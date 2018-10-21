@@ -11,7 +11,6 @@ function getPackageMeta() {
     name,
     main,
     module, // TODO: bundle module field for esnext
-    input: path.resolve(config.rootDir, 'src', 'index.js'),
   }
 }
 

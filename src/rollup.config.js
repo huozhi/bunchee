@@ -1,7 +1,10 @@
+const path = require('path');
 const babel = require('rollup-plugin-babel');
 const cjs = require('rollup-plugin-commonjs');
 const resolve = require('rollup-plugin-node-resolve');
-const utils = require('./utils');
+const config = require('./config');
+
+const defaultInput = path.resolve(config.rootDir, 'src', 'index.js');
 
 function createInputConfig({entry, babelConfig}) {
   return {
@@ -27,9 +30,13 @@ function createOutputOptions({package}) {
   };
 }
 
-function createRollupConfig({entry, package, babelConfig = {}}) {
-  const inputOptions = createInputConfig({entry, babelConfig});
+function createRollupConfig({
+  package,
+  entry = defaultInput,
+  babelConfig = {}
+}) {
   const outputOptions = createOutputOptions({package});
+  const inputOptions = createInputConfig({entry, babelConfig});
 
   return {
     inputOptions,
