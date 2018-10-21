@@ -4,7 +4,7 @@
 ## Installation
 
 ```sh
-npm install --global burrito
+npm install --global @huozhi/burrito
 ```
 
 ## Usage
