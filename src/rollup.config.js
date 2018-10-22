@@ -1,6 +1,7 @@
 const path = require('path');
 const babel = require('rollup-plugin-babel');
 const cjs = require('rollup-plugin-commonjs');
+const json = require('rollup-plugin-json');
 const resolve = require('rollup-plugin-node-resolve');
 const config = require('./config');
 
@@ -17,6 +18,7 @@ function createInputConfig({entry, babelConfig}) {
         presets: babelConfig.presets,
         plugins: babelConfig.plugins,
       }),
+      json(),
       resolve(),
     ],
   };
@@ -27,6 +29,7 @@ function createOutputOptions({package}) {
     format: 'umd',
     name: package.name,
     file: package.main,
+    exports: 'named',
   };
 }
 
