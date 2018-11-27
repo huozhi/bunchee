@@ -1,10 +1,10 @@
 {
-  "name": "@huozhi/burrito",
-  "version": "0.1.0-beta.3",
-  "description": "",
+  "name": "@bunchee/bunchee",
+  "version": "0.1.0-beta.3", 
+  "description": "simple bundler",
   "main": "index.js",
   "bin": {
-    "bo": "./bin/cli.js"
+    "bun": "./bin/cli.js"
   },
   "scripts": {},
   "keywords": [
