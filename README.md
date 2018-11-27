@@ -4,7 +4,7 @@
 ## Installation
 
 ```sh
-npm install --global @huozhi/burrito
+npm install --global @bunchee/bunchee
 ```
 
 ## Usage
@@ -15,5 +15,5 @@ npm install --global @huozhi/burrito
 # make sure there are `main` and `name` fields in package.json for description
 
 cd <project-root-dir>
-bo ./src/index.js
+bun ./src/index.js
 ```
