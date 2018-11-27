@@ -1,4 +1,5 @@
 {
   "name": "a-module",
-  "main": "dist/bundle.js"
+  "main": "dist/bundle.js",
+  "module": "dist/bundle.esm.js"
 }

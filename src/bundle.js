@@ -8,8 +8,11 @@ function createBundle(entry) {
   const babelConfig = createBabelConfig();
   const rollupConfig = createRollupConfig({entry, package, babelConfig});
 
-  return rollup.rollup(rollupConfig.inputOptions)
-    .then(bundle => bundle.write(rollupConfig.outputOptions))
+  return rollup.rollup(rollupConfig.input)
+    .then(bundle => {
+      const wirteJobs = rollupConfig.outputs.map(options => bundle.write(options));
+      return Promise.all(wirteJobs)
+    })
 }
 
 module.exports = createBundle;

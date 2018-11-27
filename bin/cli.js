@@ -9,13 +9,13 @@ const config = require('../src/config');
 
 const args = process.argv;
 
-function run(main) {
-  const entryPath = path.resolve(config.rootDir, main);
-  if (!fs.existsSync(entryPath)) {
+function run(entryFilePath) {
+  const entry = path.resolve(config.rootDir, entryFilePath);
+  if (!fs.existsSync(entry)) {
     console.log('entry file not exsited!');
     return;
   }
-  bundle(entryPath)
+  bundle(entry)
 };
 
 
