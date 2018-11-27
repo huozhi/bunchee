@@ -6,8 +6,12 @@ const resolve = require('rollup-plugin-node-resolve');
 const config = require('./config');
 
 const defaultInput = path.resolve(config.rootDir, 'src', 'index.js');
+const mainFieldsConfig = [
+  {field: 'main', format: 'umd'}, 
+  {field: 'module', format: 'esm'},
+];
 
-function createInputConfig({entry, babelConfig}) {
+function createInputConfig(entry, babelConfig) {
   return {
     input: entry,
     plugins: [
@@ -24,11 +28,11 @@ function createInputConfig({entry, babelConfig}) {
   };
 }
 
-function createOutputOptions({package}) {
+function createOutputOptions(config, package) {
   return {
-    format: 'umd',
     name: package.name,
-    file: package.main,
+    format: config.format,
+    file: package[config.field],
     exports: 'named',
   };
 }
@@ -38,12 +42,14 @@ function createRollupConfig({
   entry = defaultInput,
   babelConfig = {}
 }) {
-  const outputOptions = createOutputOptions({package});
-  const inputOptions = createInputConfig({entry, babelConfig});
+  const inputOptions = createInputConfig(entry, babelConfig);
+  const outputsOptions = mainFieldsConfig
+    .filter(config => Boolean(package[config.field]))
+    .map(config => createOutputOptions(config, package));
 
   return {
-    inputOptions,
-    outputOptions,
+    input: inputOptions,
+    outputs: outputsOptions,
   };
 }
 
