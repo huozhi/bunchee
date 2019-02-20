@@ -3,14 +3,20 @@ const config = require('./config');
 
 function getPackageMeta() {
   const pkgFilePath = path.resolve(config.rootDir, 'package.json');
-  // TODO: safe require
-  const pkgJSON = require(pkgFilePath);
-  const {name, main, module} = pkgJSON;
+  let pkg
+  try {
+    pkg = require(pkgFilePath);
+  } catch (e) {
+    pkg = {}
+  }
+  const {name, main, module, dependencies, peerDependencies} = pkg;
 
   return {
     name,
     main,
-    module, // TODO: bundle module field for esnext
+    module,
+    dependencies,
+    peerDependencies,
   }
 }
 
