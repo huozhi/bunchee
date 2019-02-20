@@ -1,29 +1,36 @@
 const path = require('path');
 const babel = require('rollup-plugin-babel');
-const cjs = require('rollup-plugin-commonjs');
+const commonjs = require('rollup-plugin-commonjs');
 const json = require('rollup-plugin-json');
-const resolve = require('rollup-plugin-node-resolve');
+const nodeResolve = require('rollup-plugin-node-resolve');
 const config = require('./config');
 
 const defaultInput = path.resolve(config.rootDir, 'src', 'index.js');
 const mainFieldsConfig = [
-  {field: 'main', format: 'umd'}, 
+  {field: 'main', format: 'cjs'},
   {field: 'module', format: 'esm'},
 ];
 
-function createInputConfig(entry, babelConfig) {
+function createInputConfig(entry, package) {
+  const externals = [
+    package.peerDependencies,
+    package.dependencies,
+  ].filter(Boolean).map(Object.keys).reduce((a, b) => a.concat(b), []);
+
   return {
     input: entry,
+    external: externals,
     plugins: [
-      cjs(),
-      babel({
-        babelrc: false,
-        configFile: false,
-        presets: babelConfig.presets,
-        plugins: babelConfig.plugins,
+      nodeResolve({
+        preferBuiltins: false,
+      }),
+      commonjs({
+        include: /node_modules\//,
       }),
       json(),
-      resolve(),
+      babel({
+        exclude: 'node_modules/**',
+      }),
     ],
   };
 }
@@ -33,16 +40,16 @@ function createOutputOptions(config, package) {
     name: package.name,
     format: config.format,
     file: package[config.field],
-    exports: 'named',
+    esModule: false,
+    strict: false,
   };
 }
 
 function createRollupConfig({
   package,
-  entry = defaultInput,
-  babelConfig = {}
+  entry = defaultInput
 }) {
-  const inputOptions = createInputConfig(entry, babelConfig);
+  const inputOptions = createInputConfig(entry, package);
   const outputsOptions = mainFieldsConfig
     .filter(config => Boolean(package[config.field]))
     .map(config => createOutputOptions(config, package));
