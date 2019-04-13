@@ -1,6 +1,6 @@
 {
   "name": "bunchee",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "simple bundler",
   "main": "index.js",
   "bin": {
