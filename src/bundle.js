@@ -2,9 +2,12 @@ const rollup = require('rollup');
 const createRollupConfig = require('./rollup-config');
 const utils = require('./utils');
 
-function createBundle(entry) {
+const defaultOptions = {};
+
+function createBundle(entry, options = defaultOptions) {
   const package = utils.getPackageMeta();
-  const rollupConfig = createRollupConfig({entry, package});
+  const rollupConfig = createRollupConfig(entry, package, options);
+  console.log('entry', rollupConfig)
 
   return rollup.rollup(rollupConfig.input)
     .then(
