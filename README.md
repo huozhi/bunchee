@@ -4,7 +4,7 @@
 ## Installation
 
 ```sh
-npm install --global @bunchee/bunchee
+npm install --save-dev bunchee
 ```
 
 ## Usage
@@ -16,4 +16,14 @@ npm install --global @bunchee/bunchee
 
 cd <project-root-dir>
 bun ./src/index.js
+```
+
+or
+
+```json
+{
+  "scripts": {
+    "build": "bun ./src/index.js"
+  }
+}
 ```
