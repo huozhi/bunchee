@@ -1,5 +1,5 @@
-function b(it) {
-  console.log('b:', it)
+class Parent {
+  f() { return 1 }
 }
 
-export default b;
+export {Parent};

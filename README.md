@@ -15,7 +15,7 @@ npm install --save-dev bunchee
 # make sure there are `main` and `name` fields in package.json for description
 
 cd <project-root-dir>
-bun ./src/index.js
+bunchee ./src/index.js
 ```
 
 or
@@ -23,7 +23,7 @@ or
 ```json
 {
   "scripts": {
-    "build": "bun ./src/index.js"
+    "build": "bunchee ./src/index.js"
   }
 }
 ```

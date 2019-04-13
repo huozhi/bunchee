@@ -1,8 +1,14 @@
-import b from './b';
+import {Parent} from './b';
 
-function a(name = '') {
-  console.log('a:', name);
-  b('a' + name);
+class A extends Parent {
+  constructor() {
+    super()
+  }
+  get x() {
+    return super.f()
+  }
 }
+
+const a = new A()
 
 export default a;
