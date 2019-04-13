@@ -12,7 +12,7 @@ const args = process.argv;
 function run(entryFilePath) {
   const entry = path.resolve(config.rootDir, entryFilePath);
   if (!fs.existsSync(entry)) {
-    console.log('entry file not exsited!');
+    console.error('Entry file not exsited!');
     return;
   }
   bundle(entry)
