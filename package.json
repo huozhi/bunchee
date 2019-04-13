@@ -4,7 +4,7 @@
   "description": "simple bundler",
   "main": "index.js",
   "bin": {
-    "bun": "./bin/cli.js"
+    "bunchee": "./bin/cli.js"
   },
   "scripts": {},
   "keywords": [
