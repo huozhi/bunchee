@@ -10,7 +10,7 @@
   "keywords": [
     "bundler"
   ],
-  "author": "huozhi <gilesliu12@gmail.com>",
+  "author": "huozhi (github.com/huozhi)",
   "license": "MIT",
   "dependencies": {
     "@babel/core": "^7.3.3",
