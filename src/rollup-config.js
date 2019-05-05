@@ -30,8 +30,8 @@ function createInputConfig(entry, package, options) {
         jsx: options.jsx,
         objectAssign: 'Object.assign',
         transforms: {
-          dangerousForOf: false,
-          dangerousTaggedTemplateString: false,
+          dangerousForOf: true,
+          dangerousTaggedTemplateString: true,
         },
       }),
     ],
