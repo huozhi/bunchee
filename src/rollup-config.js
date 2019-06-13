@@ -39,10 +39,11 @@ function createInputConfig(entry, package, options) {
 }
 
 function createOutputOptions(config, package, options) {
+  console.log('file', options.dest)
   return {
     name: package.name,
     format: config.format,
-    file: package[config.field],
+    file: options.dest || package[config.field],
     esModule: false,
     strict: false,
   };
