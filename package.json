@@ -10,6 +10,11 @@
   "keywords": [
     "bundler"
   ],
+  "files": [
+    "src",
+    "bin",
+    "*.md"
+  ],
   "author": "huozhi (github.com/huozhi)",
   "license": "MIT",
   "dependencies": {
