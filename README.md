@@ -9,6 +9,23 @@ npm install --save-dev bunchee
 
 ## Usage
 
+### CLI
+
+```
+Usage: bunchee [options]
+
+Options:
+  -v, --version  output the version number
+  -w, --watch
+  -h, --help     output usage information
+
+Usage:
+  $ bunchee ./src/index.js
+  $ bunchee -h
+```
+
+### Dev Dependency
+
 Declare your main field and module field in package.json, then call bunchee cli in build scripts
 
 ```json

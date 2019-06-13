@@ -2,25 +2,39 @@
 
 const fs = require('fs');
 const path = require('path');
-const commander = require('commander');
+const program = require('commander');
 const bundle = require('../src/bundle');
 const pkg = require('../package.json');
 const config = require('../src/config');
 
-const args = process.argv;
-
-function run(entryFilePath) {
+function run(entryFilePath, params = {}) {
+  const options = {
+    watch: params.watch
+  };
+  if (typeof entryFilePath !== 'string') {
+    return help();
+  }
   const entry = path.resolve(config.rootDir, entryFilePath);
   if (!fs.existsSync(entry)) {
-    console.error('Entry file not exsited!');
-    return;
+    return help();
   }
-  bundle(entry)
+  bundle(entry, options)
 };
 
+function help() {
+  program.help();
+}
 
-commander
+program.on('--help', function(){
+  console.log('')
+  console.log('Usage:');
+  console.log('  $ bunchee ./src/index.js');
+});
+
+program
+  .name('bunchee')
   .version(pkg.version, '-v, --version')
+  .option('-w, --watch')
   .action(run);
 
-commander.parse(args);
+program.parse(process.argv);
