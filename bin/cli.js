@@ -7,9 +7,25 @@ const bundle = require('../src/bundle');
 const pkg = require('../package.json');
 const config = require('../src/config');
 
-function run(entryFilePath, params = {}) {
+program.on('--help', function(){
+  console.log('')
+  console.log('Usage:');
+  console.log('  $ bunchee ./src/index.js');
+});
+
+program
+  .name('bunchee')
+  .version(pkg.version, '-v, --version')
+  .option('-w, --watch', 'watch src files changes')
+  .option('-d, --dest <dir>', 'specify output dest file')
+  .action(run);
+
+program.parse(process.argv);
+
+function run(entryFilePath) {
   const options = {
-    watch: params.watch
+    dest: program.dest,
+    watch: !!program.watch,
   };
   if (typeof entryFilePath !== 'string') {
     return help();
@@ -24,17 +40,3 @@ function run(entryFilePath, params = {}) {
 function help() {
   program.help();
 }
-
-program.on('--help', function(){
-  console.log('')
-  console.log('Usage:');
-  console.log('  $ bunchee ./src/index.js');
-});
-
-program
-  .name('bunchee')
-  .version(pkg.version, '-v, --version')
-  .option('-w, --watch')
-  .action(run);
-
-program.parse(process.argv);

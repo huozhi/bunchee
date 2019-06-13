@@ -15,13 +15,13 @@ npm install --save-dev bunchee
 Usage: bunchee [options]
 
 Options:
-  -v, --version  output the version number
-  -w, --watch
-  -h, --help     output usage information
+  -v, --version     output the version number
+  -w, --watch       watch src files changes
+  -d, --dest <dir>  specify output dest file
+  -h, --help        output usage information
 
 Usage:
   $ bunchee ./src/index.js
-  $ bunchee -h
 ```
 
 ### Dev Dependency
