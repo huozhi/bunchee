@@ -39,7 +39,6 @@ function createInputConfig(entry, package, options) {
 }
 
 function createOutputOptions(config, package, options) {
-  console.log('file', options.dest)
   return {
     name: package.name,
     format: config.format,
