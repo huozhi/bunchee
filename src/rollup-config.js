@@ -43,7 +43,8 @@ function createOutputOptions(config, package, options) {
     name: package.name,
     format: config.format,
     file: options.dest || package[config.field],
-    esModule: false,
+    esModule: true,
+    freeze: false,
     strict: false,
   };
 }
