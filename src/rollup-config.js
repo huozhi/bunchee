@@ -62,6 +62,9 @@ function createRollupConfig(
   return {
     input: inputOptions,
     outputs: outputsOptions,
+    treeshake: {
+      propertyReadSideEffects: false,
+    },
   };
 }
 
