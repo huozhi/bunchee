@@ -31,7 +31,10 @@ function bundle({input, outputs}) {
         return Promise.all(wirteJobs)
       },
       error => {
-        console.error(error);
+        console.log(error.code)
+        if (error.snippet) {
+          console.error(error.snippet);
+        }
       }
     );
 }

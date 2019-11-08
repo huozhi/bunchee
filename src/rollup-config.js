@@ -1,6 +1,6 @@
 const commonjs = require('rollup-plugin-commonjs');
 const json = require('rollup-plugin-json');
-const buble = require('rollup-plugin-buble');
+const buble = require('@rollup/plugin-buble');
 const nodeResolve = require('rollup-plugin-node-resolve');
 
 const mainFieldsConfig = [
@@ -13,7 +13,7 @@ function createInputConfig(entry, package, options) {
     package.peerDependencies,
     package.dependencies,
   ].filter(Boolean).map(Object.keys).reduce((a, b) => a.concat(b), []);
-
+  
   return {
     input: entry,
     external: externals,
@@ -27,7 +27,7 @@ function createInputConfig(entry, package, options) {
       json(),
       buble({
         exclude: 'node_modules/**',
-        jsx: options.jsx,
+        // jsx: options.jsx,
         objectAssign: 'Object.assign',
         transforms: {
           dangerousForOf: true,
