@@ -46,6 +46,7 @@ function createOutputOptions(config, package, options) {
     esModule: true,
     freeze: false,
     strict: false,
+    sourcemap: true,
   };
 }
 
