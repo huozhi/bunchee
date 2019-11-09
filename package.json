@@ -25,7 +25,5 @@
     "rollup-plugin-json": "^3.1.0",
     "rollup-plugin-node-resolve": "^4.0.0"
   },
-  "devDependencies": {
-    "@rollup/plugin-buble": "^0.20.0"
-  }
+  "devDependencies": {}
 }
