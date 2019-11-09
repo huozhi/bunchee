@@ -27,7 +27,7 @@ function createInputConfig(entry, package, options) {
       json(),
       buble({
         exclude: 'node_modules/**',
-        // jsx: options.jsx,
+        jsx: options.jsx,
         objectAssign: 'Object.assign',
         transforms: {
           dangerousForOf: true,

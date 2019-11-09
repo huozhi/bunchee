@@ -1,5 +1,3 @@
-//import React from 'react'
-
 function Dumb() {
   return (
     <React.Fragment>
@@ -9,4 +7,3 @@ function Dumb() {
   )
 }
 
-//export default Dumb
