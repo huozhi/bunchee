@@ -31,7 +31,8 @@ function bundle({input, outputs}) {
         return Promise.all(wirteJobs)
       },
       error => {
-        console.error(error);
+        console.log(error)
+        console.error(error.snippet); // logging source code in format
       }
     );
 }

@@ -18,6 +18,7 @@ program
   .version(pkg.version, '-v, --version')
   .option('-w, --watch', 'watch src files changes')
   .option('-d, --dest <dir>', 'specify output dest file')
+  .option('--jsx <jsx>', 'jsx function for creating element')
   .action(run);
 
 program.parse(process.argv);
@@ -26,6 +27,7 @@ function run(entryFilePath) {
   const options = {
     dest: program.dest,
     watch: !!program.watch,
+    jsx: program.jsx,
   };
   if (typeof entryFilePath !== 'string') {
     return help();
