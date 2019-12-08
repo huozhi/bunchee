@@ -1,7 +1,7 @@
 const commonjs = require('rollup-plugin-commonjs');
-const json = require('rollup-plugin-json');
+const json = require('@rollup/plugin-json');
 const buble = require('@rollup/plugin-buble');
-const nodeResolve = require('rollup-plugin-node-resolve');
+const nodeResolve = require('@rollup/plugin-node-resolve');
 
 const mainFieldsConfig = [
   {field: 'main', format: 'cjs'},
