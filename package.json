@@ -18,12 +18,11 @@
   "author": "huozhi (github.com/huozhi)",
   "license": "MIT",
   "dependencies": {
-    "@rollup/plugin-buble": "^0.20.0",
-    "@rollup/plugin-json": "^4.0.0",
-    "@rollup/plugin-node-resolve": "^6.0.0",
-    "commander": "^2.19.0",
-    "rollup": "^1.27.9",
-    "rollup-plugin-commonjs": "^10.1.0"
-  },
-  "devDependencies": {}
+    "@rollup/plugin-buble": "0.21.1",
+    "@rollup/plugin-commonjs": "11.0.2",
+    "@rollup/plugin-json": "4.0.2",
+    "@rollup/plugin-node-resolve": "7.1.1",
+    "commander": "2.20.3",
+    "rollup": "2.3.2"
+  }
 }

@@ -7,3 +7,5 @@ function Dumb() {
   )
 }
 
+export default Dumb
+
