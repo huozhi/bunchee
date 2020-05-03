@@ -13,7 +13,7 @@ function createInputConfig(entry, package, options) {
     package.peerDependencies,
     package.dependencies,
   ].filter(Boolean).map(Object.keys).reduce((a, b) => a.concat(b), []);
-  
+
   return {
     input: entry,
     external: externals,
@@ -42,7 +42,7 @@ function createOutputOptions(config, package, options) {
   return {
     name: package.name,
     format: config.format,
-    file: options.dest || package[config.field],
+    file: options.file || package[config.field],
     esModule: true,
     freeze: false,
     strict: false,
@@ -53,12 +53,13 @@ function createOutputOptions(config, package, options) {
 function createRollupConfig(
   entry,
   package,
-  options
+  options = {}
 ) {
-  const inputOptions = createInputConfig(entry, package, options);
+  const {file, watch, jsx} = options;
+  const inputOptions = createInputConfig(entry, package, {jsx});
   const outputsOptions = mainFieldsConfig
     .filter(config => Boolean(package[config.field]))
-    .map(config => createOutputOptions(config, package, options));
+    .map(config => createOutputOptions(config, package, {file, watch}));
 
   return {
     input: inputOptions,
