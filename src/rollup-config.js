@@ -13,7 +13,7 @@ function createInputConfig(entry, package, options) {
     package.peerDependencies,
     package.dependencies,
   ].filter(Boolean).map(Object.keys).reduce((a, b) => a.concat(b), []);
-  
+
   return {
     input: entry,
     external: externals,
@@ -38,12 +38,12 @@ function createInputConfig(entry, package, options) {
   };
 }
 
-function createOutputOptions(config, package, options) {
+function createOutputOptions(file, format, package) {
   return {
     name: package.name,
-    format: config.format,
-    file: options.dest || package[config.field],
-    esModule: true,
+    file,
+    format,
+    esModule: format !== 'umd',
     freeze: false,
     strict: false,
     sourcemap: true,
@@ -53,16 +53,26 @@ function createOutputOptions(config, package, options) {
 function createRollupConfig(
   entry,
   package,
-  options
+  options = {}
 ) {
-  const inputOptions = createInputConfig(entry, package, options);
-  const outputsOptions = mainFieldsConfig
+  const {file, format = 'esm', jsx} = options;
+  const inputOptions = createInputConfig(entry, package, {jsx});
+  
+  let outputConfigs = mainFieldsConfig
     .filter(config => Boolean(package[config.field]))
-    .map(config => createOutputOptions(config, package, options));
+    .map(config => {
+      const filename = package[config.field];
+      return createOutputOptions(filename, config.format, package);
+    });
+  
+  // CLI output option is always prioritized
+  if (file) {
+    outputConfigs = [createOutputOptions(file, format, package)];
+  }
 
   return {
     input: inputOptions,
-    outputs: outputsOptions,
+    outputs: outputConfigs,
     treeshake: {
       propertyReadSideEffects: false,
     },
