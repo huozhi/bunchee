@@ -55,26 +55,24 @@ function createRollupConfig(
   package,
   options = {}
 ) {
-  const {output, jsx} = options;
+  const {file, format = 'esm', jsx} = options;
   const inputOptions = createInputConfig(entry, package, {jsx});
-  const cliOutputsOptions = Object.keys(output)
-    .filter(bundleType => Boolean(output[bundleType]))
-    .map(bundleType => {
-      return createOutputOptions(output[bundleType], bundleType, package)
-    });
-  console.log('db:cliOutputsOptions', cliOutputsOptions, package)
-    
-  const pkgJsonOutputsOptions = mainFieldsConfig
+  
+  let outputConfigs = mainFieldsConfig
     .filter(config => Boolean(package[config.field]))
     .map(config => {
       const filename = package[config.field];
-      return createOutputOptions(filename, config.format, package)
+      return createOutputOptions(filename, config.format, package);
     });
   
+  // CLI output option is always prioritized
+  if (file) {
+    outputConfigs = [createOutputOptions(file, format, package)];
+  }
+
   return {
     input: inputOptions,
-    // CLI output option is always prioritized
-    outputs: cliOutputsOptions.length ? cliOutputsOptions : pkgJsonOutputsOptions,
+    outputs: outputConfigs,
     treeshake: {
       propertyReadSideEffects: false,
     },

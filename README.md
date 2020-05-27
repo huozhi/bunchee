@@ -19,10 +19,11 @@ npm install --save-dev bunchee
 Usage: bunchee [options]
 
 Options:
-  -v, --version        output the version number
-  -w, --watch          watch src files changes
-  -o, --output <file>  specify output filename
-  -h, --help           output usage information
+  -v, --version          output the version number
+  -w, --watch            watch src files changes
+  -o, --output <file>    specify output filename
+  -f, --format <format>  specify bundle type. esm, cjs, umd. default is esm
+  -h, --help             output usage information
 
 Usage:
   $ bunchee ./src/index.js
