@@ -7,25 +7,22 @@ const bundle = require('../src/bundle');
 const pkg = require('../package.json');
 const config = require('../src/config');
 
-program.on('--help', function(){
-  console.log('')
-  console.log('Usage:');
-  console.log('  $ bunchee ./src/index.js');
-});
-
 program
   .name('bunchee')
   .version(pkg.version, '-v, --version')
   .option('-w, --watch', 'watch src files changes')
-  .option('-d, --dest <dir>', 'specify output dest file')
+  .option('-o --output <file>', 'specify output filename')
   .option('--jsx <jsx>', 'jsx function for creating element')
+  .option('--format <format>', 'specify output file format')
   .action(run);
 
 program.parse(process.argv);
 
 function run(entryFilePath) {
-  const options = {
-    dest: program.dest,
+  const {format, output: file} = program;
+  const outputConfig = {
+    file,
+    format,
     watch: !!program.watch,
     jsx: program.jsx,
   };
@@ -36,7 +33,7 @@ function run(entryFilePath) {
   if (!fs.existsSync(entry)) {
     return help();
   }
-  bundle(entry, options)
+  bundle(entry, outputConfig)
 };
 
 function help() {

@@ -1,5 +1,9 @@
 # bunchee
-> zero config bundler for js library
+> zero config bundler for ES6 syntax library
+
+Bunchee can help you to bundle your code in ES6 syntax into one file with no configuration. It's built on top of rollup and buble.
+Let you focus on writing code and can generate multiple types of module (commonjs, esmodule) at the same time.
+
 
 ## Installation
 
@@ -15,16 +19,17 @@ npm install --save-dev bunchee
 Usage: bunchee [options]
 
 Options:
-  -v, --version     output the version number
-  -w, --watch       watch src files changes
-  -d, --dest <dir>  specify output dest file
-  -h, --help        output usage information
+  -v, --version          output the version number
+  -w, --watch            watch src files changes
+  -o, --output <file>    specify output filename
+  -f, --format <format>  specify bundle type. esm, cjs, umd. default is esm
+  -h, --help             output usage information
 
 Usage:
   $ bunchee ./src/index.js
 ```
 
-### Dev Dependency
+### Use NPM Script
 
 Declare your main field and module field in package.json, then call bunchee cli in build scripts
 
@@ -38,13 +43,13 @@ Declare your main field and module field in package.json, then call bunchee cli 
 }
 ```
 
-Or use it globally
+### Use CLI
 
 ```sh
-# assume your file entry is ./src/index.js
-# make sure there is a package.json file in your project root directory
-# make sure there are `main` and `name` fields in package.json for description
-
 cd <project-root-dir>
-bunchee ./src/index.js
+bunchee ./src/index.js -f cjs -o ./dist/bundle.js
+
+bunchee ./src/index.js -f esm -o ./dist/bundle.esm.js
+# if you don't specify format type, default format is ESModule
+# bunchee ./src/index.js -o ./dist/bundle.esm.js
 ```

@@ -2,17 +2,17 @@ const rollup = require('rollup');
 const createRollupConfig = require('./rollup-config');
 const utils = require('./utils');
 
-function createBundle(entry, options = {}) {
+function createBundle(entry, {watch, ...options}) {
   const package = utils.getPackageMeta();
   const rollupConfig = createRollupConfig(entry, package, options);
 
-  if (options.watch) {
-    return watch(rollupConfig);
+  if (watch) {
+    return rollupWatch(rollupConfig);
   }
-  return bundle(rollupConfig);
+  return rollupBundle(rollupConfig);
 }
 
-function watch({input, outputs}) {
+function rollupWatch({input, outputs}) {
   const watchOptions = {
     ...input,
     output: outputs,
@@ -23,7 +23,7 @@ function watch({input, outputs}) {
   return rollup.watch(watchOptions);
 }
 
-function bundle({input, outputs}) {
+function rollupBundle({input, outputs}) {
   return rollup.rollup(input)
     .then(
       bundle => {
