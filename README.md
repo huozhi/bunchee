@@ -29,7 +29,7 @@ Usage:
   $ bunchee ./src/index.js
 ```
 
-### Dev Dependency
+### Use NPM Script
 
 Declare your main field and module field in package.json, then call bunchee cli in build scripts
 
@@ -43,9 +43,13 @@ Declare your main field and module field in package.json, then call bunchee cli 
 }
 ```
 
-Or use it with CLI to specifiy the output filename
+### Use CLI
 
 ```sh
 cd <project-root-dir>
-bunchee ./src/index.js -o ./dist/bundle.js
+bunchee ./src/index.js -f cjs -o ./dist/bundle.js
+
+bunchee ./src/index.js -f esm -o ./dist/bundle.esm.js
+# if you don't specify format type, default format is ESModule
+# bunchee ./src/index.js -o ./dist/bundle.esm.js
 ```
