@@ -2,7 +2,6 @@
   "name": "bunchee",
   "version": "0.6.0",
   "description": "simple bundler",
-  "main": "index.js",
   "bin": {
     "bunchee": "./bin/cli.js"
   },
