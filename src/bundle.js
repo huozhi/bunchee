@@ -2,11 +2,11 @@ const rollup = require('rollup');
 const createRollupConfig = require('./rollup-config');
 const utils = require('./utils');
 
-function createBundle(entry, {watch, ...options}) {
+function createBundle(entry, {watch: isWatchMode, ...options}) {
   const package = utils.getPackageMeta();
   const rollupConfig = createRollupConfig(entry, package, options);
 
-  if (watch) {
+  if (isWatchMode) {
     return watch(rollupConfig);
   }
   return rollupBundle(rollupConfig);
