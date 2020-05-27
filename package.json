@@ -5,7 +5,9 @@
   "bin": {
     "bunchee": "./bin/cli.js"
   },
-  "scripts": {},
+  "scripts": {
+    "build": "tsc"
+  },
   "keywords": [
     "bundler"
   ],
@@ -23,5 +25,8 @@
     "@rollup/plugin-node-resolve": "7.1.1",
     "commander": "2.20.3",
     "rollup": "2.3.2"
+  },
+  "devDependencies": {
+    "typescript": "3.9.3"
   }
 }
