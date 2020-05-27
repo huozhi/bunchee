@@ -11,15 +11,22 @@ program
   .name('bunchee')
   .version(pkg.version, '-v, --version')
   .option('-w, --watch', 'watch src files changes')
-  .option('-o, --output <filename>', 'specify output filename')
   .option('--jsx <jsx>', 'jsx function for creating element')
+  .option('--cjs <filename>', 'specify Commonjs output filename')
+  .option('--esm <filename>', 'specify ESModule output filename')
+  .option('--umd <filename>', 'specify UMD output filename')
   .action(run);
 
 program.parse(process.argv);
 
 function run(entryFilePath) {
+  const {cjs, esm, umd} = program;
   const outputConfig = {
-    file: program.output,
+    output: {
+      cjs,
+      esm,
+      umd,
+    },
     watch: !!program.watch,
     jsx: program.jsx,
   };

@@ -38,12 +38,12 @@ function createInputConfig(entry, package, options) {
   };
 }
 
-function createOutputOptions(config, package, options) {
+function createOutputOptions(file, format, package) {
   return {
     name: package.name,
-    format: config.format,
-    file: options.file || package[config.field],
-    esModule: true,
+    file,
+    format,
+    esModule: format !== 'umd',
     freeze: false,
     strict: false,
     sourcemap: true,
@@ -55,15 +55,26 @@ function createRollupConfig(
   package,
   options = {}
 ) {
-  const {file, watch, jsx} = options;
+  const {output, jsx} = options;
   const inputOptions = createInputConfig(entry, package, {jsx});
-  const outputsOptions = mainFieldsConfig
+  const cliOutputsOptions = Object.keys(output)
+    .filter(bundleType => Boolean(output[bundleType]))
+    .map(bundleType => {
+      return createOutputOptions(output[bundleType], bundleType, package)
+    });
+  console.log('db:cliOutputsOptions', cliOutputsOptions, package)
+    
+  const pkgJsonOutputsOptions = mainFieldsConfig
     .filter(config => Boolean(package[config.field]))
-    .map(config => createOutputOptions(config, package, {file, watch}));
-
+    .map(config => {
+      const filename = package[config.field];
+      return createOutputOptions(filename, config.format, package)
+    });
+  
   return {
     input: inputOptions,
-    outputs: outputsOptions,
+    // CLI output option is always prioritized
+    outputs: cliOutputsOptions.length ? cliOutputsOptions : pkgJsonOutputsOptions,
     treeshake: {
       propertyReadSideEffects: false,
     },
