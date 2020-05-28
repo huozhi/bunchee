@@ -3,9 +3,10 @@
   "version": "0.7.0",
   "description": "simple bundler",
   "bin": {
-    "bunchee": "./dist/bin/cli.js"
+    "bunchee": "./dist/cli.js"
   },
   "scripts": {
+    "clean": "rm -rf ./dist",
     "build": "tsc"
   },
   "keywords": [

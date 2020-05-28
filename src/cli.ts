@@ -5,7 +5,7 @@ import path from "path";
 import program from "commander";
 import bundle from "./bundle";
 import config from "./config";
-import pkg from "../package.json";
+import pkg from "./pkg";
 
 program
   .name("bunchee")
