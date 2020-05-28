@@ -2,5 +2,3 @@ package-lock.json
 node_modules
 dist
 *.log
-lib/**/*.js
-
