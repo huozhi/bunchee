@@ -1,18 +1,35 @@
-const commonjs = require('@rollup/plugin-commonjs');
-const json = require('@rollup/plugin-json');
-const buble = require('@rollup/plugin-buble');
-const nodeResolve = require('@rollup/plugin-node-resolve');
+import commonjs from "@rollup/plugin-commonjs";
+import json from "@rollup/plugin-json";
+import buble from "@rollup/plugin-buble";
+import nodeResolve from "@rollup/plugin-node-resolve";
+import { PackageMetadata, BuncheeRollupConfig } from "./types";
+import { OutputOptions } from "rollup";
 
-const mainFieldsConfig = [
-  {field: 'main', format: 'cjs'},
-  {field: 'module', format: 'esm'},
+const mainFieldsConfig: {
+  field: "main" | "module";
+  format: "cjs" | "esm";
+}[] = [
+  {
+    field: "main",
+    format: "cjs",
+  },
+  {
+    field: "module",
+    format: "esm",
+  },
 ];
 
-function createInputConfig(entry, package, options) {
-  const externals = [
-    package.peerDependencies,
-    package.dependencies,
-  ].filter(Boolean).map(Object.keys).reduce((a, b) => a.concat(b), []);
+function createInputConfig(
+  entry: string,
+  npmPackage: PackageMetadata,
+  options: {
+    jsx: string | undefined;
+  }
+) {
+  const externals = [npmPackage.peerDependencies, npmPackage.dependencies]
+    .filter(<T>(n?: T): n is T => Boolean(n))
+    .map((o: { [key: string]: string }): string[] => Object.keys(o))
+    .reduce((a: string[], b: string[]) => a.concat(b), [] as string[]);
 
   return {
     input: entry,
@@ -26,9 +43,9 @@ function createInputConfig(entry, package, options) {
       }),
       json(),
       buble({
-        exclude: 'node_modules/**',
+        exclude: "node_modules/**",
         jsx: options.jsx,
-        objectAssign: 'Object.assign',
+        objectAssign: "Object.assign",
         transforms: {
           dangerousForOf: true,
           dangerousTaggedTemplateString: true,
@@ -38,45 +55,59 @@ function createInputConfig(entry, package, options) {
   };
 }
 
-function createOutputOptions(file, format, package) {
+function createOutputOptions(
+  file: any,
+  format: OutputOptions["format"],
+  npmPackage: PackageMetadata
+): OutputOptions {
   return {
-    name: package.name,
+    name: npmPackage.name,
     file,
     format,
-    esModule: format !== 'umd',
+    esModule: format !== "umd",
     freeze: false,
     strict: false,
     sourcemap: true,
   };
 }
 
-function createRollupConfig(
+function createRollupConfig({
   entry,
-  package,
-  options = {}
-) {
-  const {file, format = 'esm', jsx} = options;
-  const inputOptions = createInputConfig(entry, package, {jsx});
-  
+  npmPackage,
+  options,
+}: {
+  entry: string;
+  npmPackage: PackageMetadata;
+  options: {
+    file: string;
+    format: OutputOptions["format"];
+    jsx?: string;
+  };
+}): BuncheeRollupConfig {
+  const { file, format = "esm", jsx } = options;
+  const inputOptions = createInputConfig(entry, npmPackage, {
+    jsx,
+  });
+
   let outputConfigs = mainFieldsConfig
-    .filter(config => Boolean(package[config.field]))
-    .map(config => {
-      const filename = package[config.field];
-      return createOutputOptions(filename, config.format, package);
+    .filter((config) => Boolean(npmPackage[config.field]))
+    .map((config) => {
+      const filename = npmPackage[config.field];
+      return createOutputOptions(filename, config.format, npmPackage);
     });
-  
+
   // CLI output option is always prioritized
   if (file) {
-    outputConfigs = [createOutputOptions(file, format, package)];
+    outputConfigs = [createOutputOptions(file, format, npmPackage)];
   }
 
   return {
     input: inputOptions,
-    outputs: outputConfigs,
+    output: outputConfigs,
     treeshake: {
       propertyReadSideEffects: false,
     },
   };
 }
 
-module.exports = createRollupConfig;
+export default createRollupConfig;

@@ -1,5 +1,5 @@
 const rootDir = process.cwd();
 
-module.exports = {
+export default {
   rootDir,
 };

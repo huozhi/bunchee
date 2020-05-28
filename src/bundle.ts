@@ -1,10 +1,18 @@
-const rollup = require('rollup');
-const createRollupConfig = require('./rollup-config');
-const utils = require('./utils');
+import rollup, { RollupWatcher, RollupWatchOptions } from "rollup";
+import createRollupConfig from "./rollup-config";
+import utils from "./utils";
+import { BuncheeRollupConfig } from "./types";
 
-function createBundle(entry, {watch, ...options}) {
-  const package = utils.getPackageMeta();
-  const rollupConfig = createRollupConfig(entry, package, options);
+function createBundle(
+  entry: string,
+  { watch, ...options }: { file: any; format: any; watch: boolean; jsx: any }
+) {
+  const npmPackage = utils.getPackageMeta();
+  const rollupConfig = createRollupConfig({
+    entry,
+    npmPackage: npmPackage,
+    options,
+  });
 
   if (watch) {
     return rollupWatch(rollupConfig);
@@ -12,29 +20,30 @@ function createBundle(entry, {watch, ...options}) {
   return rollupBundle(rollupConfig);
 }
 
-function rollupWatch({input, outputs}) {
-  const watchOptions = {
+function rollupWatch({ input, output }: BuncheeRollupConfig): RollupWatcher {
+  const watchOptions: RollupWatchOptions = {
     ...input,
-    output: outputs,
+    output: output,
     watch: {
-      exclude: 'node_modules/**'
-    }
+      exclude: ["node_modules/**"],
+    },
   };
   return rollup.watch(watchOptions);
 }
 
-function rollupBundle({input, outputs}) {
-  return rollup.rollup(input)
-    .then(
-      bundle => {
-        const wirteJobs = outputs.map(options => bundle.write(options));
-        return Promise.all(wirteJobs)
-      },
-      error => {
-        console.log(error)
-        console.error(error.snippet); // logging source code in format
-      }
-    );
+function rollupBundle({ input, output }: BuncheeRollupConfig) {
+  return rollup.rollup(input).then(
+    (bundle) => {
+      const wirteJobs = output.map((options: rollup.OutputOptions) =>
+        bundle.write(options)
+      );
+      return Promise.all(wirteJobs);
+    },
+    (error) => {
+      console.log(error);
+      console.error(error.snippet); // logging source code in format
+    }
+  );
 }
 
-module.exports = createBundle;
+export default createBundle;

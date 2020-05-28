@@ -1,15 +1,16 @@
-const path = require('path');
-const config = require('./config');
+import path from "path";
+import config from "./config";
+import { PackageMetadata } from "./types";
 
-function getPackageMeta() {
-  const pkgFilePath = path.resolve(config.rootDir, 'package.json');
-  let pkg
+function getPackageMeta(): PackageMetadata {
+  const pkgFilePath = path.resolve(config.rootDir, "package.json");
+  let pkg;
   try {
     pkg = require(pkgFilePath);
   } catch (e) {
-    pkg = {}
+    pkg = {};
   }
-  const {name, main, module, dependencies, peerDependencies} = pkg;
+  const { name, main, module, dependencies, peerDependencies } = pkg;
 
   return {
     name,
@@ -17,14 +18,14 @@ function getPackageMeta() {
     module,
     dependencies,
     peerDependencies,
-  }
+  };
 }
 
-function resolvePackagePath(path) {
-  return path.resolve(config.rootDir, path);
+function resolvePackagePath(pathname: string): string {
+  return path.resolve(config.rootDir, pathname);
 }
 
-module.exports = {
+export default {
   getPackageMeta,
   resolvePackagePath,
 };
