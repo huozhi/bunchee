@@ -3,9 +3,12 @@
   "version": "0.7.0",
   "description": "simple bundler",
   "bin": {
-    "bunchee": "./bin/cli.js"
+    "bunchee": "./dist/cli.js"
   },
-  "scripts": {},
+  "scripts": {
+    "clean": "rm -rf ./dist",
+    "build": "tsc"
+  },
   "keywords": [
     "bundler"
   ],
@@ -17,11 +20,14 @@
   "author": "huozhi (github.com/huozhi)",
   "license": "MIT",
   "dependencies": {
-    "@rollup/plugin-buble": "0.21.1",
+    "@rollup/plugin-buble": "0.21.3",
     "@rollup/plugin-commonjs": "11.0.2",
     "@rollup/plugin-json": "4.0.2",
     "@rollup/plugin-node-resolve": "7.1.1",
     "commander": "2.20.3",
     "rollup": "2.3.2"
+  },
+  "devDependencies": {
+    "typescript": "3.9.3"
   }
 }
