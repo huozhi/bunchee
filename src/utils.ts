@@ -1,15 +1,9 @@
 import path from "path";
 import config from "./config";
 import { PackageMetadata } from "./types";
+import pkg from "./pkg";
 
 function getPackageMeta(): PackageMetadata {
-  const pkgFilePath = path.resolve(config.rootDir, "package.json");
-  let pkg;
-  try {
-    pkg = require(pkgFilePath);
-  } catch (e) {
-    pkg = {};
-  }
   const { name, main, module, dependencies, peerDependencies } = pkg;
 
   return {

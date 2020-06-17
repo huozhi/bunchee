@@ -1,4 +1,4 @@
-import rollup, { RollupWatcher, RollupWatchOptions } from "rollup";
+import { watch as rollupWatch, rollup, RollupWatcher, RollupWatchOptions, OutputOptions, RollupBuild } from "rollup";
 import createRollupConfig from "./rollup-config";
 import utils from "./utils";
 import { BuncheeRollupConfig } from "./types";
@@ -15,12 +15,12 @@ function createBundle(
   });
 
   if (watch) {
-    return rollupWatch(rollupConfig);
+    return runWatch(rollupConfig);
   }
-  return rollupBundle(rollupConfig);
+  return runBundle(rollupConfig);
 }
 
-function rollupWatch({ input, output }: BuncheeRollupConfig): RollupWatcher {
+function runWatch({ input, output }: BuncheeRollupConfig): RollupWatcher {
   const watchOptions: RollupWatchOptions = {
     ...input,
     output: output,
@@ -28,13 +28,13 @@ function rollupWatch({ input, output }: BuncheeRollupConfig): RollupWatcher {
       exclude: ["node_modules/**"],
     },
   };
-  return rollup.watch(watchOptions);
+  return rollupWatch(watchOptions);
 }
 
-function rollupBundle({ input, output }: BuncheeRollupConfig) {
-  return rollup.rollup(input).then(
-    (bundle) => {
-      const wirteJobs = output.map((options: rollup.OutputOptions) =>
+function runBundle({ input, output }: BuncheeRollupConfig) {
+  return rollup(input).then(
+    (bundle: RollupBuild) => {
+      const wirteJobs = output.map((options: OutputOptions) =>
         bundle.write(options)
       );
       return Promise.all(wirteJobs);
