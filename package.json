@@ -24,7 +24,7 @@
     "@rollup/plugin-commonjs": "11.0.2",
     "@rollup/plugin-json": "4.0.2",
     "@rollup/plugin-node-resolve": "7.1.1",
-    "@rollup/plugin-typescript": "4.1.2",
+    "@rollup/plugin-typescript": "3",
     "commander": "2.20.3",
     "rollup": "2.3.2",
     "tslib": "2.0.0",
