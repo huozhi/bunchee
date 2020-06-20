@@ -6,7 +6,7 @@ import { BuncheeRollupConfig } from "./types";
 function createBundle(
   entry: string,
   { watch, ...options }: { file: any; format: any; watch: boolean; jsx: any }
-) {
+): Promise<any> {
   const npmPackage = utils.getPackageMeta();
   const rollupConfig = createRollupConfig({
     entry,
@@ -15,7 +15,7 @@ function createBundle(
   });
 
   if (watch) {
-    return runWatch(rollupConfig);
+    return Promise.resolve(runWatch(rollupConfig));
   }
   return runBundle(rollupConfig);
 }
@@ -39,9 +39,15 @@ function runBundle({ input, output }: BuncheeRollupConfig) {
       );
       return Promise.all(wirteJobs);
     },
-    (error) => {
-      console.log(error);
-      console.error(error.snippet); // logging source code in format
+    (error = {}) => {
+      // logging source code in format
+      if (error.frame) {
+        console.error(error.frame);
+      }
+      if (error.stack) {
+        console.error(error.stack)
+      }
+      throw error
     }
   );
 }

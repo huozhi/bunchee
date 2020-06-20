@@ -2,6 +2,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
 import buble from "@rollup/plugin-buble";
 import nodeResolve from "@rollup/plugin-node-resolve";
+import typescript from '@rollup/plugin-typescript';
 import { PackageMetadata, BuncheeRollupConfig } from "./types";
 import { OutputOptions } from "rollup";
 
@@ -50,6 +51,11 @@ function createInputConfig(
           dangerousForOf: true,
           dangerousTaggedTemplateString: true,
         },
+      }),
+      // ts plugin compile ts files to ES6 then handle to buble
+      typescript({
+        module: 'ESNext',
+        target: 'ES6',
       }),
     ],
   };
