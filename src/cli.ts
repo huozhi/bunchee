@@ -33,7 +33,10 @@ function run(entryFilePath: string) {
   if (!fs.existsSync(entry)) {
     return help();
   }
-  bundle(entry, outputConfig);
+  bundle(entry, outputConfig)
+    .catch(() => {
+      process.exit(2);
+    });
 }
 
 function help() {
