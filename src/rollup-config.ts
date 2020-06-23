@@ -1,9 +1,11 @@
+import { extname } from "path";
 import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
 import buble from "@rollup/plugin-buble";
 import nodeResolve from "@rollup/plugin-node-resolve";
+import typescript from "@rollup/plugin-typescript";
 import { PackageMetadata, BuncheeRollupConfig } from "./types";
-import { OutputOptions } from "rollup";
+import { OutputOptions, Plugin } from "rollup";
 
 const mainFieldsConfig: {
   field: "main" | "module";
@@ -30,28 +32,36 @@ function createInputConfig(
     .filter(<T>(n?: T): n is T => Boolean(n))
     .map((o: { [key: string]: string }): string[] => Object.keys(o))
     .reduce((a: string[], b: string[]) => a.concat(b), [] as string[]);
+  const useTypescript: boolean = extname(entry) === ".ts" || extname(entry) === ".tsx";
 
+  const plugins: (Plugin)[] = [
+    nodeResolve({
+      preferBuiltins: false,
+    }),
+    commonjs({
+      include: /node_modules\//,
+    }),
+    json(),
+    useTypescript && typescript({
+      typescript: require("typescript"),
+      module: "ES6",
+      target: "ES6",
+    }),
+    buble({
+      exclude: "node_modules/**",
+      jsx: options.jsx,
+      objectAssign: "Object.assign",
+      transforms: {
+        dangerousForOf: true,
+        dangerousTaggedTemplateString: true,
+      },
+    })
+  ].filter((n: (Plugin | false)): n is Plugin => Boolean(n));
+  
   return {
     input: entry,
     external: externals,
-    plugins: [
-      nodeResolve({
-        preferBuiltins: false,
-      }),
-      commonjs({
-        include: /node_modules\//,
-      }),
-      json(),
-      buble({
-        exclude: "node_modules/**",
-        jsx: options.jsx,
-        objectAssign: "Object.assign",
-        transforms: {
-          dangerousForOf: true,
-          dangerousTaggedTemplateString: true,
-        },
-      }),
-    ],
+    plugins,
   };
 }
 
@@ -90,7 +100,9 @@ function createRollupConfig({
   });
 
   let outputConfigs = mainFieldsConfig
-    .filter((config) => Boolean(npmPackage[config.field]))
+    .filter((config) => {
+      return Boolean(npmPackage[config.field])
+    })
     .map((config) => {
       const filename = npmPackage[config.field];
       return createOutputOptions(filename, config.format, npmPackage);
