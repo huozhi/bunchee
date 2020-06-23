@@ -44,9 +44,7 @@ function createInputConfig(
     json(),
     useTypescript && typescript({
       typescript: require("typescript"),
-      tslib: require.resolve("tslib"),
-      include: [entry],
-      module: "ESNext",
+      module: "ES6",
       target: "ES6",
     }),
     buble({
@@ -102,7 +100,9 @@ function createRollupConfig({
   });
 
   let outputConfigs = mainFieldsConfig
-    .filter((config) => Boolean(npmPackage[config.field]))
+    .filter((config) => {
+      return Boolean(npmPackage[config.field])
+    })
     .map((config) => {
       const filename = npmPackage[config.field];
       return createOutputOptions(filename, config.format, npmPackage);
