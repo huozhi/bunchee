@@ -46,9 +46,9 @@ function createInputConfig(
       tsconfig: path.resolve(config.rootDir, "tsconfig.json"),
       typescript: require("typescript"),
       module: "ES6",
-      target: "ES6",
+      target: "ES5",
     }),
-    buble({
+    !useTypescript && buble({
       exclude: "node_modules/**",
       jsx: options.jsx,
       objectAssign: "Object.assign",
