@@ -1,4 +1,4 @@
-import { extname } from "path";
+import path from "path";
 import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
 import buble from "@rollup/plugin-buble";
@@ -6,6 +6,7 @@ import nodeResolve from "@rollup/plugin-node-resolve";
 import typescript from "@rollup/plugin-typescript";
 import { PackageMetadata, BuncheeRollupConfig } from "./types";
 import { OutputOptions, Plugin } from "rollup";
+import config from "./config";
 
 const mainFieldsConfig: {
   field: "main" | "module";
@@ -32,8 +33,7 @@ function createInputConfig(
     .filter(<T>(n?: T): n is T => Boolean(n))
     .map((o: { [key: string]: string }): string[] => Object.keys(o))
     .reduce((a: string[], b: string[]) => a.concat(b), [] as string[]);
-  const useTypescript: boolean = extname(entry) === ".ts" || extname(entry) === ".tsx";
-
+  const useTypescript: boolean = path.extname(entry) === ".ts" || path.extname(entry) === ".tsx";
   const plugins: (Plugin)[] = [
     nodeResolve({
       preferBuiltins: false,
@@ -43,6 +43,7 @@ function createInputConfig(
     }),
     json(),
     useTypescript && typescript({
+      tsconfig: path.resolve(config.rootDir, "tsconfig.json"),
       typescript: require("typescript"),
       module: "ES6",
       target: "ES6",
