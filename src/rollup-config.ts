@@ -1,5 +1,5 @@
 import path from "path";
-import commonjs from "@rollup/plugin-commonjs";
+import commonjs from "rollup-plugin-commonjs";
 import json from "@rollup/plugin-json";
 import buble from "@rollup/plugin-buble";
 import nodeResolve from "@rollup/plugin-node-resolve";
