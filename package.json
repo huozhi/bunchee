@@ -21,12 +21,12 @@
   "license": "MIT",
   "dependencies": {
     "@rollup/plugin-buble": "0.21.3",
-    "@rollup/plugin-commonjs": "13.0.0",
     "@rollup/plugin-json": "4.0.2",
     "@rollup/plugin-node-resolve": "8.1.0",
     "@rollup/plugin-typescript": "3.1.1",
     "commander": "2.20.3",
-    "rollup": "2.18.0",
+    "rollup": "^1.32.0",
+    "rollup-plugin-commonjs": "10.1.0",
     "tslib": "2.0.0"
   },
   "peerDependencies": {

@@ -21,13 +21,13 @@ function createBundle(
 }
 
 function runWatch({ input, output }: BuncheeRollupConfig): RollupWatcher {
-  const watchOptions: RollupWatchOptions = {
+  const watchOptions: RollupWatchOptions[] = [{
     ...input,
     output: output,
     watch: {
       exclude: ["node_modules/**"],
     },
-  };
+  }];
   return rollupWatch(watchOptions);
 }
 
