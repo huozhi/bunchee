@@ -12,7 +12,7 @@ export default Dumb;
 "
 `;
 
-exports[`should compile modue case correctly 1`] = `
+exports[`should compile module case correctly 1`] = `
 "function _defineProperties(target, props) {
   for (var i = 0; i < props.length; i++) {
     var descriptor = props[i];
