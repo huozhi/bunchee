@@ -24,7 +24,6 @@ function run(entryFilePath: string) {
     file,
     format,
     watch: !!program.watch,
-    jsx: program.jsx,
   };
   if (typeof entryFilePath !== "string") {
     return help();

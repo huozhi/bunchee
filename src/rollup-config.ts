@@ -24,10 +24,7 @@ const mainFieldsConfig: {
 
 function createInputConfig(
   entry: string,
-  npmPackage: PackageMetadata,
-  options: {
-    jsx: string | undefined;
-  }
+  npmPackage: PackageMetadata
 ) {
   const externals = [npmPackage.peerDependencies, npmPackage.dependencies]
     .filter(<T>(n?: T): n is T => Boolean(n))
@@ -51,9 +48,22 @@ function createInputConfig(
     !useTypescript && babel({
       babelHelpers: 'bundled',
       babelrc: false,
-      compact: false,
       configFile: false,
-      include: 'node_modules/**',
+      exclude: 'node_modules/**',
+      presets: [
+        require.resolve('@babel/preset-react'),
+        [
+          require.resolve('@babel/preset-env'),
+          {
+            loose: true,
+            useBuiltIns: false,
+            targets: {
+              node: '4',
+              esmodules: true,
+            },
+          },
+        ]
+      ],
     })
   ].filter((n: (Plugin | false)): n is Plugin => Boolean(n));
   
@@ -88,15 +98,12 @@ function createRollupConfig({
   entry: string;
   npmPackage: PackageMetadata;
   options: {
-    file: string;
-    format: OutputOptions["format"];
-    jsx?: string;
+    file?: string;
+    format?: OutputOptions["format"];
   };
 }): BuncheeRollupConfig {
-  const { file, format = "esm", jsx } = options;
-  const inputOptions = createInputConfig(entry, npmPackage, {
-    jsx,
-  });
+  const { file, format = "esm" } = options;
+  const inputOptions = createInputConfig(entry, npmPackage);
 
   let outputConfigs = mainFieldsConfig
     .filter((config) => {

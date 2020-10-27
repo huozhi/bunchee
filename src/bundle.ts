@@ -3,9 +3,9 @@ import createRollupConfig from "./rollup-config";
 import utils from "./utils";
 import { BuncheeRollupConfig } from "./types";
 
-function createBundle(
+function bundle(
   entry: string,
-  { watch, ...options }: { file: any; format: any; watch: boolean; jsx: any }
+  { watch, ...options } : { file?: any; format?: any; watch?: boolean; } = {}
 ): Promise<any> {
   const npmPackage = utils.getPackageMeta();
   const rollupConfig = createRollupConfig({
@@ -42,14 +42,14 @@ function runBundle({ input, output }: BuncheeRollupConfig) {
     (error = {}) => {
       // logging source code in format
       if (error.frame) {
-        console.error(error.frame);
+        process.stdout.write(error.frame + '\n');
       }
       if (error.stack) {
-        console.error(error.stack)
+        process.stdout.write(error.stack + '\n');
       }
-      throw error
+      throw error;
     }
   );
 }
 
-export default createBundle;
+export default bundle;

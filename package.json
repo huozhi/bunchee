@@ -5,6 +5,7 @@
   "bin": {
     "bunchee": "./dist/cli.js"
   },
+  "main": "./dist/index.js",
   "scripts": {
     "clean": "rm -rf ./dist",
     "build": "tsc"
@@ -21,6 +22,8 @@
   "license": "MIT",
   "dependencies": {
     "@babel/core": "^7.12.3",
+    "@babel/preset-env": "^7.12.1",
+    "@babel/preset-react": "^7.12.1",
     "@rollup/plugin-babel": "^5.2.1",
     "@rollup/plugin-json": "4.0.2",
     "@rollup/plugin-node-resolve": "8.1.0",
@@ -34,6 +37,7 @@
     "typescript": ">= 3.4.0"
   },
   "devDependencies": {
+    "jest": "^26.6.1",
     "typescript": "3.9.6"
   }
 }
