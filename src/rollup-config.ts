@@ -1,7 +1,7 @@
 import path from "path";
 import commonjs from "rollup-plugin-commonjs";
 import json from "@rollup/plugin-json";
-import buble from "@rollup/plugin-buble";
+import babel from "@rollup/plugin-babel";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import typescript from "@rollup/plugin-typescript";
 import { PackageMetadata, BuncheeRollupConfig } from "./types";
@@ -24,10 +24,7 @@ const mainFieldsConfig: {
 
 function createInputConfig(
   entry: string,
-  npmPackage: PackageMetadata,
-  options: {
-    jsx: string | undefined;
-  }
+  npmPackage: PackageMetadata
 ) {
   const externals = [npmPackage.peerDependencies, npmPackage.dependencies]
     .filter(<T>(n?: T): n is T => Boolean(n))
@@ -48,14 +45,25 @@ function createInputConfig(
       module: "ES6",
       target: "ES5",
     }),
-    !useTypescript && buble({
-      exclude: "node_modules/**",
-      jsx: options.jsx,
-      objectAssign: "Object.assign",
-      transforms: {
-        dangerousForOf: true,
-        dangerousTaggedTemplateString: true,
-      },
+    !useTypescript && babel({
+      babelHelpers: 'bundled',
+      babelrc: false,
+      configFile: false,
+      exclude: 'node_modules/**',
+      presets: [
+        require.resolve('@babel/preset-react'),
+        [
+          require.resolve('@babel/preset-env'),
+          {
+            loose: true,
+            useBuiltIns: false,
+            targets: {
+              node: '4',
+              esmodules: true,
+            },
+          },
+        ]
+      ],
     })
   ].filter((n: (Plugin | false)): n is Plugin => Boolean(n));
   
@@ -90,15 +98,12 @@ function createRollupConfig({
   entry: string;
   npmPackage: PackageMetadata;
   options: {
-    file: string;
-    format: OutputOptions["format"];
-    jsx?: string;
+    file?: string;
+    format?: OutputOptions["format"];
   };
 }): BuncheeRollupConfig {
-  const { file, format = "esm", jsx } = options;
-  const inputOptions = createInputConfig(entry, npmPackage, {
-    jsx,
-  });
+  const { file, format = "esm" } = options;
+  const inputOptions = createInputConfig(entry, npmPackage);
 
   let outputConfigs = mainFieldsConfig
     .filter((config) => {
