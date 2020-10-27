@@ -16,8 +16,7 @@
     "bundler"
   ],
   "files": [
-    "src",
-    "bin",
+    "dist",
     "*.md"
   ],
   "author": "huozhi (github.com/huozhi)",

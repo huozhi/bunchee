@@ -3,9 +3,9 @@
 import fs from "fs";
 import path from "path";
 import program from "commander";
-import bundle from "./bundle";
 import config from "./config";
 import pkg from "./pkg";
+import bunchee from ".";
 
 program
   .name("bunchee")
@@ -31,7 +31,7 @@ function run(entryFilePath: string) {
   if (!fs.existsSync(entry)) {
     return help();
   }
-  bundle(entry, outputConfig)
+  bunchee(entry, outputConfig)
     .catch(() => {
       process.exit(2);
     });
