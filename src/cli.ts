@@ -5,7 +5,7 @@ import path from "path";
 import program from "commander";
 import config from "./config";
 import pkg from "./pkg";
-import bunchee from "./index";
+import bunchee from ".";
 
 program
   .name("bunchee")
