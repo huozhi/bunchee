@@ -3,6 +3,6 @@
   "main": "dist/bundle.js",
   "module": "dist/bundle.esm.js",
   "scripts": {
-    "test": "../../bin/cli.js ./main.js"
+    "test": "node ../../dist/cli.js ./main.js"
   }
 }

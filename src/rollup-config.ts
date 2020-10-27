@@ -1,7 +1,7 @@
 import path from "path";
 import commonjs from "rollup-plugin-commonjs";
 import json from "@rollup/plugin-json";
-import buble from "@rollup/plugin-buble";
+import babel from "@rollup/plugin-babel";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import typescript from "@rollup/plugin-typescript";
 import { PackageMetadata, BuncheeRollupConfig } from "./types";
@@ -48,14 +48,12 @@ function createInputConfig(
       module: "ES6",
       target: "ES5",
     }),
-    !useTypescript && buble({
-      exclude: "node_modules/**",
-      jsx: options.jsx,
-      objectAssign: "Object.assign",
-      transforms: {
-        dangerousForOf: true,
-        dangerousTaggedTemplateString: true,
-      },
+    !useTypescript && babel({
+      babelHelpers: 'bundled',
+      babelrc: false,
+      compact: false,
+      configFile: false,
+      include: 'node_modules/**',
     })
   ].filter((n: (Plugin | false)): n is Plugin => Boolean(n));
   

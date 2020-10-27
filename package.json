@@ -20,7 +20,8 @@
   "author": "huozhi (github.com/huozhi)",
   "license": "MIT",
   "dependencies": {
-    "@rollup/plugin-buble": "0.21.3",
+    "@babel/core": "^7.12.3",
+    "@rollup/plugin-babel": "^5.2.1",
     "@rollup/plugin-json": "4.0.2",
     "@rollup/plugin-node-resolve": "8.1.0",
     "@rollup/plugin-typescript": "3.1.1",
