@@ -17,7 +17,7 @@ program
 
 program.parse(process.argv);
 
-function run(entryFilePath: string) {
+async function run(entryFilePath: string) {
   const { format, output: file } = program;
   const outputConfig = {
     file,
@@ -31,10 +31,7 @@ function run(entryFilePath: string) {
   if (!fs.existsSync(entry)) {
     return help();
   }
-  bunchee(entry, outputConfig)
-    .catch(() => {
-      process.exit(2);
-    });
+  await bunchee(entry, outputConfig);
 }
 
 function help() {

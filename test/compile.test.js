@@ -1,6 +1,6 @@
 const fs = require('fs');
 const {resolve} = require('path');
-const bunchee = require('..');
+const bunchee = require('..').default;
 
 const baseUnitTestDir = resolve(__dirname, 'unit');
 const unitTestDirs = fs.readdirSync(baseUnitTestDir);
