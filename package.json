@@ -9,6 +9,7 @@
   "scripts": {
     "test": "jest",
     "clean": "rm -rf ./dist",
+    "prerelease": "yarn clean && yarn build && chmod +x ./dist/cli.js",
     "build": "tsc"
   },
   "keywords": [
