@@ -1,8 +1,0 @@
-{
-  "name": "ts-basics",
-  "main": "dist/cjs.js",
-  "module": "dist/index.js",
-  "scripts": {
-    "build": "bunchee index.ts"
-  }
-}

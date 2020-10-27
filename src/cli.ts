@@ -12,7 +12,6 @@ program
   .version(pkg.version, "-v, --version")
   .option("-w, --watch", "watch src files changes")
   .option("-o --output <file>", "specify output filename")
-  .option("--jsx <jsx>", "jsx function for creating element")
   .option("--format <format>", "specify output file format")
   .action(run);
 
@@ -24,7 +23,6 @@ function run(entryFilePath: string) {
     file,
     format,
     watch: !!program.watch,
-    jsx: program.jsx,
   };
   if (typeof entryFilePath !== "string") {
     return help();

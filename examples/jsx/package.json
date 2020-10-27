@@ -1,9 +1,0 @@
-{
-  "main": "dist/bundle.js",
-  "scripts": {
-    "test": "../../bin/cli.js test.jsx"
-  },
-  "dependencies": {
-    "react": "*"
-  }
-}

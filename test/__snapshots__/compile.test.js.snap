@@ -1,0 +1,104 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`should compile jsx case correctly 1`] = `
+"import React from 'react';
+
+function Dumb() {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(\\"div\\", null, \\"hello\\"), /*#__PURE__*/React.createElement(\\"h1\\", null, \\"yep\\"));
+}
+
+export default Dumb;
+//# sourceMappingURL=bundle.js.map
+"
+`;
+
+exports[`should compile module case correctly 1`] = `
+"function _defineProperties(target, props) {
+  for (var i = 0; i < props.length; i++) {
+    var descriptor = props[i];
+    descriptor.enumerable = descriptor.enumerable || false;
+    descriptor.configurable = true;
+    if (\\"value\\" in descriptor) descriptor.writable = true;
+    Object.defineProperty(target, descriptor.key, descriptor);
+  }
+}
+
+function _createClass(Constructor, protoProps, staticProps) {
+  if (protoProps) _defineProperties(Constructor.prototype, protoProps);
+  if (staticProps) _defineProperties(Constructor, staticProps);
+  return Constructor;
+}
+
+function _inheritsLoose(subClass, superClass) {
+  subClass.prototype = Object.create(superClass.prototype);
+  subClass.prototype.constructor = subClass;
+  subClass.__proto__ = superClass;
+}
+
+var Parent = /*#__PURE__*/function () {
+  function Parent() {}
+
+  var _proto = Parent.prototype;
+
+  _proto.f = function f() {
+    return 1;
+  };
+
+  return Parent;
+}();
+
+var A = /*#__PURE__*/function (_Parent) {
+  _inheritsLoose(A, _Parent);
+
+  function A() {
+    return _Parent.call(this) || this;
+  }
+
+  var _proto = A.prototype;
+  _proto.f1 = /*#__PURE__*/regeneratorRuntime.mark(function f1() {
+    return regeneratorRuntime.wrap(function f1$(_context) {
+      while (1) {
+        switch (_context.prev = _context.next) {
+          case 0:
+            _context.next = 2;
+            return 1;
+
+          case 2:
+          case \\"end\\":
+            return _context.stop();
+        }
+      }
+    }, f1);
+  });
+
+  _createClass(A, [{
+    key: \\"x\\",
+    get: function get() {
+      return _Parent.prototype.f.call(this);
+    }
+  }]);
+
+  return A;
+}(Parent);
+
+var a = new A();
+
+console.log('main', a.x);
+//# sourceMappingURL=bundle.js.map
+"
+`;
+
+exports[`should compile ts-basic case correctly 1`] = `
+"import { __assign } from 'tslib';
+
+var add = function (a, b) { return a + b; };
+
+var sum = add(1, 2);
+var obj = { a: 1, b: 2 };
+var clone = __assign({}, obj);
+
+export default sum;
+export { clone };
+//# sourceMappingURL=bundle.js.map
+"
+`;
