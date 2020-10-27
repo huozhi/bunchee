@@ -1,6 +1,6 @@
 {
   "name": "bunchee",
-  "version": "0.7.0",
+  "version": "1.0.0",
   "description": "simple bundler",
   "bin": {
     "bunchee": "./dist/cli.js"
