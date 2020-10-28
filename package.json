@@ -9,10 +9,9 @@
   "scripts": {
     "test": "jest",
     "clean": "rm -rf ./dist",
-    "prerelease": "yarn clean && yarn build",
-    "build:cli": "bunchee src/cli.ts -o dist/cli.js && yarn build:shebang",
-    "build:main": "bunchee src/index.ts",
-    "build:shebang": "cat <(echo \"#!/usr/bin/env node\") ./dist/cli.js > ./dist/cli.js && chmod +x ./dist/cli.js",
+    "prerelease": "yarn clean && yarn build && chmod +x dist/cli.js",
+    "build:cli": "bunchee src/cli.ts --format cjs --shebang -o dist/cli.js",
+    "build:main": "bunchee src/index.ts --format cjs",
     "build": "yarn build:main && yarn build:cli"
   },
   "keywords": [

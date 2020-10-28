@@ -30,7 +30,7 @@ async function run(entryFilePath: string) {
     return help();
   }
 
-  await eval(`require('.')`)(entry, outputConfig);
+  await eval(`require('.').default`)(entry, outputConfig);
 }
 
 function help() {
