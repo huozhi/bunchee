@@ -1,9 +1,9 @@
 import { InputOptions, OutputOptions, TreeshakingOptions } from "rollup";
 
 type PackageMetadata = {
-  name?: any;
-  main?: any;
-  module?: any;
+  name?: string;
+  main?: string;
+  module?: string;
   dependencies?: { [key: string]: string };
   peerDependencies?: { [key: string]: string };
 };
@@ -14,4 +14,16 @@ type BuncheeRollupConfig = {
   treeshake: TreeshakingOptions;
 };
 
-export { BuncheeRollupConfig, PackageMetadata };
+type CliArgs = {
+  file?: string;
+  format?: OutputOptions["format"];
+  shebang?: boolean;
+  watch?: boolean;
+}
+
+
+export { 
+  CliArgs,
+  PackageMetadata,
+  BuncheeRollupConfig, 
+ };
