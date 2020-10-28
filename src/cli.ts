@@ -12,8 +12,8 @@ program
   .name("bunchee")
   .version(pkg.version, "-v, --version")
   .option("-w, --watch", "watch src files changes")
-  .option("-o --output <file>", "specify output filename")
-  .option("--format <format>", "specify output file format")
+  .option("-o, --output <file>", "specify output filename")
+  .option("-f, --format <format>", "specify output file format")
   .option("--shebang", "output with shebang as banner")
   .action(run);
 
