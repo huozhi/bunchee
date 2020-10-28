@@ -16,7 +16,7 @@ const testCases = [
   },
   {
     name: 'shebang',
-    args: [resolve('fixtures/shebang.js'), '--shebang', '-o', resolve('dist/shebang.bundle.js')],
+    args: [resolve('fixtures/shebang.js'), '-b', '-o', resolve('dist/shebang.bundle.js')],
     expected(distFile) {
       const shebang = `#!/usr/bin/env node`;
       return [
