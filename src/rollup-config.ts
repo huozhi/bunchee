@@ -4,7 +4,7 @@ import json from "@rollup/plugin-json";
 import babel from "@rollup/plugin-babel";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import typescript from "@rollup/plugin-typescript";
-import { PackageMetadata, BuncheeRollupConfig } from "./types";
+import { PackageMetadata, BuncheeRollupConfig, CliArgs } from "./types";
 import { OutputOptions, Plugin } from "rollup";
 import config from "./config";
 
@@ -24,13 +24,14 @@ const mainFieldsConfig: {
 
 function createInputConfig(
   entry: string,
-  npmPackage: PackageMetadata
+  npmPackage: PackageMetadata,
 ) {
   const externals = [npmPackage.peerDependencies, npmPackage.dependencies]
     .filter(<T>(n?: T): n is T => Boolean(n))
     .map((o: { [key: string]: string }): string[] => Object.keys(o))
     .reduce((a: string[], b: string[]) => a.concat(b), [] as string[]);
-  const useTypescript: boolean = path.extname(entry) === ".ts" || path.extname(entry) === ".tsx";
+  const ext = path.extname(entry);
+  const useTypescript: boolean = ext === ".ts" || ext === ".tsx";
   const plugins: (Plugin)[] = [
     nodeResolve({
       preferBuiltins: false,
@@ -75,12 +76,13 @@ function createInputConfig(
 }
 
 function createOutputOptions(
-  file: any,
-  format: OutputOptions["format"],
+  cliArgs: CliArgs,
   npmPackage: PackageMetadata
 ): OutputOptions {
+  const {file, format, shebang} = cliArgs;
   return {
     name: npmPackage.name,
+    banner: shebang ? '#!/usr/bin/env node' : undefined,
     file,
     format,
     esModule: format !== "umd",
@@ -97,10 +99,7 @@ function createRollupConfig({
 }: {
   entry: string;
   npmPackage: PackageMetadata;
-  options: {
-    file?: string;
-    format?: OutputOptions["format"];
-  };
+  options: CliArgs;
 }): BuncheeRollupConfig {
   const { file, format = "esm" } = options;
   const inputOptions = createInputConfig(entry, npmPackage);
@@ -111,12 +110,28 @@ function createRollupConfig({
     })
     .map((config) => {
       const filename = npmPackage[config.field];
-      return createOutputOptions(filename, config.format, npmPackage);
+      return createOutputOptions(
+        {
+          file: filename, 
+          format: config.format,
+          shebang: options.shebang,
+        },
+        npmPackage
+      );
     });
 
   // CLI output option is always prioritized
   if (file) {
-    outputConfigs = [createOutputOptions(file, format, npmPackage)];
+    outputConfigs = [
+      createOutputOptions(
+        {
+          file, 
+          format, 
+          shebang: options.shebang
+        }, 
+        npmPackage
+      )
+    ];
   }
 
   return {
