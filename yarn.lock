@@ -1589,10 +1589,10 @@ builtin-modules@^3.1.0:
   resolved "https://registry.npmjs.org/builtin-modules/-/builtin-modules-3.1.0.tgz#aad97c15131eb76b65b50ef208e7584cd76a7484"
   integrity sha512-k0KL0aWZuBt2lrxrcASWDfwOLMnodeQjodT/1SxEQAXsHANgo6ZC/VEaSEHCXt7aSTZ4/4H5LKa+tBXmW7Vtvw==
 
-bunchee@1.0.2:
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/bunchee/-/bunchee-1.0.2.tgz#8fa111199f0f42205e1e7fb5ea253f8252ba1faa"
-  integrity sha512-ltVRFrxMapB8WC4yTZ9d5PQLcl32Cbzi1/4XjvFANCInP0FL0ZOjGvB+/60oTG5vuMgR0ha8VZ7ciQ0VhzuLJA==
+bunchee@1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/bunchee/-/bunchee-1.1.0.tgz#a48099325b9d777b52d33a3c95c806a40c63e825"
+  integrity sha512-RzwVvYDdsaQG4/jR9bnrsSwYcC3ug0ndjYb/YYfAsN/urZ+XSprm11QIwB0LDD7IOdhuzVqZjPLsJCst8kH3DA==
   dependencies:
     "@babel/core" "7.12.3"
     "@babel/preset-env" "7.12.1"
