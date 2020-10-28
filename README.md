@@ -25,6 +25,7 @@ Options:
   -w, --watch            watch src files changes
   -o, --output <file>    specify output filename
   -f, --format <format>  specify bundle type. esm, cjs, umd. default is esm
+  -b, --bin              output with shebang banner at top of file
   -h, --help             output usage information
 
 Usage:
