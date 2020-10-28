@@ -2,24 +2,54 @@ const fs = require('fs');
 const path = require('path');
 const {fork} = require('child_process');
 
-const resolveRelative = filepath => path.resolve(__dirname, '../test', filepath)
+const resolve = filepath => path.resolve(__dirname, '../test', filepath)
 
-it('cli should work properly', async () => {
-  const srcFile = resolveRelative('fixtures/hello.js');
-  const distFile = resolveRelative('dist/hello.bundle.js');
-  const ps = fork(
-    __dirname + '/../dist/cli.js',
-    [srcFile, '-o', distFile],
-    {stdio: 'pipe'}
-  );
-  let stderr = '', stdout = '';
-  ps.stdout.on('data', chunk => stdout += chunk.toString());
-  ps.stderr.on('data', chunk => stderr += chunk.toString());
-  await new Promise((resolve) => {
-    ps.on('close', resolve)
+const testCases = [
+  {
+    name: 'basic',
+    args: [resolve('fixtures/hello.js'), '-o', resolve('dist/hello.bundle.js')],
+    expected(distFile) {
+      return [
+        [fs.existsSync(distFile), true],
+      ]
+    }
+  },
+  {
+    name: 'shebang',
+    args: [resolve('fixtures/shebang.js'), '--shebang', '-o', resolve('dist/shebang.bundle.js')],
+    expected(distFile) {
+      const shebang = `#!/usr/bin/env node`;
+      return [
+        [fs.existsSync(distFile), true],
+        [fs.readFileSync(distFile, {encoding: 'utf-8'}).slice(0, shebang.length), shebang],
+      ]
+    }
+  },
+]
+
+for (const testCase of testCases) {
+  const {name, args, expected} = testCase;
+  it(`cli ${name} should work properly`, async () => {
+    const ps = fork(
+      __dirname + '/../dist/cli.js',
+      args,
+      {stdio: 'pipe'}
+    );
+    let stderr = '', stdout = '';
+    ps.stdout.on('data', chunk => stdout += chunk.toString());
+    ps.stderr.on('data', chunk => stderr += chunk.toString());
+    await new Promise((resolve) => {
+      ps.on('close', resolve)
+    });
+    stdout && console.log(stdout);
+    stderr && console.error(stderr);
+    const distFile = args[args.length - 1];
+    for (const conditions of expected(distFile)) {
+      const [left, right] = conditions;
+      expect(left).toBe(right);
+    }
+    expect(fs.existsSync(distFile)).toBe(true);
+    expect(stderr).toBe('');
   });
-  stdout && console.log(stdout);
-  stderr && console.error(stderr);
-  expect(fs.existsSync(distFile)).toBe(true);
-});
+}
 

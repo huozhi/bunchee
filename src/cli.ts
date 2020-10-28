@@ -5,7 +5,8 @@ import path from "path";
 import program from "commander";
 import config from "./config";
 import pkg from "./pkg";
-import bunchee from ".";
+import bunchee from "./index";
+import { CliArgs } from "./types";
 
 program
   .name("bunchee")
@@ -13,16 +14,18 @@ program
   .option("-w, --watch", "watch src files changes")
   .option("-o --output <file>", "specify output filename")
   .option("--format <format>", "specify output file format")
+  .option("--shebang", "output with shebang as banner")
   .action(run);
 
 program.parse(process.argv);
 
 async function run(entryFilePath: string) {
-  const { format, output: file } = program;
-  const outputConfig = {
+  const { format, output: file, shebang, watch } = program;
+  const outputConfig: CliArgs = {
     file,
     format,
-    watch: !!program.watch,
+    watch: !!watch,
+    shebang: !!shebang,
   };
   if (typeof entryFilePath !== "string") {
     return help();
