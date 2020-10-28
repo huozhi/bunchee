@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [12]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup Node
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: Install
+      run: yarn install
+    - name: Build Dist
+      run: yarn build
+    - name: Test
+      run: yarn test
+
