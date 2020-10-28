@@ -1,16 +1,11 @@
-#!/usr/bin/env node
-
 import fs from "fs";
 import path from "path";
 import program from "commander";
-import config from "./config";
-import pkg from "./pkg";
-import bunchee from "./index";
 import { CliArgs } from "./types";
 
 program
   .name("bunchee")
-  .version(pkg.version, "-v, --version")
+  .version(require('../package.json').version, "-v, --version")
   .option("-w, --watch", "watch src files changes")
   .option("-o, --output <file>", "specify output filename")
   .option("-f, --format <format>", "specify output file format")
@@ -30,11 +25,12 @@ async function run(entryFilePath: string) {
   if (typeof entryFilePath !== "string") {
     return help();
   }
-  const entry = path.resolve(config.rootDir, entryFilePath);
+  const entry = path.resolve(process.cwd(), entryFilePath);
   if (!fs.existsSync(entry)) {
     return help();
   }
-  await bunchee(entry, outputConfig);
+
+  await eval(`require('.')`)(entry, outputConfig);
 }
 
 function help() {
