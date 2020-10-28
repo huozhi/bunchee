@@ -1,7 +1,9 @@
 # bunchee
-> zero config bundler for ES6 syntax library
+> zero config bundler for JavaScript/TypeScript/JSX library
 
-Bunchee can help you to bundle your code in ES6 syntax into one file with no configuration. It's built on top of rollup and buble.
+[![CI Status](https://github.com/huozhi/bunchee/workflows/CI/badge.svg)](https://github.com/huozhi/bunchee/actions?workflow=CI)
+
+Bunchee can help you to bundle your library into one file with zero configuration. It's built on top of rollup and babel.
 Let you focus on writing code and can generate multiple types of module (commonjs, esmodule) at the same time.
 
 
@@ -26,8 +28,8 @@ Options:
   -h, --help             output usage information
 
 Usage:
-  $ bunchee ./src/index.js
-```
+  $ bunchee ./src/index.js # if you set main fields in package.json
+  $ bunchee ./src/index.ts -o ./dist/bundle.js # specify the dist file path
 
 ### Use NPM Script
 
