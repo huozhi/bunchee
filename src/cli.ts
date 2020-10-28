@@ -14,18 +14,18 @@ program
   .option("-w, --watch", "watch src files changes")
   .option("-o, --output <file>", "specify output filename")
   .option("-f, --format <format>", "specify output file format")
-  .option("--shebang", "output with shebang as banner")
+  .option("-b, --bin", "output with shebang as banner at top")
   .action(run);
 
 program.parse(process.argv);
 
 async function run(entryFilePath: string) {
-  const { format, output: file, shebang, watch } = program;
+  const { format, output: file, bin, watch } = program;
   const outputConfig: CliArgs = {
     file,
     format,
     watch: !!watch,
-    shebang: !!shebang,
+    shebang: !!bin,
   };
   if (typeof entryFilePath !== "string") {
     return help();
