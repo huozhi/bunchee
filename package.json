@@ -9,8 +9,10 @@
   "scripts": {
     "test": "jest",
     "clean": "rm -rf ./dist",
-    "prerelease": "yarn clean && yarn build && chmod +x ./dist/cli.js",
-    "build": "tsc"
+    "prerelease": "yarn clean && yarn build && chmod +x dist/cli.js",
+    "build:cli": "bunchee src/cli.ts -f cjs -b -o dist/cli.js",
+    "build:main": "bunchee src/index.ts -f cjs",
+    "build": "yarn build:main && yarn build:cli"
   },
   "keywords": [
     "bundler"
@@ -39,6 +41,7 @@
     "typescript": ">= 3.4.0"
   },
   "devDependencies": {
+    "bunchee": "1.1.0",
     "jest": "26.6.1"
   }
 }
