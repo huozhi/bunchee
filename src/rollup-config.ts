@@ -63,8 +63,14 @@ function createInputConfig(
               esmodules: true,
             },
           },
-        ]
+        ],
       ],
+      plugins: [
+        [
+          require.resolve('@babel/plugin-proposal-class-properties'),
+          {loose: true}
+        ]
+      ]
     })
   ].filter((n: (Plugin | false)): n is Plugin => Boolean(n));
   
