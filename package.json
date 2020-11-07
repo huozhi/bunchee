@@ -1,7 +1,7 @@
 {
   "name": "bunchee",
   "version": "1.2.0",
-  "description": "simple bundler",
+  "description": "zero config bundler for js/ts/jsx libraries",
   "bin": {
     "bunchee": "./dist/cli.js"
   },
@@ -15,7 +15,13 @@
     "build": "yarn build:main && yarn build:cli"
   },
   "keywords": [
-    "bundler"
+    "bundler",
+    "javascript",
+    "bundle",
+    "typescript",
+    "jsx",
+    "zero-config",
+    "library"
   ],
   "files": [
     "dist",
