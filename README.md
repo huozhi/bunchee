@@ -1,6 +1,9 @@
 # bunchee
 > zero config bundler for JavaScript/TypeScript/JSX library
 
+![bunchee](https://user-images.githubusercontent.com/4800338/98430015-7ce64f00-20e5-11eb-8c64-41addfbd4ede.png)
+
+
 [![CI Status](https://github.com/huozhi/bunchee/workflows/CI/badge.svg)](https://github.com/huozhi/bunchee/actions?workflow=CI)
 
 Bunchee can help you to bundle your library into one file with zero configuration. It's built on top of rollup and babel.
