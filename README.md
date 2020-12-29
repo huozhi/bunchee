@@ -34,6 +34,7 @@ Options:
 Usage:
   $ bunchee ./src/index.js # if you set main fields in package.json
   $ bunchee ./src/index.ts -o ./dist/bundle.js # specify the dist file path
+```
 
 ### Use NPM Script
 
