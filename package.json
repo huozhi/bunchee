@@ -10,8 +10,8 @@
     "test": "jest",
     "clean": "rm -rf ./dist",
     "prerelease": "yarn clean && yarn build && chmod +x dist/cli.js",
-    "build:cli": "bunchee src/cli.ts -f cjs -b -o dist/cli.js",
-    "build:main": "bunchee src/index.ts -f cjs",
+    "build:cli": "ts-node src/cli.ts src/cli.ts -f cjs -b -o dist/cli.js",
+    "build:main": "ts-node src/cli.ts src/index.ts -f cjs",
     "build": "yarn build:main && yarn build:cli"
   },
   "keywords": [
@@ -30,14 +30,11 @@
   "author": "huozhi (github.com/huozhi)",
   "license": "MIT",
   "dependencies": {
-    "@babel/core": "7.12.3",
-    "@babel/plugin-proposal-class-properties": "7.12.1",
-    "@babel/preset-env": "7.12.1",
-    "@babel/preset-react": "7.12.1",
     "@rollup/plugin-babel": "5.2.1",
     "@rollup/plugin-json": "4.0.2",
     "@rollup/plugin-node-resolve": "8.1.0",
     "@rollup/plugin-typescript": "3.1.1",
+    "babel-preset-o": "0.2.1",
     "commander": "2.20.3",
     "rollup": "1.32.0",
     "rollup-plugin-commonjs": "10.1.0",
@@ -48,7 +45,7 @@
     "typescript": ">= 3.4.0"
   },
   "devDependencies": {
-    "bunchee": "1.1.0",
-    "jest": "26.6.1"
+    "jest": "26.6.1",
+    "ts-node": "9.1.1"
   }
 }

@@ -1,1 +1,2 @@
-export {default} from './bundle';
+export {default} from './bundle'
+
