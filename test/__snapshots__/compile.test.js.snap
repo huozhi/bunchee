@@ -1,5 +1,18 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`should compile es-advance case correctly 1`] = `
+"var _foo$bar;
+
+var foo = {
+  bar: 'hello'
+};
+console.log('bar', foo == null ? void 0 : foo.bar);
+var prop = (_foo$bar = foo.bar) != null ? _foo$bar : 'default';
+console.log('name', prop);
+//# sourceMappingURL=bundle.js.map
+"
+`;
+
 exports[`should compile es-basic case correctly 1`] = `
 "function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
   try {
