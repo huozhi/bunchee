@@ -1,7 +1,8 @@
-import { watch as rollupWatch, rollup, RollupWatcher, RollupWatchOptions, OutputOptions, RollupBuild } from "rollup";
+import { watch as rollupWatch, rollup } from "rollup";
+import type { RollupWatcher, RollupWatchOptions, OutputOptions, RollupBuild } from "rollup"
 import createRollupConfig from "./rollup-config";
 import utils from "./utils";
-import { BuncheeRollupConfig, CliArgs } from "./types";
+import type { BuncheeRollupConfig, CliArgs } from "./types";
 
 function bundle(
   entry: string,

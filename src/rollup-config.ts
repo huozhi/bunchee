@@ -4,9 +4,9 @@ import json from "@rollup/plugin-json";
 import babel from "@rollup/plugin-babel";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import typescript from "@rollup/plugin-typescript";
-import { PackageMetadata, BuncheeRollupConfig, CliArgs } from "./types";
-import { OutputOptions, Plugin } from "rollup";
 import config from "./config";
+import type { OutputOptions, Plugin } from "rollup";
+import type { PackageMetadata, BuncheeRollupConfig, CliArgs } from "./types";
 
 const mainFieldsConfig: {
   field: "main" | "module";
@@ -47,30 +47,13 @@ function createInputConfig(
       target: "ES5",
     }),
     !useTypescript && babel({
-      babelHelpers: 'bundled',
+      babelHelpers: "bundled",
       babelrc: false,
       configFile: false,
-      exclude: 'node_modules/**',
+      exclude: "node_modules/**",
       presets: [
-        require.resolve('@babel/preset-react'),
-        [
-          require.resolve('@babel/preset-env'),
-          {
-            loose: true,
-            useBuiltIns: false,
-            targets: {
-              node: '4',
-              esmodules: true,
-            },
-          },
-        ],
+        ["babel-preset-o", {nodeVersion: process.env.NODE_VERSION || "4.0.0"}]
       ],
-      plugins: [
-        [
-          require.resolve('@babel/plugin-proposal-class-properties'),
-          {loose: true}
-        ]
-      ]
     })
   ].filter((n: (Plugin | false)): n is Plugin => Boolean(n));
   
@@ -88,7 +71,7 @@ function createOutputOptions(
   const {file, format, shebang} = cliArgs;
   return {
     name: npmPackage.name,
-    banner: shebang ? '#!/usr/bin/env node' : undefined,
+    banner: shebang ? "#!/usr/bin/env node" : undefined,
     file,
     format,
     esModule: format !== "umd",
