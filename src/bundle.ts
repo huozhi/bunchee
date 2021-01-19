@@ -9,11 +9,11 @@ function bundle(
   { watch, ...options } : CliArgs = {}
 ): Promise<any> {
   const npmPackage = utils.getPackageMeta();
-  const rollupConfig = createRollupConfig({
+  const rollupConfig = createRollupConfig(
     entry,
     npmPackage,
     options,
-  });
+  );
 
   if (watch) {
     return Promise.resolve(runWatch(rollupConfig));
