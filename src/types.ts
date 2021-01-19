@@ -21,9 +21,13 @@ type CliArgs = {
   watch?: boolean;
 }
 
+type BundleOptions = CliArgs & {
+  useTypescript: boolean;
+}
 
 export { 
   CliArgs,
+  BundleOptions,
   PackageMetadata,
   BuncheeRollupConfig, 
  };

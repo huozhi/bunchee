@@ -1,4 +1,5 @@
-import path from "path";
+import fs from "fs";
+import { resolve, extname } from "path";
 import commonjs from "rollup-plugin-commonjs";
 import json from "@rollup/plugin-json";
 import babel from "@rollup/plugin-babel";
@@ -6,7 +7,7 @@ import nodeResolve from "@rollup/plugin-node-resolve";
 import typescript from "@rollup/plugin-typescript";
 import config from "./config";
 import type { OutputOptions, Plugin } from "rollup";
-import type { PackageMetadata, BuncheeRollupConfig, CliArgs } from "./types";
+import type { PackageMetadata, BuncheeRollupConfig, CliArgs, BundleOptions } from "./types";
 
 const mainFieldsConfig: {
   field: "main" | "module";
@@ -22,16 +23,35 @@ const mainFieldsConfig: {
   },
 ];
 
+// ts doesn't support type `Module`
+const { Module } = require("module");
+function resolveTypescript() {
+  let ts;
+  const m = new Module("", null);
+  m.paths = Module._nodeModulePaths(config.rootDir)
+  try {
+    ts = m.require("typescript");
+  } catch (_) {
+    ts = require("typescript");
+  }
+  return ts;
+}
+
 function createInputConfig(
   entry: string,
   npmPackage: PackageMetadata,
+  options: BundleOptions,
 ) {
   const externals = [npmPackage.peerDependencies, npmPackage.dependencies]
     .filter(<T>(n?: T): n is T => Boolean(n))
     .map((o: { [key: string]: string }): string[] => Object.keys(o))
     .reduce((a: string[], b: string[]) => a.concat(b), [] as string[]);
-  const ext = path.extname(entry);
-  const useTypescript: boolean = ext === ".ts" || ext === ".tsx";
+  
+  const {useTypescript} = options;
+
+  
+  // tsconfigOptions.esModuleInterop
+  
   const plugins: (Plugin)[] = [
     nodeResolve({
       preferBuiltins: false,
@@ -41,7 +61,7 @@ function createInputConfig(
     }),
     json(),
     useTypescript && typescript({
-      tsconfig: path.resolve(config.rootDir, "tsconfig.json"),
+      tsconfig: resolve(config.rootDir, "tsconfig.json"),
       typescript: require("typescript"),
       module: "ES6",
       target: "ES5",
@@ -65,34 +85,57 @@ function createInputConfig(
 }
 
 function createOutputOptions(
-  cliArgs: CliArgs,
+  options: BundleOptions,
   npmPackage: PackageMetadata
 ): OutputOptions {
-  const {file, format, shebang} = cliArgs;
+  const {file, format, shebang, useTypescript} = options;
+  
+  let tsconfigOptions = {} as any;
+  const ts = resolveTypescript();
+  const tsconfigPath = resolve(config.rootDir, "tsconfig.json");
+  if (useTypescript) {
+    if (fs.existsSync(tsconfigPath)) {
+      const tsconfigJSON = ts.readConfigFile(tsconfigPath, ts.sys.readFile)
+        .config;
+      tsconfigOptions = ts.parseJsonConfigFileContent(
+        tsconfigJSON,
+        ts.sys,
+        './',
+      ).options;
+    }
+  }
+  
+  
+  // respect if tsconfig.json has `esModuleInterop` config;
+  // add esmodule mark if cjs and esmodule are both specified;
+  const useEsModuleMark = !!tsconfigOptions.esModuleInterop ||
+    (
+      npmPackage.hasOwnProperty("main") && 
+      npmPackage.hasOwnProperty("module")
+    );
+    
   return {
     name: npmPackage.name,
     banner: shebang ? "#!/usr/bin/env node" : undefined,
     file,
     format,
-    esModule: format !== "umd",
+    esModule: !useEsModuleMark && format !== "umd",
     freeze: false,
     strict: false,
     sourcemap: true,
   };
 }
 
-function createRollupConfig({
-  entry,
-  npmPackage,
-  options,
-}: {
-  entry: string;
-  npmPackage: PackageMetadata;
-  options: CliArgs;
-}): BuncheeRollupConfig {
-  const { file, format = "esm" } = options;
-  const inputOptions = createInputConfig(entry, npmPackage);
-
+function createRollupConfig(
+  entry: string,
+  npmPackage: PackageMetadata,
+  cliArgs: CliArgs,
+): BuncheeRollupConfig {
+  const { file, format = "esm" } = cliArgs;
+  const ext = extname(entry);
+  const useTypescript: boolean = ext === ".ts" || ext === ".tsx";
+  const options = {...cliArgs, useTypescript};
+  const inputOptions = createInputConfig(entry, npmPackage, options);
   let outputConfigs = mainFieldsConfig
     .filter((config) => {
       return Boolean(npmPackage[config.field])
@@ -104,6 +147,7 @@ function createRollupConfig({
           file: filename, 
           format: config.format,
           shebang: options.shebang,
+          useTypescript,
         },
         npmPackage
       );
@@ -116,7 +160,8 @@ function createRollupConfig({
         {
           file, 
           format, 
-          shebang: options.shebang
+          shebang: options.shebang,
+          useTypescript,
         }, 
         npmPackage
       )
