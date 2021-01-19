@@ -227,3 +227,13 @@ export { clone };
 //# sourceMappingURL=bundle.js.map
 "
 `;
+
+exports[`should compile ts-interop case correctly 1`] = `
+"var a = { x: 1 };
+var b = 'hello';
+
+exports.b = b;
+exports.default = a;
+//# sourceMappingURL=bundle.js.map
+"
+`;

@@ -11,8 +11,9 @@ for (const folderName of unitTestDirs) {
     const inputeName = `${dirPath}/input`;
     const inputFileName = inputeName + (fs.existsSync(`${inputeName}.ts`) ? '.ts' : '.js')
     const distFile = `${dirPath}/dist/bundle.js`;
+    const pkgJson = fs.existsSync(`${dirPath}/package.json`) ? require(`${dirPath}/package.json`) : {}
 
-    await bunchee(inputFileName, {file: distFile});
+    await bunchee(inputFileName, {file: distFile, format: pkgJson.main ? 'cjs' : 'esm'});
 
     const bundledAssest = fs.readFileSync(distFile, {encoding: 'utf-8'});
     expect(bundledAssest).toMatchSnapshot();
