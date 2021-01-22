@@ -91,7 +91,7 @@ function createOutputOptions(
   options: BundleOptions,
   npmPackage: PackageMetadata
 ): OutputOptions {
-  const {file, format, shebang, useTypescript} = options;
+  const {file, format, useTypescript} = options;
   
   let tsconfigOptions = {} as any;
   const ts = resolveTypescript();
@@ -119,7 +119,6 @@ function createOutputOptions(
     
   return {
     name: npmPackage.name,
-    banner: shebang ? "#!/usr/bin/env node" : undefined,
     file,
     format,
     esModule: !useEsModuleMark && format !== "umd",
@@ -149,7 +148,6 @@ function createRollupConfig(
         {
           file: filename, 
           format: config.format,
-          shebang: options.shebang,
           useTypescript,
         },
         npmPackage
@@ -163,7 +161,6 @@ function createRollupConfig(
         {
           file, 
           format, 
-          shebang: options.shebang,
           useTypescript,
         }, 
         npmPackage
