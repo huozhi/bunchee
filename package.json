@@ -10,7 +10,7 @@
     "test": "jest",
     "clean": "rm -rf ./dist",
     "prerelease": "yarn clean && yarn build && chmod +x dist/cli.js",
-    "build:cli": "ts-node src/cli.ts src/cli.ts -f cjs -b -o dist/cli.js",
+    "build:cli": "ts-node src/cli.ts src/cli.ts -f cjs -o dist/cli.js",
     "build:main": "ts-node src/cli.ts src/index.ts -f cjs",
     "build": "yarn build:main && yarn build:cli"
   },
@@ -38,6 +38,7 @@
     "commander": "2.20.3",
     "rollup": "1.32.0",
     "rollup-plugin-commonjs": "10.1.0",
+    "rollup-plugin-preserve-shebang": "1.0.1",
     "tslib": "2.0.0",
     "typescript": "^3.9.6"
   },

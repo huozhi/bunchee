@@ -14,17 +14,6 @@ const testCases = [
       ]
     }
   },
-  {
-    name: 'shebang',
-    args: [resolve('fixtures/shebang.js'), '-b', '-o', resolve('dist/shebang.bundle.js')],
-    expected(distFile) {
-      const shebang = `#!/usr/bin/env node`;
-      return [
-        [fs.existsSync(distFile), true],
-        [fs.readFileSync(distFile, {encoding: 'utf-8'}).slice(0, shebang.length), shebang],
-      ]
-    }
-  },
 ]
 
 for (const testCase of testCases) {
