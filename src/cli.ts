@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import fs from "fs";
 import path from "path";
 import program from "commander";
@@ -9,7 +11,6 @@ program
   .option("-w, --watch", "watch src files changes")
   .option("-o, --output <file>", "specify output filename")
   .option("-f, --format <format>", "specify output file format")
-  .option("-b, --bin", "output with shebang as banner at top")
   .action(run);
 
 program.parse(process.argv);

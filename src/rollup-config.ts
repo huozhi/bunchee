@@ -1,6 +1,8 @@
 import fs from "fs";
 import { resolve, extname } from "path";
 import commonjs from "rollup-plugin-commonjs";
+// @ts-ignore rollup-plugin-preserve-shebang is untyped module
+import shebang from "rollup-plugin-preserve-shebang"; 
 import json from "@rollup/plugin-json";
 import babel from "@rollup/plugin-babel";
 import nodeResolve from "@rollup/plugin-node-resolve";
@@ -60,6 +62,7 @@ function createInputConfig(
       include: /node_modules\//,
     }),
     json(),
+    shebang(),
     useTypescript && typescript({
       tsconfig: resolve(config.rootDir, "tsconfig.json"),
       typescript: require("typescript"),
@@ -88,7 +91,7 @@ function createOutputOptions(
   options: BundleOptions,
   npmPackage: PackageMetadata
 ): OutputOptions {
-  const {file, format, shebang, useTypescript} = options;
+  const {file, format, useTypescript} = options;
   
   let tsconfigOptions = {} as any;
   const ts = resolveTypescript();
@@ -116,7 +119,6 @@ function createOutputOptions(
     
   return {
     name: npmPackage.name,
-    banner: shebang ? "#!/usr/bin/env node" : undefined,
     file,
     format,
     esModule: !useEsModuleMark && format !== "umd",
@@ -146,7 +148,6 @@ function createRollupConfig(
         {
           file: filename, 
           format: config.format,
-          shebang: options.shebang,
           useTypescript,
         },
         npmPackage
@@ -160,7 +161,6 @@ function createRollupConfig(
         {
           file, 
           format, 
-          shebang: options.shebang,
           useTypescript,
         }, 
         npmPackage
