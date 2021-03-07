@@ -17,7 +17,7 @@ type BuncheeRollupConfig = {
 type CliArgs = {
   file?: string;
   format?: OutputOptions["format"];
-  shebang?: boolean;
+  minify?: boolean;
   watch?: boolean;
 }
 
