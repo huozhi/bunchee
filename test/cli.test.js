@@ -14,6 +14,17 @@ const testCases = [
       ]
     }
   },
+  {
+    name: 'compress',
+    args: [resolve('fixtures/hello.js'), '-m', '-o', resolve('dist/hello.bundle.min.js')],
+    expected(distFile) {
+      return [
+        [fs.existsSync(distFile), true],
+        // original function name is compressed
+        [fs.readFileSync(distFile, { encoding: 'utf-8' }).includes('sayHello'), false],
+      ]
+    }
+  },
 ]
 
 for (const testCase of testCases) {

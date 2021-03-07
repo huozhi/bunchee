@@ -26,8 +26,9 @@ Usage: bunchee [options]
 Options:
   -v, --version          output the version number
   -w, --watch            watch src files changes
+  -m, --minify           compress output. false by default
   -o, --output <file>    specify output filename
-  -f, --format <format>  specify bundle type. esm, cjs, umd. default is esm
+  -f, --format <format>  specify bundle type. esm, cjs, umd. "esm" by default
   -h, --help             output usage information
 
 Usage:

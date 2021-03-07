@@ -9,6 +9,7 @@ import nodeResolve from "@rollup/plugin-node-resolve";
 import typescript from "@rollup/plugin-typescript";
 import config from "./config";
 import type { OutputOptions, Plugin } from "rollup";
+import { terser } from "rollup-plugin-terser";
 import type { PackageMetadata, BuncheeRollupConfig, CliArgs, BundleOptions } from "./types";
 
 const mainFieldsConfig: {
@@ -49,10 +50,7 @@ function createInputConfig(
     .map((o: { [key: string]: string }): string[] => Object.keys(o))
     .reduce((a: string[], b: string[]) => a.concat(b), [] as string[]);
   
-  const {useTypescript} = options;
-
-  
-  // tsconfigOptions.esModuleInterop
+  const {useTypescript, minify = false} = options;
   
   const plugins: (Plugin)[] = [
     nodeResolve({
@@ -77,7 +75,17 @@ function createInputConfig(
       presets: [
         ["babel-preset-o", {nodeVersion: process.env.NODE_VERSION || "4.0.0"}]
       ],
-    })
+    }),
+    minify && terser({
+      compress: {
+        "keep_infinity": true,
+      },
+      format: {
+        "comments": /^\s*([@#]__[A-Z]__\s*$|@[a-zA-Z]\s*$)/,
+        "wrap_func_args": false,
+        "preserve_annotations": true,
+      }
+    }),
   ].filter((n: (Plugin | false)): n is Plugin => Boolean(n));
   
   return {

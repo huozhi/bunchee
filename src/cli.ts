@@ -11,17 +11,18 @@ program
   .option("-w, --watch", "watch src files changes")
   .option("-o, --output <file>", "specify output filename")
   .option("-f, --format <format>", "specify output file format")
+  .option("-m, --minify", "compress output")
   .action(run);
 
 program.parse(process.argv);
 
 async function run(entryFilePath: string) {
-  const { format, output: file, bin, watch } = program;
+  const { format, output: file, watch, minify } = program;
   const outputConfig: CliArgs = {
     file,
     format,
     watch: !!watch,
-    shebang: !!bin,
+    minify: !!minify,
   };
   if (typeof entryFilePath !== "string") {
     return help();

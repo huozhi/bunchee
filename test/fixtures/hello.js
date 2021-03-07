@@ -1,3 +1,8 @@
-console.log('hello')
+function sayHello() {
+  const val = 'hello'
+  console.log(val)
+  return val
+}
 
-module.exports = 'world'
+export default sayHello
+export const world = 'world'
