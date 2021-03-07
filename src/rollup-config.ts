@@ -1,5 +1,5 @@
 import fs from "fs";
-import { resolve, extname } from "path";
+import { resolve, extname, dirname } from "path";
 import commonjs from "rollup-plugin-commonjs";
 // @ts-ignore rollup-plugin-preserve-shebang is untyped module
 import shebang from "rollup-plugin-preserve-shebang"; 
@@ -12,9 +12,11 @@ import type { OutputOptions, Plugin } from "rollup";
 import { terser } from "rollup-plugin-terser";
 import type { PackageMetadata, BuncheeRollupConfig, CliArgs, BundleOptions } from "./types";
 
+type SupportedFields = "main" | "module"
+
 const mainFieldsConfig: {
-  field: "main" | "module";
-  format: "cjs" | "esm";
+  field: SupportedFields
+  format: "cjs" | "esm"
 }[] = [
   {
     field: "main",
@@ -40,17 +42,24 @@ function resolveTypescript() {
   return ts;
 }
 
+function getDistPath(pkg: PackageMetadata, filed: SupportedFields = 'main') {
+  return pkg[filed] || 'dist/index.js'
+}
+
 function createInputConfig(
   entry: string,
-  npmPackage: PackageMetadata,
+  pkg: PackageMetadata,
   options: BundleOptions,
 ) {
-  const externals = [npmPackage.peerDependencies, npmPackage.dependencies]
+  const externals = [pkg.peerDependencies, pkg.dependencies]
     .filter(<T>(n?: T): n is T => Boolean(n))
     .map((o: { [key: string]: string }): string[] => Object.keys(o))
     .reduce((a: string[], b: string[]) => a.concat(b), [] as string[]);
   
   const {useTypescript, minify = false} = options;
+  const typings: string | undefined = pkg.types || pkg.typings
+  const distPath = getDistPath(pkg, 'main')
+  console.log(dirname(distPath))
   
   const plugins: (Plugin)[] = [
     nodeResolve({
@@ -66,6 +75,8 @@ function createInputConfig(
       typescript: require("typescript"),
       module: "ES6",
       target: "ES5",
+      declaration: !!typings,
+      declarationDir: dirname(typings ? typings : distPath),
     }),
     !useTypescript && babel({
       babelHelpers: "bundled",
@@ -97,7 +108,7 @@ function createInputConfig(
 
 function createOutputOptions(
   options: BundleOptions,
-  npmPackage: PackageMetadata
+  pkg: PackageMetadata
 ): OutputOptions {
   const {file, format, useTypescript} = options;
   
@@ -121,12 +132,12 @@ function createOutputOptions(
   // add esmodule mark if cjs and esmodule are both specified;
   const useEsModuleMark = !!tsconfigOptions.esModuleInterop ||
     (
-      npmPackage.hasOwnProperty("main") && 
-      npmPackage.hasOwnProperty("module")
+      pkg.hasOwnProperty("main") && 
+      pkg.hasOwnProperty("module")
     );
     
   return {
-    name: npmPackage.name,
+    name: pkg.name,
     file,
     format,
     esModule: !useEsModuleMark && format !== "umd",
@@ -138,27 +149,27 @@ function createOutputOptions(
 
 function createRollupConfig(
   entry: string,
-  npmPackage: PackageMetadata,
+  pkg: PackageMetadata,
   cliArgs: CliArgs,
 ): BuncheeRollupConfig {
   const { file, format = "esm" } = cliArgs;
   const ext = extname(entry);
   const useTypescript: boolean = ext === ".ts" || ext === ".tsx";
   const options = {...cliArgs, useTypescript};
-  const inputOptions = createInputConfig(entry, npmPackage, options);
+  const inputOptions = createInputConfig(entry, pkg, options);
   let outputConfigs = mainFieldsConfig
     .filter((config) => {
-      return Boolean(npmPackage[config.field])
+      return Boolean(pkg[config.field])
     })
     .map((config) => {
-      const filename = npmPackage[config.field];
+      const filename = getDistPath(pkg, config.field)
       return createOutputOptions(
         {
           file: filename, 
           format: config.format,
           useTypescript,
         },
-        npmPackage
+        pkg
       );
     });
 
@@ -171,7 +182,7 @@ function createRollupConfig(
           format, 
           useTypescript,
         }, 
-        npmPackage
+        pkg
       )
     ];
   }
