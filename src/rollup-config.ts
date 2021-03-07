@@ -58,12 +58,10 @@ function createInputConfig(
   
   const {useTypescript, minify = false} = options;
   const typings: string | undefined = pkg.types || pkg.typings
-  const distPath = getDistPath(pkg, 'main')
-  console.log(dirname(distPath))
-  
+
   const plugins: (Plugin)[] = [
     nodeResolve({
-      preferBuiltins: false,
+      preferBuiltins: false, // TODO: support node target
     }),
     commonjs({
       include: /node_modules\//,
@@ -72,11 +70,13 @@ function createInputConfig(
     shebang(),
     useTypescript && typescript({
       tsconfig: resolve(config.rootDir, "tsconfig.json"),
-      typescript: require("typescript"),
+      typescript: resolveTypescript(),
       module: "ES6",
       target: "ES5",
       declaration: !!typings,
-      declarationDir: dirname(typings ? typings : distPath),
+      ...(!!typings && {
+        declarationDir: dirname(resolve(config.rootDir, typings)),
+      })
     }),
     !useTypescript && babel({
       babelHelpers: "bundled",

@@ -10,7 +10,15 @@ function getPackageMeta(): PackageMetadata {
   } catch (e) {
     targetPackageJson = {}
   }
-  const {name, main, module, dependencies, peerDependencies} = targetPackageJson;
+  const {
+    name, 
+    main, 
+    module, 
+    dependencies, 
+    peerDependencies,
+    types,
+    typings,
+  } = targetPackageJson;
 
   return {
     name,
@@ -18,6 +26,8 @@ function getPackageMeta(): PackageMetadata {
     module,
     dependencies,
     peerDependencies,
+    types,
+    typings,
   };
 }
 

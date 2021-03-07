@@ -6,6 +6,7 @@
     "bunchee": "./dist/cli.js"
   },
   "main": "./dist/index.js",
+  "types": "./types/index.d.ts",
   "scripts": {
     "test": "jest",
     "clean": "rm -rf ./dist",
@@ -33,7 +34,7 @@
     "@rollup/plugin-babel": "5.2.1",
     "@rollup/plugin-json": "4.0.2",
     "@rollup/plugin-node-resolve": "8.1.0",
-    "@rollup/plugin-typescript": "3.1.1",
+    "@rollup/plugin-typescript": "8.2.0",
     "babel-preset-o": "0.2.1",
     "commander": "2.20.3",
     "rollup": "1.32.0",
@@ -47,6 +48,7 @@
     "typescript": ">= 3.4.0"
   },
   "devDependencies": {
+    "@types/node": "14.14.32",
     "jest": "26.6.1",
     "ts-node": "9.1.1"
   }
