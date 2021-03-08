@@ -5,13 +5,21 @@ import utils from "./utils";
 import config from "./config";
 import type { BuncheeRollupConfig, CliArgs } from "./types";
 
+function assignDefault(options: CliArgs, name: keyof CliArgs, defaultValue: any) {
+  if (!(name in options) || options[name] == null) {
+    options[name] = defaultValue
+  }
+}
+
 function bundle(
   entry: string,
   { watch, cwd, ...options } : CliArgs = {}
 ): Promise<any> {
-  if (cwd) {
-    config.rootDir = cwd
-  }
+  config.rootDir = cwd || config.rootDir;
+  
+  assignDefault(options, "format", "esm")
+  assignDefault(options, "sourcemap", true)
+  
   const npmPackage = utils.getPackageMeta();
   const rollupConfig = createRollupConfig(
     entry,

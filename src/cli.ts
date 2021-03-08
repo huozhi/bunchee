@@ -12,18 +12,20 @@ program
   .option("-o, --output <file>", "specify output filename")
   .option("-f, --format <format>", "specify output file format")
   .option("-m, --minify", "compress output")
-  .option("--cwd", "specify current working directory")
+  .option("--cwd <cwd>", "specify current working directory")
+  .option("--no-sourcemap", "disable sourcemap")
   .action(run);
 
 program.parse(process.argv);
 
 async function run(entryFilePath: string) {
-  const { format, output: file, watch, minify, cwd } = program;
+  const { format, output: file, watch, minify, cwd, sourcemap } = program;
   const outputConfig: CliArgs = {
     file,
     format,
     watch: !!watch,
     minify: !!minify,
+    sourcemap: sourcemap === false ? false : true,
   };
   if (typeof entryFilePath !== "string") {
     return help();
