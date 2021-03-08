@@ -3,11 +3,12 @@
     "./src/**/*.ts"
   ],
   "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
     "target": "es5",
     "module": "CommonJS",
     "lib": ["ES6"],
     "declaration": false,
-    "outDir": "./dist",
     "removeComments": true,
     "strict": true,
     "noUnusedLocals": true,

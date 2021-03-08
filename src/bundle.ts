@@ -2,12 +2,16 @@ import { watch as rollupWatch, rollup } from "rollup";
 import type { RollupWatcher, RollupWatchOptions, OutputOptions, RollupBuild } from "rollup"
 import createRollupConfig from "./rollup-config";
 import utils from "./utils";
+import config from "./config";
 import type { BuncheeRollupConfig, CliArgs } from "./types";
 
 function bundle(
   entry: string,
-  { watch, ...options } : CliArgs = {}
+  { watch, cwd, ...options } : CliArgs = {}
 ): Promise<any> {
+  if (cwd) {
+    config.rootDir = cwd
+  }
   const npmPackage = utils.getPackageMeta();
   const rollupConfig = createRollupConfig(
     entry,

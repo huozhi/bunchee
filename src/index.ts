@@ -1,2 +1,6 @@
-export {default} from './bundle'
+export {default} from "./bundle"
 
+export {
+  CliArgs,
+  BuncheeRollupConfig,
+} from "./types"
