@@ -22,6 +22,7 @@ type CliArgs = {
   minify?: boolean;
   watch?: boolean;
   cwd?: string;
+  sourcemap?: boolean;
 }
 
 type BundleOptions = CliArgs & {
