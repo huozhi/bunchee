@@ -6,6 +6,8 @@ type PackageMetadata = {
   module?: string;
   dependencies?: { [key: string]: string };
   peerDependencies?: { [key: string]: string };
+  types?: string,
+  typings?: string,
 };
 
 type BuncheeRollupConfig = {
@@ -19,6 +21,7 @@ type CliArgs = {
   format?: OutputOptions["format"];
   minify?: boolean;
   watch?: boolean;
+  cwd?: string;
 }
 
 type BundleOptions = CliArgs & {
