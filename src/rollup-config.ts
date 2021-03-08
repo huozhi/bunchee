@@ -1,4 +1,4 @@
-import fs from "fs";
+import fs, { existsSync } from "fs";
 import { resolve, extname, dirname, basename } from "path";
 import commonjs from "rollup-plugin-commonjs";
 // @ts-ignore rollup-plugin-preserve-shebang is untyped module
@@ -11,6 +11,8 @@ import config from "./config";
 import type { OutputOptions, Plugin } from "rollup";
 import { terser } from "rollup-plugin-terser";
 import type { PackageMetadata, BuncheeRollupConfig, CliArgs, BundleOptions } from "./types";
+// ts doesn't support type `Module`
+const { Module } = require("module");
 
 type SupportedFields = "main" | "module"
 
@@ -28,8 +30,6 @@ const mainFieldsConfig: {
   },
 ];
 
-// ts doesn't support type `Module`
-const { Module } = require("module");
 function resolveTypescript() {
   let ts;
   const m = new Module("", null);
@@ -58,6 +58,7 @@ function createInputConfig(
   
   const {useTypescript, minify = false} = options;
   const typings: string | undefined = pkg.types || pkg.typings
+  const cwd: string = config.rootDir
 
   const plugins: (Plugin)[] = [
     nodeResolve({
@@ -69,13 +70,20 @@ function createInputConfig(
     json(),
     shebang(),
     useTypescript && typescript({
-      tsconfig: resolve(config.rootDir, "tsconfig.json"),
+      tsconfig: (() => { 
+        const tsconfig = resolve(cwd, "tsconfig.json"); 
+        return existsSync(tsconfig) ? tsconfig : undefined;
+      })(),
       typescript: resolveTypescript(),
+      
+      // override default options in @rollup/plugin-typescript
+      noEmitHelpers: false,
+      importHelpers: false,
       module: "ES6",
       target: "ES5",
       declaration: !!typings,
       ...(!!typings && {
-        declarationDir: dirname(resolve(config.rootDir, typings)),
+        declarationDir: dirname(resolve(cwd, typings)),
       })
     }),
     !useTypescript && babel({
@@ -111,12 +119,12 @@ function createOutputOptions(
   pkg: PackageMetadata
 ): OutputOptions {
   const {format, useTypescript} = options;
-  const file = options.file as string
+  const cwd: string = config.rootDir
   
   let tsconfigOptions = {} as any;
-  const ts = resolveTypescript();
-  const tsconfigPath = resolve(config.rootDir, "tsconfig.json");
   if (useTypescript) {
+    const ts = resolveTypescript();
+    const tsconfigPath = resolve(cwd, "tsconfig.json");
     if (fs.existsSync(tsconfigPath)) {
       const tsconfigJSON = ts.readConfigFile(tsconfigPath, ts.sys.readFile)
         .config;
@@ -136,7 +144,8 @@ function createOutputOptions(
       pkg.hasOwnProperty("main") && 
       pkg.hasOwnProperty("module")
     );
-    
+  
+  const file = resolve(options.file as string)
   return {
     name: pkg.name,
     dir: dirname(file),

@@ -12,12 +12,13 @@ program
   .option("-o, --output <file>", "specify output filename")
   .option("-f, --format <format>", "specify output file format")
   .option("-m, --minify", "compress output")
+  .option("--cwd", "specify current working directory")
   .action(run);
 
 program.parse(process.argv);
 
 async function run(entryFilePath: string) {
-  const { format, output: file, watch, minify } = program;
+  const { format, output: file, watch, minify, cwd } = program;
   const outputConfig: CliArgs = {
     file,
     format,
@@ -27,7 +28,7 @@ async function run(entryFilePath: string) {
   if (typeof entryFilePath !== "string") {
     return help();
   }
-  const entry = path.resolve(process.cwd(), entryFilePath);
+  const entry = path.resolve(cwd || process.cwd(), entryFilePath);
   if (!fs.existsSync(entry)) {
     return help();
   }

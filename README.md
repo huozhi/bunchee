@@ -30,6 +30,7 @@ Options:
   -o, --output <file>    specify output filename
   -f, --format <format>  specify bundle type. esm, cjs, umd. "esm" by default
   -h, --help             output usage information
+  --cwd                  specify current working directory
 
 Usage:
   $ bunchee ./src/index.js # if you set main fields in package.json
