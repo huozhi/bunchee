@@ -40,7 +40,7 @@ Usage:
 
 ### Use NPM Script
 
-Declare your main field and module field in package.json, then call bunchee cli in build scripts
+Declare your main field and module field in package.json, then call bunchee cli in build scripts. If you're using typescript, types will be generated automatically based on your package.json field `typings` or `types`.
 
 ```json
 {
@@ -48,7 +48,8 @@ Declare your main field and module field in package.json, then call bunchee cli 
   "module": "dist/pkg.esm.js",
   "scripts": {
     "build": "bunchee ./src/index.js"
-  }
+  },
+  "types": "dist/index.d.ts"
 }
 ```
 
