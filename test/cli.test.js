@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const {fork} = require('child_process');
+const {fork, execSync} = require('child_process');
 
 const resolve = filepath => path.resolve(__dirname, '../test', filepath)
 
@@ -25,11 +25,25 @@ const testCases = [
       ]
     }
   },
+  {
+    name: 'no-sourcemap',
+    args: [resolve('fixtures/hello.js'), '--no-sourcemap', '-o', resolve('dist/hello.nomap.js')],
+    expected(distFile) {
+      return [
+        [fs.existsSync(distFile), true],
+        //# sourceMappingURL is not set
+        [fs.readFileSync(distFile, { encoding: 'utf-8' }).includes('sourceMappingURL'), false],
+        [fs.existsSync(distFile + '.map'), false],
+      ]
+    }
+  },
 ]
 
 for (const testCase of testCases) {
   const {name, args, expected} = testCase;
   it(`cli ${name} should work properly`, async () => {
+    const dist = args[args.length - 1]
+    execSync(`rm -rf ${path.dirname(dist)}`)
     const ps = fork(
       __dirname + '/../dist/cli.js',
       args,

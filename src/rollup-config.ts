@@ -11,7 +11,7 @@ import config from "./config";
 import type { OutputOptions, Plugin } from "rollup";
 import { terser } from "rollup-plugin-terser";
 import type { PackageMetadata, BuncheeRollupConfig, CliArgs, BundleOptions } from "./types";
-// ts doesn't support type `Module`
+// current ts typings doesn't support type `Module`, use cjs require instead
 const { Module } = require("module");
 
 type SupportedFields = "main" | "module"
@@ -81,6 +81,7 @@ function createInputConfig(
       importHelpers: false,
       module: "ES6",
       target: "ES5",
+      sourceMap: options.sourcemap,
       declaration: !!typings,
       ...(!!typings && {
         declarationDir: dirname(resolve(cwd, typings)),
@@ -144,7 +145,7 @@ function createOutputOptions(
       pkg.hasOwnProperty("main") && 
       pkg.hasOwnProperty("module")
     );
-  
+
   const file = resolve(options.file as string)
   return {
     name: pkg.name,
@@ -154,7 +155,7 @@ function createOutputOptions(
     esModule: !useEsModuleMark && format !== "umd",
     freeze: false,
     strict: false,
-    sourcemap: true,
+    sourcemap: options.sourcemap,
   };
 }
 
@@ -163,7 +164,7 @@ function createRollupConfig(
   pkg: PackageMetadata,
   cliArgs: CliArgs,
 ): BuncheeRollupConfig {
-  const { file, format = "esm" } = cliArgs;
+  const { file, format } = cliArgs;
   const ext = extname(entry);
   const useTypescript: boolean = ext === ".ts" || ext === ".tsx";
   const options = {...cliArgs, useTypescript};
@@ -176,6 +177,7 @@ function createRollupConfig(
       const filename = getDistPath(pkg, config.field)
       return createOutputOptions(
         {
+          ...cliArgs,
           file: filename, 
           format: config.format,
           useTypescript,
@@ -189,6 +191,7 @@ function createRollupConfig(
     outputConfigs = [
       createOutputOptions(
         {
+          ...cliArgs,
           file, 
           format, 
           useTypescript,
