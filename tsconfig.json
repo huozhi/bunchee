@@ -3,7 +3,8 @@
     "./src/**/*.ts"
   ],
   "compilerOptions": {
-    "rootDir": "src",
+    "rootDir": "./src",
+    "outDir": "./dist",
     "target": "es5",
     "module": "CommonJS",
     "lib": ["ES6"],

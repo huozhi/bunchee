@@ -1,5 +1,5 @@
 import fs from "fs";
-import { resolve, extname, dirname } from "path";
+import { resolve, extname, dirname, basename } from "path";
 import commonjs from "rollup-plugin-commonjs";
 // @ts-ignore rollup-plugin-preserve-shebang is untyped module
 import shebang from "rollup-plugin-preserve-shebang"; 
@@ -110,7 +110,8 @@ function createOutputOptions(
   options: BundleOptions,
   pkg: PackageMetadata
 ): OutputOptions {
-  const {file, format, useTypescript} = options;
+  const {format, useTypescript} = options;
+  const file = options.file as string
   
   let tsconfigOptions = {} as any;
   const ts = resolveTypescript();
@@ -138,7 +139,8 @@ function createOutputOptions(
     
   return {
     name: pkg.name,
-    file,
+    dir: dirname(file),
+    entryFileNames: basename(file),
     format,
     esModule: !useEsModuleMark && format !== "umd",
     freeze: false,
