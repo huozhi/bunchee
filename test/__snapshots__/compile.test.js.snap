@@ -253,7 +253,9 @@ export { clone };
 `;
 
 exports[`should compile ts-interop case correctly 1`] = `
-"var a = { x: 1 };
+"Object.defineProperty(exports, '__esModule', { value: true });
+
+var a = { x: 1 };
 var b = 'hello';
 
 exports.b = b;
