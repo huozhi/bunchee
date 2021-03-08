@@ -63,3 +63,7 @@ bunchee ./src/index.js -f esm -o ./dist/bundle.esm.js
 # if you don't specify format type, default format is ESModule
 # bunchee ./src/index.js -o ./dist/bundle.esm.js
 ```
+
+### Using Typescript
+
+This plugin requires at least [TypeScript 3.7](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html).

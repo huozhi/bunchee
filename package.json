@@ -10,8 +10,7 @@
   "scripts": {
     "test": "jest",
     "clean": "rm -rf ./dist",
-    "build:tsc": "tsc",
-    "prerelease": "yarn clean && yarn build && chmod +x dist/cli.js",
+    "prepublishOnly": "yarn clean && yarn build && chmod +x dist/cli.js",
     "build:cli": "ts-node src/cli.ts src/cli.ts -f cjs -o dist/cli.js",
     "build:main": "ts-node src/cli.ts src/index.ts -f cjs",
     "build": "yarn build:main && yarn build:cli"
