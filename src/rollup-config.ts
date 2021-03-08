@@ -152,7 +152,7 @@ function createOutputOptions(
     dir: dirname(file),
     entryFileNames: basename(file),
     format,
-    esModule: !useEsModuleMark && format !== "umd",
+    esModule: useEsModuleMark && format !== "umd",
     freeze: false,
     strict: false,
     sourcemap: options.sourcemap,
