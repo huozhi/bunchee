@@ -1,4 +1,4 @@
-function Dumb() {
+function Jsx() {
   return (
     <React.Fragment>
       <div>hello</div>
@@ -7,5 +7,5 @@ function Dumb() {
   )
 }
 
-export default Dumb
+export default Jsx
 

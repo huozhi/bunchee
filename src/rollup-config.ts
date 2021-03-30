@@ -63,6 +63,7 @@ function createInputConfig(
   const plugins: (Plugin)[] = [
     nodeResolve({
       preferBuiltins: false, // TODO: support node target
+      extensions: ['.mjs', '.js', '.json', '.node', '.jsx'],
     }),
     commonjs({
       include: /node_modules\//,
@@ -76,7 +77,8 @@ function createInputConfig(
       })(),
       typescript: resolveTypescript(),
       
-      // override default options in @rollup/plugin-typescript
+      // override default options in rollup/plugin-typescript
+      jsx: "react",
       noEmitHelpers: false,
       importHelpers: false,
       module: "ES6",
