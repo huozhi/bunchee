@@ -7,10 +7,16 @@ const unitTestDirs = fs.readdirSync(baseUnitTestDir);
 
 for (const folderName of unitTestDirs) {
   it (`should compile ${folderName} case correctly`, async () => {
-    const dirPath = resolve(baseUnitTestDir, folderName) // `${baseUnitTestDir}/${folderName}`;
-    const inputeName = resolve(dirPath, 'input') // `${dirPath}/input`;
-    const inputFileName = inputeName + (fs.existsSync(`${inputeName}.ts`) ? '.ts' : '.js')
-    const distFile = resolve(dirPath, 'dist/bundle.js') // `${dirPath}/dist/bundle.js`;
+    const dirPath = resolve(baseUnitTestDir, folderName);
+    const inputeName = resolve(dirPath, 'input');
+    const inputFileName = inputeName + [
+      '.js',
+      '.jsx',
+      '.ts',
+      '.tsx'
+    ].find(ext => fs.existsSync(`${inputeName}${ext}`)); 
+    
+    const distFile = resolve(dirPath, 'dist/bundle.js');
     const pkgJson = fs.existsSync(`${dirPath}/package.json`) ? require(`${dirPath}/package.json`) : {}
 
 
