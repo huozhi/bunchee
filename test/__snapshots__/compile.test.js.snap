@@ -213,6 +213,18 @@ console.log('main', a.x);
 "
 `;
 
+exports[`should compile sub-folder-import case correctly 1`] = `
+"import ms from 'ms/index';
+
+var input = (function () {
+  return ms.apply(void 0, arguments);
+});
+
+export default input;
+//# sourceMappingURL=bundle.js.map
+"
+`;
+
 exports[`should compile ts-basic case correctly 1`] = `
 "/*! *****************************************************************************
 Copyright (c) Microsoft Corporation.
