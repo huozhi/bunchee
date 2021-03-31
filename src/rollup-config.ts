@@ -112,7 +112,9 @@ function createInputConfig(
   
   return {
     input: entry,
-    external: externals,
+    external(id: string) {
+      return externals.some(name => id === name || id.startsWith(name + '/'))
+    },
     plugins,
   };
 }
