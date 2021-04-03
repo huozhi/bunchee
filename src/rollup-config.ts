@@ -43,7 +43,7 @@ function resolveTypescript() {
 }
 
 function getDistPath(pkg: PackageMetadata, filed: SupportedFields = 'main') {
-  return pkg[filed] || 'dist/index.js'
+  return resolve(config.rootDir, pkg[filed] || 'dist/index.js')
 }
 
 function createInputConfig(
@@ -187,7 +187,7 @@ function createRollupConfig(
           useTypescript,
         },
         pkg
-      );
+      );      
     });
 
   // CLI output option is always prioritized
