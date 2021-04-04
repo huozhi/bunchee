@@ -1,3 +1,4 @@
+import { resolve } from "path";
 import { watch as rollupWatch, rollup } from "rollup";
 import type { RollupWatcher, RollupWatchOptions, OutputOptions, RollupBuild } from "rollup"
 import createRollupConfig from "./rollup-config";
@@ -15,8 +16,7 @@ function bundle(
   entry: string,
   { watch, cwd, ...options } : CliArgs = {}
 ): Promise<any> {
-  config.rootDir = cwd || config.rootDir;
-  
+  config.rootDir = resolve(process.cwd(), cwd || "");
   assignDefault(options, "format", "esm")
   assignDefault(options, "sourcemap", true)
   

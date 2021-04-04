@@ -23,6 +23,7 @@ async function run(entryFilePath: string) {
   const outputConfig: CliArgs = {
     file,
     format,
+    cwd,
     watch: !!watch,
     minify: !!minify,
     sourcemap: sourcemap === false ? false : true,
