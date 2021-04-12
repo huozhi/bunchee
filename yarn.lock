@@ -1471,10 +1471,10 @@ babel-preset-jest@^26.6.2:
     babel-plugin-jest-hoist "^26.6.2"
     babel-preset-current-node-syntax "^1.0.0"
 
-babel-preset-o@0.2.1:
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/babel-preset-o/-/babel-preset-o-0.2.1.tgz#93f077a3842bd77b29292ca53bf66fc9e5123a18"
-  integrity sha512-5GbH5hzoA5ZPRHnlgHjieNtayj1V/ffe3lNxOcCgvz0RJjh8df8sH1heF2VER9a9xqHE6B0+LKlF7GxZxZlHOw==
+babel-preset-o@0.4.0:
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/babel-preset-o/-/babel-preset-o-0.4.0.tgz#dbbd1309c5191fe019eae0345b3e75b7ffe447d6"
+  integrity sha512-IxqDAKMyEEAXnXgx3P8GIN6ZqYKHqKKMzesxMz34KAd1rIt85QnKwP7NtNeOgBZ1YGpv7CvCSP3/jTulD6AXpg==
   dependencies:
     "@babel/core" "7.12.10"
     "@babel/plugin-proposal-class-properties" "7.12.1"

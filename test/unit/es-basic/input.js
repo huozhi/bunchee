@@ -7,6 +7,9 @@ class A {
   getX = () => { return this.#x }
 }
 
+const _v = 123
+export const x = () => `value:${_v}`
+
 export {
   generator,
   asyncFunc,
