@@ -122,7 +122,12 @@ var A = function A() {
   };
 };
 
-export { A, asyncFunc, generator };
+var _v = 123;
+var x = function x() {
+  return \\"value:\\" + _v;
+};
+
+export { A, asyncFunc, generator, x };
 //# sourceMappingURL=bundle.js.map
 "
 `;

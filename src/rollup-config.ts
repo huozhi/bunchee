@@ -95,7 +95,7 @@ function createInputConfig(
       configFile: false,
       exclude: "node_modules/**",
       presets: [
-        ["babel-preset-o", {nodeVersion: process.env.NODE_VERSION || "4.0.0"}]
+        ["babel-preset-o", { targets: {} }]
       ],
     }),
     minify && terser({
