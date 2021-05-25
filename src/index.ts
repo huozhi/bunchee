@@ -1,4 +1,4 @@
-export {default} from "./bundle"
+export { default as bundle } from "./bundle"
 
 export {
   CliArgs,

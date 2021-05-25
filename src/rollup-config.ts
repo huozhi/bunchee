@@ -8,9 +8,9 @@ import babel from "@rollup/plugin-babel";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import typescript from "@rollup/plugin-typescript";
 import config from "./config";
-import type { OutputOptions, Plugin } from "rollup";
+import { OutputOptions, Plugin } from "rollup";
 import { terser } from "rollup-plugin-terser";
-import type { PackageMetadata, BuncheeRollupConfig, CliArgs, BundleOptions } from "./types";
+import { PackageMetadata, BuncheeRollupConfig, CliArgs, BundleOptions } from "./types";
 // current ts typings doesn't support type `Module`, use cjs require instead
 const { Module } = require("module");
 

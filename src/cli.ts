@@ -3,7 +3,7 @@
 import fs from "fs";
 import path from "path";
 import program from "commander";
-import type { CliArgs } from "./types";
+import { CliArgs } from "./types";
 
 program
   .name("bunchee")
@@ -36,13 +36,11 @@ async function run(entryFilePath: string) {
     return help();
   }
 
-  // TODO: let it resolve easier with both ts-node and nodejs
-  const module = require('.')
-  const bunchee = module.default ? module.default : module 
+  const { bundle } = require('.')
   
   try {
     // @ts-ignore 
-    await bunchee(entry, outputConfig);
+    await bundle(entry, outputConfig);
   } catch (e) {
     console.error(e)
     process.exit(2)
