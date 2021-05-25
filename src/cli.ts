@@ -24,7 +24,7 @@ async function run(entryFilePath: string) {
     file,
     format,
     cwd,
-    watch: !!watch,
+    watch: watch,
     minify: !!minify,
     sourcemap: sourcemap === false ? false : true,
   };
