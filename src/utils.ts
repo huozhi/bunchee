@@ -1,6 +1,6 @@
 import path from "path";
 import config from "./config";
-import type { PackageMetadata } from "./types";
+import { PackageMetadata } from "./types";
 
 function getPackageMeta(): PackageMetadata {
   const pkgFilePath = path.resolve(config.rootDir, 'package.json');
