@@ -39,7 +39,6 @@ async function run(entryFilePath: string) {
   const { bundle } = require('.')
   
   try {
-    // @ts-ignore 
     await bundle(entry, outputConfig);
   } catch (e) {
     console.error(e)
