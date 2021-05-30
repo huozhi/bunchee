@@ -12,11 +12,12 @@ Usage: bunchee [options]
 Options:
   -v, --version          output the version number
   -w, --watch            watch src files changes
+  -m, --minify           compress output. false by default
   -o, --output <file>    specify output filename
-  -f, --format <format>  specify output file format
-  -m, --minify           compress output
+  -f, --format <format>  specify bundle type: "esm", "cjs", "umd". "esm" by default
+  --target <target>      build environment, use "node" for nodejs runtime
+  --no-sourcemap         disable sourcemap generation, sourcemap generation is enabled by default
   --cwd <cwd>            specify current working directory
-  --no-sourcemap         disable sourcemap
   -h, --help             output usage information
 `
 
@@ -30,11 +31,12 @@ function exit(error: Error) {
 }
 
 async function run(args: any) {
-  const { source, format, file, watch, minify, cwd, sourcemap } = args;
+  const { source, format, file, watch, minify, cwd, sourcemap, target } = args;
   const outputConfig: CliArgs = {
     file,
     format,
     cwd,
+    target,
     watch: watch,
     minify: !!minify,
     sourcemap: sourcemap === false ? false : true,

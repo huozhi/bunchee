@@ -47,6 +47,7 @@ export function parseCliArgs(argv: string[]) {
     "--minify": Boolean,
     "--help": Boolean,
     "--version": Boolean,
+    "--target": String,
     "--no-sourcemap": Boolean,
     
     "-h": "--help",
@@ -70,6 +71,7 @@ export function parseCliArgs(argv: string[]) {
     cwd: args["--cwd"],
     help: args["--help"],
     version: args["--version"],
+    target: args["--target"],
   }
   return parsedArgs;
 }
