@@ -12,8 +12,8 @@
     "clean": "rm -rf ./dist",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build && chmod +x dist/cli.js && yarn test",
-    "build:cli": "ts-node src/cli.ts src/cli.ts -f cjs -o dist/cli.js",
-    "build:main": "ts-node src/cli.ts src/index.ts -f cjs",
+    "build:cli": "node -r ts-node/register src/cli.ts src/cli.ts -f cjs -o dist/cli.js",
+    "build:main": "node -r ts-node/register src/cli.ts src/index.ts -f cjs",
     "build": "yarn build:main && yarn build:cli"
   },
   "type": "commonjs",
