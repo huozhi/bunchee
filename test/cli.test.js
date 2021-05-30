@@ -53,7 +53,7 @@ for (const testCase of testCases) {
     ps.stdout.on('data', chunk => stdout += chunk.toString());
     ps.stderr.on('data', chunk => stderr += chunk.toString());
     await new Promise((resolve) => {
-      ps.on('close', resolve)
+      ps.on('close', resolve);
     });
     stdout && console.log(stdout);
     stderr && console.error(stderr);
@@ -66,4 +66,3 @@ for (const testCase of testCases) {
     expect(stderr).toBe('');
   });
 }
-

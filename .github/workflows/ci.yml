@@ -21,6 +21,8 @@ jobs:
         node-version: ${{ matrix.node-version }}
     - name: Install
       run: yarn install
+    - name: Type Checking
+      run: yarn typecheck
     - name: Build Dist
       run: yarn build
     - name: Test
