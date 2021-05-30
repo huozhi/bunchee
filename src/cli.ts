@@ -2,8 +2,8 @@
 
 import fs from "fs";
 import path from "path";
-import arg from "arg";
 import { CliArgs } from "./types";
+import { parseCliArgs } from "./utils";
 
 const helpMessage = `
 Usage: bunchee [options]
@@ -23,34 +23,14 @@ function help() {
   console.log(helpMessage);
 }
 
-
-// program
-//   .name("bunchee")
-//   .version(require('../package.json').version, "-v, --version")
-//   .option("-w, --watch", "watch src files changes")
-//   .option("-o, --output <file>", "specify output filename")
-//   .option("-f, --format <format>", "specify output file format")
-//   .option("-m, --minify", "compress output")
-//   .option("--cwd <cwd>", "specify current working directory")
-//   .option("--no-sourcemap", "disable sourcemap")
-//   .action(run);
-
-// program.parse(process.argv);
-
-async function main() {
-  const argv = arg({
-    '-w, --watch': Boolean,
-    '-o, --output': String,
-    '-f, --format': String,
-    '-m, --minify': String,
-    '--cwd': String,
-    '--no-sourcemap': String,
-  })
-  
+function exit(error: Error) {
+  console.error(error);
+  process.exit(2);
 }
 
-async function run(entryFilePath: string) {
-  const { format, output: file, watch, minify, cwd, sourcemap } = program;
+
+async function run(parmas: any) {
+  const { source, format, file, watch, minify, cwd, sourcemap } = parmas;
   const outputConfig: CliArgs = {
     file,
     format,
@@ -59,21 +39,29 @@ async function run(entryFilePath: string) {
     minify: !!minify,
     sourcemap: sourcemap === false ? false : true,
   };
-  if (typeof entryFilePath !== "string") {
-    return help();
-  }
-  const entry = path.resolve(cwd || process.cwd(), entryFilePath);
-  if (!fs.existsSync(entry)) {
-    return help();
+  const entry = path.resolve(cwd || process.cwd(), source);
+  if (!fs.existsSync(entry) || !fs.statSync(entry).isFile()) {
+    const err = new Error('Entry file is not existed');
+    return exit(err);
   }
 
-  const { bundle } = require('.')
+  const { bundle } = require(".")
   
-  try {
-    await bundle(entry, outputConfig);
-  } catch (e) {
-    console.error(e)
-    process.exit(2)
-  }
+  return await bundle(entry, outputConfig);
 }
 
+async function main() {
+  let params, error;
+  try {
+    params = parseCliArgs(process.argv.slice(2));
+  } catch (err) {
+    error = err;
+  }
+  if (error || !params) {
+    if (!error) help();
+    return exit(error);
+  }
+  await run(params);
+}
+
+main().catch(exit);
