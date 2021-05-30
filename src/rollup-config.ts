@@ -56,13 +56,13 @@ function createInputConfig(
     .map((o: { [key: string]: string }): string[] => Object.keys(o))
     .reduce((a: string[], b: string[]) => a.concat(b), [] as string[]);
   
-  const {useTypescript, minify = false} = options;
+  const {useTypescript, target, minify = false} = options;
   const typings: string | undefined = pkg.types || pkg.typings
   const cwd: string = config.rootDir
 
   const plugins: (Plugin)[] = [
     nodeResolve({
-      preferBuiltins: false, // TODO: support node target
+      preferBuiltins: target === 'node',
       extensions: ['.mjs', '.js', '.json', '.node', '.jsx'],
     }),
     commonjs({

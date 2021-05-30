@@ -21,6 +21,7 @@ type CliArgs = {
   format?: OutputOptions["format"];
   minify?: boolean;
   watch?: boolean;
+  target?: string;
   cwd?: string;
   sourcemap?: boolean;
 }

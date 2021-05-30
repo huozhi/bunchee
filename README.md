@@ -49,8 +49,9 @@ Options:
   -w, --watch            watch src files changes
   -m, --minify           compress output. false by default
   -o, --output <file>    specify output filename
-  -f, --format <format>  specify bundle type. esm, cjs, umd. "esm" by default
+  -f, --format <format>  specify bundle type: "esm", "cjs", "umd". "esm" by default
   -h, --help             output usage information
+  --target <target>      build environment, use "node" for nodejs runtime
   --no-sourcemap         disable sourcemap generation, sourcemap generation is enabled by default
   --cwd <cwd>            specify current working directory
 
