@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 import { CliArgs } from "./types";
 import { parseCliArgs } from "./utils";
+import { version } from "../package.json";
 
 const helpMessage = `
 Usage: bunchee [options]
@@ -28,9 +29,8 @@ function exit(error: Error) {
   process.exit(2);
 }
 
-
-async function run(parmas: any) {
-  const { source, format, file, watch, minify, cwd, sourcemap } = parmas;
+async function run(args: any) {
+  const { source, format, file, watch, minify, cwd, sourcemap } = args;
   const outputConfig: CliArgs = {
     file,
     format,
@@ -39,9 +39,18 @@ async function run(parmas: any) {
     minify: !!minify,
     sourcemap: sourcemap === false ? false : true,
   };
+  if (args.version) {
+    return console.log(version);
+  }
+  if (args.help || !source) {
+    return help();
+  }
+
   const entry = path.resolve(cwd || process.cwd(), source);
+  
   if (!fs.existsSync(entry) || !fs.statSync(entry).isFile()) {
     const err = new Error('Entry file is not existed');
+    help();
     return exit(err);
   }
 
