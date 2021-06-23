@@ -47,10 +47,10 @@ function runWatch({ input, output }: BuncheeRollupConfig): RollupWatcher {
 function runBundle({ input, output }: BuncheeRollupConfig) {
   return rollup(input).then(
     (bundle: RollupBuild) => {
-      const wirteJobs = output.map((options: OutputOptions) =>
+      const writeJobs = output.map((options: OutputOptions) =>
         bundle.write(options)
       );
-      return Promise.all(wirteJobs);
+      return Promise.all(writeJobs);
     },
     (error = {}) => {
       // logging source code in format
