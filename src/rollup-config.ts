@@ -76,11 +76,8 @@ function createInputConfig(
         return existsSync(tsconfig) ? tsconfig : undefined;
       })(),
       typescript: resolveTypescript(),
-      
-      // override default options in rollup/plugin-typescript
+      // override options
       jsx: "react",
-      noEmitHelpers: false,
-      importHelpers: false,
       module: "ES6",
       target: "ES5",
       sourceMap: options.sourcemap,
