@@ -73,4 +73,10 @@ bunchee ./src/index.js -f esm -o ./dist/bundle.esm.js
 
 ### Using Typescript
 
+By default bunchee includes Typescript v3.9.x inside as a dependency. If you want to use your own version, just install typescript as another dev dependency then bunchee will automatically pick it.
+
+```sh
+yarn add -D bunchee typescript
+```
+
 This library requires at least [TypeScript 3.7](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html).
