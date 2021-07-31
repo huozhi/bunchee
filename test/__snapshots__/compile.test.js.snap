@@ -137,7 +137,7 @@ exports[`should compile jsx case correctly 1`] = `
   return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(\\"div\\", null, \\"hello\\"), /*#__PURE__*/React.createElement(\\"h1\\", null, \\"yep\\"));
 }
 
-export default Jsx;
+export { Jsx as default };
 //# sourceMappingURL=bundle.js.map
 "
 `;
@@ -225,7 +225,7 @@ var input = (function () {
   return ms.apply(void 0, arguments);
 });
 
-export default input;
+export { input as default };
 //# sourceMappingURL=bundle.js.map
 "
 `;
@@ -263,8 +263,7 @@ var sum = add(1, 2);
 var obj = { a: 1, b: 2 };
 var clone = __assign({}, obj);
 
-export default sum;
-export { clone };
+export { clone, sum as default };
 //# sourceMappingURL=bundle.js.map
 "
 `;
@@ -276,7 +275,7 @@ var a = { x: 1 };
 var b = 'hello';
 
 exports.b = b;
-exports.default = a;
+exports['default'] = a;
 //# sourceMappingURL=bundle.js.map
 "
 `;
@@ -288,7 +287,7 @@ function Tsx() {
     return (React.createElement(\\"div\\", null, \\"hello\\"));
 }
 
-export default Tsx;
+export { Tsx as default };
 //# sourceMappingURL=bundle.js.map
 "
 `;
