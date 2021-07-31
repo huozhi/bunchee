@@ -1,6 +1,6 @@
 import fs, { existsSync } from "fs";
 import { resolve, extname, dirname, basename } from "path";
-import commonjs from "rollup-plugin-commonjs";
+import commonjs from "@rollup/plugin-commonjs";
 // @ts-ignore rollup-plugin-preserve-shebang is untyped module
 import shebang from "rollup-plugin-preserve-shebang"; 
 import json from "@rollup/plugin-json";
