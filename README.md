@@ -60,6 +60,14 @@ Usage:
   $ bunchee ./src/index.ts -o ./dist/bundle.js # specify the dist file path
 ```
 
+### API
+
+```js
+import { bundle } from 'bunchee'
+
+// options is same to CLI options
+await bundle(entryFilePath, options)
+```
 #### Example Scripts
 
 ```sh
