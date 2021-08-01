@@ -1,6 +1,7 @@
 import fs, { existsSync } from "fs";
 import { resolve, extname, dirname, basename } from "path";
 import commonjs from "@rollup/plugin-commonjs";
+// @ts-expect-error
 import shebang from "rollup-plugin-preserve-shebang";
 import json from "@rollup/plugin-json";
 import babel from "@rollup/plugin-babel";
@@ -10,7 +11,6 @@ import config from "./config";
 import { OutputOptions, Plugin } from "rollup";
 import { terser } from "rollup-plugin-terser";
 import { PackageMetadata, BuncheeRollupConfig, CliArgs, BundleOptions } from "./types";
-
 
 const { Module } = require("module");
 
