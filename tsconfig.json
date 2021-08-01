@@ -1,6 +1,6 @@
 {
   "include": [
-    "./src/**/*.ts"
+    "./src",
   ],
   "compilerOptions": {
     "rootDir": ".",
@@ -18,7 +18,6 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "typeRoots": [
-      "./types",
       "./node_modules/@types"
     ],
     "forceConsistentCasingInFileNames": true
