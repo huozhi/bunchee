@@ -2,7 +2,7 @@ import { resolve } from "path";
 import { watch as rollupWatch, rollup } from "rollup";
 import { RollupWatcher, RollupWatchOptions, OutputOptions, RollupBuild } from "rollup"
 import createRollupConfig from "./rollup-config";
-import utils from "./utils";
+import { getPackageMeta } from "./utils";
 import config from "./config";
 import { BuncheeRollupConfig, CliArgs } from "./types";
 
@@ -20,7 +20,7 @@ function bundle(
   assignDefault(options, "format", "esm")
   assignDefault(options, "sourcemap", true)
   
-  const npmPackage = utils.getPackageMeta();
+  const npmPackage = getPackageMeta();
   const rollupConfig = createRollupConfig(
     entry,
     npmPackage,
@@ -55,10 +55,10 @@ function runBundle({ input, output }: BuncheeRollupConfig) {
     (error = {}) => {
       // logging source code in format
       if (error.frame) {
-        process.stdout.write(error.frame + '\n');
+        process.stdout.write(error.frame + "\n");
       }
       if (error.stack) {
-        process.stdout.write(error.stack + '\n');
+        process.stdout.write(error.stack + "\n");
       }
       throw error;
     }

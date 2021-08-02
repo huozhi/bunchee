@@ -4,11 +4,11 @@ import path from "path";
 import config from "./config";
 import { PackageMetadata } from "./types";
 
-function getPackageMeta(): PackageMetadata {
-  const pkgFilePath = path.resolve(config.rootDir, 'package.json');
+export function getPackageMeta(): PackageMetadata {
+  const pkgFilePath = path.resolve(config.rootDir, "package.json");
   let targetPackageJson;
   try {
-    targetPackageJson = JSON.parse(fs.readFileSync(pkgFilePath, { encoding: 'utf-8' }));
+    targetPackageJson = JSON.parse(fs.readFileSync(pkgFilePath, { encoding: "utf-8" }));
   } catch (e) {
     targetPackageJson = {}
   }
@@ -33,7 +33,7 @@ function getPackageMeta(): PackageMetadata {
   };
 }
 
-function resolvePackagePath(pathname: string): string {
+export function resolvePackagePath(pathname: string): string {
   return path.resolve(config.rootDir, pathname);
 }
 
@@ -76,8 +76,8 @@ export function parseCliArgs(argv: string[]) {
   return parsedArgs;
 }
 
-
-export default {
-  getPackageMeta,
-  resolvePackagePath,
-};
+export const logger = {
+  log(...args: any[]) { console.log(...args) },
+  warn(...args: any[]) { console.log("\x1b[33m", ...args, "\x1b[0m") },
+  error(...args: any[]) { console.error("\x1b[31m", ...args, "\x1b[0m") },
+}

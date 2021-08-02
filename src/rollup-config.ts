@@ -7,10 +7,11 @@ import json from "@rollup/plugin-json";
 import babel from "@rollup/plugin-babel";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import typescript from "@rollup/plugin-typescript";
-import config from "./config";
 import { OutputOptions, Plugin } from "rollup";
 import { terser } from "rollup-plugin-terser";
 import { PackageMetadata, BuncheeRollupConfig, CliArgs, BundleOptions } from "./types";
+import config from "./config";
+import { logger } from "./utils"
 
 const { Module } = require("module");
 
@@ -37,13 +38,13 @@ function resolveTypescript() {
   try {
     ts = m.require("typescript");
   } catch (_) {
-    ts = require("typescript");
+    logger.warn("Could not load TypeScript compiler. Try `yarn add --dev typescript`")
   }
   return ts;
 }
 
-function getDistPath(pkg: PackageMetadata, filed: SupportedFields = 'main') {
-  return resolve(config.rootDir, pkg[filed] || 'dist/index.js')
+function getDistPath(pkg: PackageMetadata, filed: SupportedFields = "main") {
+  return resolve(config.rootDir, pkg[filed] || "dist/index.js")
 }
 
 function createInputConfig(
@@ -62,8 +63,8 @@ function createInputConfig(
 
   const plugins: (Plugin)[] = [
     nodeResolve({
-      preferBuiltins: target === 'node',
-      extensions: ['.mjs', '.js', '.json', '.node', '.jsx'],
+      preferBuiltins: target === "node",
+      extensions: [".mjs", ".js", ".json", ".node", ".jsx"],
     }),
     commonjs({
       include: /node_modules\//,
@@ -110,7 +111,7 @@ function createInputConfig(
   return {
     input: entry,
     external(id: string) {
-      return externals.some(name => id === name || id.startsWith(name + '/'))
+      return externals.some(name => id === name || id.startsWith(name + "/"))
     },
     plugins,
   };
@@ -133,7 +134,7 @@ function createOutputOptions(
       tsconfigOptions = ts.parseJsonConfigFileContent(
         tsconfigJSON,
         ts.sys,
-        './',
+        "./",
       ).options;
     }
   }
