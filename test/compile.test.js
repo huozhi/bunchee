@@ -1,5 +1,5 @@
 const fs = require('fs');
-const {resolve} = require('path');
+const { resolve } = require('path');
 const { bundle } = require('..');
 
 const baseUnitTestDir = resolve(__dirname, 'unit');

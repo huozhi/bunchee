@@ -3,7 +3,7 @@
 import fs from "fs";
 import path from "path";
 import { CliArgs } from "./types";
-import { parseCliArgs } from "./utils";
+import { parseCliArgs, logger } from "./utils";
 import { version } from "../package.json";
 
 const helpMessage = `
@@ -25,8 +25,8 @@ function help() {
   console.log(helpMessage);
 }
 
-function exit(error: Error) {
-  console.error(error);
+function exit(err: Error) {
+  logger.error(err);
   process.exit(2);
 }
 
@@ -51,7 +51,7 @@ async function run(args: any) {
   const entry = path.resolve(cwd || process.cwd(), source);
   
   if (!fs.existsSync(entry) || !fs.statSync(entry).isFile()) {
-    const err = new Error('Entry file is not existed');
+    const err = new Error("Entry file is not existed");
     help();
     return exit(err);
   }
