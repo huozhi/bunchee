@@ -1,6 +1,7 @@
 {
   "include": [
-    "./src",
+    "env.d.ts",
+    "./src"
   ],
   "compilerOptions": {
     "rootDir": ".",
@@ -17,9 +18,6 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "typeRoots": [
-      "./node_modules/@types"
-    ],
     "forceConsistentCasingInFileNames": true
   }
 }

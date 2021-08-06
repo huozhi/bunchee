@@ -1,7 +1,6 @@
 import fs, { existsSync } from "fs";
 import { resolve, extname, dirname, basename } from "path";
 import commonjs from "@rollup/plugin-commonjs";
-// @ts-expect-error
 import shebang from "rollup-plugin-preserve-shebang";
 import json from "@rollup/plugin-json";
 import babel from "@rollup/plugin-babel";
