@@ -1,6 +1,7 @@
 {
   "include": [
-    "./src",
+    "*.d.ts",
+    "./src"
   ],
   "compilerOptions": {
     "rootDir": ".",
@@ -8,7 +9,6 @@
     "target": "es5",
     "module": "CommonJS",
     "lib": ["ES6"],
-    "declaration": false,
     "removeComments": true,
     "strict": true,
     "noUnusedLocals": true,
@@ -17,9 +17,6 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "typeRoots": [
-      "./node_modules/@types"
-    ],
     "forceConsistentCasingInFileNames": true
   }
 }
