@@ -1,6 +1,6 @@
 {
   "include": [
-    "env.d.ts",
+    "*.d.ts",
     "./src"
   ],
   "compilerOptions": {
@@ -9,7 +9,6 @@
     "target": "es5",
     "module": "CommonJS",
     "lib": ["ES6"],
-    "declaration": false,
     "removeComments": true,
     "strict": true,
     "noUnusedLocals": true,

@@ -1,1 +1,1 @@
-declare module "rollup-plugin-preserve-shebang";
+declare module "rollup-plugin-preserve-shebang"

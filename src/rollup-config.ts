@@ -84,7 +84,7 @@ function createInputConfig(
       declaration: !!typings,
       ...(!!typings && {
         declarationDir: dirname(resolve(cwd, typings)),
-      })
+      }),
     }),
     !useTypescript && babel({
       babelHelpers: "bundled",
@@ -123,14 +123,13 @@ function createOutputOptions(
   const {format, useTypescript} = options;
   const cwd: string = config.rootDir
   
-  let tsconfigOptions = {} as any;
+  let tsCompilerOptions = {} as any;
   if (useTypescript) {
     const ts = resolveTypescript();
     const tsconfigPath = resolve(cwd, "tsconfig.json");
     if (fs.existsSync(tsconfigPath)) {
-      const tsconfigJSON = ts.readConfigFile(tsconfigPath, ts.sys.readFile)
-        .config;
-      tsconfigOptions = ts.parseJsonConfigFileContent(
+      const tsconfigJSON = ts.readConfigFile(tsconfigPath, ts.sys.readFile).config;
+      tsCompilerOptions = ts.parseJsonConfigFileContent(
         tsconfigJSON,
         ts.sys,
         "./",
@@ -138,10 +137,9 @@ function createOutputOptions(
     }
   }
   
-  
   // respect if tsconfig.json has `esModuleInterop` config;
   // add esmodule mark if cjs and esmodule are both specified;
-  const useEsModuleMark = !!tsconfigOptions.esModuleInterop ||
+  const useEsModuleMark = !!tsCompilerOptions.esModuleInterop ||
     (
       pkg.hasOwnProperty("main") && 
       pkg.hasOwnProperty("module")
