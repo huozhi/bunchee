@@ -20,7 +20,7 @@ for (const folderName of unitTestDirs) {
     const pkgJson = fs.existsSync(`${dirPath}/package.json`) ? require(`${dirPath}/package.json`) : {}
 
 
-    await bundle(inputFileName, {file: distFile, format: pkgJson.main ? 'cjs' : 'esm', cwd: dirPath});
+    await bundle(inputFileName, {file: distFile, format: pkgJson.main ? 'cjs' : 'es', cwd: dirPath});
 
     const bundledAssest = fs.readFileSync(distFile, {encoding: 'utf-8'});
     expect(bundledAssest).toMatchSnapshot();
