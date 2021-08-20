@@ -17,8 +17,13 @@ function bundle(
   { watch, cwd, ...options } : CliArgs = {}
 ): Promise<any> {
   config.rootDir = resolve(process.cwd(), cwd || "");
-  assignDefault(options, "format", "esm")
+  assignDefault(options, "format", "es")
   assignDefault(options, "sourcemap", true)
+
+  // alias for 'es' in rollup
+  if (options.format === "esm") {
+    options.format = "es"
+  }
   
   const npmPackage = getPackageMeta();
   const rollupConfig = createRollupConfig(

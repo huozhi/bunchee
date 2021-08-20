@@ -18,7 +18,7 @@ type SupportedFields = "main" | "module"
 
 const mainFieldsConfig: {
   field: SupportedFields
-  format: "cjs" | "esm"
+  format: "cjs" | "es"
 }[] = [
   {
     field: "main",
@@ -26,7 +26,7 @@ const mainFieldsConfig: {
   },
   {
     field: "module",
-    format: "esm",
+    format: "es",
   },
 ];
 
