@@ -5,7 +5,6 @@ import shebang from "rollup-plugin-preserve-shebang";
 import json from "@rollup/plugin-json";
 import babel from "@rollup/plugin-babel";
 import nodeResolve from "@rollup/plugin-node-resolve";
-import typescript from "@rollup/plugin-typescript";
 import { OutputOptions, Plugin } from "rollup";
 import { terser } from "rollup-plugin-terser";
 import { PackageMetadata, BuncheeRollupConfig, CliArgs, BundleOptions } from "./types";
@@ -70,7 +69,7 @@ function createInputConfig(
     }),
     json(),
     shebang(),
-    useTypescript && typescript({
+    useTypescript && require("@rollup/plugin-typescript")({
       tsconfig: (() => { 
         const tsconfig = resolve(cwd, "tsconfig.json"); 
         return existsSync(tsconfig) ? tsconfig : undefined;
