@@ -29,6 +29,7 @@ const mainFieldsConfig: {
   },
 ];
 
+let hasLoggedTsWarning = false
 function resolveTypescript() {
   let ts;
   const m = new Module("", null);
@@ -36,7 +37,10 @@ function resolveTypescript() {
   try {
     ts = m.require("typescript");
   } catch (_) {
-    logger.warn("Could not load TypeScript compiler. Try `yarn add --dev typescript`")
+    if (!hasLoggedTsWarning) {
+      hasLoggedTsWarning = true
+      logger.warn("Could not load TypeScript compiler. Try `yarn add --dev typescript`")
+    }
   }
   return ts;
 }
@@ -79,6 +83,7 @@ function createInputConfig(
       jsx: "react",
       module: "ES6",
       target: "ES5",
+      noEmitOnError: true,
       sourceMap: options.sourcemap,
       declaration: !!typings,
       ...(!!typings && {

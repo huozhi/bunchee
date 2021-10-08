@@ -31,7 +31,9 @@ function exit(err: Error) {
 }
 
 async function run(args: any) {
-  const { source, format, file, watch, minify, cwd, sourcemap, target } = args;
+  const { source, format, watch, minify, sourcemap, target } = args;
+  const cwd = args.cwd || process.cwd()
+  const file = args.file ? path.resolve(cwd, args.file) : args.file
   const outputConfig: CliArgs = {
     file,
     format,
@@ -48,8 +50,8 @@ async function run(args: any) {
     return help();
   }
 
-  const entry = path.resolve(cwd || process.cwd(), source);
-  
+  const entry = path.resolve(cwd, source);
+
   if (!fs.existsSync(entry) || !fs.statSync(entry).isFile()) {
     const err = new Error("Entry file is not existed");
     help();
@@ -70,7 +72,7 @@ async function main() {
   }
   if (error || !params) {
     if (!error) help();
-    return exit(error);
+    return exit(error as Error);
   }
   await run(params);
 }
