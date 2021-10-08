@@ -1,10 +1,8 @@
 const { execSync, fork } = require('child_process');
 const fs = require('fs');
-const { resolve, join, dirname } = require('path');
-const { bundle } = require('..');
+const { resolve, join } = require('path');
 
 const integrationTestDir = resolve(__dirname, 'integration');
-const integrationDirs = fs.readdirSync(integrationTestDir);
 
 const getPath = (filepath) => join(integrationTestDir, filepath)
 
