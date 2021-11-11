@@ -39,7 +39,7 @@
     "@rollup/plugin-node-resolve": "11.2.1",
     "@rollup/plugin-typescript": "8.2.3",
     "arg": "5.0.0",
-    "babel-preset-o": "0.4.2",
+    "babel-preset-o": "0.4.3",
     "rollup": "2.55.1",
     "rollup-plugin-preserve-shebang": "1.0.1",
     "rollup-plugin-terser": "7.0.2",
