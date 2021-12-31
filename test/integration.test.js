@@ -23,6 +23,18 @@ const testCases = [
       const distFile = join(dir, './dist/index.js')
       expect(fs.existsSync(distFile)).toBe(true)
     }
+  },
+  {
+    name: 'pkg-exports',
+    args: ['index.js'],
+    expected(dir) {
+      const distFiles = [
+        join(dir, './dist/index.cjs'),
+        join(dir, './dist/index.mjs'),
+        join(dir, './dist/index.esm.js'),
+      ]
+      expect(distFiles.every(f => fs.existsSync(f))).toBe(true)
+    }
   }
 ]
 
