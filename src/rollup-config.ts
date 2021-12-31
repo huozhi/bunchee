@@ -149,6 +149,13 @@ function createOutputOptions(
   };
 }
 
+function findExport(field: any): string | null {
+  if (!field) return null
+  if (typeof field === "string") return field
+  const value = field["."] || field["import"] || field["module"]
+  return findExport(value)
+}
+
 function getExportPaths(pkg: PackageMetadata) {
   const paths: Record<'main' | 'module' | 'export', string | null> = {
     main: null,
@@ -167,7 +174,7 @@ function getExportPaths(pkg: PackageMetadata) {
     } else {
       paths.main = paths.main || pkg.exports["require"];
       paths.module = paths.module || pkg.exports["module"];
-      paths.export = pkg.exports["."] || pkg.exports["import"];
+      paths.export = findExport(pkg.exports);
     }
   }
   return paths;
