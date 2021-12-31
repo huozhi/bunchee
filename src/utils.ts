@@ -6,31 +6,12 @@ import { PackageMetadata } from "./types";
 
 export function getPackageMeta(): PackageMetadata {
   const pkgFilePath = path.resolve(config.rootDir, "package.json");
-  let targetPackageJson;
+  let targetPackageJson = {};
   try {
     targetPackageJson = JSON.parse(fs.readFileSync(pkgFilePath, { encoding: "utf-8" }));
-  } catch (e) {
-    targetPackageJson = {}
-  }
-  const {
-    name,
-    main,
-    module,
-    dependencies,
-    peerDependencies,
-    types,
-    typings,
-  } = targetPackageJson;
+  } catch (_) {}
 
-  return {
-    name,
-    main,
-    module,
-    dependencies,
-    peerDependencies,
-    types,
-    typings,
-  };
+  return targetPackageJson;
 }
 
 export function resolvePackagePath(pathname: string): string {

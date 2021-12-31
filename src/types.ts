@@ -4,8 +4,9 @@ type PackageMetadata = {
   name?: string;
   main?: string;
   module?: string;
-  dependencies?: { [key: string]: string };
-  peerDependencies?: { [key: string]: string };
+  dependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  exports?: string | Record<string, string>
   types?: string,
   typings?: string,
 };
