@@ -28,6 +28,11 @@ npm install --save-dev bunchee
 
 Declare your main field and module field in package.json, then call bunchee cli in build scripts. If you're using typescript, types will be generated automatically based on your package.json field `typings` or `types`.
 
+
+* `main` + `module`
+
+You can have Commonjs + ESModules output as the simple config
+
 ```json
 {
   "main": "dist/pkg.cjs.js",
@@ -36,6 +41,23 @@ Declare your main field and module field in package.json, then call bunchee cli 
     "build": "bunchee ./src/index.js"
   },
   "types": "dist/types/index.d.ts"
+}
+```
+
+* `exports` [sugar](https://nodejs.org/api/packages.html#exports-sugar)
+
+Leverage `exports` field to support different conditions would be also ideal. Most of the bundler such as `webpack` can already handle the [`package exports`](https://webpack.js.org/guides/package-exports/) well. It's convenient to define multiple conditions in exports.
+
+```json
+{
+  "exports": {
+    "require": "dist/index.cjs",
+    "import": "dist/index.mjs",
+    "module": "dist/index.esm.js" // module condition
+  },
+  "scripts": {
+    "build": "bunchee ./src/index.js"
+  },
 }
 ```
 
