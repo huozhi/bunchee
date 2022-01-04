@@ -35,7 +35,18 @@ const testCases = [
       ]
       expect(distFiles.every(f => fs.existsSync(f))).toBe(true)
     }
-  }
+  },
+  {
+    name: 'pkg-exports-default',
+    args: ['index.js'],
+    expected(dir) {
+      const distFiles = [
+        join(dir, './dist/index.cjs'),
+        join(dir, './dist/index.mjs'),
+      ]
+      expect(distFiles.every(f => fs.existsSync(f))).toBe(true)
+    }
+  },
 ]
 
 async function runBundle(dir, _args) {

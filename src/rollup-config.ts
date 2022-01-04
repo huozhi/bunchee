@@ -150,10 +150,10 @@ function createOutputOptions(
 }
 
 function findExport(field: any): string | null {
-  if (!field) return null
-  if (typeof field === "string") return field
-  const value = field["."] || field["import"] || field["module"]
-  return findExport(value)
+  if (!field) return null;
+  if (typeof field === "string") return field;
+  const value = field["."] || field["import"] || field["module"] || field["default"];
+  return findExport(value);
 }
 
 function getExportPaths(pkg: PackageMetadata) {
@@ -172,7 +172,7 @@ function getExportPaths(pkg: PackageMetadata) {
     if (typeof pkg.exports === "string") {
       paths.export = pkg.exports;
     } else {
-      paths.main = paths.main || pkg.exports["require"];
+      paths.main = paths.main || pkg.exports["require"] || pkg.exports["node"] || pkg.exports["default"];
       paths.module = paths.module || pkg.exports["module"];
       paths.export = findExport(pkg.exports);
     }

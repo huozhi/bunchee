@@ -1,0 +1,7 @@
+{
+  "name": "pkg-export-default",
+  "exports": {
+    "default": "./dist/index.mjs",
+    "node": "./dist/index.cjs"
+  }
+}
