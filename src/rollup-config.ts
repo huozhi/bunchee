@@ -5,7 +5,7 @@ import shebang from "rollup-plugin-preserve-shebang";
 import json from "@rollup/plugin-json";
 import babel from "@rollup/plugin-babel";
 import nodeResolve from "@rollup/plugin-node-resolve";
-import { OutputOptions, Plugin } from "rollup";
+import { InputOptions, OutputOptions, Plugin } from "rollup";
 import { terser } from "rollup-plugin-terser";
 import { PackageMetadata, BuncheeRollupConfig, CliArgs, BundleOptions } from "./types";
 import config from "./config";
@@ -37,7 +37,7 @@ function createInputConfig(
   entry: string,
   pkg: PackageMetadata,
   options: BundleOptions,
-) {
+): InputOptions {
   const externals = [pkg.peerDependencies, pkg.dependencies]
     .filter(<T>(n?: T): n is T => Boolean(n))
     .map((o: { [key: string]: string }): string[] => Object.keys(o))
@@ -101,6 +101,13 @@ function createInputConfig(
       return externals.some(name => id === name || id.startsWith(name + "/"))
     },
     plugins,
+    treeshake: {
+      propertyReadSideEffects: false,
+    },
+    onwarn (warning, warn) {
+      if (warning.code === 'MIXED_EXPORTS') return;
+      warn(warning);
+    },
   };
 }
 
@@ -241,9 +248,6 @@ function createRollupConfig(
   return {
     input: inputOptions,
     output: outputConfigs,
-    treeshake: {
-      propertyReadSideEffects: false,
-    },
   };
 }
 

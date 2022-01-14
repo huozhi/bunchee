@@ -1,4 +1,4 @@
-import { InputOptions, OutputOptions, TreeshakingOptions } from "rollup";
+import { InputOptions, OutputOptions, RollupOptions } from "rollup";
 
 type PackageMetadata = {
   name?: string;
@@ -6,15 +6,14 @@ type PackageMetadata = {
   module?: string;
   dependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
-  exports?: string | Record<string, string>
-  types?: string,
-  typings?: string,
+  exports?: string | Record<string, string>;
+  types?: string;
+  typings?: string;
 };
 
-type BuncheeRollupConfig = {
+type BuncheeRollupConfig = Partial<Omit<RollupOptions, 'input' | 'output'>> & {
   input: InputOptions;
   output: OutputOptions[];
-  treeshake: TreeshakingOptions;
 };
 
 type CliArgs = {
