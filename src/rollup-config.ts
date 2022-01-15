@@ -105,7 +105,10 @@ function createInputConfig(
       propertyReadSideEffects: false,
     },
     onwarn (warning, warn) {
-      if (warning.code === 'MIXED_EXPORTS') return;
+      if (
+        warning.code && 
+        ['MIXED_EXPORTS', 'PREFER_NAMED_EXPORTS'].includes(warning.code)
+      ) return;
       warn(warning);
     },
   };
