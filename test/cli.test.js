@@ -52,7 +52,7 @@ for (const testCase of testCases) {
     let stderr = '', stdout = '';
     ps.stdout.on('data', chunk => stdout += chunk.toString());
     ps.stderr.on('data', chunk => stderr += chunk.toString());
-    await new Promise((resolve) => {
+    const code = await new Promise((resolve) => {
       ps.on('close', resolve);
     });
     stdout && console.log(stdout);
@@ -63,6 +63,6 @@ for (const testCase of testCases) {
       expect(left).toBe(right);
     }
     expect(fs.existsSync(distFile)).toBe(true);
-    expect(stderr).toBe('');
+    expect(code).toBe(0);
   });
 }

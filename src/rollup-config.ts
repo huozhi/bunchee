@@ -42,7 +42,7 @@ function createInputConfig(
     .filter(<T>(n?: T): n is T => Boolean(n))
     .map((o: { [key: string]: string }): string[] => Object.keys(o))
     .reduce((a: string[], b: string[]) => a.concat(b), [] as string[]);
-  
+
   const {useTypescript, target, minify = false} = options;
   const typings: string | undefined = pkg.types || pkg.typings
   const cwd: string = config.rootDir
@@ -58,8 +58,8 @@ function createInputConfig(
     json(),
     shebang(),
     useTypescript && require("@rollup/plugin-typescript")({
-      tsconfig: (() => { 
-        const tsconfig = resolve(cwd, "tsconfig.json"); 
+      tsconfig: (() => {
+        const tsconfig = resolve(cwd, "tsconfig.json");
         return existsSync(tsconfig) ? tsconfig : undefined;
       })(),
       typescript: resolveTypescript(),
@@ -94,7 +94,7 @@ function createInputConfig(
       }
     }),
   ].filter((n: (Plugin | false)): n is Plugin => Boolean(n));
-  
+
   return {
     input: entry,
     external(id: string) {
@@ -106,7 +106,7 @@ function createInputConfig(
     },
     onwarn (warning, warn) {
       if (
-        warning.code && 
+        warning.code &&
         ['MIXED_EXPORTS', 'PREFER_NAMED_EXPORTS'].includes(warning.code)
       ) return;
       warn(warning);
@@ -135,13 +135,13 @@ function createOutputOptions(
   }
 
   const exportPaths = getExportPaths(pkg);
-  
+
   // respect if tsconfig.json has `esModuleInterop` config;
   // add esmodule mark if cjs and esmodule are both generated;
 
   const useEsModuleMark = Boolean(tsCompilerOptions.esModuleInterop ||
     (
-      exportPaths.main && 
+      exportPaths.main &&
       exportPaths.module
     )
   );
@@ -152,6 +152,7 @@ function createOutputOptions(
     dir: dirname(file),
     entryFileNames: basename(file),
     format,
+    exports: "named",
     esModule: useEsModuleMark && format !== "umd",
     freeze: false,
     strict: false,
@@ -225,12 +226,12 @@ function createRollupConfig(
       return createOutputOptions(
         {
           ...cliArgs,
-          file: exportDist.file, 
+          file: exportDist.file,
           format: exportDist.format,
           useTypescript,
         },
         pkg
-      );      
+      );
     });
 
   // CLI output option is always prioritized
@@ -239,10 +240,10 @@ function createRollupConfig(
       createOutputOptions(
         {
           ...cliArgs,
-          file, 
-          format, 
+          file,
+          format,
           useTypescript,
-        }, 
+        },
         pkg
       )
     ];
