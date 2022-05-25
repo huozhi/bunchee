@@ -39,7 +39,7 @@ async function run(args: any) {
     format,
     cwd,
     target,
-    watch: watch,
+    watch: !!watch,
     minify: !!minify,
     sourcemap: sourcemap === false ? false : true,
   };
@@ -59,7 +59,7 @@ async function run(args: any) {
   }
 
   const { bundle } = require(".")
-  
+
   return await bundle(entry, outputConfig);
 }
 
