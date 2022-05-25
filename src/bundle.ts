@@ -24,7 +24,7 @@ function bundle(
   if (options.format === "esm") {
     options.format = "es"
   }
-  
+
   const npmPackage = getPackageMeta();
   const rollupConfig = createRollupConfig(
     entry,
@@ -46,7 +46,13 @@ function runWatch({ input, output }: BuncheeRollupConfig): RollupWatcher {
       exclude: ["node_modules/**"],
     },
   }];
-  return rollupWatch(watchOptions);
+  const watcher = rollupWatch(watchOptions);
+  watcher.on('event', event => {
+    if (event.code === 'ERROR') {
+      onError(event.error)
+    }
+  });
+  return watcher;
 }
 
 function runBundle({ input, output }: BuncheeRollupConfig) {
@@ -57,17 +63,20 @@ function runBundle({ input, output }: BuncheeRollupConfig) {
       );
       return Promise.all(writeJobs);
     },
-    (error = {}) => {
-      // logging source code in format
-      if (error.frame) {
-        process.stdout.write(error.frame + "\n");
-      }
-      if (error.stack) {
-        process.stdout.write(error.stack + "\n");
-      }
-      throw error;
-    }
+    onError
   );
+}
+
+function onError(error: any) {
+  if (!error) return
+  // logging source code in format
+  if (error.frame) {
+    process.stdout.write(error.frame + "\n");
+  }
+  if (error.stack) {
+    process.stdout.write(error.stack + "\n");
+  }
+  throw error;
 }
 
 export default bundle;
