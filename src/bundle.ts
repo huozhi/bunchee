@@ -14,7 +14,7 @@ function assignDefault(options: CliArgs, name: keyof CliArgs, defaultValue: any)
 
 function bundle(
   entry: string,
-  { watch, cwd, ...options } : CliArgs = {}
+  { cwd, ...options } : CliArgs = {}
 ): Promise<any> {
   config.rootDir = resolve(process.cwd(), cwd || "");
   assignDefault(options, "format", "es")
@@ -32,7 +32,7 @@ function bundle(
     options,
   );
 
-  if (watch) {
+  if (options.watch) {
     return Promise.resolve(runWatch(rollupConfig));
   }
   return runBundle(rollupConfig);

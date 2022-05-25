@@ -67,7 +67,8 @@ function createInputConfig(
       jsx: "react",
       module: "ES6",
       target: "ES5",
-      noEmitOnError: process.env.NODE_ENV === 'production',
+      // Disable `noEmitOnError` for watch mode to avoid plugin error
+      noEmitOnError: !options.watch,
       sourceMap: options.sourcemap,
       declaration: !!typings,
       ...(!!typings && {
