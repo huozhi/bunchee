@@ -67,7 +67,7 @@ function createInputConfig(
       jsx: "react",
       module: "ES6",
       target: "ES5",
-      noEmitOnError: true,
+      noEmitOnError: process.env.NODE_ENV === 'production',
       sourceMap: options.sourcemap,
       declaration: !!typings,
       ...(!!typings && {
