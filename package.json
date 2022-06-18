@@ -12,8 +12,8 @@
     "clean": "rm -rf ./dist",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build && chmod +x dist/cli.js && yarn test",
-    "build:cli": "ts-node --files src/cli.ts src/cli.ts --target node -f cjs -o dist/cli.js",
-    "build:main": "ts-node --files src/cli.ts src/index.ts --target node -f cjs",
+    "build:cli": "tsx src/cli.ts src/cli.ts --target node -f cjs -o dist/cli.js",
+    "build:main": "tsx src/cli.ts src/index.ts --target node -f cjs",
     "build": "yarn build:main && yarn build:cli"
   },
   "type": "commonjs",
@@ -54,9 +54,8 @@
     }
   },
   "devDependencies": {
-    "@types/node": "17.0.35",
     "jest": "27.0.6",
-    "ts-node": "10.0.0",
-    "typescript": "4.3.5"
+    "tsx": "3.4.3",
+    "typescript": "4.7.4"
   }
 }

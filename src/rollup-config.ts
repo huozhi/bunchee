@@ -1,3 +1,4 @@
+import type { PackageMetadata, BuncheeRollupConfig, CliArgs, BundleOptions } from "./types";
 import fs, { existsSync } from "fs";
 import { resolve, extname, dirname, basename } from "path";
 import commonjs from "@rollup/plugin-commonjs";
@@ -7,7 +8,6 @@ import babel from "@rollup/plugin-babel";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import { InputOptions, OutputOptions, Plugin } from "rollup";
 import { terser } from "rollup-plugin-terser";
-import { PackageMetadata, BuncheeRollupConfig, CliArgs, BundleOptions } from "./types";
 import config from "./config";
 import { logger } from "./utils"
 

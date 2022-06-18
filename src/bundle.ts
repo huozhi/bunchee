@@ -1,10 +1,11 @@
+import type { RollupWatcher, RollupWatchOptions, OutputOptions, RollupBuild } from "rollup"
+import type { BuncheeRollupConfig, CliArgs } from "./types";
+
 import { resolve } from "path";
 import { watch as rollupWatch, rollup } from "rollup";
-import { RollupWatcher, RollupWatchOptions, OutputOptions, RollupBuild } from "rollup"
 import createRollupConfig from "./rollup-config";
 import { getPackageMeta } from "./utils";
 import config from "./config";
-import { BuncheeRollupConfig, CliArgs } from "./types";
 
 function assignDefault(options: CliArgs, name: keyof CliArgs, defaultValue: any) {
   if (!(name in options) || options[name] == null) {

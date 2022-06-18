@@ -2,7 +2,7 @@ import fs from "fs";
 import arg from "arg";
 import path from "path";
 import config from "./config";
-import { PackageMetadata } from "./types";
+import type { PackageMetadata } from "./types";
 
 export function getPackageMeta(): PackageMetadata {
   const pkgFilePath = path.resolve(config.rootDir, "package.json");
@@ -30,7 +30,7 @@ export function parseCliArgs(argv: string[]) {
     "--version": Boolean,
     "--target": String,
     "--no-sourcemap": Boolean,
-    
+
     "-h": "--help",
     "-v": "--version",
     "-w": "--watch",
@@ -38,16 +38,16 @@ export function parseCliArgs(argv: string[]) {
     "-f": "--format",
     "-m": "--minify",
   }, {
-    permissive: true, 
+    permissive: true,
     argv
   });
   const source: string = args._[0];
   const parsedArgs = {
     source,
-    format: args["--format"], 
-    file: args["--output"], 
-    watch: args["--watch"], 
-    minify: args["--minify"], 
+    format: args["--format"],
+    file: args["--output"],
+    watch: args["--watch"],
+    minify: args["--minify"],
     sourcemap: args["--no-sourcemap"] !== true,
     cwd: args["--cwd"],
     help: args["--help"],

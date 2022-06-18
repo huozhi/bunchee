@@ -1,6 +1,6 @@
 export { default as bundle } from "./bundle"
 
-export {
+export type {
   CliArgs,
   BuncheeRollupConfig,
 } from "./types"

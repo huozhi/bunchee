@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
+import type { CliArgs } from "./types";
+
 import fs from "fs";
 import path from "path";
-import { CliArgs } from "./types";
 import { parseCliArgs, logger } from "./utils";
 import { version } from "../package.json";
 
