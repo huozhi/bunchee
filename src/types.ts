@@ -1,4 +1,4 @@
-import { InputOptions, OutputOptions, RollupOptions } from "rollup";
+import type { InputOptions, OutputOptions, RollupOptions } from "rollup";
 
 type PackageMetadata = {
   name?: string;
@@ -31,9 +31,9 @@ type BundleOptions = CliArgs & {
 }
 
 
-export { 
+export type {
   CliArgs,
   BundleOptions,
   PackageMetadata,
-  BuncheeRollupConfig, 
+  BuncheeRollupConfig,
  };
