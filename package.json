@@ -39,11 +39,12 @@
     "@rollup/plugin-json": "4.1.0",
     "@rollup/plugin-node-resolve": "13.3.0",
     "@rollup/plugin-typescript": "8.3.4",
+    "@swc/core": "1.2.196",
     "arg": "5.0.0",
-    "babel-preset-o": "0.4.3",
+    "regenerator-runtime": "0.13.9",
     "rollup": "2.74.1",
     "rollup-plugin-preserve-shebang": "1.0.1",
-    "rollup-plugin-terser": "7.0.2",
+    "rollup-plugin-swc3": "0.3.0",
     "tslib": "2.3.0"
   },
   "peerDependencies": {
