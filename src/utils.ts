@@ -30,6 +30,7 @@ export function parseCliArgs(argv: string[]) {
     "--version": Boolean,
     "--target": String,
     "--no-sourcemap": Boolean,
+    "--external": [String],
 
     "-h": "--help",
     "-v": "--version",
@@ -37,6 +38,7 @@ export function parseCliArgs(argv: string[]) {
     "-o": "--output",
     "-f": "--format",
     "-m": "--minify",
+    "-e": "--external",
   }, {
     permissive: true,
     argv
@@ -53,6 +55,7 @@ export function parseCliArgs(argv: string[]) {
     help: args["--help"],
     version: args["--version"],
     target: args["--target"],
+    external: args["--external"],
   }
   return parsedArgs;
 }
