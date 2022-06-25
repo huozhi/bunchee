@@ -1,13 +1,13 @@
 # bunchee
 > zero config bundler for JavaScript/TypeScript/JSX library
 
-![bunchee](https://user-images.githubusercontent.com/4800338/98430015-7ce64f00-20e5-11eb-8c64-41addfbd4ede.png) 
+![bunchee](https://user-images.githubusercontent.com/4800338/98430015-7ce64f00-20e5-11eb-8c64-41addfbd4ede.png)
 
 <p align="left">
   <a href="https://npm.im/bunchee">
     <img src="https://badgen.net/npm/v/bunchee">
   </a>
-  
+
   <a href="https://github.com/huozhi/bunchee/actions?workflow=CI">
     <img src="https://github.com/huozhi/bunchee/workflows/CI/badge.svg">
   </a>
@@ -72,6 +72,7 @@ Options:
   -m, --minify           compress output. false by default
   -o, --output <file>    specify output filename
   -f, --format <format>  specify bundle type: "esm", "cjs", "umd". "esm" by default
+  -e, --external <mod>   specify an external dependency
   -h, --help             output usage information
   --target <target>      build environment, use "node" for nodejs runtime
   --no-sourcemap         disable sourcemap generation, sourcemap generation is enabled by default
