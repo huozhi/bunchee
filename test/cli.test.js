@@ -39,11 +39,17 @@ const testCases = [
   },
   {
     name: 'externals',
-    args: [resolve('fixtures/with-externals.js'), '-e', 'foo', '-e', 'bar', '-o', resolve('dist/with-externals.bundle.js')],
+    args: [resolve('fixtures/with-externals.js'), '-e', 'foo', '-o', resolve('dist/with-externals.bundle.js')],
     expected(distFile, { stdout, stderr }) {
+      const output = stdout + stderr
       return [
         [fs.existsSync(distFile), true],
-        [(stdout + stderr).includes('treating it as an external dependency'), false]
+        [output.includes(
+          `'bar' is imported by test/fixtures/with-externals.js, but could not be resolved – treating it as an external dependency`
+        ), true],
+        [output.includes(
+          `'foo' is imported by test/fixtures/with-externals.js, but could not be resolved – treating it as an external dependency`
+        ), false]
       ]
     }
   }
