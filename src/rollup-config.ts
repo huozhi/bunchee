@@ -41,7 +41,8 @@ function createInputConfig(
   const externals = [pkg.peerDependencies, pkg.dependencies]
     .filter(<T>(n?: T): n is T => Boolean(n))
     .map((o: { [key: string]: string }): string[] => Object.keys(o))
-    .reduce((a: string[], b: string[]) => a.concat(b), [] as string[]);
+    .reduce((a: string[], b: string[]) => a.concat(b), [] as string[])
+    .concat(options.external ?? [])
 
   const {useTypescript, target, minify = false} = options;
   const typings: string | undefined = pkg.types || pkg.typings

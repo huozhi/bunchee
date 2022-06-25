@@ -16,6 +16,7 @@ Options:
   -m, --minify           compress output. false by default
   -o, --output <file>    specify output filename
   -f, --format <format>  specify bundle type: "esm", "cjs", "umd". "esm" by default
+  -e, --external <mod>   specify an external dependency
   --target <target>      build environment, use "node" for nodejs runtime
   --no-sourcemap         disable sourcemap generation, sourcemap generation is enabled by default
   --cwd <cwd>            specify current working directory
@@ -40,6 +41,7 @@ async function run(args: any) {
     format,
     cwd,
     target,
+    external: args.external || [],
     watch: !!watch,
     minify: !!minify,
     sourcemap: sourcemap === false ? false : true,

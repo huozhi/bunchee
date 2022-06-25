@@ -24,6 +24,7 @@ type CliArgs = {
   target?: string;
   cwd?: string;
   sourcemap?: boolean;
+  external?: string[];
 }
 
 type BundleOptions = CliArgs & {

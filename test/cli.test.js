@@ -37,11 +37,22 @@ const testCases = [
       ]
     }
   },
+  {
+    name: 'externals',
+    args: [resolve('fixtures/with-externals.js'), '-e', 'foo', '-e', 'bar', '-o', resolve('dist/with-externals.bundle.js')],
+    expected(distFile, { stdout, stderr }) {
+      return [
+        [fs.existsSync(distFile), true],
+        [(stdout + stderr).includes('treating it as an external dependency'), false]
+      ]
+    }
+  }
 ]
 
 for (const testCase of testCases) {
   const {name, args, expected} = testCase;
   test(`cli ${name} should work properly`, async () => {
+    // Delete dist folder (as last argument)
     const dist = args[args.length - 1]
     execSync(`rm -rf ${path.dirname(dist)}`)
     const ps = fork(
@@ -58,7 +69,7 @@ for (const testCase of testCases) {
     stdout && console.log(stdout);
     stderr && console.error(stderr);
     const distFile = args[args.length - 1];
-    for (const conditions of expected(distFile)) {
+    for (const conditions of expected(distFile, { stdout, stderr })) {
       const [left, right] = conditions;
       expect(left).toBe(right);
     }
