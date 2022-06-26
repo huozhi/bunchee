@@ -29,7 +29,6 @@ jobs:
 
       - name: Cache Dependencies
         uses: actions/cache@v3
-        id: yarn-cache
         with:
           path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
           key: ${{ runner.os }}-node-${{ matrix.node-version }}-yarn-${{ hashFiles('**/yarn.lock') }}
@@ -38,8 +37,7 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install Dependencies
-        if: steps.yarn-cache.outputs.cache-hit != 'true'
-        run: yarn install --frozen-lockfile
+        run: yarn install --frozen-lockfile --prefer-offline
 
       - name: Check Types
         run: yarn typecheck
