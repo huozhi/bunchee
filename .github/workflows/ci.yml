@@ -11,20 +11,39 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [14]
+        node-version: [14, 16, 18]
 
+    name: Node ${{ matrix.node-version }}
     steps:
-    - uses: actions/checkout@v2
-    - name: Setup Node
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - name: Install
-      run: yarn install
-    - name: Type Checking
-      run: yarn typecheck
-    - name: Build Dist
-      run: yarn build
-    - name: Test
-      run: yarn test
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
+      - name: Use Node ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Get Yarn Cache Directory Path
+        id: yarn-cache-dir-path
+        run: echo "::set-output name=dir::$(yarn cache dir)"
+
+      - name: Cache Dependencies
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          key: ${{ runner.os }}-node-${{ matrix.node-version }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-node-${{ matrix.node-version }}-yarn-
+            ${{ runner.os }}-node-
+
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile --prefer-offline
+
+      - name: Check Types
+        run: yarn typecheck
+
+      - name: Build Dist
+        run: yarn build
+
+      - name: Test
+        run: yarn test
