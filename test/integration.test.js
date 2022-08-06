@@ -47,6 +47,22 @@ const testCases = [
       expect(distFiles.every(f => fs.existsSync(f))).toBe(true)
     }
   },
+  {
+    name: 'multi-entries',
+    args: [],
+    expected(dir, stdout, stderr) {
+      const distFiles = [
+        join(dir, './dist/lite.js'),
+        join(dir, './dist/client/index.cjs'),
+        join(dir, './dist/client/index.mjs'),
+      ]
+
+      console.log(stdout, stderr)
+      expect(distFiles.every(f => fs.existsSync(f))).toBe(true)
+
+
+    }
+  },
 ]
 
 async function runBundle(dir, _args) {

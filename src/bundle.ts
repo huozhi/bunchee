@@ -1,6 +1,7 @@
 import type { RollupWatcher, RollupWatchOptions, OutputOptions, RollupBuild } from "rollup"
 import type { BuncheeRollupConfig, CliArgs } from "./types";
 
+import fs from "fs";
 import { resolve } from "path";
 import { watch as rollupWatch, rollup } from "rollup";
 import createRollupConfig from "./rollup-config";
@@ -14,7 +15,7 @@ function assignDefault(options: CliArgs, name: keyof CliArgs, defaultValue: any)
 }
 
 function bundle(
-  entry: string,
+  entryPath: string,
   { cwd, ...options } : CliArgs = {}
 ): Promise<any> {
   config.rootDir = resolve(process.cwd(), cwd || "");
@@ -27,8 +28,44 @@ function bundle(
   }
 
   const npmPackage = getPackageMeta();
+  const { entry: entries, ...customConfig } = npmPackage.bunchee || {};
+  const hasMultiEntries = entries && Object.keys(entries).length > 0;
+
+  if (!fs.existsSync(entryPath)) {
+    const hasEntryFile = entryPath === '' ? '' : fs.statSync(entryPath).isFile();
+    if (!hasEntryFile && !hasMultiEntries) {
+      const err = new Error("Entry file is not existed");
+      err.name = "NOT_EXISTED";
+      return Promise.reject(err);
+    }
+
+    if (hasMultiEntries) {
+      Object.assign(options, customConfig);
+      const rollupConfigs = Object.keys(entries).map(entryExport => {
+        const source = entries[entryExport];
+        // const dist = npmPackage.exports[entryExport];
+
+        const rollupConfig = createRollupConfig(
+          resolve(cwd!, source),
+          npmPackage,
+          options,
+          entryExport
+        );
+        return rollupConfig;
+      });
+
+      // TODO: watch mode
+      return Promise.all(
+        rollupConfigs.map(rollupConfig =>
+          runBundle(rollupConfig)
+        )
+      )
+    }
+  }
+
+  Object.assign(options, customConfig);
   const rollupConfig = createRollupConfig(
-    entry,
+    entryPath,
     npmPackage,
     options,
   );

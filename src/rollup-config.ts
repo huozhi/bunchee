@@ -148,7 +148,7 @@ function createOutputOptions(
     )
   );
 
-  const file = resolve(options.file as string)
+  const file = resolve(options.file!)
   return {
     name: pkg.name,
     dir: dirname(file),
@@ -195,7 +195,7 @@ function getExportPaths(pkg: PackageMetadata) {
 
 function getExportDist(pkg: PackageMetadata) {
   const paths = getExportPaths(pkg);
-  const dist: Array<{format: "cjs" | "esm", file: string}> = []
+  const dist: {format: "cjs" | "esm", file: string}[] = []
   if (paths.main) {
     dist.push({format: "cjs", file: getDistPath(paths.main)})
   }
@@ -213,17 +213,40 @@ function getExportDist(pkg: PackageMetadata) {
   return dist
 }
 
+function getSubExportDist(pkg: PackageMetadata, subExport: string) {
+  const pkgExports = pkg.exports || {}
+  const dist: {format: "cjs" | "esm", file: string}[] = [];
+  const exports = (pkgExports as Record<string, string | Record<string, string>>)[subExport];
+  if (typeof exports === 'string') {
+      dist.push({format: "esm", file: getDistPath(exports)});
+  } else {
+    if (exports.require) {
+      dist.push({format: "cjs", file: getDistPath(exports.require)});
+    }
+    if (exports.import) {
+      dist.push({format: "esm", file: getDistPath(exports.import)});
+    }
+  }
+  return dist;
+}
+
 function createRollupConfig(
   entry: string,
   pkg: PackageMetadata,
   cliArgs: CliArgs,
+  entryExport?: string
 ): BuncheeRollupConfig {
   const { file, format } = cliArgs;
   const ext = extname(entry);
   const useTypescript: boolean = ext === ".ts" || ext === ".tsx";
   const options = {...cliArgs, useTypescript};
   const inputOptions = createInputConfig(entry, pkg, options);
-  let outputConfigs = getExportDist(pkg)
+
+  const outputExports = entryExport
+      ? getSubExportDist(pkg, entryExport)
+      : getExportDist(pkg)
+
+  let outputConfigs = outputExports
     .map((exportDist) => {
       return createOutputOptions(
         {

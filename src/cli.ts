@@ -2,7 +2,6 @@
 
 import type { CliArgs } from "./types";
 
-import fs from "fs";
 import path from "path";
 import { parseCliArgs, logger } from "./utils";
 import { version } from "../package.json";
@@ -49,21 +48,22 @@ async function run(args: any) {
   if (args.version) {
     return console.log(version);
   }
-  if (args.help || !source) {
+  if (args.help) {
     return help();
   }
 
-  const entry = path.resolve(cwd, source);
+  const entry = source ? path.resolve(cwd, source) : '';
+  const { bundle } = require(".");
 
-  if (!fs.existsSync(entry) || !fs.statSync(entry).isFile()) {
-    const err = new Error("Entry file is not existed");
-    help();
-    return exit(err);
+  try {
+    return await bundle(entry, outputConfig);
+  } catch (err: any) {
+    if (err.name === 'NOT_EXISTED') {
+      help();
+      return exit(err);
+    }
+    throw err;
   }
-
-  const { bundle } = require(".")
-
-  return await bundle(entry, outputConfig);
 }
 
 async function main() {

@@ -1,0 +1,15 @@
+{
+  "exports": {
+    "./lite": "./dist/lite.js",
+    "./client": {
+      "require": "./dist/client/index.cjs",
+      "import": "./dist/client/index.mjs"
+    }
+  },
+  "bunchee": {
+    "entry": {
+      "./lite": "./lite/index.js",
+      "./client": "./client/index.js"
+    }
+  }
+}
