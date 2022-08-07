@@ -43,7 +43,6 @@ function bundle(
       Object.assign(options, customConfig);
       const rollupConfigs = Object.keys(entries).map(entryExport => {
         const source = entries[entryExport];
-        // const dist = npmPackage.exports[entryExport];
 
         const rollupConfig = createRollupConfig(
           resolve(cwd!, source),
