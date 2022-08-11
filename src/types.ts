@@ -12,7 +12,7 @@ type CommonConfig = {
 }
 
 type BuildConfig = CommonConfig & {
-  entry: Record<string, string>;
+  entry: string | Record<string, string>;
 }
 
 type PackageMetadata = {

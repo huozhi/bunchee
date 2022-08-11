@@ -29,10 +29,19 @@ function bundle(
 
   const npmPackage = getPackageMeta();
   const { entry: entries, ...customConfig } = npmPackage.bunchee || {};
-  const hasMultiEntries = entries && Object.keys(entries).length > 0;
+  const isSingleEntry = typeof entries === 'string'
+  const hasMultiEntries = entries
+    && !isSingleEntry
+    && Object.keys(entries).length > 0;
+
+  if (isSingleEntry) {
+    entryPath = resolve(config.rootDir, entries)
+  }
 
   if (!fs.existsSync(entryPath)) {
-    const hasEntryFile = entryPath === '' ? '' : fs.statSync(entryPath).isFile();
+    const hasEntryFile =
+      entryPath === '' ? '' : fs.statSync(entryPath).isFile()
+
     if (!hasEntryFile && !hasMultiEntries) {
       const err = new Error("Entry file is not existed");
       err.name = "NOT_EXISTED";

@@ -1,0 +1,9 @@
+{
+  "exports": {
+    ".": "./dist/index.js",
+    "./package.json": "./package.json"
+  },
+  "bunchee": {
+    "entry": "./src/index.js"
+  }
+}

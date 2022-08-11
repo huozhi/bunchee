@@ -236,10 +236,14 @@ function getExportDist(pkg: PackageMetadata) {
 function getSubExportDist(pkg: PackageMetadata, subExport: string) {
   const pkgExports = pkg.exports || {}
   const dist: {format: "cjs" | "esm", file: string}[] = [];
+  // "exports": "..."
   if (typeof pkgExports === 'string') {
     dist.push({format: pkg.type === "module" ? "esm" : "cjs", file: getDistPath(pkgExports)})
   } else {
+    // "exports": { }
     const exports = pkgExports[subExport];
+    // Ignore json exports, like "./package.json"
+    if (subExport.endsWith(".json")) return dist
     if (typeof exports === 'string') {
         dist.push({format: "esm", file: getDistPath(exports)});
     } else {
