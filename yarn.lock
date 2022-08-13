@@ -708,7 +708,7 @@
   resolved "https://registry.yarnpkg.com/@swc/core-win32-x64-msvc/-/core-win32-x64-msvc-1.2.229.tgz#efcc100b2e432075822036ec89d9deda6b67668a"
   integrity sha512-RnVQ/xfF5pluMqMAKGMYOtbIgk4M6N4V3xc0KBAkBHJIkswWIoOUvRdu/GKbOY6TrrW/CVXmdG/skK6khqUalA==
 
-"@swc/core@1.2.229":
+"@swc/core@~1.2.229":
   version "1.2.229"
   resolved "https://registry.yarnpkg.com/@swc/core/-/core-1.2.229.tgz#8703974d70d3fda6de6a2f3f9a9a370b90c6fc45"
   integrity sha512-Raii20iIkM1ami1K90GZpqRcSm5c3LWBgcO9ArNEXGnEC1nur/MOU01GEVIsLx7UEHQuVNXUuVODv1rEIXxz6w==
