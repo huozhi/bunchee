@@ -9,6 +9,7 @@ import shebang from "rollup-plugin-preserve-shebang";
 import json from "@rollup/plugin-json";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import { InputOptions, OutputOptions, Plugin } from "rollup";
+import { terser } from "rollup-plugin-terser";
 import config from "./config";
 import { logger } from "./utils"
 
@@ -55,8 +56,8 @@ function createInputConfig(
     .concat(options.external ?? [])
 
   const {useTypescript, target, minify = false} = options;
-  // const typings: string | undefined = pkg.types || pkg.typings
-  // const cwd: string = config.rootDir
+  const typings: string | undefined = pkg.types || pkg.typings
+  const cwd: string = config.rootDir
 
   const plugins: (Plugin)[] = [
     nodeResolve({
@@ -68,7 +69,45 @@ function createInputConfig(
     }),
     json(),
     shebang(),
-    swc({
+    useTypescript && require("@rollup/plugin-typescript")({
+      tsconfig: (() => {
+        const tsconfig = resolve(cwd, "tsconfig.json");
+        return fs.existsSync(tsconfig) ? tsconfig : undefined;
+      })(),
+      typescript: resolveTypescript(),
+      // override options
+      jsx: "react",
+      module: "ES6",
+      target: "ES5",
+      // Disable `noEmitOnError` for watch mode to avoid plugin error
+      noEmitOnError: !options.watch,
+      sourceMap: options.sourcemap,
+      declaration: !!typings,
+      ...(!!typings && {
+        declarationDir: dirname(resolve(cwd, typings)),
+      }),
+    }),
+    minify && terser({
+      compress: {
+        "keep_infinity": true,
+      },
+      format: {
+        "comments": /^\s*([@#]__[A-Z]__\s*$|@[a-zA-Z]\s*$)/,
+        "wrap_func_args": false,
+        "preserve_annotations": true,
+      }
+    }),
+    useTypescript && minify && terser({
+      compress: {
+        "keep_infinity": true,
+      },
+      format: {
+        "comments": /^\s*([@#]__[A-Z]__\s*$|@[a-zA-Z]\s*$)/,
+        "wrap_func_args": false,
+        "preserve_annotations": true,
+      }
+    }),
+    !useTypescript && swc({
       // All options are optional
       include: /\.(m|c)?[jt]sx?$/,
       exclude: 'node_modules',
@@ -89,7 +128,6 @@ function createInputConfig(
       },
       sourceMaps: options.sourcemap,
       inlineSourcesContent: false,
-
     }),
   ].filter((n: (Plugin | false)): n is Plugin => Boolean(n));
 

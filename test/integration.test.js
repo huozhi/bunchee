@@ -8,6 +8,15 @@ const getPath = (filepath) => join(integrationTestDir, filepath)
 
 const testCases = [
   {
+    name: 'ts-error',
+    args: ['index.ts', '-o', './dist/index.js'],
+    expected(dir, stdout) {
+      const distFile = join(dir, './dist/index.js')
+      expect(fs.existsSync(distFile)).toBe(false)
+      expect(stdout).toMatch(/Could not load TypeScript compiler/)
+    }
+  },
+  {
     name: 'no-ts-require-for-js',
     args: ['index.js', '-o', './dist/index.js'],
     expected(dir) {

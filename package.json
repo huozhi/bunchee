@@ -45,6 +45,7 @@
     "rollup": "2.74.1",
     "rollup-plugin-preserve-shebang": "1.0.1",
     "rollup-plugin-swc3": "0.3.0",
+    "rollup-plugin-terser": "7.0.2",
     "tslib": "2.3.0"
   },
   "peerDependencies": {
