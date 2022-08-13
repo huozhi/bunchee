@@ -668,62 +668,15 @@ function _asyncToGenerator(fn) {
         });
     };
 }
-function _checkPrivateRedeclaration(obj, privateCollection) {
-    if (privateCollection.has(obj)) {
-        throw new TypeError("Cannot initialize the same private elements twice on an object");
+function _classPrivateFieldLooseBase(receiver, privateKey) {
+    if (!Object.prototype.hasOwnProperty.call(receiver, privateKey)) {
+        throw new TypeError("attempted to use private field on non-instance");
     }
+    return receiver[privateKey];
 }
-function _classApplyDescriptorGet(receiver, descriptor) {
-    if (descriptor.get) {
-        return descriptor.get.call(receiver);
-    }
-    return descriptor.value;
-}
-function _classCallCheck(instance, Constructor) {
-    if (!(instance instanceof Constructor)) {
-        throw new TypeError("Cannot call a class as a function");
-    }
-}
-function _classExtractFieldDescriptor(receiver, privateMap, action) {
-    if (!privateMap.has(receiver)) {
-        throw new TypeError("attempted to " + action + " private field on non-instance");
-    }
-    return privateMap.get(receiver);
-}
-function _classPrivateFieldGet(receiver, privateMap) {
-    var descriptor = _classExtractFieldDescriptor(receiver, privateMap, "get");
-    return _classApplyDescriptorGet(receiver, descriptor);
-}
-function _classPrivateFieldInit(obj, privateMap, value) {
-    _checkPrivateRedeclaration(obj, privateMap);
-    privateMap.set(obj, value);
-}
-function _defineProperties(target, props) {
-    for(var i = 0; i < props.length; i++){
-        var descriptor = props[i];
-        descriptor.enumerable = descriptor.enumerable || false;
-        descriptor.configurable = true;
-        if ("value" in descriptor) descriptor.writable = true;
-        Object.defineProperty(target, descriptor.key, descriptor);
-    }
-}
-function _createClass(Constructor, protoProps, staticProps) {
-    if (protoProps) _defineProperties(Constructor.prototype, protoProps);
-    if (staticProps) _defineProperties(Constructor, staticProps);
-    return Constructor;
-}
-function _defineProperty(obj, key, value) {
-    if (key in obj) {
-        Object.defineProperty(obj, key, {
-            value: value,
-            enumerable: true,
-            configurable: true,
-            writable: true
-        });
-    } else {
-        obj[key] = value;
-    }
-    return obj;
+var id = 0;
+function _classPrivateFieldLooseKey(name) {
+    return "__private_" + id++ + "_" + name;
 }
 var _marked = /*#__PURE__*/ regeneratorRuntime$1.mark(generator);
 function generator() {
@@ -758,41 +711,36 @@ function _asyncFunc() {
     }));
     return _asyncFunc.apply(this, arguments);
 }
-var _x = /*#__PURE__*/ new WeakMap();
+var _x = /*#__PURE__*/ _classPrivateFieldLooseKey("_x");
 var A = /*#__PURE__*/ function() {
     function A() {
         var _this = this;
-        _classCallCheck(this, A);
-        _classPrivateFieldInit(this, _x, {
+        Object.defineProperty(this, _x, {
             writable: true,
             value: 1
         });
-        _defineProperty(this, "getX", function() {
-            return _classPrivateFieldGet(_this, _x);
-        });
+        this.getX = function() {
+            return _classPrivateFieldLooseBase(_this, _x)[_x];
+        };
     }
-    _createClass(A, [
-        {
-            key: "f1",
-            value: /*#__PURE__*/ regeneratorRuntime$1.mark(function f1() {
-                return regeneratorRuntime$1.wrap(function f1$(_ctx) {
-                    while(1)switch(_ctx.prev = _ctx.next){
-                        case 0:
-                            _ctx.next = 2;
-                            return 1;
-                        case 2:
-                        case "end":
-                            return _ctx.stop();
-                    }
-                }, f1);
-            })
-        }
-    ]);
+    var _proto = A.prototype;
+    _proto.f1 = /*#__PURE__*/ regeneratorRuntime$1.mark(function f1() {
+        return regeneratorRuntime$1.wrap(function f1$(_ctx) {
+            while(1)switch(_ctx.prev = _ctx.next){
+                case 0:
+                    _ctx.next = 2;
+                    return 1;
+                case 2:
+                case "end":
+                    return _ctx.stop();
+            }
+        }, f1);
+    });
     return A;
 }();
 var _v = 123;
 var x = function() {
-    return "value:".concat(_v);
+    return "value:" + _v;
 };
 
 export { A, asyncFunc, generator, x };

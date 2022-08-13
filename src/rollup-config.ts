@@ -115,6 +115,8 @@ function createInputConfig(
       // "filename" will be ignored since it is handled by rollup
       jsc: {
         target: 'es5',
+        // Use loose mode
+        loose: true,
         externalHelpers: false,
         parser: {
           syntax: useTypescript ? 'typescript' : 'ecmascript',
