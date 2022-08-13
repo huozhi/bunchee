@@ -39,6 +39,7 @@
     "@rollup/plugin-node-resolve": "13.3.0",
     "@rollup/plugin-typescript": "8.3.4",
     "@swc/core": "1.2.229",
+    "regenerator-runtime": "0.13.9",
     "arg": "5.0.0",
     "rollup": "2.74.1",
     "rollup-plugin-preserve-shebang": "1.0.1",
