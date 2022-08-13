@@ -1,4 +1,3 @@
-
 import type { PackageMetadata, BuncheeRollupConfig, ExportCondition, CliArgs, BundleOptions, ExportType } from "./types";
 import type { JsMinifyOptions } from "@swc/core"
 import fs from "fs";
