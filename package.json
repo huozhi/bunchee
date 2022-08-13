@@ -37,7 +37,7 @@
     "@rollup/plugin-commonjs": "21.1.0",
     "@rollup/plugin-json": "4.1.0",
     "@rollup/plugin-node-resolve": "13.3.0",
-    "@rollup/plugin-typescript": "8.2.3",
+    "@rollup/plugin-typescript": "8.3.4",
     "arg": "5.0.0",
     "babel-preset-o": "0.4.3",
     "rollup": "2.74.1",
