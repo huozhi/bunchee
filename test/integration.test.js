@@ -47,6 +47,30 @@ const testCases = [
       expect(distFiles.every(f => fs.existsSync(f))).toBe(true)
     }
   },
+  {
+    name: 'multi-entries',
+    args: [],
+    expected(dir, stdout, stderr) {
+      const distFiles = [
+        join(dir, './dist/lite.js'),
+        join(dir, './dist/client/index.cjs'),
+        join(dir, './dist/client/index.mjs'),
+      ]
+
+      expect(distFiles.every(f => fs.existsSync(f))).toBe(true)
+    }
+  },
+  {
+    name: 'single-entry',
+    args: [],
+    expected(dir, stdout, stderr) {
+      const distFiles = [
+        join(dir, './dist/index.js'),
+      ]
+
+      expect(distFiles.every(f => fs.existsSync(f))).toBe(true)
+    }
+  },
 ]
 
 async function runBundle(dir, _args) {
@@ -63,6 +87,10 @@ async function runBundle(dir, _args) {
   ps.stderr.on('data', chunk => stderr += chunk.toString());
   return new Promise((resolve) => {
     ps.on('close', (code) => {
+      if (process.env.TEST_DEBUG) {
+        console.log(stdout)
+        console.error(stderr)
+      }
       resolve({
         code,
         stdout,

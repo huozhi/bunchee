@@ -1,4 +1,4 @@
-import type { PackageMetadata, BuncheeRollupConfig, CliArgs, BundleOptions } from "./types";
+import type { PackageMetadata, BuncheeRollupConfig, ExportCondition, CliArgs, BundleOptions, ExportType } from "./types";
 import fs, { existsSync } from "fs";
 import { resolve, extname, dirname, basename } from "path";
 import commonjs from "@rollup/plugin-commonjs";
@@ -148,7 +148,7 @@ function createOutputOptions(
     )
   );
 
-  const file = resolve(options.file as string)
+  const file = resolve(options.file!)
   return {
     name: pkg.name,
     dir: dirname(file),
@@ -162,40 +162,60 @@ function createOutputOptions(
   };
 }
 
-function findExport(field: any): string | null {
-  if (!field) return null;
+function findExport(field: any): string | undefined {
+  if (!field) return;
   if (typeof field === "string") return field;
   const value = field["."] || field["import"] || field["module"] || field["default"];
   return findExport(value);
 }
 
+function parseExport(exportsCondition: ExportCondition) {
+  const paths: Record<Exclude<ExportType, 'default'>, string | undefined> = {}
+
+  if (typeof exportsCondition === "string") {
+    paths.export = exportsCondition;
+  } else {
+    paths.main = paths.main || exportsCondition["require"] || exportsCondition["node"] || exportsCondition["default"];
+    paths.module = paths.module || exportsCondition["module"];
+    paths.export = findExport(exportsCondition);
+  }
+  return paths
+}
+
 function getExportPaths(pkg: PackageMetadata) {
-  const paths: Record<'main' | 'module' | 'export', string | null> = {
-    main: null,
-    module: null,
-    export: null,
-  };
+  const pathsMap: Record<string, Record<string, string | undefined>> = {}
+  const mainExport: Record<Exclude<ExportType, 'default'>, string> = {};
   if (pkg.main) {
-    paths.main = pkg.main;
+    mainExport.main = pkg.main;
   }
   if (pkg.module) {
-    paths.module = pkg.module;
+    mainExport.module = pkg.module;
   }
-  if (pkg.exports) {
-    if (typeof pkg.exports === "string") {
-      paths.export = pkg.exports;
+  pathsMap['.'] = mainExport
+
+  const { exports: exportsConditions } = pkg
+  if (exportsConditions) {
+    if (typeof exportsConditions === 'string') {
+      mainExport.export = exportsConditions
     } else {
-      paths.main = paths.main || pkg.exports["require"] || pkg.exports["node"] || pkg.exports["default"];
-      paths.module = paths.module || pkg.exports["module"];
-      paths.export = findExport(pkg.exports);
+      const exportKeys = Object.keys(exportsConditions)
+      if (exportKeys.some(key => key.startsWith('.'))) {
+        exportKeys.forEach(subExport => {
+          pathsMap[subExport] = parseExport(exportsConditions[subExport])
+        })
+      } else {
+        Object.assign(mainExport, parseExport(exportsConditions as ExportCondition))
+      }
     }
   }
-  return paths;
+  pathsMap['.'] = mainExport
+
+  return pathsMap;
 }
 
 function getExportDist(pkg: PackageMetadata) {
-  const paths = getExportPaths(pkg);
-  const dist: Array<{format: "cjs" | "esm", file: string}> = []
+  const paths = getExportPaths(pkg)['.']
+  const dist: {format: "cjs" | "esm", file: string}[] = []
   if (paths.main) {
     dist.push({format: "cjs", file: getDistPath(paths.main)})
   }
@@ -213,17 +233,49 @@ function getExportDist(pkg: PackageMetadata) {
   return dist
 }
 
+function getSubExportDist(pkg: PackageMetadata, subExport: string) {
+  const pkgExports = pkg.exports || {}
+  const dist: {format: "cjs" | "esm", file: string}[] = [];
+  // "exports": "..."
+  if (typeof pkgExports === 'string') {
+    dist.push({format: pkg.type === "module" ? "esm" : "cjs", file: getDistPath(pkgExports)})
+  } else {
+    // "exports": { }
+    const exports = pkgExports[subExport];
+    // Ignore json exports, like "./package.json"
+    if (subExport.endsWith(".json")) return dist
+    if (typeof exports === 'string') {
+        dist.push({format: "esm", file: getDistPath(exports)});
+    } else {
+      if (exports.require) {
+        dist.push({format: "cjs", file: getDistPath(exports.require)});
+      }
+      if (exports.import) {
+        dist.push({format: "esm", file: getDistPath(exports.import)});
+      }
+    }
+  }
+  return dist;
+}
+
 function createRollupConfig(
   entry: string,
   pkg: PackageMetadata,
   cliArgs: CliArgs,
+  entryExport?: string
 ): BuncheeRollupConfig {
   const { file, format } = cliArgs;
   const ext = extname(entry);
   const useTypescript: boolean = ext === ".ts" || ext === ".tsx";
   const options = {...cliArgs, useTypescript};
+
   const inputOptions = createInputConfig(entry, pkg, options);
-  let outputConfigs = getExportDist(pkg)
+
+  const outputExports = entryExport
+      ? getSubExportDist(pkg, entryExport)
+      : getExportDist(pkg)
+
+  let outputConfigs = outputExports
     .map((exportDist) => {
       return createOutputOptions(
         {
