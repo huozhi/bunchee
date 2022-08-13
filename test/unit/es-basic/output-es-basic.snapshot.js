@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <<<<<<< HEAD:test/unit/es-basic/output-es-basic.snapshot.js
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
   try {
@@ -49,6 +50,8 @@ function _classPrivateFieldLooseBase(receiver, privateKey) {
   return receiver;
 }
 
+=======
+>>>>>>> 6bf6570 (Use manual snapshot)
 var runtime = {exports: {}};
 
 /**
@@ -56,6 +59,7 @@ var runtime = {exports: {}};
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+<<<<<<< HEAD
  */
 
 (function (module) {
@@ -420,6 +424,10 @@ exports[`should compile es-basic case correctly 1`] = `
  * LICENSE file in the root directory of this source tree.
  */ function _instanceof(left, right) {
     if (right != null && typeof Symbol !== \\"undefined\\" && right[Symbol.hasInstance]) {
+=======
+ */ function _instanceof(left, right) {
+    if (right != null && typeof Symbol !== "undefined" && right[Symbol.hasInstance]) {
+>>>>>>> 6bf6570 (Use manual snapshot)
         return !!right[Symbol.hasInstance](left);
     } else {
         return left instanceof right;
@@ -459,12 +467,20 @@ exports[`should compile es-basic case correctly 1`] = `
         function tryCatch(fn, obj, arg) {
             try {
                 return {
+<<<<<<< HEAD
                     type: \\"normal\\",
+=======
+                    type: "normal",
+>>>>>>> 6bf6570 (Use manual snapshot)
                     arg: fn.call(obj, arg)
                 };
             } catch (err) {
                 return {
+<<<<<<< HEAD
                     type: \\"throw\\",
+=======
+                    type: "throw",
+>>>>>>> 6bf6570 (Use manual snapshot)
                     arg: err
                 };
             }
@@ -480,9 +496,15 @@ exports[`should compile es-basic case correctly 1`] = `
         // Iterator interface in terms of a single ._invoke method.
         function defineIteratorMethods(prototype) {
             [
+<<<<<<< HEAD
                 \\"next\\",
                 \\"throw\\",
                 \\"return\\"
+=======
+                "next",
+                "throw",
+                "return"
+>>>>>>> 6bf6570 (Use manual snapshot)
             ].forEach(function(method) {
                 define(prototype, method, function(arg) {
                     return this._invoke(method, arg);
@@ -492,16 +514,28 @@ exports[`should compile es-basic case correctly 1`] = `
         var AsyncIterator = function AsyncIterator(generator, PromiseImpl) {
             function invoke(method, arg, resolve, reject) {
                 var record = tryCatch(generator[method], generator, arg);
+<<<<<<< HEAD
                 if (record.type === \\"throw\\") {
+=======
+                if (record.type === "throw") {
+>>>>>>> 6bf6570 (Use manual snapshot)
                     reject(record.arg);
                 } else {
                     var result = record.arg;
                     var value = result.value;
+<<<<<<< HEAD
                     if (value && typeof value === \\"object\\" && hasOwn.call(value, \\"__await\\")) {
                         return PromiseImpl.resolve(value.__await).then(function(value) {
                             invoke(\\"next\\", value, resolve, reject);
                         }, function(err) {
                             invoke(\\"throw\\", err, resolve, reject);
+=======
+                    if (value && typeof value === "object" && hasOwn.call(value, "__await")) {
+                        return PromiseImpl.resolve(value.__await).then(function(value) {
+                            invoke("next", value, resolve, reject);
+                        }, function(err) {
+                            invoke("throw", err, resolve, reject);
+>>>>>>> 6bf6570 (Use manual snapshot)
                         });
                     }
                     return PromiseImpl.resolve(value).then(function(unwrapped) {
@@ -513,7 +547,11 @@ exports[`should compile es-basic case correctly 1`] = `
                     }, function(error) {
                         // If a rejected Promise was yielded, throw the rejection back
                         // into the async generator function so it can be handled there.
+<<<<<<< HEAD
                         return invoke(\\"throw\\", error, resolve, reject);
+=======
+                        return invoke("throw", error, resolve, reject);
+>>>>>>> 6bf6570 (Use manual snapshot)
                     });
                 }
             }
@@ -548,10 +586,17 @@ exports[`should compile es-basic case correctly 1`] = `
             var state = GenStateSuspendedStart;
             return function invoke(method, arg) {
                 if (state === GenStateExecuting) {
+<<<<<<< HEAD
                     throw new Error(\\"Generator is already running\\");
                 }
                 if (state === GenStateCompleted) {
                     if (method === \\"throw\\") {
+=======
+                    throw new Error("Generator is already running");
+                }
+                if (state === GenStateCompleted) {
+                    if (method === "throw") {
+>>>>>>> 6bf6570 (Use manual snapshot)
                         throw arg;
                     }
                     // Be forgiving, per 25.3.3.3.3 of the spec:
@@ -569,22 +614,39 @@ exports[`should compile es-basic case correctly 1`] = `
                             return delegateResult;
                         }
                     }
+<<<<<<< HEAD
                     if (context.method === \\"next\\") {
                         // Setting context._sent for legacy support of Babel's
                         // function.sent implementation.
                         context.sent = context._sent = context.arg;
                     } else if (context.method === \\"throw\\") {
+=======
+                    if (context.method === "next") {
+                        // Setting context._sent for legacy support of Babel's
+                        // function.sent implementation.
+                        context.sent = context._sent = context.arg;
+                    } else if (context.method === "throw") {
+>>>>>>> 6bf6570 (Use manual snapshot)
                         if (state === GenStateSuspendedStart) {
                             state = GenStateCompleted;
                             throw context.arg;
                         }
                         context.dispatchException(context.arg);
+<<<<<<< HEAD
                     } else if (context.method === \\"return\\") {
                         context.abrupt(\\"return\\", context.arg);
                     }
                     state = GenStateExecuting;
                     var record = tryCatch(innerFn, self, context);
                     if (record.type === \\"normal\\") {
+=======
+                    } else if (context.method === "return") {
+                        context.abrupt("return", context.arg);
+                    }
+                    state = GenStateExecuting;
+                    var record = tryCatch(innerFn, self, context);
+                    if (record.type === "normal") {
+>>>>>>> 6bf6570 (Use manual snapshot)
                         // If an exception is thrown from innerFn, we leave state ===
                         // GenStateExecuting and loop back for another invocation.
                         state = context.done ? GenStateCompleted : GenStateSuspendedYield;
@@ -595,11 +657,19 @@ exports[`should compile es-basic case correctly 1`] = `
                             value: record.arg,
                             done: context.done
                         };
+<<<<<<< HEAD
                     } else if (record.type === \\"throw\\") {
                         state = GenStateCompleted;
                         // Dispatch the exception by looping back around to the
                         // context.dispatchException(context.arg) call above.
                         context.method = \\"throw\\";
+=======
+                    } else if (record.type === "throw") {
+                        state = GenStateCompleted;
+                        // Dispatch the exception by looping back around to the
+                        // context.dispatchException(context.arg) call above.
+                        context.method = "throw";
+>>>>>>> 6bf6570 (Use manual snapshot)
                         context.arg = record.arg;
                     }
                 }
@@ -620,7 +690,11 @@ exports[`should compile es-basic case correctly 1`] = `
         };
         var resetTryEntry = function resetTryEntry(entry) {
             var record = entry.completion || {};
+<<<<<<< HEAD
             record.type = \\"normal\\";
+=======
+            record.type = "normal";
+>>>>>>> 6bf6570 (Use manual snapshot)
             delete record.arg;
             entry.completion = record;
         };
@@ -630,7 +704,11 @@ exports[`should compile es-basic case correctly 1`] = `
             // locations where there is no enclosing try statement.
             this.tryEntries = [
                 {
+<<<<<<< HEAD
                     tryLoc: \\"root\\"
+=======
+                    tryLoc: "root"
+>>>>>>> 6bf6570 (Use manual snapshot)
                 }
             ];
             tryLocsList.forEach(pushTryEntry, this);
@@ -642,7 +720,11 @@ exports[`should compile es-basic case correctly 1`] = `
                 if (iteratorMethod) {
                     return iteratorMethod.call(iterable);
                 }
+<<<<<<< HEAD
                 if (typeof iterable.next === \\"function\\") {
+=======
+                if (typeof iterable.next === "function") {
+>>>>>>> 6bf6570 (Use manual snapshot)
                     return iterable;
                 }
                 if (!isNaN(iterable.length)) {
@@ -675,6 +757,7 @@ exports[`should compile es-basic case correctly 1`] = `
         var Op = Object.prototype;
         var hasOwn = Op.hasOwnProperty;
         var undefined$1; // More compressible than void 0.
+<<<<<<< HEAD
         var $Symbol = typeof Symbol === \\"function\\" ? Symbol : {};
         var iteratorSymbol = $Symbol.iterator || \\"@@iterator\\";
         var asyncIteratorSymbol = $Symbol.asyncIterator || \\"@@asyncIterator\\";
@@ -682,16 +765,32 @@ exports[`should compile es-basic case correctly 1`] = `
         try {
             // IE 8 has a broken Object.defineProperty that only works on DOM objects.
             define({}, \\"\\");
+=======
+        var $Symbol = typeof Symbol === "function" ? Symbol : {};
+        var iteratorSymbol = $Symbol.iterator || "@@iterator";
+        var asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator";
+        var toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
+        try {
+            // IE 8 has a broken Object.defineProperty that only works on DOM objects.
+            define({}, "");
+>>>>>>> 6bf6570 (Use manual snapshot)
         } catch (err) {
             define = function define(obj, key, value) {
                 return obj[key] = value;
             };
         }
         exports.wrap = wrap;
+<<<<<<< HEAD
         var GenStateSuspendedStart = \\"suspendedStart\\";
         var GenStateSuspendedYield = \\"suspendedYield\\";
         var GenStateExecuting = \\"executing\\";
         var GenStateCompleted = \\"completed\\";
+=======
+        var GenStateSuspendedStart = "suspendedStart";
+        var GenStateSuspendedYield = "suspendedYield";
+        var GenStateExecuting = "executing";
+        var GenStateCompleted = "completed";
+>>>>>>> 6bf6570 (Use manual snapshot)
         // Returning this object from the innerFn has the same effect as
         // breaking out of the dispatch switch statement.
         var ContinueSentinel = {};
@@ -710,6 +809,7 @@ exports[`should compile es-basic case correctly 1`] = `
         }
         var Gp = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(IteratorPrototype);
         GeneratorFunction.prototype = GeneratorFunctionPrototype;
+<<<<<<< HEAD
         define(Gp, \\"constructor\\", GeneratorFunctionPrototype);
         define(GeneratorFunctionPrototype, \\"constructor\\", GeneratorFunction);
         GeneratorFunction.displayName = define(GeneratorFunctionPrototype, toStringTagSymbol, \\"GeneratorFunction\\");
@@ -718,20 +818,40 @@ exports[`should compile es-basic case correctly 1`] = `
             return ctor ? ctor === GeneratorFunction || // For the native GeneratorFunction constructor, the best we can
             // do is to check its .name property.
             (ctor.displayName || ctor.name) === \\"GeneratorFunction\\" : false;
+=======
+        define(Gp, "constructor", GeneratorFunctionPrototype);
+        define(GeneratorFunctionPrototype, "constructor", GeneratorFunction);
+        GeneratorFunction.displayName = define(GeneratorFunctionPrototype, toStringTagSymbol, "GeneratorFunction");
+        exports.isGeneratorFunction = function(genFun) {
+            var ctor = typeof genFun === "function" && genFun.constructor;
+            return ctor ? ctor === GeneratorFunction || // For the native GeneratorFunction constructor, the best we can
+            // do is to check its .name property.
+            (ctor.displayName || ctor.name) === "GeneratorFunction" : false;
+>>>>>>> 6bf6570 (Use manual snapshot)
         };
         exports.mark = function(genFun) {
             if (Object.setPrototypeOf) {
                 Object.setPrototypeOf(genFun, GeneratorFunctionPrototype);
             } else {
                 genFun.__proto__ = GeneratorFunctionPrototype;
+<<<<<<< HEAD
                 define(genFun, toStringTagSymbol, \\"GeneratorFunction\\");
+=======
+                define(genFun, toStringTagSymbol, "GeneratorFunction");
+>>>>>>> 6bf6570 (Use manual snapshot)
             }
             genFun.prototype = Object.create(Gp);
             return genFun;
         };
+<<<<<<< HEAD
         // Within the body of any async function, \`await x\` is transformed to
         // \`yield regeneratorRuntime.awrap(x)\`, so that the runtime can test
         // \`hasOwn.call(value, \\"__await\\")\` to determine if the yielded value is
+=======
+        // Within the body of any async function, `await x` is transformed to
+        // `yield regeneratorRuntime.awrap(x)`, so that the runtime can test
+        // `hasOwn.call(value, "__await")` to determine if the yielded value is
+>>>>>>> 6bf6570 (Use manual snapshot)
         // meant to be awaited.
         exports.awrap = function(arg) {
             return {
@@ -764,6 +884,7 @@ exports[`should compile es-basic case correctly 1`] = `
                 // A .throw or .return when the delegate iterator has no .throw
                 // method always terminates the yield* loop.
                 context.delegate = null;
+<<<<<<< HEAD
                 if (context.method === \\"throw\\") {
                     // Note: [\\"return\\"] must be used for ES3 parsing compatibility.
                     if (delegate.iterator[\\"return\\"]) {
@@ -780,20 +901,48 @@ exports[`should compile es-basic case correctly 1`] = `
                     }
                     context.method = \\"throw\\";
                     context.arg = new TypeError(\\"The iterator does not provide a 'throw' method\\");
+=======
+                if (context.method === "throw") {
+                    // Note: ["return"] must be used for ES3 parsing compatibility.
+                    if (delegate.iterator["return"]) {
+                        // If the delegate iterator has a return method, give it a
+                        // chance to clean up.
+                        context.method = "return";
+                        context.arg = undefined$1;
+                        maybeInvokeDelegate(delegate, context);
+                        if (context.method === "throw") {
+                            // If maybeInvokeDelegate(context) changed context.method from
+                            // "return" to "throw", let that override the TypeError below.
+                            return ContinueSentinel;
+                        }
+                    }
+                    context.method = "throw";
+                    context.arg = new TypeError("The iterator does not provide a 'throw' method");
+>>>>>>> 6bf6570 (Use manual snapshot)
                 }
                 return ContinueSentinel;
             }
             var record = tryCatch(method, delegate.iterator, context.arg);
+<<<<<<< HEAD
             if (record.type === \\"throw\\") {
                 context.method = \\"throw\\";
+=======
+            if (record.type === "throw") {
+                context.method = "throw";
+>>>>>>> 6bf6570 (Use manual snapshot)
                 context.arg = record.arg;
                 context.delegate = null;
                 return ContinueSentinel;
             }
             var info = record.arg;
             if (!info) {
+<<<<<<< HEAD
                 context.method = \\"throw\\";
                 context.arg = new TypeError(\\"iterator result is not an object\\");
+=======
+                context.method = "throw";
+                context.arg = new TypeError("iterator result is not an object");
+>>>>>>> 6bf6570 (Use manual snapshot)
                 context.delegate = null;
                 return ContinueSentinel;
             }
@@ -803,6 +952,7 @@ exports[`should compile es-basic case correctly 1`] = `
                 context[delegate.resultName] = info.value;
                 // Resume execution at the desired location (see delegateYield).
                 context.next = delegate.nextLoc;
+<<<<<<< HEAD
                 // If context.method was \\"throw\\" but the delegate handled the
                 // exception, let the outer generator proceed normally. If
                 // context.method was \\"next\\", forget context.arg since it has been
@@ -811,6 +961,16 @@ exports[`should compile es-basic case correctly 1`] = `
                 // outer generator.
                 if (context.method !== \\"return\\") {
                     context.method = \\"next\\";
+=======
+                // If context.method was "throw" but the delegate handled the
+                // exception, let the outer generator proceed normally. If
+                // context.method was "next", forget context.arg since it has been
+                // "consumed" by the delegate iterator. If context.method was
+                // "return", allow the original .return call to continue in the
+                // outer generator.
+                if (context.method !== "return") {
+                    context.method = "next";
+>>>>>>> 6bf6570 (Use manual snapshot)
                     context.arg = undefined$1;
                 }
             } else {
@@ -820,6 +980,7 @@ exports[`should compile es-basic case correctly 1`] = `
             // The delegate iterator is finished, so forget it and continue with
             // the outer generator.
             context.delegate = null;
+<<<<<<< HEAD
 >>>>>>> 487595a (use ts type):test/__snapshots__/compile.test.js.snap
             return ContinueSentinel;
         }
@@ -845,6 +1006,14 @@ exports[`should compile es-basic case correctly 1`] = `
         // unified ._invoke helper method.
         defineIteratorMethods(Gp);
         define(Gp, toStringTagSymbol, \\"Generator\\");
+=======
+            return ContinueSentinel;
+        }
+        // Define Generator.prototype.{next,throw,return} in terms of the
+        // unified ._invoke helper method.
+        defineIteratorMethods(Gp);
+        define(Gp, toStringTagSymbol, "Generator");
+>>>>>>> 6bf6570 (Use manual snapshot)
         // A Generator should always return itself as the iterator object when the
         // @@iterator function is called on it. Some browsers' implementations of the
         // iterator prototype chain incorrectly implement this, causing the Generator
@@ -853,8 +1022,13 @@ exports[`should compile es-basic case correctly 1`] = `
         define(Gp, iteratorSymbol, function() {
             return this;
         });
+<<<<<<< HEAD
         define(Gp, \\"toString\\", function() {
             return \\"[object Generator]\\";
+=======
+        define(Gp, "toString", function() {
+            return "[object Generator]";
+>>>>>>> 6bf6570 (Use manual snapshot)
         });
         exports.keys = function(object) {
             var keys = [];
@@ -891,13 +1065,21 @@ exports[`should compile es-basic case correctly 1`] = `
                 this.sent = this._sent = undefined$1;
                 this.done = false;
                 this.delegate = null;
+<<<<<<< HEAD
                 this.method = \\"next\\";
+=======
+                this.method = "next";
+>>>>>>> 6bf6570 (Use manual snapshot)
                 this.arg = undefined$1;
                 this.tryEntries.forEach(resetTryEntry);
                 if (!skipTempReset) {
                     for(var name in this){
                         // Not sure about the optimal order of these conditions:
+<<<<<<< HEAD
                         if (name.charAt(0) === \\"t\\" && hasOwn.call(this, name) && !isNaN(+name.slice(1))) {
+=======
+                        if (name.charAt(0) === "t" && hasOwn.call(this, name) && !isNaN(+name.slice(1))) {
+>>>>>>> 6bf6570 (Use manual snapshot)
                             this[name] = undefined$1;
                         }
                     }
@@ -907,20 +1089,32 @@ exports[`should compile es-basic case correctly 1`] = `
                 this.done = true;
                 var rootEntry = this.tryEntries[0];
                 var rootRecord = rootEntry.completion;
+<<<<<<< HEAD
                 if (rootRecord.type === \\"throw\\") {
+=======
+                if (rootRecord.type === "throw") {
+>>>>>>> 6bf6570 (Use manual snapshot)
                     throw rootRecord.arg;
                 }
                 return this.rval;
             },
             dispatchException: function dispatchException(exception) {
                 var handle = function handle(loc, caught) {
+<<<<<<< HEAD
                     record.type = \\"throw\\";
+=======
+                    record.type = "throw";
+>>>>>>> 6bf6570 (Use manual snapshot)
                     record.arg = exception;
                     context.next = loc;
                     if (caught) {
                         // If the dispatched exception was caught by a catch block,
                         // then let that catch block handle the exception normally.
+<<<<<<< HEAD
                         context.method = \\"next\\";
+=======
+                        context.method = "next";
+>>>>>>> 6bf6570 (Use manual snapshot)
                         context.arg = undefined$1;
                     }
                     return !!caught;
@@ -932,6 +1126,7 @@ exports[`should compile es-basic case correctly 1`] = `
                 for(var i = this.tryEntries.length - 1; i >= 0; --i){
                     var entry = this.tryEntries[i];
                     var record = entry.completion;
+<<<<<<< HEAD
                     if (entry.tryLoc === \\"root\\") {
                         // Exception thrown outside of any try block that could handle
                         // it, so set the completion value of the entire function to
@@ -941,6 +1136,17 @@ exports[`should compile es-basic case correctly 1`] = `
                     if (entry.tryLoc <= this.prev) {
                         var hasCatch = hasOwn.call(entry, \\"catchLoc\\");
                         var hasFinally = hasOwn.call(entry, \\"finallyLoc\\");
+=======
+                    if (entry.tryLoc === "root") {
+                        // Exception thrown outside of any try block that could handle
+                        // it, so set the completion value of the entire function to
+                        // throw the exception.
+                        return handle("end");
+                    }
+                    if (entry.tryLoc <= this.prev) {
+                        var hasCatch = hasOwn.call(entry, "catchLoc");
+                        var hasFinally = hasOwn.call(entry, "finallyLoc");
+>>>>>>> 6bf6570 (Use manual snapshot)
                         if (hasCatch && hasFinally) {
                             if (this.prev < entry.catchLoc) {
                                 return handle(entry.catchLoc, true);
@@ -956,7 +1162,11 @@ exports[`should compile es-basic case correctly 1`] = `
                                 return handle(entry.finallyLoc);
                             }
                         } else {
+<<<<<<< HEAD
                             throw new Error(\\"try statement without catch or finally\\");
+=======
+                            throw new Error("try statement without catch or finally");
+>>>>>>> 6bf6570 (Use manual snapshot)
                         }
                     }
                 }
@@ -964,12 +1174,20 @@ exports[`should compile es-basic case correctly 1`] = `
             abrupt: function abrupt(type, arg) {
                 for(var i = this.tryEntries.length - 1; i >= 0; --i){
                     var entry = this.tryEntries[i];
+<<<<<<< HEAD
                     if (entry.tryLoc <= this.prev && hasOwn.call(entry, \\"finallyLoc\\") && this.prev < entry.finallyLoc) {
+=======
+                    if (entry.tryLoc <= this.prev && hasOwn.call(entry, "finallyLoc") && this.prev < entry.finallyLoc) {
+>>>>>>> 6bf6570 (Use manual snapshot)
                         var finallyEntry = entry;
                         break;
                     }
                 }
+<<<<<<< HEAD
                 if (finallyEntry && (type === \\"break\\" || type === \\"continue\\") && finallyEntry.tryLoc <= arg && arg <= finallyEntry.finallyLoc) {
+=======
+                if (finallyEntry && (type === "break" || type === "continue") && finallyEntry.tryLoc <= arg && arg <= finallyEntry.finallyLoc) {
+>>>>>>> 6bf6570 (Use manual snapshot)
                     // Ignore the finally entry if control is not jumping to a
                     // location outside the try/catch block.
                     finallyEntry = null;
@@ -978,13 +1196,18 @@ exports[`should compile es-basic case correctly 1`] = `
                 record.type = type;
                 record.arg = arg;
                 if (finallyEntry) {
+<<<<<<< HEAD
                     this.method = \\"next\\";
+=======
+                    this.method = "next";
+>>>>>>> 6bf6570 (Use manual snapshot)
                     this.next = finallyEntry.finallyLoc;
                     return ContinueSentinel;
                 }
                 return this.complete(record);
             },
             complete: function complete(record, afterLoc) {
+<<<<<<< HEAD
                 if (record.type === \\"throw\\") {
                     throw record.arg;
                 }
@@ -995,6 +1218,18 @@ exports[`should compile es-basic case correctly 1`] = `
                     this.method = \\"return\\";
                     this.next = \\"end\\";
                 } else if (record.type === \\"normal\\" && afterLoc) {
+=======
+                if (record.type === "throw") {
+                    throw record.arg;
+                }
+                if (record.type === "break" || record.type === "continue") {
+                    this.next = record.arg;
+                } else if (record.type === "return") {
+                    this.rval = this.arg = record.arg;
+                    this.method = "return";
+                    this.next = "end";
+                } else if (record.type === "normal" && afterLoc) {
+>>>>>>> 6bf6570 (Use manual snapshot)
                     this.next = afterLoc;
                 }
                 return ContinueSentinel;
@@ -1009,12 +1244,20 @@ exports[`should compile es-basic case correctly 1`] = `
                     }
                 }
             },
+<<<<<<< HEAD
             \\"catch\\": function(tryLoc) {
+=======
+            "catch": function(tryLoc) {
+>>>>>>> 6bf6570 (Use manual snapshot)
                 for(var i = this.tryEntries.length - 1; i >= 0; --i){
                     var entry = this.tryEntries[i];
                     if (entry.tryLoc === tryLoc) {
                         var record = entry.completion;
+<<<<<<< HEAD
                         if (record.type === \\"throw\\") {
+=======
+                        if (record.type === "throw") {
+>>>>>>> 6bf6570 (Use manual snapshot)
                             var thrown = record.arg;
                             resetTryEntry(entry);
                         }
@@ -1023,7 +1266,11 @@ exports[`should compile es-basic case correctly 1`] = `
                 }
                 // The context.catch method must only be called with a location
                 // argument that corresponds to a known catch block.
+<<<<<<< HEAD
                 throw new Error(\\"illegal catch attempt\\");
+=======
+                throw new Error("illegal catch attempt");
+>>>>>>> 6bf6570 (Use manual snapshot)
             },
             delegateYield: function delegateYield(iterable, resultName, nextLoc) {
                 this.delegate = {
@@ -1031,7 +1278,11 @@ exports[`should compile es-basic case correctly 1`] = `
                     resultName: resultName,
                     nextLoc: nextLoc
                 };
+<<<<<<< HEAD
                 if (this.method === \\"next\\") {
+=======
+                if (this.method === "next") {
+>>>>>>> 6bf6570 (Use manual snapshot)
                     // Deliberately forget the last sent value so that we don't
                     // accidentally pass it on to the delegate.
                     this.arg = undefined$1;
@@ -1042,7 +1293,11 @@ exports[`should compile es-basic case correctly 1`] = `
         // Regardless of whether this script is executing as a CommonJS module
         // or not, return the runtime object so that we can declare the variable
         // regeneratorRuntime in the outer scope, which allows this module to be
+<<<<<<< HEAD
         // injected easily by \`bin/regenerator --include-runtime script.js\`.
+=======
+        // injected easily by `bin/regenerator --include-runtime script.js`.
+>>>>>>> 6bf6570 (Use manual snapshot)
         return exports;
     }(// If this script is executing as a CommonJS module, use module.exports
     // as the regeneratorRuntime namespace. Otherwise create a new empty
@@ -1062,16 +1317,25 @@ exports[`should compile es-basic case correctly 1`] = `
         // you've misconfigured your bundler to force strict mode and applied a
         // CSP to forbid Function, and you're not willing to fix either of those
         // problems, please detail your unique predicament in a GitHub issue.
+<<<<<<< HEAD
         if (typeof globalThis === \\"object\\") {
             globalThis.regeneratorRuntime = runtime;
         } else {
             Function(\\"r\\", \\"regeneratorRuntime = r\\")(runtime);
         }
 >>>>>>> 487595a (use ts type):test/__snapshots__/compile.test.js.snap
+=======
+        if (typeof globalThis === "object") {
+            globalThis.regeneratorRuntime = runtime;
+        } else {
+            Function("r", "regeneratorRuntime = r")(runtime);
+        }
+>>>>>>> 6bf6570 (Use manual snapshot)
     }
 })(runtime);
 var regeneratorRuntime$1 = runtime.exports;
 
+<<<<<<< HEAD
 <<<<<<< HEAD:test/unit/es-basic/output-es-basic.snapshot.js
     var info = record.arg;
 
@@ -1081,6 +1345,8 @@ var regeneratorRuntime$1 = runtime.exports;
       context.delegate = null;
       return ContinueSentinel;
 =======
+=======
+>>>>>>> 6bf6570 (Use manual snapshot)
 function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
     try {
         var info = gen[key](arg);
@@ -1088,6 +1354,7 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
     } catch (error) {
         reject(error);
         return;
+<<<<<<< HEAD
 >>>>>>> 487595a (use ts type):test/__snapshots__/compile.test.js.snap
     }
     if (info.done) {
@@ -1149,6 +1416,14 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
     if (1 in locs) {
       entry.catchLoc = locs[1];
 =======
+=======
+    }
+    if (info.done) {
+        resolve(value);
+    } else {
+        Promise.resolve(value).then(_next, _throw);
+    }
+>>>>>>> 6bf6570 (Use manual snapshot)
 }
 function _asyncToGenerator(fn) {
     return function() {
@@ -1156,10 +1431,17 @@ function _asyncToGenerator(fn) {
         return new Promise(function(resolve, reject) {
             var gen = fn.apply(self, args);
             function _next(value) {
+<<<<<<< HEAD
                 asyncGeneratorStep(gen, resolve, reject, _next, _throw, \\"next\\", value);
             }
             function _throw(err) {
                 asyncGeneratorStep(gen, resolve, reject, _next, _throw, \\"throw\\", err);
+=======
+                asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
+            }
+            function _throw(err) {
+                asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
+>>>>>>> 6bf6570 (Use manual snapshot)
             }
             _next(undefined);
         });
@@ -1167,14 +1449,19 @@ function _asyncToGenerator(fn) {
 }
 function _checkPrivateRedeclaration(obj, privateCollection) {
     if (privateCollection.has(obj)) {
+<<<<<<< HEAD
         throw new TypeError(\\"Cannot initialize the same private elements twice on an object\\");
 >>>>>>> 487595a (use ts type):test/__snapshots__/compile.test.js.snap
+=======
+        throw new TypeError("Cannot initialize the same private elements twice on an object");
+>>>>>>> 6bf6570 (Use manual snapshot)
     }
 }
 function _classApplyDescriptorGet(receiver, descriptor) {
     if (descriptor.get) {
         return descriptor.get.call(receiver);
     }
+<<<<<<< HEAD
 <<<<<<< HEAD:test/unit/es-basic/output-es-basic.snapshot.js
 
     this.tryEntries.push(entry);
@@ -1515,21 +1802,35 @@ function generator() {
           return _context.stop();
       }
 =======
+=======
+>>>>>>> 6bf6570 (Use manual snapshot)
     return descriptor.value;
 }
 function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
+<<<<<<< HEAD
         throw new TypeError(\\"Cannot call a class as a function\\");
+=======
+        throw new TypeError("Cannot call a class as a function");
+>>>>>>> 6bf6570 (Use manual snapshot)
     }
 }
 function _classExtractFieldDescriptor(receiver, privateMap, action) {
     if (!privateMap.has(receiver)) {
+<<<<<<< HEAD
         throw new TypeError(\\"attempted to \\" + action + \\" private field on non-instance\\");
+=======
+        throw new TypeError("attempted to " + action + " private field on non-instance");
+>>>>>>> 6bf6570 (Use manual snapshot)
     }
     return privateMap.get(receiver);
 }
 function _classPrivateFieldGet(receiver, privateMap) {
+<<<<<<< HEAD
     var descriptor = _classExtractFieldDescriptor(receiver, privateMap, \\"get\\");
+=======
+    var descriptor = _classExtractFieldDescriptor(receiver, privateMap, "get");
+>>>>>>> 6bf6570 (Use manual snapshot)
     return _classApplyDescriptorGet(receiver, descriptor);
 }
 function _classPrivateFieldInit(obj, privateMap, value) {
@@ -1541,7 +1842,11 @@ function _defineProperties(target, props) {
         var descriptor = props[i];
         descriptor.enumerable = descriptor.enumerable || false;
         descriptor.configurable = true;
+<<<<<<< HEAD
         if (\\"value\\" in descriptor) descriptor.writable = true;
+=======
+        if ("value" in descriptor) descriptor.writable = true;
+>>>>>>> 6bf6570 (Use manual snapshot)
         Object.defineProperty(target, descriptor.key, descriptor);
     }
 }
@@ -1560,7 +1865,10 @@ function _defineProperty(obj, key, value) {
         });
     } else {
         obj[key] = value;
+<<<<<<< HEAD
 >>>>>>> 487595a (use ts type):test/__snapshots__/compile.test.js.snap
+=======
+>>>>>>> 6bf6570 (Use manual snapshot)
     }
     return obj;
 }
@@ -1572,7 +1880,11 @@ function generator() {
                 _ctx.next = 2;
                 return 1;
             case 2:
+<<<<<<< HEAD
             case \\"end\\":
+=======
+            case "end":
+>>>>>>> 6bf6570 (Use manual snapshot)
                 return _ctx.stop();
         }
     }, _marked);
@@ -1581,6 +1893,7 @@ function asyncFunc() {
     return _asyncFunc.apply(this, arguments);
 }
 function _asyncFunc() {
+<<<<<<< HEAD
 <<<<<<< HEAD:test/unit/es-basic/output-es-basic.snapshot.js
 <<<<<<< HEAD:test/unit/es-basic/output-es-basic.snapshot.js
   _asyncFunc = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee() {
@@ -1636,6 +1949,9 @@ var A = /*#__PURE__*/function () {
 =======
     _asyncFunc = _asyncToGenerator(/*#__PURE__*/ regeneratorRuntime$1.mark(function _callee() {
 >>>>>>> 27d66a5 (update swc and snapshot):test/__snapshots__/compile.test.js.snap
+=======
+    _asyncFunc = _asyncToGenerator(/*#__PURE__*/ regeneratorRuntime$1.mark(function _callee() {
+>>>>>>> 6bf6570 (Use manual snapshot)
         return regeneratorRuntime$1.wrap(function _callee$(_ctx) {
             while(1)switch(_ctx.prev = _ctx.next){
                 case 0:
@@ -1644,7 +1960,11 @@ var A = /*#__PURE__*/function () {
                         return r(1);
                     });
                 case 2:
+<<<<<<< HEAD
                 case \\"end\\":
+=======
+                case "end":
+>>>>>>> 6bf6570 (Use manual snapshot)
                     return _ctx.stop();
             }
         }, _callee);
@@ -1660,13 +1980,21 @@ var A = /*#__PURE__*/ function() {
             writable: true,
             value: 1
         });
+<<<<<<< HEAD
         _defineProperty(this, \\"getX\\", function() {
+=======
+        _defineProperty(this, "getX", function() {
+>>>>>>> 6bf6570 (Use manual snapshot)
             return _classPrivateFieldGet(_this, _x);
         });
     }
     _createClass(A, [
         {
+<<<<<<< HEAD
             key: \\"f1\\",
+=======
+            key: "f1",
+>>>>>>> 6bf6570 (Use manual snapshot)
             value: /*#__PURE__*/ regeneratorRuntime$1.mark(function f1() {
                 return regeneratorRuntime$1.wrap(function f1$(_ctx) {
                     while(1)switch(_ctx.prev = _ctx.next){
@@ -1674,17 +2002,25 @@ var A = /*#__PURE__*/ function() {
                             _ctx.next = 2;
                             return 1;
                         case 2:
+<<<<<<< HEAD
                         case \\"end\\":
+=======
+                        case "end":
+>>>>>>> 6bf6570 (Use manual snapshot)
                             return _ctx.stop();
                     }
                 }, f1);
             })
+<<<<<<< HEAD
 >>>>>>> 487595a (use ts type):test/__snapshots__/compile.test.js.snap
+=======
+>>>>>>> 6bf6570 (Use manual snapshot)
         }
     ]);
     return A;
 }();
 var _v = 123;
+<<<<<<< HEAD
 <<<<<<< HEAD:test/unit/es-basic/output-es-basic.snapshot.js
 var x = function x() {
   return "value:" + _v;
@@ -1692,10 +2028,15 @@ var x = function x() {
 var x = function() {
     return \\"value:\\".concat(_v);
 >>>>>>> 487595a (use ts type):test/__snapshots__/compile.test.js.snap
+=======
+var x = function() {
+    return "value:".concat(_v);
+>>>>>>> 6bf6570 (Use manual snapshot)
 };
 
 export { A, asyncFunc, generator, x };
 //# sourceMappingURL=bundle.js.map
+<<<<<<< HEAD
 <<<<<<< HEAD:test/unit/es-basic/output-es-basic.snapshot.js
 =======
 "
@@ -2035,3 +2376,5 @@ export { Tsx as default };
 "
 `;
 >>>>>>> 487595a (use ts type):test/__snapshots__/compile.test.js.snap
+=======
+>>>>>>> 6bf6570 (Use manual snapshot)
