@@ -22,7 +22,7 @@ for (const folderName of unitTestDirs) {
 
     await bundle(inputFileName, {file: distFile, format: pkgJson.main ? 'cjs' : 'es', cwd: dirPath});
 
-    const bundledAssetContent = fs.readFileSync(distFile, {encoding: 'utf-8'});
+    const bundledAssetContent = fs.readFileSync(distFile, {encoding: 'utf-8'}).replace(/\r\n/g, '\n');
     const outputFilePath = resolve(dirPath, `output-${folderName}.snapshot.js`);
 
     let currentOutputSnapshot
