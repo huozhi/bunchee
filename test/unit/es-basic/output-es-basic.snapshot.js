@@ -413,7 +413,12 @@ console.log(\\"name\\", prop);
 exports[`should compile es-basic case correctly 1`] = `
 "var runtime = {exports: {}};
 
-function _instanceof(left, right) {
+/**
+ * Copyright (c) 2014-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */ function _instanceof(left, right) {
     if (right != null && typeof Symbol !== \\"undefined\\" && right[Symbol.hasInstance]) {
         return !!right[Symbol.hasInstance](left);
     } else {
@@ -491,15 +496,15 @@ function _instanceof(left, right) {
                     reject(record.arg);
                 } else {
                     var result = record.arg;
-                    var value1 = result.value;
-                    if (value1 && typeof value1 === \\"object\\" && hasOwn.call(value1, \\"__await\\")) {
-                        return PromiseImpl.resolve(value1.__await).then(function(value) {
+                    var value = result.value;
+                    if (value && typeof value === \\"object\\" && hasOwn.call(value, \\"__await\\")) {
+                        return PromiseImpl.resolve(value.__await).then(function(value) {
                             invoke(\\"next\\", value, resolve, reject);
                         }, function(err) {
                             invoke(\\"throw\\", err, resolve, reject);
                         });
                     }
-                    return PromiseImpl.resolve(value1).then(function(unwrapped) {
+                    return PromiseImpl.resolve(value).then(function(unwrapped) {
                         // When a yielded Promise is resolved, its final value becomes
                         // the .value of the Promise<{value,done}> result for the
                         // current iteration.
@@ -641,7 +646,7 @@ function _instanceof(left, right) {
                     return iterable;
                 }
                 if (!isNaN(iterable.length)) {
-                    var i = -1, next1 = function next() {
+                    var i = -1, next = function next() {
                         while(++i < iterable.length){
                             if (hasOwn.call(iterable, i)) {
                                 next.value = iterable[i];
@@ -653,7 +658,7 @@ function _instanceof(left, right) {
                         next.done = true;
                         return next;
                     };
-                    return next1.next = next1;
+                    return next.next = next;
                 }
             }
             // Return an iterator with no values.
@@ -853,8 +858,8 @@ function _instanceof(left, right) {
         });
         exports.keys = function(object) {
             var keys = [];
-            for(var key1 in object){
-                keys.push(key1);
+            for(var key in object){
+                keys.push(key);
             }
             keys.reverse();
             // Rather than returning an object with a next method, we keep
@@ -1559,7 +1564,7 @@ function _defineProperty(obj, key, value) {
     }
     return obj;
 }
-var _marked = regeneratorRuntime$1.mark(generator);
+var _marked = /*#__PURE__*/ regeneratorRuntime$1.mark(generator);
 function generator() {
     return regeneratorRuntime$1.wrap(function generator$(_ctx) {
         while(1)switch(_ctx.prev = _ctx.next){
@@ -1576,6 +1581,7 @@ function asyncFunc() {
     return _asyncFunc.apply(this, arguments);
 }
 function _asyncFunc() {
+<<<<<<< HEAD:test/unit/es-basic/output-es-basic.snapshot.js
 <<<<<<< HEAD:test/unit/es-basic/output-es-basic.snapshot.js
   _asyncFunc = _asyncToGenerator( /*#__PURE__*/regenerator.mark(function _callee() {
     return regenerator.wrap(function _callee$(_context3) {
@@ -1627,6 +1633,9 @@ var A = /*#__PURE__*/function () {
             return _context2.stop();
 =======
     _asyncFunc = _asyncToGenerator(regeneratorRuntime$1.mark(function _callee() {
+=======
+    _asyncFunc = _asyncToGenerator(/*#__PURE__*/ regeneratorRuntime$1.mark(function _callee() {
+>>>>>>> 27d66a5 (update swc and snapshot):test/__snapshots__/compile.test.js.snap
         return regeneratorRuntime$1.wrap(function _callee$(_ctx) {
             while(1)switch(_ctx.prev = _ctx.next){
                 case 0:
@@ -1658,7 +1667,7 @@ var A = /*#__PURE__*/ function() {
     _createClass(A, [
         {
             key: \\"f1\\",
-            value: regeneratorRuntime$1.mark(function f1() {
+            value: /*#__PURE__*/ regeneratorRuntime$1.mark(function f1() {
                 return regeneratorRuntime$1.wrap(function f1$(_ctx) {
                     while(1)switch(_ctx.prev = _ctx.next){
                         case 0:
@@ -1762,7 +1771,7 @@ function _createClass(Constructor, protoProps, staticProps) {
     if (staticProps) _defineProperties(Constructor, staticProps);
     return Constructor;
 }
-function _get(target1, property1, receiver1) {
+function _get(target, property, receiver) {
     if (typeof Reflect !== \\"undefined\\" && Reflect.get) {
         _get = Reflect.get;
     } else {
@@ -1776,13 +1785,13 @@ function _get(target1, property1, receiver1) {
             return desc.value;
         };
     }
-    return _get(target1, property1, receiver1 || target1);
+    return _get(target, property, receiver || target);
 }
-function _getPrototypeOf(o1) {
+function _getPrototypeOf(o) {
     _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
         return o.__proto__ || Object.getPrototypeOf(o);
     };
-    return _getPrototypeOf(o1);
+    return _getPrototypeOf(o);
 }
 function _inherits(subClass, superClass) {
     if (typeof superClass !== \\"function\\" && superClass !== null) {
@@ -1803,12 +1812,12 @@ function _possibleConstructorReturn(self, call) {
     }
     return _assertThisInitialized(self);
 }
-function _setPrototypeOf(o2, p1) {
+function _setPrototypeOf(o, p) {
     _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
         o.__proto__ = p;
         return o;
     };
-    return _setPrototypeOf(o2, p1);
+    return _setPrototypeOf(o, p);
 }
 function _superPropBase(object, property) {
     while(!Object.prototype.hasOwnProperty.call(object, property)){
@@ -1845,8 +1854,8 @@ function _createSuper(Derived) {
         return _possibleConstructorReturn(this, result);
     };
 }
-var A = /*#__PURE__*/ function(Parent1) {
-    _inherits(A, Parent1);
+var A = /*#__PURE__*/ function(Parent) {
+    _inherits(A, Parent);
     var _super = _createSuper(A);
     function A() {
         _classCallCheck(this, A);
