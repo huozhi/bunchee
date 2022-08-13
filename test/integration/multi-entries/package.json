@@ -8,8 +8,8 @@
   },
   "bunchee": {
     "entry": {
-      "./lite": "./lite/index.js",
-      "./client": "./client/index.js"
+      "./lite": "./lite/index.ts",
+      "./client": "./client/index.ts"
     }
   }
 }
