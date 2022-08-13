@@ -9,6 +9,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "test": "jest --env node",
+    "test:update": "TEST_UPDATE_SNAPSHOT=1 yarn test",
     "clean": "rm -rf ./dist",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build && chmod +x dist/cli.js && yarn test",
