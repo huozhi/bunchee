@@ -86,16 +86,6 @@ function createInputConfig(
         declarationDir: dirname(resolve(cwd, typings)),
       }),
     }),
-    minify && terser({
-      compress: {
-        "keep_infinity": true,
-      },
-      format: {
-        "comments": /^\s*([@#]__[A-Z]__\s*$|@[a-zA-Z]\s*$)/,
-        "wrap_func_args": false,
-        "preserve_annotations": true,
-      }
-    }),
     useTypescript && minify && terser({
       compress: {
         "keep_infinity": true,
