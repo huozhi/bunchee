@@ -1,10 +1,11 @@
 import type { PackageMetadata, BuncheeRollupConfig, ExportCondition, CliArgs, BundleOptions, ExportType } from "./types";
-import fs, { existsSync } from "fs";
+import type { JsMinifyOptions } from "@swc/core"
+import fs from "fs";
 import { resolve, extname, dirname, basename } from "path";
+import { swc } from 'rollup-plugin-swc3';
 import commonjs from "@rollup/plugin-commonjs";
 import shebang from "rollup-plugin-preserve-shebang";
 import json from "@rollup/plugin-json";
-import babel from "@rollup/plugin-babel";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import { InputOptions, OutputOptions, Plugin } from "rollup";
 import { terser } from "rollup-plugin-terser";
@@ -12,6 +13,15 @@ import config from "./config";
 import { logger } from "./utils"
 
 const { Module } = require("module");
+const minifyOptions: JsMinifyOptions = {
+  compress: true,
+  format: {
+    comments: 'some',
+    wrapFuncArgs: false,
+    preserveAnnotations: true,
+  },
+  mangle: true
+}
 
 let hasLoggedTsWarning = false
 function resolveTypescript() {
@@ -61,7 +71,7 @@ function createInputConfig(
     useTypescript && require("@rollup/plugin-typescript")({
       tsconfig: (() => {
         const tsconfig = resolve(cwd, "tsconfig.json");
-        return existsSync(tsconfig) ? tsconfig : undefined;
+        return fs.existsSync(tsconfig) ? tsconfig : undefined;
       })(),
       typescript: resolveTypescript(),
       // override options
@@ -76,15 +86,6 @@ function createInputConfig(
         declarationDir: dirname(resolve(cwd, typings)),
       }),
     }),
-    !useTypescript && babel({
-      babelHelpers: "bundled",
-      babelrc: false,
-      configFile: false,
-      exclude: "node_modules/**",
-      presets: [
-        ["babel-preset-o", { targets: {} }]
-      ],
-    }),
     minify && terser({
       compress: {
         "keep_infinity": true,
@@ -94,6 +95,40 @@ function createInputConfig(
         "wrap_func_args": false,
         "preserve_annotations": true,
       }
+    }),
+    useTypescript && minify && terser({
+      compress: {
+        "keep_infinity": true,
+      },
+      format: {
+        "comments": /^\s*([@#]__[A-Z]__\s*$|@[a-zA-Z]\s*$)/,
+        "wrap_func_args": false,
+        "preserve_annotations": true,
+      }
+    }),
+    !useTypescript && swc({
+      // All options are optional
+      include: /\.(m|c)?[jt]sx?$/,
+      exclude: 'node_modules',
+      tsconfig: 'tsconfig.json',
+      // And add your swc configuration here!
+      // "filename" will be ignored since it is handled by rollup
+      jsc: {
+        target: 'es5',
+        // Use loose mode
+        loose: true,
+        externalHelpers: false,
+        parser: {
+          syntax: useTypescript ? 'typescript' : 'ecmascript',
+          [useTypescript ? 'tsx': 'jsx']: true,
+          privateMethod: true,
+          classPrivateProperty: true,
+          exportDefaultFrom: true,
+        },
+        ...(minify && { minify: minifyOptions })
+      },
+      sourceMaps: options.sourcemap,
+      inlineSourcesContent: false,
     }),
   ].filter((n: (Plugin | false)): n is Plugin => Boolean(n));
 
