@@ -13,8 +13,9 @@
   </a>
 </p>
 
-Bunchee can help you to bundle your library into one file with zero configuration. It's built on top of rollup and babel.
-Let you focus on writing code and can generate multiple types of module (commonjs, esmodule) at the same time.
+Bunchee can help you to bundle your library into one file with zero configuration. It's built on top of rollup.
+
+Let you focus on writing code and can generate multiple types of module (CommonJS, ESModules) at the same time.
 
 
 ## Installation
