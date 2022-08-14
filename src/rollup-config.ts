@@ -52,7 +52,7 @@ function createInputConfig(
     .filter(<T>(n?: T): n is T => Boolean(n))
     .map((o: { [key: string]: string }): string[] => Object.keys(o))
     .reduce((a: string[], b: string[]) => a.concat(b), [] as string[])
-    .concat(options.external ?? [])
+    .concat((options.external ?? []).concat(pkg.name))
 
   const {useTypescript, target, minify = false} = options;
   const typings: string | undefined = pkg.types || pkg.typings
