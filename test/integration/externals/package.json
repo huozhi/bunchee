@@ -1,0 +1,12 @@
+{
+  "name": "externals",
+  "exports": "./dist/index.js",
+  "peerDependencies": {
+    "peer-dep": "*"
+  },
+  "peerDependenciesMeta": {
+    "peer-dep-meta": {
+      "optional": true
+    }
+  }
+}

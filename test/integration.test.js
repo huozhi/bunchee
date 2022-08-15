@@ -7,6 +7,17 @@ const integrationTestDir = resolve(__dirname, 'integration');
 const getPath = (filepath) => join(integrationTestDir, filepath)
 
 const testCases = [
+  // TODO: test externals/sub-path-export
+  {
+    name: 'externals',
+    args: ['index.js', '-o', './dist/index.js'],
+    expected(dir, stdout) {
+      const distFile = join(dir, './dist/index.js');
+      const content = fs.readFileSync(distFile, { encoding: 'utf-8' });
+      expect(content).toMatch(/['"]peer-dep['"]/);
+      expect(content).toMatch(/['"]peer-dep-meta['"]/);
+    }
+  },
   {
     name: 'ts-error',
     args: ['index.ts', '-o', './dist/index.js'],
@@ -105,7 +116,7 @@ function runTests() {
     const { name, args, expected } = testCase
     const dir = getPath(name)
     test(`integration ${name}`, async () => {
-      const { stdout, stderr } =  await runBundle(dir, args)
+      const { stdout, stderr } = await runBundle(dir, args)
       if (process.env.DEBUG_TEST) {
         console.log(stdout)
         console.error(stderr)
