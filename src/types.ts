@@ -22,6 +22,7 @@ type PackageMetadata = {
   type?: "commonjs" | "module"
   dependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
+  peerDependenciesMeta?: Record<string, Record<string, string>>
   exports?: string | Record<string, ExportCondition>;
   types?: string;
   typings?: string;

@@ -48,11 +48,11 @@ function createInputConfig(
   pkg: PackageMetadata,
   options: BundleOptions,
 ): InputOptions {
-  const externals = [pkg.peerDependencies, pkg.dependencies]
+  const externals = [pkg.peerDependencies, pkg.dependencies, pkg.peerDependenciesMeta]
     .filter(<T>(n?: T): n is T => Boolean(n))
-    .map((o: { [key: string]: string }): string[] => Object.keys(o))
+    .map((o: { [key: string]: any }): string[] => Object.keys(o))
     .reduce((a: string[], b: string[]) => a.concat(b), [] as string[])
-    .concat(options.external ?? [])
+    .concat((options.external ?? []).concat(pkg.name ? [pkg.name] : []))
 
   const {useTypescript, target, minify = false} = options;
   const typings: string | undefined = pkg.types || pkg.typings
