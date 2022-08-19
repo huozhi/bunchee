@@ -1,6 +1,7 @@
 import type { PackageMetadata, BuncheeRollupConfig, ExportCondition, CliArgs, BundleOptions, ExportType } from "./types";
 import type { JsMinifyOptions } from "@swc/core"
 import fs from "fs";
+import alias from "@rollup/plugin-alias";
 import { resolve, extname, dirname, basename } from "path";
 import { swc } from 'rollup-plugin-swc3';
 import commonjs from "@rollup/plugin-commonjs";
@@ -68,6 +69,11 @@ function createInputConfig(
     }),
     json(),
     shebang(),
+    alias({
+      entries: [
+        { find: 'regenerator-runtime', replacement: require.resolve('regenerator-runtime') },
+      ]
+    }),
     useTypescript && require("@rollup/plugin-typescript")({
       tsconfig: (() => {
         const tsconfig = resolve(cwd, "tsconfig.json");
