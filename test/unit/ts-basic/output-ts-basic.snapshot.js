@@ -183,4 +183,3 @@ function asyncFunc() {
 }
 
 export { asyncFunc, clone, sum as default };
-//# sourceMappingURL=bundle.js.map

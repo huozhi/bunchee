@@ -76,7 +76,7 @@ Options:
   -e, --external <mod>   specify an external dependency
   -h, --help             output usage information
   --target <target>      build environment, use "node" for nodejs runtime
-  --no-sourcemap         disable sourcemap generation, sourcemap generation is enabled by default
+  --sourcemap            enable sourcemap generation, sourcemap generation is disabled by default
   --cwd <cwd>            specify current working directory
 
 Usage:

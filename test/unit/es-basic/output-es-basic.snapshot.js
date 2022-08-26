@@ -209,4 +209,3 @@ var x = function() {
 };
 
 export { A, asyncFunc, generator, x };
-//# sourceMappingURL=bundle.js.map

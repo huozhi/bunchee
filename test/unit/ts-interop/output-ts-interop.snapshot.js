@@ -7,4 +7,3 @@ var b = "hello";
 
 exports.b = b;
 exports["default"] = a;
-//# sourceMappingURL=bundle.js.map

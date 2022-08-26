@@ -88,4 +88,3 @@ var A = /*#__PURE__*/ function(Parent) {
 var a = new A();
 
 console.log("main", a.x);
-//# sourceMappingURL=bundle.js.map
