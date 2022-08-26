@@ -13,7 +13,7 @@
   </a>
 </p>
 
-Bunchee can help you to bundle your library into one file with zero configuration. It's built on top of rollup.
+Bunchee can help you to bundle your library into one file with zero configuration. It's built on top of rollup and SWC ⚡️.
 
 Let you focus on writing code and can generate multiple types of module (CommonJS, ESModules) at the same time.
 
