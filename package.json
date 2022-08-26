@@ -6,16 +6,17 @@
     "bunchee": "./dist/cli.js"
   },
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/src/index.d.ts",
   "scripts": {
     "test": "jest --env node",
     "test:update": "TEST_UPDATE_SNAPSHOT=1 yarn test",
     "clean": "rm -rf ./dist",
+    "types": "tsc --declaration --declarationDir dist --emitDeclarationOnly",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build && chmod +x dist/cli.js && yarn test",
     "build:cli": "tsx src/cli.ts src/cli.ts --target node -f cjs -o dist/cli.js",
     "build:main": "tsx src/cli.ts src/index.ts --target node -f cjs",
-    "build": "yarn build:main && yarn build:cli"
+    "build": "yarn build:main && yarn build:cli && yarn types"
   },
   "type": "commonjs",
   "keywords": [
@@ -39,13 +40,11 @@
     "@rollup/plugin-json": "4.1.0",
     "@rollup/plugin-node-resolve": "13.3.0",
     "@rollup/plugin-typescript": "8.3.4",
-    "@swc/core": "~1.2.229",
+    "@swc/core": "^1.2.244",
     "arg": "5.0.0",
-    "regenerator-runtime": "0.13.9",
     "rollup": "2.74.1",
     "rollup-plugin-preserve-shebang": "1.0.1",
     "rollup-plugin-swc3": "0.3.0",
-    "rollup-plugin-terser": "7.0.2",
     "tslib": "2.3.0"
   },
   "peerDependencies": {

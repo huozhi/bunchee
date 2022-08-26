@@ -9,11 +9,11 @@ import shebang from "rollup-plugin-preserve-shebang";
 import json from "@rollup/plugin-json";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import { InputOptions, OutputOptions, Plugin } from "rollup";
-import { terser } from "rollup-plugin-terser";
 import config from "./config";
 import { logger } from "./utils"
 
 const { Module } = require("module");
+
 const minifyOptions: JsMinifyOptions = {
   compress: true,
   format: {
@@ -22,7 +22,7 @@ const minifyOptions: JsMinifyOptions = {
     preserveAnnotations: true,
   },
   mangle: true
-}
+};
 
 let hasLoggedTsWarning = false
 function resolveTypescript() {
@@ -71,7 +71,7 @@ function createInputConfig(
     shebang(),
     alias({
       entries: [
-        { find: 'regenerator-runtime', replacement: require.resolve('regenerator-runtime') },
+        // { find: 'regenerator-runtime', replacement: require.resolve('regenerator-runtime') },
       ]
     }),
     useTypescript && require("@rollup/plugin-typescript")({
@@ -88,21 +88,23 @@ function createInputConfig(
       noEmitOnError: !options.watch,
       sourceMap: options.sourcemap,
       declaration: !!typings,
+      // Only emit types, use swc to emit js
+      emitDeclarationOnly: true,
       ...(!!typings && {
         declarationDir: dirname(resolve(cwd, typings)),
       }),
     }),
-    useTypescript && minify && terser({
-      compress: {
-        "keep_infinity": true,
-      },
-      format: {
-        "comments": /^\s*([@#]__[A-Z]__\s*$|@[a-zA-Z]\s*$)/,
-        "wrap_func_args": false,
-        "preserve_annotations": true,
-      }
-    }),
-    !useTypescript && swc({
+    // useTypescript && minify && terser({
+    //   compress: {
+    //     "keep_infinity": true,
+    //   },
+    //   format: {
+    //     "comments": /^\s*([@#]__[A-Z]__\s*$|@[a-zA-Z]\s*$)/,
+    //     "wrap_func_args": false,
+    //     "preserve_annotations": true,
+    //   }
+    // }),
+    swc({
       // All options are optional
       include: /\.(m|c)?[jt]sx?$/,
       exclude: 'node_modules',

@@ -21,6 +21,28 @@ function _createClass(Constructor, protoProps, staticProps) {
     if (staticProps) _defineProperties(Constructor, staticProps);
     return Constructor;
 }
+function _get(target, property, receiver) {
+    if (typeof Reflect !== "undefined" && Reflect.get) {
+        _get = Reflect.get;
+    } else {
+        _get = function _get(target, property, receiver) {
+            var base = _superPropBase(target, property);
+            if (!base) return;
+            var desc = Object.getOwnPropertyDescriptor(base, property);
+            if (desc.get) {
+                return desc.get.call(receiver);
+            }
+            return desc.value;
+        };
+    }
+    return _get(target, property, receiver || target);
+}
+function _getPrototypeOf(o) {
+    _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+        return o.__proto__ || Object.getPrototypeOf(o);
+    };
+    return _getPrototypeOf(o);
+}
 function _inherits(subClass, superClass) {
     if (typeof superClass !== "function" && superClass !== null) {
         throw new TypeError("Super expression must either be null or a function");
@@ -41,6 +63,13 @@ function _setPrototypeOf(o, p) {
     };
     return _setPrototypeOf(o, p);
 }
+function _superPropBase(object, property) {
+    while(!Object.prototype.hasOwnProperty.call(object, property)){
+        object = _getPrototypeOf(object);
+        if (object === null) break;
+    }
+    return object;
+}
 var A = /*#__PURE__*/ function(Parent) {
     _inherits(A, Parent);
     function A() {
@@ -50,7 +79,7 @@ var A = /*#__PURE__*/ function(Parent) {
         {
             key: "x",
             get: function get() {
-                return Parent.prototype.f.call(this);
+                return _get(A.prototype, "f", this).call(this);
             }
         }
     ]);
