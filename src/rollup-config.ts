@@ -1,7 +1,6 @@
 import type { PackageMetadata, BuncheeRollupConfig, ExportCondition, CliArgs, BundleOptions, ExportType } from "./types";
 import type { JsMinifyOptions } from "@swc/core"
 import fs from "fs";
-import alias from "@rollup/plugin-alias";
 import { resolve, extname, dirname, basename } from "path";
 import { swc } from 'rollup-plugin-swc3';
 import commonjs from "@rollup/plugin-commonjs";
@@ -9,11 +8,11 @@ import shebang from "rollup-plugin-preserve-shebang";
 import json from "@rollup/plugin-json";
 import nodeResolve from "@rollup/plugin-node-resolve";
 import { InputOptions, OutputOptions, Plugin } from "rollup";
-import { terser } from "rollup-plugin-terser";
 import config from "./config";
 import { logger } from "./utils"
 
 const { Module } = require("module");
+
 const minifyOptions: JsMinifyOptions = {
   compress: true,
   format: {
@@ -22,7 +21,7 @@ const minifyOptions: JsMinifyOptions = {
     preserveAnnotations: true,
   },
   mangle: true
-}
+};
 
 let hasLoggedTsWarning = false
 function resolveTypescript() {
@@ -69,11 +68,6 @@ function createInputConfig(
     }),
     json(),
     shebang(),
-    alias({
-      entries: [
-        { find: 'regenerator-runtime', replacement: require.resolve('regenerator-runtime') },
-      ]
-    }),
     useTypescript && require("@rollup/plugin-typescript")({
       tsconfig: (() => {
         const tsconfig = resolve(cwd, "tsconfig.json");
@@ -88,31 +82,20 @@ function createInputConfig(
       noEmitOnError: !options.watch,
       sourceMap: options.sourcemap,
       declaration: !!typings,
+      // Only emit types, use swc to emit js
+      emitDeclarationOnly: true,
       ...(!!typings && {
         declarationDir: dirname(resolve(cwd, typings)),
       }),
     }),
-    useTypescript && minify && terser({
-      compress: {
-        "keep_infinity": true,
-      },
-      format: {
-        "comments": /^\s*([@#]__[A-Z]__\s*$|@[a-zA-Z]\s*$)/,
-        "wrap_func_args": false,
-        "preserve_annotations": true,
-      }
-    }),
-    !useTypescript && swc({
-      // All options are optional
+    swc({
       include: /\.(m|c)?[jt]sx?$/,
       exclude: 'node_modules',
       tsconfig: 'tsconfig.json',
-      // And add your swc configuration here!
-      // "filename" will be ignored since it is handled by rollup
       jsc: {
         target: 'es5',
-        // Use loose mode
-        loose: true,
+
+        loose: true, // Use loose mode
         externalHelpers: false,
         parser: {
           syntax: useTypescript ? 'typescript' : 'ecmascript',
