@@ -20,7 +20,6 @@ function bundle(
 ): Promise<any> {
   config.rootDir = resolve(process.cwd(), cwd || "");
   assignDefault(options, "format", "es")
-  assignDefault(options, "sourcemap", true)
 
   // alias for 'es' in rollup
   if (options.format === "esm") {

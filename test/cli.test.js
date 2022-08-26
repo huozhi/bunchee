@@ -26,14 +26,14 @@ const testCases = [
     }
   },
   {
-    name: 'no-sourcemap',
-    args: [resolve('fixtures/hello.js'), '--no-sourcemap', '-o', resolve('dist/hello.nomap.js')],
+    name: 'with-sourcemap',
+    args: [resolve('fixtures/hello.js'), '--sourcemap', '-o', resolve('dist/hello.nomap.js')],
     expected(distFile) {
       return [
         [fs.existsSync(distFile), true],
-        //# sourceMappingURL is not set
-        [fs.readFileSync(distFile, { encoding: 'utf-8' }).includes('sourceMappingURL'), false],
-        [fs.existsSync(distFile + '.map'), false],
+        //# sourceMappingURL is set
+        [fs.readFileSync(distFile, { encoding: 'utf-8' }).includes('sourceMappingURL'), true],
+        [fs.existsSync(distFile + '.map'), true],
       ]
     }
   },

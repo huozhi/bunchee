@@ -8,4 +8,3 @@ function input() {
 }
 
 export { input as default };
-//# sourceMappingURL=bundle.js.map

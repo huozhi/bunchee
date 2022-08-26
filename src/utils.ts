@@ -29,7 +29,7 @@ export function parseCliArgs(argv: string[]) {
     "--help": Boolean,
     "--version": Boolean,
     "--target": String,
-    "--no-sourcemap": Boolean,
+    "--sourcemap": Boolean,
     "--external": [String],
 
     "-h": "--help",
@@ -50,7 +50,7 @@ export function parseCliArgs(argv: string[]) {
     file: args["--output"],
     watch: args["--watch"],
     minify: args["--minify"],
-    sourcemap: args["--no-sourcemap"] !== true,
+    sourcemap: !!args["--sourcemap"],
     cwd: args["--cwd"],
     help: args["--help"],
     version: args["--version"],

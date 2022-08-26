@@ -5,4 +5,3 @@ function Tsx() {
 }
 
 export { Tsx as default };
-//# sourceMappingURL=bundle.js.map
