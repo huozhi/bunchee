@@ -94,27 +94,14 @@ function createInputConfig(
         declarationDir: dirname(resolve(cwd, typings)),
       }),
     }),
-    // useTypescript && minify && terser({
-    //   compress: {
-    //     "keep_infinity": true,
-    //   },
-    //   format: {
-    //     "comments": /^\s*([@#]__[A-Z]__\s*$|@[a-zA-Z]\s*$)/,
-    //     "wrap_func_args": false,
-    //     "preserve_annotations": true,
-    //   }
-    // }),
     swc({
-      // All options are optional
       include: /\.(m|c)?[jt]sx?$/,
       exclude: 'node_modules',
       tsconfig: 'tsconfig.json',
-      // And add your swc configuration here!
-      // "filename" will be ignored since it is handled by rollup
       jsc: {
         target: 'es5',
-        // Use loose mode
-        loose: true,
+
+        loose: true, // Use loose mode
         externalHelpers: false,
         parser: {
           syntax: useTypescript ? 'typescript' : 'ecmascript',
