@@ -104,7 +104,7 @@ function createInputConfig(
           classPrivateProperty: true,
           exportDefaultFrom: true,
         },
-        ...(minify && { minify: minifyOptions })
+        ...(minify && { minify: {...minifyOptions, sourceMap: options.sourcemap } })
       },
       sourceMaps: options.sourcemap,
       inlineSourcesContent: false,
