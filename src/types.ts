@@ -35,7 +35,11 @@ type CliArgs = CommonConfig & {
   file?: string
   watch?: boolean
   cwd?: string
-  exportCondition?: { source: string, export: ExportCondition }
+  exportCondition?: {
+    source: string // detected source file
+    name: string // export condition name
+    export: ExportCondition // export condition value
+  }
 }
 
 type BundleOptions = CliArgs & {

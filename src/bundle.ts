@@ -23,7 +23,10 @@ function getSourcePathFromExportPath(cwd: string, exportPath: string) {
     if (exportPath.endsWith('package.json')) return
     if (exportPath === '.') exportPath = './index'
     const filename = resolve(cwd, `${exportPath}.${ext}`)
-    if (fs.existsSync(filename)) return filename
+
+    if (fs.existsSync(filename)) {
+      return filename
+    }
   }
   return
 }
@@ -62,6 +65,7 @@ function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Promise<a
 
         options.exportCondition = {
           source,
+          name: entryExport,
           export: packageExports[entryExport]
         }
 

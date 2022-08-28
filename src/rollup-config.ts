@@ -1,7 +1,7 @@
 import type { PackageMetadata, BuncheeRollupConfig, ExportCondition, CliArgs, BundleOptions, ExportType } from './types'
 import type { JsMinifyOptions } from '@swc/core'
 import fs from 'fs'
-import { resolve, extname, dirname, basename } from 'path'
+import { resolve, extname, dirname } from 'path'
 import { swc } from 'rollup-plugin-swc3'
 import commonjs from '@rollup/plugin-commonjs'
 import shebang from 'rollup-plugin-preserve-shebang'
@@ -33,7 +33,8 @@ function resolveTypescript() {
   } catch (_) {
     if (!hasLoggedTsWarning) {
       hasLoggedTsWarning = true
-      logger.warn('Could not load TypeScript compiler. Try `yarn add --dev typescript`')
+      logger.error('Could not load TypeScript compiler. Try `yarn add --dev typescript`')
+      process.exit(1)
     }
   }
   return ts
@@ -46,8 +47,7 @@ function getDistPath(distPath: string) {
 function createInputConfig(
   entry: string,
   pkg: PackageMetadata,
-  options: BundleOptions,
-  // entryExport?: string
+  options: BundleOptions
 ): InputOptions {
   const externals = [pkg.peerDependencies, pkg.dependencies, pkg.peerDependenciesMeta]
     .filter(<T>(n?: T): n is T => Boolean(n))
@@ -55,7 +55,7 @@ function createInputConfig(
     .reduce((a: string[], b: string[]) => a.concat(b), [] as string[])
     .concat((options.external ?? []).concat(pkg.name ? [pkg.name] : []))
 
-  const { useTypescript, target, minify = false } = options
+  const { useTypescript, target, minify = false, exportCondition } = options
   const typings: string | undefined = pkg.types || pkg.typings
   const cwd: string = config.rootDir
 
@@ -65,7 +65,11 @@ function createInputConfig(
     const tsconfig = resolve(cwd, 'tsconfig.json')
     tsPath = fs.existsSync(tsconfig) ? tsconfig : undefined
 
-    const { exportCondition } = options
+    if (typings) {
+      declarationDir = dirname(resolve(cwd, typings))
+    }
+
+    // Generate `declarationDir` based on the dist files of export condition
     if (exportCondition) {
       const exportConditionDistFolder =
         dirname(
@@ -77,10 +81,10 @@ function createInputConfig(
         config.rootDir,
         exportConditionDistFolder
       )
-    } else if (typings) {
-      declarationDir = dirname(resolve(cwd, typings))
     }
   }
+
+  const isMainExport = !exportCondition || exportCondition.name === '.'
 
   const plugins: Plugin[] = [
     nodeResolve({
@@ -92,7 +96,8 @@ function createInputConfig(
     }),
     json(),
     shebang(),
-    useTypescript &&
+    // Use typescript only emit types once for main export compilation
+    useTypescript && isMainExport &&
       require('@rollup/plugin-typescript')({
         tsconfig: tsPath,
         typescript: resolveTypescript(),
@@ -116,7 +121,6 @@ function createInputConfig(
       tsconfig: 'tsconfig.json',
       jsc: {
         target: 'es5',
-
         loose: true, // Use loose mode
         externalHelpers: false,
         parser: {
@@ -177,8 +181,9 @@ function createOutputOptions(options: BundleOptions, pkg: PackageMetadata): Outp
   const file = resolve(options.file!)
   return {
     name: pkg.name,
-    dir: dirname(file),
-    entryFileNames: basename(file),
+    // dir: dirname(file),
+    // entryFileNames: basename(file),
+    file: file,
     format,
     exports: 'named',
     esModule: useEsModuleMark && format !== 'umd',
@@ -287,8 +292,7 @@ function getSubExportDist(pkg: PackageMetadata, exportCondition: ExportCondition
 function createRollupConfig(
   entry: string,
   pkg: PackageMetadata,
-  cliArgs: CliArgs,
-  // entryExport?: string
+  cliArgs: CliArgs
 ): BuncheeRollupConfig {
   const { file } = cliArgs
   const ext = extname(entry)

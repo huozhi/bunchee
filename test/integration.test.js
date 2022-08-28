@@ -1,5 +1,5 @@
-const { execSync, fork } = require('child_process')
 const fs = require('fs')
+const { execSync, fork } = require('child_process')
 const { resolve, join } = require('path')
 
 const integrationTestDir = resolve(__dirname, 'integration')
@@ -21,10 +21,10 @@ const testCases = [
   {
     name: 'ts-error',
     args: ['index.ts', '-o', './dist/index.js'],
-    expected(dir, stdout) {
+    expected(dir, stdout, stderr) {
       const distFile = join(dir, './dist/index.js')
+      expect(stderr).toMatch(/Could not load TypeScript compiler/)
       expect(fs.existsSync(distFile)).toBe(false)
-      expect(stdout).toMatch(/Could not load TypeScript compiler/)
     },
   },
   {
@@ -60,12 +60,14 @@ const testCases = [
         join(dir, './dist/lite.js'),
         join(dir, './dist/client/index.cjs'),
         join(dir, './dist/client/index.mjs'),
+
+        // types
+        join(dir, './dist/client.d.ts'),
+        join(dir, './dist/index.d.ts'),
+        join(dir, './dist/lite.d.ts'),
       ]
 
       expect(distFiles.every((f) => fs.existsSync(f))).toBe(true)
-
-      // non exported paths shouldn't be compiled from source file
-      expect(fs.existsSync(join(dir, './dist/non-entry.js'))).toBe(false)
     },
   },
   {
@@ -88,8 +90,8 @@ async function runBundle(dir, _args) {
   return new Promise((resolve) => {
     ps.on('close', (code) => {
       if (process.env.TEST_DEBUG) {
-        console.log(stdout)
-        console.error(stderr)
+        stdout && console.log(stdout)
+        stderr && console.error(stderr)
       }
       resolve({
         code,
@@ -109,8 +111,8 @@ function runTests() {
       execSync(`rm -rf ${join(dir, 'dist')}`)
       const { stdout, stderr } = await runBundle(dir, args)
       if (process.env.DEBUG_TEST) {
-        console.log(stdout)
-        console.error(stderr)
+        stdout && console.log(stdout)
+        stderr && console.error(stderr)
       }
 
       expected(dir, stdout, stderr)
