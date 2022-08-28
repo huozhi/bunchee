@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-import type { CliArgs } from './types'
+import type { CliArgs } from './src/types'
 
 import path from 'path'
-import { parseCliArgs, logger } from './utils'
-import { version } from '../package.json'
+import { parseCliArgs, logger } from './src/utils'
+import { version } from './package.json'
 
 const helpMessage = `
 Usage: bunchee [options]
@@ -53,7 +53,7 @@ async function run(args: any) {
   }
 
   const entry = source ? path.resolve(cwd, source) : ''
-  const { bundle } = require('.')
+  const { bundle } = require('./lib')
 
   try {
     return await bundle(entry, outputConfig)

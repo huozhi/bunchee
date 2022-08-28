@@ -1,7 +1,8 @@
 {
   "include": [
+    "./src",
     "*.d.ts",
-    "./src"
+    "*.ts"
   ],
   "compilerOptions": {
     "rootDir": ".",
