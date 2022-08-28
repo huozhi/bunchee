@@ -1,17 +1,27 @@
 const fs = require('fs');
-const { resolve } = require('path');
+const { resolve, dirname } = require('path');
 const { bundle } = require('..');
 
 const baseUnitTestDir = resolve(__dirname, 'unit');
 const unitTestDirs = fs.readdirSync(baseUnitTestDir);
+
+function ensureDir(dir) {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true })
+  }
+}
 
 function compareOrUpdateSnapshot(filename, unitName, onCompare) {
   const dirPath = resolve(baseUnitTestDir, unitName);
   const bundledAssetContent = fs.readFileSync(filename, {encoding: 'utf-8'}).replace(/\r\n/g, '\n');
   const outputFilePath = resolve(
     dirPath,
-    `output-${unitName}${filename.endsWith('.min.js') ? '.min' : ''}.snapshot.js`
+    '__snapshot__',
+    `${unitName}${filename.endsWith('.min.js') ? '.min' : ''}.js.snapshot`
   );
+
+
+  ensureDir(dirname(outputFilePath))
 
   let currentOutputSnapshot
   if (fs.existsSync(outputFilePath)) {
