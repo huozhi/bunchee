@@ -181,9 +181,7 @@ function createOutputOptions(options: BundleOptions, pkg: PackageMetadata): Outp
   const file = resolve(options.file!)
   return {
     name: pkg.name,
-    // dir: dirname(file),
-    // entryFileNames: basename(file),
-    file: file,
+    file,
     format,
     exports: 'named',
     esModule: useEsModuleMark && format !== 'umd',
