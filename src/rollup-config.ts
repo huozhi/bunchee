@@ -120,11 +120,15 @@ function createInputConfig(
     treeshake: {
       propertyReadSideEffects: false,
     },
-    onwarn (warning, warn) {
+    onwarn(warning, warn) {
+      const code = warning.code || '';
       if (
-        warning.code &&
-        ['MIXED_EXPORTS', 'PREFER_NAMED_EXPORTS'].includes(warning.code)
+        ['MIXED_EXPORTS', 'PREFER_NAMED_EXPORTS', 'THIS_IS_UNDEFINED'].includes(code)
       ) return;
+      // If the circular dependency warning is from node_modules, ignore it
+      if (code === 'CIRCULAR_DEPENDENCY' && /Circular dependency: node_modules/.test(warning.message)) {
+        return;
+      }
       warn(warning);
     },
   };

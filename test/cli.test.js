@@ -26,8 +26,20 @@ const testCases = [
     }
   },
   {
-    name: 'with-sourcemap',
-    args: [resolve('fixtures/hello.js'), '--sourcemap', '-o', resolve('dist/hello.nomap.js')],
+    name: 'with sourcemap',
+    args: [resolve('fixtures/hello.js'), '--sourcemap', '-o', resolve('dist/hello.js')],
+    expected(distFile) {
+      return [
+        [fs.existsSync(distFile), true],
+        //# sourceMappingURL is set
+        [fs.readFileSync(distFile, { encoding: 'utf-8' }).includes('sourceMappingURL'), true],
+        [fs.existsSync(distFile + '.map'), true],
+      ]
+    }
+  },
+  {
+    name: 'minified with sourcemap',
+    args: [resolve('fixtures/hello.js'), '-m', '--sourcemap', '-o', resolve('dist/hello.min.js')],
     expected(distFile) {
       return [
         [fs.existsSync(distFile), true],
