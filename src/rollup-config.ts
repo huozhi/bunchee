@@ -43,7 +43,12 @@ function getDistPath(distPath: string) {
   return resolve(config.rootDir, distPath)
 }
 
-function createInputConfig(entry: string, pkg: PackageMetadata, options: BundleOptions): InputOptions {
+function createInputConfig(
+  entry: string,
+  pkg: PackageMetadata,
+  options: BundleOptions,
+  // entryExport?: string
+): InputOptions {
   const externals = [pkg.peerDependencies, pkg.dependencies, pkg.peerDependenciesMeta]
     .filter(<T>(n?: T): n is T => Boolean(n))
     .map((o: { [key: string]: any }): string[] => Object.keys(o))
@@ -53,6 +58,29 @@ function createInputConfig(entry: string, pkg: PackageMetadata, options: BundleO
   const { useTypescript, target, minify = false } = options
   const typings: string | undefined = pkg.types || pkg.typings
   const cwd: string = config.rootDir
+
+  let tsPath: string | undefined
+  let declarationDir: string | undefined
+  if (useTypescript) {
+    const tsconfig = resolve(cwd, 'tsconfig.json')
+    tsPath = fs.existsSync(tsconfig) ? tsconfig : undefined
+
+    const { exportCondition } = options
+    if (exportCondition) {
+      const exportConditionDistFolder =
+        dirname(
+          typeof exportCondition.export === 'string'
+            ? exportCondition.export
+            : Object.values(exportCondition.export)[0]
+          )
+      declarationDir = resolve(
+        config.rootDir,
+        exportConditionDistFolder
+      )
+    } else if (typings) {
+      declarationDir = dirname(resolve(cwd, typings))
+    }
+  }
 
   const plugins: Plugin[] = [
     nodeResolve({
@@ -66,10 +94,7 @@ function createInputConfig(entry: string, pkg: PackageMetadata, options: BundleO
     shebang(),
     useTypescript &&
       require('@rollup/plugin-typescript')({
-        tsconfig: (() => {
-          const tsconfig = resolve(cwd, 'tsconfig.json')
-          return fs.existsSync(tsconfig) ? tsconfig : undefined
-        })(),
+        tsconfig: tsPath,
         typescript: resolveTypescript(),
         // override options
         jsx: 'react',
@@ -82,7 +107,7 @@ function createInputConfig(entry: string, pkg: PackageMetadata, options: BundleO
         // Only emit types, use swc to emit js
         emitDeclarationOnly: true,
         ...(!!typings && {
-          declarationDir: dirname(resolve(cwd, typings)),
+          declarationDir,
         }),
       }),
     swc({
@@ -234,25 +259,25 @@ function getExportDist(pkg: PackageMetadata) {
   return dist
 }
 
-function getSubExportDist(pkg: PackageMetadata, subExport: string) {
-  const pkgExports = pkg.exports || {}
+function getSubExportDist(pkg: PackageMetadata, exportCondition: ExportCondition) {
+  // const pkgExports = pkg.exports || {}
   const dist: { format: 'cjs' | 'esm'; file: string }[] = []
   // "exports": "..."
-  if (typeof pkgExports === 'string') {
-    dist.push({ format: pkg.type === 'module' ? 'esm' : 'cjs', file: getDistPath(pkgExports) })
+  if (typeof exportCondition === 'string') {
+    dist.push({ format: pkg.type === 'module' ? 'esm' : 'cjs', file: getDistPath(exportCondition) })
   } else {
-    // "exports": { }
-    const exports = pkgExports[subExport]
+    // "./<subexport>": { }
+    const subExports = exportCondition // pkgExports[subExport]
     // Ignore json exports, like "./package.json"
-    if (subExport.endsWith('.json')) return dist
-    if (typeof exports === 'string') {
-      dist.push({ format: 'esm', file: getDistPath(exports) })
+    // if (subExport.endsWith('.json')) return dist
+    if (typeof subExports === 'string') {
+      dist.push({ format: 'esm', file: getDistPath(subExports) })
     } else {
-      if (exports.require) {
-        dist.push({ format: 'cjs', file: getDistPath(exports.require) })
+      if (subExports.require) {
+        dist.push({ format: 'cjs', file: getDistPath(subExports.require) })
       }
-      if (exports.import) {
-        dist.push({ format: 'esm', file: getDistPath(exports.import) })
+      if (subExports.import) {
+        dist.push({ format: 'esm', file: getDistPath(subExports.import) })
       }
     }
   }
@@ -263,7 +288,7 @@ function createRollupConfig(
   entry: string,
   pkg: PackageMetadata,
   cliArgs: CliArgs,
-  entryExport?: string
+  // entryExport?: string
 ): BuncheeRollupConfig {
   const { file } = cliArgs
   const ext = extname(entry)
@@ -271,7 +296,9 @@ function createRollupConfig(
   const options = { ...cliArgs, useTypescript }
 
   const inputOptions = createInputConfig(entry, pkg, options)
-  const outputExports = entryExport ? getSubExportDist(pkg, entryExport) : getExportDist(pkg)
+  const outputExports = options.exportCondition
+    ? getSubExportDist(pkg, options.exportCondition.export)
+    : getExportDist(pkg)
 
   let outputConfigs = outputExports.map((exportDist) => {
     return createOutputOptions(

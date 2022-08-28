@@ -63,6 +63,9 @@ const testCases = [
       ]
 
       expect(distFiles.every((f) => fs.existsSync(f))).toBe(true)
+
+      // non exported paths shouldn't be compiled from source file
+      expect(fs.existsSync(join(dir, './dist/non-entry.js'))).toBe(false)
     },
   },
   {
@@ -70,7 +73,6 @@ const testCases = [
     args: [],
     expected(dir, stdout, stderr) {
       const distFiles = [join(dir, './dist/index.js')]
-
       expect(distFiles.every((f) => fs.existsSync(f))).toBe(true)
     },
   },
