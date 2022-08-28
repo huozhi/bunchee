@@ -15,8 +15,7 @@
     "prepublishOnly": "yarn clean && yarn build && chmod +x ./dist/cli.js && yarn test",
     "build:cli": "tsx ./cli.ts ./cli.ts --target node -f cjs -o ./dist/cli.js",
     "build:main": "tsx ./cli.ts ./lib.ts --target node -f cjs",
-    "build": "yarn build:main && yarn build:cli",
-    "types": "tsc --declaration --declarationDir dist --emitDeclarationOnly"
+    "build": "yarn build:main && yarn build:cli"
   },
   "type": "commonjs",
   "keywords": [
