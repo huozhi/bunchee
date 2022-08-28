@@ -1,6 +1,6 @@
 const fs = require('fs');
 const { resolve, dirname } = require('path');
-const { bundle } = require('..');
+const { bundle } = require('bunchee');
 
 const baseUnitTestDir = resolve(__dirname, 'unit');
 const unitTestDirs = fs.readdirSync(baseUnitTestDir);
