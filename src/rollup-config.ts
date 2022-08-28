@@ -1,7 +1,7 @@
 import type { PackageMetadata, BuncheeRollupConfig, ExportCondition, CliArgs, BundleOptions, ExportType } from './types'
 import type { JsMinifyOptions } from '@swc/core'
 import fs from 'fs'
-import { resolve, extname, dirname, basename } from 'path'
+import { resolve, extname, dirname } from 'path'
 import { swc } from 'rollup-plugin-swc3'
 import commonjs from '@rollup/plugin-commonjs'
 import shebang from 'rollup-plugin-preserve-shebang'
@@ -33,7 +33,8 @@ function resolveTypescript() {
   } catch (_) {
     if (!hasLoggedTsWarning) {
       hasLoggedTsWarning = true
-      logger.warn('Could not load TypeScript compiler. Try `yarn add --dev typescript`')
+      logger.error('Could not load TypeScript compiler. Try `yarn add --dev typescript`')
+      process.exit(1)
     }
   }
   return ts
@@ -43,16 +44,47 @@ function getDistPath(distPath: string) {
   return resolve(config.rootDir, distPath)
 }
 
-function createInputConfig(entry: string, pkg: PackageMetadata, options: BundleOptions): InputOptions {
+function createInputConfig(
+  entry: string,
+  pkg: PackageMetadata,
+  options: BundleOptions
+): InputOptions {
   const externals = [pkg.peerDependencies, pkg.dependencies, pkg.peerDependenciesMeta]
     .filter(<T>(n?: T): n is T => Boolean(n))
     .map((o: { [key: string]: any }): string[] => Object.keys(o))
     .reduce((a: string[], b: string[]) => a.concat(b), [] as string[])
     .concat((options.external ?? []).concat(pkg.name ? [pkg.name] : []))
 
-  const { useTypescript, target, minify = false } = options
+  const { useTypescript, target, minify = false, exportCondition } = options
   const typings: string | undefined = pkg.types || pkg.typings
   const cwd: string = config.rootDir
+
+  let tsPath: string | undefined
+  let declarationDir: string | undefined
+  if (useTypescript) {
+    const tsconfig = resolve(cwd, 'tsconfig.json')
+    tsPath = fs.existsSync(tsconfig) ? tsconfig : undefined
+
+    if (typings) {
+      declarationDir = dirname(resolve(cwd, typings))
+    }
+
+    // Generate `declarationDir` based on the dist files of export condition
+    if (exportCondition) {
+      const exportConditionDistFolder =
+        dirname(
+          typeof exportCondition.export === 'string'
+            ? exportCondition.export
+            : Object.values(exportCondition.export)[0]
+          )
+      declarationDir = resolve(
+        config.rootDir,
+        exportConditionDistFolder
+      )
+    }
+  }
+
+  const isMainExport = !exportCondition || exportCondition.name === '.'
 
   const plugins: Plugin[] = [
     nodeResolve({
@@ -64,12 +96,10 @@ function createInputConfig(entry: string, pkg: PackageMetadata, options: BundleO
     }),
     json(),
     shebang(),
-    useTypescript &&
+    // Use typescript only emit types once for main export compilation
+    useTypescript && isMainExport &&
       require('@rollup/plugin-typescript')({
-        tsconfig: (() => {
-          const tsconfig = resolve(cwd, 'tsconfig.json')
-          return fs.existsSync(tsconfig) ? tsconfig : undefined
-        })(),
+        tsconfig: tsPath,
         typescript: resolveTypescript(),
         // override options
         jsx: 'react',
@@ -82,7 +112,7 @@ function createInputConfig(entry: string, pkg: PackageMetadata, options: BundleO
         // Only emit types, use swc to emit js
         emitDeclarationOnly: true,
         ...(!!typings && {
-          declarationDir: dirname(resolve(cwd, typings)),
+          declarationDir,
         }),
       }),
     swc({
@@ -91,7 +121,6 @@ function createInputConfig(entry: string, pkg: PackageMetadata, options: BundleO
       tsconfig: 'tsconfig.json',
       jsc: {
         target: 'es5',
-
         loose: true, // Use loose mode
         externalHelpers: false,
         parser: {
@@ -152,8 +181,9 @@ function createOutputOptions(options: BundleOptions, pkg: PackageMetadata): Outp
   const file = resolve(options.file!)
   return {
     name: pkg.name,
-    dir: dirname(file),
-    entryFileNames: basename(file),
+    // dir: dirname(file),
+    // entryFileNames: basename(file),
+    file: file,
     format,
     exports: 'named',
     esModule: useEsModuleMark && format !== 'umd',
@@ -234,25 +264,25 @@ function getExportDist(pkg: PackageMetadata) {
   return dist
 }
 
-function getSubExportDist(pkg: PackageMetadata, subExport: string) {
-  const pkgExports = pkg.exports || {}
+function getSubExportDist(pkg: PackageMetadata, exportCondition: ExportCondition) {
+  // const pkgExports = pkg.exports || {}
   const dist: { format: 'cjs' | 'esm'; file: string }[] = []
   // "exports": "..."
-  if (typeof pkgExports === 'string') {
-    dist.push({ format: pkg.type === 'module' ? 'esm' : 'cjs', file: getDistPath(pkgExports) })
+  if (typeof exportCondition === 'string') {
+    dist.push({ format: pkg.type === 'module' ? 'esm' : 'cjs', file: getDistPath(exportCondition) })
   } else {
-    // "exports": { }
-    const exports = pkgExports[subExport]
+    // "./<subexport>": { }
+    const subExports = exportCondition // pkgExports[subExport]
     // Ignore json exports, like "./package.json"
-    if (subExport.endsWith('.json')) return dist
-    if (typeof exports === 'string') {
-      dist.push({ format: 'esm', file: getDistPath(exports) })
+    // if (subExport.endsWith('.json')) return dist
+    if (typeof subExports === 'string') {
+      dist.push({ format: 'esm', file: getDistPath(subExports) })
     } else {
-      if (exports.require) {
-        dist.push({ format: 'cjs', file: getDistPath(exports.require) })
+      if (subExports.require) {
+        dist.push({ format: 'cjs', file: getDistPath(subExports.require) })
       }
-      if (exports.import) {
-        dist.push({ format: 'esm', file: getDistPath(exports.import) })
+      if (subExports.import) {
+        dist.push({ format: 'esm', file: getDistPath(subExports.import) })
       }
     }
   }
@@ -262,8 +292,7 @@ function getSubExportDist(pkg: PackageMetadata, subExport: string) {
 function createRollupConfig(
   entry: string,
   pkg: PackageMetadata,
-  cliArgs: CliArgs,
-  entryExport?: string
+  cliArgs: CliArgs
 ): BuncheeRollupConfig {
   const { file } = cliArgs
   const ext = extname(entry)
@@ -271,7 +300,9 @@ function createRollupConfig(
   const options = { ...cliArgs, useTypescript }
 
   const inputOptions = createInputConfig(entry, pkg, options)
-  const outputExports = entryExport ? getSubExportDist(pkg, entryExport) : getExportDist(pkg)
+  const outputExports = options.exportCondition
+    ? getSubExportDist(pkg, options.exportCondition.export)
+    : getExportDist(pkg)
 
   let outputConfigs = outputExports.map((exportDist) => {
     return createOutputOptions(

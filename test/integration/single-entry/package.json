@@ -1,8 +1,6 @@
 {
-  "exports": {
-    ".": "./dist/index.js",
-    "./package.json": "./package.json"
-  },
+  "types": "./dist/index.d.ts",
+  "exports": "./dist/index.js",
   "bunchee": {
     "entry": "./src/index.js"
   }

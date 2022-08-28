@@ -1,5 +1,5 @@
-const { execSync, fork } = require('child_process')
 const fs = require('fs')
+const { execSync, fork } = require('child_process')
 const { resolve, join } = require('path')
 
 const integrationTestDir = resolve(__dirname, 'integration')
@@ -21,10 +21,10 @@ const testCases = [
   {
     name: 'ts-error',
     args: ['index.ts', '-o', './dist/index.js'],
-    expected(dir, stdout) {
+    expected(dir, stdout, stderr) {
       const distFile = join(dir, './dist/index.js')
+      expect(stderr).toMatch(/Could not load TypeScript compiler/)
       expect(fs.existsSync(distFile)).toBe(false)
-      expect(stdout).toMatch(/Could not load TypeScript compiler/)
     },
   },
   {
@@ -56,9 +56,15 @@ const testCases = [
     args: [],
     expected(dir, stdout, stderr) {
       const distFiles = [
+        join(dir, './dist/index.js'),
         join(dir, './dist/lite.js'),
         join(dir, './dist/client/index.cjs'),
         join(dir, './dist/client/index.mjs'),
+
+        // types
+        join(dir, './dist/client.d.ts'),
+        join(dir, './dist/index.d.ts'),
+        join(dir, './dist/lite.d.ts'),
       ]
 
       expect(distFiles.every((f) => fs.existsSync(f))).toBe(true)
@@ -69,7 +75,6 @@ const testCases = [
     args: [],
     expected(dir, stdout, stderr) {
       const distFiles = [join(dir, './dist/index.js')]
-
       expect(distFiles.every((f) => fs.existsSync(f))).toBe(true)
     },
   },
@@ -77,8 +82,6 @@ const testCases = [
 
 async function runBundle(dir, _args) {
   const args = _args.concat(['--cwd', dir])
-  console.log(`Command: bunchee ${args.join(' ')}`)
-  execSync(`rm -rf ${join(dir, 'dist')}`)
   const ps = fork(__dirname + '/../dist/cli.js', args, { stdio: 'pipe' })
   let stderr = '',
     stdout = ''
@@ -87,8 +90,8 @@ async function runBundle(dir, _args) {
   return new Promise((resolve) => {
     ps.on('close', (code) => {
       if (process.env.TEST_DEBUG) {
-        console.log(stdout)
-        console.error(stderr)
+        stdout && console.log(stdout)
+        stderr && console.error(stderr)
       }
       resolve({
         code,
@@ -104,10 +107,12 @@ function runTests() {
     const { name, args, expected } = testCase
     const dir = getPath(name)
     test(`integration ${name}`, async () => {
+      console.log(`Command: bunchee ${args.join(' ')}`)
+      execSync(`rm -rf ${join(dir, 'dist')}`)
       const { stdout, stderr } = await runBundle(dir, args)
       if (process.env.DEBUG_TEST) {
-        console.log(stdout)
-        console.error(stderr)
+        stdout && console.log(stdout)
+        stderr && console.error(stderr)
       }
 
       expected(dir, stdout, stderr)

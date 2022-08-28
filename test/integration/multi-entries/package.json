@@ -1,15 +1,12 @@
 {
+  "types": "./dist/index.d.ts",
   "exports": {
+    "./package.json": "./package.json",
+    ".": "./dist/index.js",
     "./lite": "./dist/lite.js",
     "./client": {
       "require": "./dist/client/index.cjs",
       "import": "./dist/client/index.mjs"
-    }
-  },
-  "bunchee": {
-    "entry": {
-      "./lite": "./lite/index.ts",
-      "./client": "./client/index.ts"
     }
   }
 }

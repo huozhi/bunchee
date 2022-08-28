@@ -14,6 +14,23 @@ function assignDefault(options: CliArgs, name: keyof CliArgs, defaultValue: any)
   }
 }
 
+// Map '.' -> './index.[ext]'
+// Map './lite' -> './lite.[ext]'
+function getSourcePathFromExportPath(cwd: string, exportPath: string) {
+  const exts = ['js', 'cjs', 'mjs', 'jsx', 'ts', 'tsx']
+  for (const ext of exts) {
+    // ignore package.json
+    if (exportPath.endsWith('package.json')) return
+    if (exportPath === '.') exportPath = './index'
+    const filename = resolve(cwd, `${exportPath}.${ext}`)
+
+    if (fs.existsSync(filename)) {
+      return filename
+    }
+  }
+  return
+}
+
 function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Promise<any> {
   config.rootDir = resolve(process.cwd(), cwd || '')
   assignDefault(options, 'format', 'es')
@@ -24,12 +41,12 @@ function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Promise<a
   }
 
   const npmPackage = getPackageMeta()
-  const { entry: entries, ...customConfig } = npmPackage.bunchee || {}
-  const isSingleEntry = typeof entries === 'string'
-  const hasMultiEntries = entries && !isSingleEntry && Object.keys(entries).length > 0
+  const { exports: packageExports } = npmPackage
+  const isSingleEntry = typeof packageExports === 'string'
+  const hasMultiEntries = packageExports && !isSingleEntry && Object.keys(packageExports).length > 0
 
   if (isSingleEntry) {
-    entryPath = resolve(config.rootDir, entries)
+    entryPath = getSourcePathFromExportPath(config.rootDir, '.') as string
   }
 
   if (!fs.existsSync(entryPath)) {
@@ -42,20 +59,24 @@ function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Promise<a
     }
 
     if (hasMultiEntries) {
-      Object.assign(options, customConfig)
-      const rollupConfigs = Object.keys(entries).map((entryExport) => {
-        const source = entries[entryExport]
+      const rollupConfigs = Object.keys(packageExports).map((entryExport) => {
+        const source = getSourcePathFromExportPath(config.rootDir, entryExport)
+        if (!source) return
 
-        const rollupConfig = createRollupConfig(resolve(cwd!, source), npmPackage, options, entryExport)
+        options.exportCondition = {
+          source,
+          name: entryExport,
+          export: packageExports[entryExport]
+        }
+
+        const rollupConfig = createRollupConfig(resolve(cwd!, source), npmPackage, options)
         return rollupConfig
       })
 
-      // TODO: watch mode
-      return Promise.all(rollupConfigs.map((rollupConfig) => runBundle(rollupConfig)))
+      return Promise.all(rollupConfigs.filter(Boolean).map((rollupConfig) => runBundle(rollupConfig!)))
     }
   }
 
-  Object.assign(options, customConfig)
   const rollupConfig = createRollupConfig(entryPath, npmPackage, options)
 
   if (options.watch) {
