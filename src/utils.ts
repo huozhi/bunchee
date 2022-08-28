@@ -29,7 +29,7 @@ export function parseCliArgs(argv: string[]) {
       '--minify': Boolean,
       '--help': Boolean,
       '--version': Boolean,
-      '--target': String,
+      '--runtime': String,
       '--sourcemap': Boolean,
       '--external': [String],
 
@@ -57,7 +57,7 @@ export function parseCliArgs(argv: string[]) {
     cwd: args['--cwd'],
     help: args['--help'],
     version: args['--version'],
-    target: args['--target'],
+    runtime: args['--runtime'],
     external: args['--external'],
   }
   return parsedArgs

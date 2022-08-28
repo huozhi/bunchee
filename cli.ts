@@ -16,7 +16,7 @@ Options:
   -o, --output <file>    specify output filename
   -f, --format <format>  specify bundle type: "esm", "cjs", "umd". "esm" by default
   -e, --external <mod>   specify an external dependency
-  --target <target>      build environment, use "node" for nodejs runtime
+  --runtime              target build environment, use "node" for nodejs runtime, default runtime is "browser"
   --sourcemap            enable sourcemap generation, sourcemap generation is disabled by default
   --cwd <cwd>            specify current working directory
   -h, --help             output usage information
@@ -32,14 +32,14 @@ function exit(err: Error) {
 }
 
 async function run(args: any) {
-  const { source, format, watch, minify, sourcemap, target } = args
+  const { source, format, watch, minify, sourcemap, runtime } = args
   const cwd = args.cwd || process.cwd()
   const file = args.file ? path.resolve(cwd, args.file) : args.file
   const outputConfig: CliArgs = {
     file,
     format,
     cwd,
-    target,
+    runtime,
     external: args.external || [],
     watch: !!watch,
     minify: !!minify,

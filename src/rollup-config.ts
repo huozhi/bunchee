@@ -55,7 +55,7 @@ function createInputConfig(
     .reduce((a: string[], b: string[]) => a.concat(b), [] as string[])
     .concat((options.external ?? []).concat(pkg.name ? [pkg.name] : []))
 
-  const { useTypescript, target, minify = false, exportCondition } = options
+  const { useTypescript, runtime, minify = false, exportCondition } = options
   const typings: string | undefined = pkg.types || pkg.typings
   const cwd: string = config.rootDir
 
@@ -88,7 +88,7 @@ function createInputConfig(
 
   const plugins: Plugin[] = [
     nodeResolve({
-      preferBuiltins: target === 'node',
+      preferBuiltins: runtime === 'node',
       extensions: ['.mjs', '.js', '.json', '.node', '.jsx'],
     }),
     commonjs({

@@ -8,7 +8,7 @@ type CommonConfig = {
   minify?: boolean
   sourcemap?: boolean
   external?: string[]
-  target?: string
+  runtime?: string
 }
 
 type PackageMetadata = {

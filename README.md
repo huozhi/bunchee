@@ -75,7 +75,7 @@ Options:
   -f, --format <format>  specify bundle type: "esm", "cjs", "umd". "esm" by default
   -e, --external <mod>   specify an external dependency
   -h, --help             output usage information
-  --target <target>      build environment, use "node" for nodejs runtime
+  --runtime <target>     target build environment, use "node" for nodejs runtime, default runtime is "browser"
   --sourcemap            enable sourcemap generation, sourcemap generation is disabled by default
   --cwd <cwd>            specify current working directory
 
