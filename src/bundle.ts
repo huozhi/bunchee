@@ -18,7 +18,6 @@ function assignDefault(options: CliArgs, name: keyof CliArgs, defaultValue: any)
 // Map './lite' -> './lite.[ext]'
 function getSourcePathFromExportPath(cwd: string, exportPath: string) {
   const exts = ['js', 'cjs', 'mjs', 'jsx', 'ts', 'tsx']
-  console.log('exportPath', exportPath)
   for (const ext of exts) {
     // ignore package.json
     if (exportPath.endsWith('package.json')) return
