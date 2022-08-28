@@ -11,10 +11,6 @@ type CommonConfig = {
   target?: string
 }
 
-type BuildConfig = CommonConfig & {
-  entry: string | Record<string, string>
-}
-
 type PackageMetadata = {
   name?: string
   main?: string
@@ -26,7 +22,6 @@ type PackageMetadata = {
   exports?: string | Record<string, ExportCondition>
   types?: string
   typings?: string
-  bunchee?: BuildConfig
 }
 
 type ExportCondition = string | Record<ExportType, string>

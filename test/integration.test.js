@@ -56,6 +56,7 @@ const testCases = [
     args: [],
     expected(dir, stdout, stderr) {
       const distFiles = [
+        join(dir, './dist/index.js'),
         join(dir, './dist/lite.js'),
         join(dir, './dist/client/index.cjs'),
         join(dir, './dist/client/index.mjs'),
@@ -77,8 +78,6 @@ const testCases = [
 
 async function runBundle(dir, _args) {
   const args = _args.concat(['--cwd', dir])
-  console.log(`Command: bunchee ${args.join(' ')}`)
-  execSync(`rm -rf ${join(dir, 'dist')}`)
   const ps = fork(__dirname + '/../dist/cli.js', args, { stdio: 'pipe' })
   let stderr = '',
     stdout = ''
@@ -104,6 +103,8 @@ function runTests() {
     const { name, args, expected } = testCase
     const dir = getPath(name)
     test(`integration ${name}`, async () => {
+      console.log(`Command: bunchee ${args.join(' ')}`)
+      execSync(`rm -rf ${join(dir, 'dist')}`)
       const { stdout, stderr } = await runBundle(dir, args)
       if (process.env.DEBUG_TEST) {
         console.log(stdout)
