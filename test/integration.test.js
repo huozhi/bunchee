@@ -1,8 +1,8 @@
-const { execSync, fork } = require('child_process');
-const fs = require('fs');
-const { resolve, join } = require('path');
+const { execSync, fork } = require('child_process')
+const fs = require('fs')
+const { resolve, join } = require('path')
 
-const integrationTestDir = resolve(__dirname, 'integration');
+const integrationTestDir = resolve(__dirname, 'integration')
 
 const getPath = (filepath) => join(integrationTestDir, filepath)
 
@@ -12,11 +12,11 @@ const testCases = [
     name: 'externals',
     args: ['index.js', '-o', './dist/index.js'],
     expected(dir, stdout) {
-      const distFile = join(dir, './dist/index.js');
-      const content = fs.readFileSync(distFile, { encoding: 'utf-8' });
-      expect(content).toMatch(/['"]peer-dep['"]/);
-      expect(content).toMatch(/['"]peer-dep-meta['"]/);
-    }
+      const distFile = join(dir, './dist/index.js')
+      const content = fs.readFileSync(distFile, { encoding: 'utf-8' })
+      expect(content).toMatch(/['"]peer-dep['"]/)
+      expect(content).toMatch(/['"]peer-dep-meta['"]/)
+    },
   },
   {
     name: 'ts-error',
@@ -25,7 +25,7 @@ const testCases = [
       const distFile = join(dir, './dist/index.js')
       expect(fs.existsSync(distFile)).toBe(false)
       expect(stdout).toMatch(/Could not load TypeScript compiler/)
-    }
+    },
   },
   {
     name: 'no-ts-require-for-js',
@@ -33,30 +33,23 @@ const testCases = [
     expected(dir) {
       const distFile = join(dir, './dist/index.js')
       expect(fs.existsSync(distFile)).toBe(true)
-    }
+    },
   },
   {
     name: 'pkg-exports',
     args: ['index.js'],
     expected(dir) {
-      const distFiles = [
-        join(dir, './dist/index.cjs'),
-        join(dir, './dist/index.mjs'),
-        join(dir, './dist/index.esm.js'),
-      ]
-      expect(distFiles.every(f => fs.existsSync(f))).toBe(true)
-    }
+      const distFiles = [join(dir, './dist/index.cjs'), join(dir, './dist/index.mjs'), join(dir, './dist/index.esm.js')]
+      expect(distFiles.every((f) => fs.existsSync(f))).toBe(true)
+    },
   },
   {
     name: 'pkg-exports-default',
     args: ['index.js'],
     expected(dir) {
-      const distFiles = [
-        join(dir, './dist/index.cjs'),
-        join(dir, './dist/index.mjs'),
-      ]
-      expect(distFiles.every(f => fs.existsSync(f))).toBe(true)
-    }
+      const distFiles = [join(dir, './dist/index.cjs'), join(dir, './dist/index.mjs')]
+      expect(distFiles.every((f) => fs.existsSync(f))).toBe(true)
+    },
   },
   {
     name: 'multi-entries',
@@ -68,19 +61,17 @@ const testCases = [
         join(dir, './dist/client/index.mjs'),
       ]
 
-      expect(distFiles.every(f => fs.existsSync(f))).toBe(true)
-    }
+      expect(distFiles.every((f) => fs.existsSync(f))).toBe(true)
+    },
   },
   {
     name: 'single-entry',
     args: [],
     expected(dir, stdout, stderr) {
-      const distFiles = [
-        join(dir, './dist/index.js'),
-      ]
+      const distFiles = [join(dir, './dist/index.js')]
 
-      expect(distFiles.every(f => fs.existsSync(f))).toBe(true)
-    }
+      expect(distFiles.every((f) => fs.existsSync(f))).toBe(true)
+    },
   },
 ]
 
@@ -88,14 +79,11 @@ async function runBundle(dir, _args) {
   const args = _args.concat(['--cwd', dir])
   console.log(`Command: bunchee ${args.join(' ')}`)
   execSync(`rm -rf ${join(dir, 'dist')}`)
-  const ps = fork(
-    __dirname + '/../dist/cli.js',
-    args,
-    {stdio: 'pipe'}
-  );
-  let stderr = '', stdout = '';
-  ps.stdout.on('data', chunk => stdout += chunk.toString());
-  ps.stderr.on('data', chunk => stderr += chunk.toString());
+  const ps = fork(__dirname + '/../dist/cli.js', args, { stdio: 'pipe' })
+  let stderr = '',
+    stdout = ''
+  ps.stdout.on('data', (chunk) => (stdout += chunk.toString()))
+  ps.stderr.on('data', (chunk) => (stderr += chunk.toString()))
   return new Promise((resolve) => {
     ps.on('close', (code) => {
       if (process.env.TEST_DEBUG) {
@@ -107,8 +95,8 @@ async function runBundle(dir, _args) {
         stdout,
         stderr,
       })
-    });
-  });
+    })
+  })
 }
 
 function runTests() {

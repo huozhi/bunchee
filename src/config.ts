@@ -1,5 +1,5 @@
-const rootDir = process.cwd();
+const rootDir = process.cwd()
 
 export default {
   rootDir,
-};
+}

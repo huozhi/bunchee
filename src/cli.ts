@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-import type { CliArgs } from "./types";
+import type { CliArgs } from './types'
 
-import path from "path";
-import { parseCliArgs, logger } from "./utils";
-import { version } from "../package.json";
+import path from 'path'
+import { parseCliArgs, logger } from './utils'
+import { version } from '../package.json'
 
 const helpMessage = `
 Usage: bunchee [options]
@@ -23,16 +23,16 @@ Options:
 `
 
 function help() {
-  console.log(helpMessage);
+  console.log(helpMessage)
 }
 
 function exit(err: Error) {
-  logger.error(err);
-  process.exit(2);
+  logger.error(err)
+  process.exit(2)
 }
 
 async function run(args: any) {
-  const { source, format, watch, minify, sourcemap, target } = args;
+  const { source, format, watch, minify, sourcemap, target } = args
   const cwd = args.cwd || process.cwd()
   const file = args.file ? path.resolve(cwd, args.file) : args.file
   const outputConfig: CliArgs = {
@@ -44,40 +44,40 @@ async function run(args: any) {
     watch: !!watch,
     minify: !!minify,
     sourcemap: sourcemap === false ? false : true,
-  };
+  }
   if (args.version) {
-    return console.log(version);
+    return console.log(version)
   }
   if (args.help) {
-    return help();
+    return help()
   }
 
-  const entry = source ? path.resolve(cwd, source) : '';
-  const { bundle } = require(".");
+  const entry = source ? path.resolve(cwd, source) : ''
+  const { bundle } = require('.')
 
   try {
-    return await bundle(entry, outputConfig);
+    return await bundle(entry, outputConfig)
   } catch (err: any) {
     if (err.name === 'NOT_EXISTED') {
-      help();
-      return exit(err);
+      help()
+      return exit(err)
     }
-    throw err;
+    throw err
   }
 }
 
 async function main() {
-  let params, error;
+  let params, error
   try {
-    params = parseCliArgs(process.argv.slice(2));
+    params = parseCliArgs(process.argv.slice(2))
   } catch (err) {
-    error = err;
+    error = err
   }
   if (error || !params) {
-    if (!error) help();
-    return exit(error as Error);
+    if (!error) help()
+    return exit(error as Error)
   }
-  await run(params);
+  await run(params)
 }
 
-main().catch(exit);
+main().catch(exit)
