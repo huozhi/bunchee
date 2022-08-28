@@ -30,6 +30,7 @@ export function parseCliArgs(argv: string[]) {
       '--help': Boolean,
       '--version': Boolean,
       '--runtime': String,
+      '--target': String,
       '--sourcemap': Boolean,
       '--external': [String],
 
@@ -58,6 +59,7 @@ export function parseCliArgs(argv: string[]) {
     help: args['--help'],
     version: args['--version'],
     runtime: args['--runtime'],
+    target: args['--target'],
     external: args['--external'],
   }
   return parsedArgs

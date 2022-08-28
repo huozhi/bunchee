@@ -34,6 +34,8 @@ function getSourcePathFromExportPath(cwd: string, exportPath: string) {
 function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Promise<any> {
   config.rootDir = resolve(process.cwd(), cwd || '')
   assignDefault(options, 'format', 'es')
+  assignDefault(options, 'minify', false)
+  assignDefault(options, 'target', 'es5')
 
   // alias for 'es' in rollup
   if (options.format === 'esm') {
