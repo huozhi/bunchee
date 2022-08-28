@@ -227,9 +227,9 @@ function getExportDist(pkg: PackageMetadata) {
     dist.push({ format: 'esm', file: getDistPath(paths.export) })
   }
 
-  // default fallback to output `dist/index.js` in cjs format
+  // default fallback to output `dist/index.js` in default esm format
   if (dist.length === 0) {
-    dist.push({ format: 'cjs', file: getDistPath('dist/index.js') })
+    dist.push({ format: 'esm', file: getDistPath('dist/index.js') })
   }
   return dist
 }
@@ -265,13 +265,12 @@ function createRollupConfig(
   cliArgs: CliArgs,
   entryExport?: string
 ): BuncheeRollupConfig {
-  const { file, format } = cliArgs
+  const { file } = cliArgs
   const ext = extname(entry)
   const useTypescript: boolean = ext === '.ts' || ext === '.tsx'
   const options = { ...cliArgs, useTypescript }
 
   const inputOptions = createInputConfig(entry, pkg, options)
-
   const outputExports = entryExport ? getSubExportDist(pkg, entryExport) : getExportDist(pkg)
 
   let outputConfigs = outputExports.map((exportDist) => {
@@ -288,12 +287,13 @@ function createRollupConfig(
 
   // CLI output option is always prioritized
   if (file) {
+    const format = outputExports[0]?.format
     outputConfigs = [
       createOutputOptions(
         {
           ...cliArgs,
           file,
-          format,
+          format: format || cliArgs.format,
           useTypescript,
         },
         pkg
