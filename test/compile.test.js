@@ -17,7 +17,7 @@ function compareOrUpdateSnapshot(filename, unitName, onCompare) {
   const outputFilePath = resolve(
     dirPath,
     '__snapshot__',
-    `${unitName}${filename.endsWith('.min.js') ? '.min' : ''}.js.snap`
+    `${unitName}${filename.endsWith('.min.js') ? '.min' : ''}.js.snapshot`
   );
 
 
