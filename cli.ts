@@ -14,10 +14,11 @@ Options:
   -w, --watch            watch src files changes
   -m, --minify           compress output. false by default
   -o, --output <file>    specify output filename
-  -f, --format <format>  specify bundle type: "esm", "cjs", "umd". default is "esm"
+  -f, --format <format>  specify bundle type: "esm", "cjs", "umd". "esm" by default
   -e, --external <mod>   specify an external dependency
-  --runtime <runtime>    build runtime: "nodejs", "browser". default is "browser"
-  --sourcemap            enable sourcemap generation, sourcemap generation is disabled by default
+  --target <target>      js features target: swc target es versions. "es5" by default
+  --runtime <runtime>    build runtime: "nodejs", "browser". "browser" by default
+  --sourcemap            enable sourcemap generation, false by default
   --cwd <cwd>            specify current working directory
   -h, --help             output usage information
 `
@@ -32,13 +33,14 @@ function exit(err: Error) {
 }
 
 async function run(args: any) {
-  const { source, format, watch, minify, sourcemap, runtime } = args
+  const { source, format, watch, minify, sourcemap, target, runtime } = args
   const cwd = args.cwd || process.cwd()
   const file = args.file ? path.resolve(cwd, args.file) : args.file
   const outputConfig: CliArgs = {
     file,
     format,
     cwd,
+    target,
     runtime,
     external: args.external || [],
     watch: !!watch,

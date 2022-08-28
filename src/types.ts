@@ -1,3 +1,4 @@
+import type { JscTarget } from '@swc/core'
 import type { InputOptions, OutputOptions, RollupOptions } from 'rollup'
 
 type ExportType = 'require' | 'export' | 'default' | string // omit other names
@@ -9,6 +10,13 @@ type CommonConfig = {
   sourcemap?: boolean
   external?: string[]
   runtime?: string
+
+  // assigned extra config
+  exportCondition?: {
+    source: string // detected source file
+    name: string // export condition name
+    export: ExportCondition // export condition value
+  }
 }
 
 type PackageMetadata = {
@@ -35,11 +43,7 @@ type CliArgs = CommonConfig & {
   file?: string
   watch?: boolean
   cwd?: string
-  exportCondition?: {
-    source: string // detected source file
-    name: string // export condition name
-    export: ExportCondition // export condition value
-  }
+  target?: JscTarget
 }
 
 type BundleOptions = CliArgs & {

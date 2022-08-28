@@ -72,11 +72,12 @@ Options:
   -w, --watch            watch src files changes
   -m, --minify           compress output. false by default
   -o, --output <file>    specify output filename
-  -f, --format <format>  specify bundle type: "esm", "cjs", "umd". default is "esm"
+  -f, --format <format>  specify bundle type: "esm", "cjs", "umd". "esm" by default
   -e, --external <mod>   specify an external dependency
   -h, --help             output usage information
-  --runtime <runtime>    build runtime: "nodejs", "browser". default is "browser"
-  --sourcemap            enable sourcemap generation, sourcemap generation is disabled by default
+  --target <target>      js features target: swc target es versions. "es5" by default
+  --runtime <runtime>    build runtime: "nodejs", "browser". "browser" by default
+  --sourcemap            enable sourcemap generation, false by default
   --cwd <cwd>            specify current working directory
 
 Usage:

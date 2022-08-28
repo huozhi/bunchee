@@ -64,7 +64,19 @@ const testCases = [
         ), false]
       ]
     }
-  }
+  },
+  {
+    name: 'es2020-target',
+    args: [resolve('fixtures/es2020.js'), '--target', 'es2020', '-o', resolve('dist/es2020.js')],
+    expected(distFile, { stdout, stderr }) {
+      const content = fs.readFileSync(distFile, { encoding: 'utf-8' })
+      return [
+        [content.includes(`...globalThis`), true],
+        [content.includes(`get?.apply?.bind`), true],
+        [content.includes(`async function`), true],
+      ]
+    }
+  },
 ]
 
 for (const testCase of testCases) {

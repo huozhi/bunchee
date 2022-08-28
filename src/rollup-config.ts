@@ -55,7 +55,7 @@ function createInputConfig(
     .reduce((a: string[], b: string[]) => a.concat(b), [] as string[])
     .concat((options.external ?? []).concat(pkg.name ? [pkg.name] : []))
 
-  const { useTypescript, runtime, minify = false, exportCondition } = options
+  const { useTypescript, runtime, target: jscTarget, minify, exportCondition } = options
   const typings: string | undefined = pkg.types || pkg.typings
   const cwd: string = config.rootDir
 
@@ -120,7 +120,7 @@ function createInputConfig(
       exclude: 'node_modules',
       tsconfig: 'tsconfig.json',
       jsc: {
-        target: 'es5',
+        target: jscTarget,
         loose: true, // Use loose mode
         externalHelpers: false,
         parser: {
