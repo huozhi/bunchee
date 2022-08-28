@@ -115,12 +115,12 @@ function onError(error: any) {
   if (!error) return
   // logging source code in format
   if (error.frame) {
-    process.stdout.write(error.frame + '\n')
+    process.stderr.write(error.frame + '\n')
   }
-  if (error.stack) {
-    process.stdout.write(error.stack + '\n')
-  }
-  throw error
+  // filter out the rollup plugin error information such as loc/frame/code...
+  const err = new Error(error.message)
+  err.stack = error.stack
+  throw err
 }
 
 export default bundle

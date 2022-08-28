@@ -28,7 +28,7 @@ function help() {
 
 function exit(err: Error) {
   logger.error(err)
-  process.exit(2)
+  process.exit(1)
 }
 
 async function run(args: any) {
