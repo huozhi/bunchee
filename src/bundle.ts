@@ -1,4 +1,4 @@
-import type { RollupWatcher, RollupWatchOptions, OutputOptions, RollupBuild } from 'rollup'
+import type { RollupWatcher, RollupWatchOptions, OutputOptions, RollupBuild, RollupOutput } from 'rollup'
 import type { BuncheeRollupConfig, CliArgs } from './types'
 
 import fs from 'fs'
@@ -47,6 +47,15 @@ function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Promise<a
   const isSingleEntry = typeof packageExports === 'string'
   const hasMultiEntries = packageExports && !isSingleEntry && Object.keys(packageExports).length > 0
 
+  const bundleOrWatch = (
+    rollupConfig: BuncheeRollupConfig
+  ): Promise<RollupWatcher | RollupOutput[] | void> => {
+    if (options.watch) {
+      return Promise.resolve(runWatch(rollupConfig))
+    }
+    return runBundle(rollupConfig)
+  }
+
   if (isSingleEntry) {
     entryPath = getSourcePathFromExportPath(config.rootDir, '.') as string
   }
@@ -75,16 +84,13 @@ function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Promise<a
         return rollupConfig
       })
 
-      return Promise.all(rollupConfigs.filter(Boolean).map((rollupConfig) => runBundle(rollupConfig!)))
+      return Promise.all(rollupConfigs.filter(Boolean).map((rollupConfig) => bundleOrWatch(rollupConfig!)))
     }
   }
 
   const rollupConfig = createRollupConfig(entryPath, npmPackage, options)
 
-  if (options.watch) {
-    return Promise.resolve(runWatch(rollupConfig))
-  }
-  return runBundle(rollupConfig)
+  return bundleOrWatch(rollupConfig)
 }
 
 function runWatch({ input, output }: BuncheeRollupConfig): RollupWatcher {
