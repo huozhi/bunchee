@@ -54,7 +54,7 @@ Leverage `exports` field to support different conditions would be also ideal. Mo
   "exports": {
     "require": "dist/index.cjs",
     "import": "dist/index.mjs",
-    "module": "dist/index.esm.js" // module condition
+    "module": "dist/index.esm.js"
   },
   "scripts": {
     "build": "bunchee ./src/index.js"
@@ -85,15 +85,7 @@ Usage:
   $ bunchee ./src/index.ts -o ./dist/bundle.js # specify the dist file path
 ```
 
-### Node.js API
-
-```js
-import { bundle } from 'bunchee'
-
-// options is same to CLI options
-await bundle(entryFilePath, options)
-```
-### CLI Usage
+Run bunchee via CLI
 
 ```sh
 cd <project-root-dir>
@@ -102,6 +94,15 @@ bunchee ./src/index.js -f cjs -o ./dist/bundle.js
 bunchee ./src/index.js -f esm -o ./dist/bundle.esm.js
 # if you don't specify format type, default format is ESModule
 # bunchee ./src/index.js -o ./dist/bundle.esm.js
+```
+
+### Node.js API
+
+```js
+import { bundle } from 'bunchee'
+
+// options is same to CLI options
+await bundle(entryFilePath, options)
 ```
 
 ### Typescript
