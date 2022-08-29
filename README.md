@@ -85,7 +85,7 @@ Usage:
   $ bunchee ./src/index.ts -o ./dist/bundle.js # specify the dist file path
 ```
 
-### API
+### Node.js API
 
 ```js
 import { bundle } from 'bunchee'
@@ -93,7 +93,7 @@ import { bundle } from 'bunchee'
 // options is same to CLI options
 await bundle(entryFilePath, options)
 ```
-#### Example Scripts
+### CLI Usage
 
 ```sh
 cd <project-root-dir>
@@ -104,7 +104,7 @@ bunchee ./src/index.js -f esm -o ./dist/bundle.esm.js
 # bunchee ./src/index.js -o ./dist/bundle.esm.js
 ```
 
-### Using Typescript
+### Typescript
 
 By default bunchee includes Typescript v3.9.x inside as a dependency. If you want to use your own version, just install typescript as another dev dependency then bunchee will automatically pick it.
 
@@ -112,4 +112,54 @@ By default bunchee includes Typescript v3.9.x inside as a dependency. If you wan
 yarn add -D bunchee typescript
 ```
 
+Create `tsconfig.json` to specify any compiler options for TypeScript.
+
 This library requires at least [TypeScript 3.7](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html).
+
+
+## Advanced
+
+### Multiple Exports
+
+While `exports` filed is becoming the standard of exporting in node.js, bunchee also supports to build multiple exports all in one command.
+
+What you need to do is just add an entry file with the name (`[name].[ext]`) that matches the exported name from exports field in package.json. For instance:
+
+* `index.ts` will match `"."` export name or the if there's only one main export.
+* `lite.ts` will match `"./lite"` export name.
+
+The build script will be simplified to just `bunchee` in package.json without configure any input sources for each exports. Of course you can still specify other arguments as you need.
+
+#### How it works
+
+Assuming you have main entry export `"."` and subpath export `"./lite"` with different exports condition listed in package.json
+
+```json
+{
+  "name": "example",
+  "scripts": {
+     "build": "bunchee"
+  },
+  "exports": {
+    "./lite": "./dist/lite.js"
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+   }
+  }
+}
+```
+
+Then you need to add two entry files `index.ts` and `lite.ts` in project root directory to match the export name `"."` and `"./lite"`, bunchee will associate these entry files with export names then use them as input source and output paths information.
+
+```
+- example/
+  |- lite.ts
+  |- index.ts
+  |- src/
+  |- package.json
+```
+
+### License
+
+MIT
