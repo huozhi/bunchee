@@ -1,6 +1,6 @@
 {
   "name": "bunchee",
-  "version": "2.0.0-beta.5",
+  "version": "2.0.0",
   "description": "zero config bundler for js/ts/jsx libraries",
   "bin": {
     "bunchee": "./dist/cli.js"
