@@ -35,6 +35,7 @@ type PackageMetadata = {
 type ExportCondition = string | Record<ExportType, string>
 
 type BuncheeRollupConfig = Partial<Omit<RollupOptions, 'input' | 'output'>> & {
+  exportName?: string
   input: InputOptions
   output: OutputOptions[]
 }

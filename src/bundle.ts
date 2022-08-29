@@ -1,11 +1,11 @@
 import type { RollupWatcher, RollupWatchOptions, OutputOptions, RollupBuild, RollupOutput } from 'rollup'
-import type { BuncheeRollupConfig, CliArgs } from './types'
+import type { BuncheeRollupConfig, CliArgs, PackageMetadata } from './types'
 
 import fs from 'fs'
-import { resolve } from 'path'
+import { resolve, join } from 'path'
 import { watch as rollupWatch, rollup } from 'rollup'
 import createRollupConfig from './rollup-config'
-import { getPackageMeta } from './utils'
+import { getPackageMeta, logger } from './utils'
 import config from './config'
 
 function assignDefault(options: CliArgs, name: keyof CliArgs, defaultValue: any) {
@@ -42,8 +42,8 @@ function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Promise<a
     options.format = 'es'
   }
 
-  const npmPackage = getPackageMeta()
-  const { exports: packageExports } = npmPackage
+  const pkg = getPackageMeta()
+  const { exports: packageExports } = pkg
   const isSingleEntry = typeof packageExports === 'string'
   const hasMultiEntries = packageExports && !isSingleEntry && Object.keys(packageExports).length > 0
 
@@ -51,9 +51,9 @@ function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Promise<a
     rollupConfig: BuncheeRollupConfig
   ): Promise<RollupWatcher | RollupOutput[] | void> => {
     if (options.watch) {
-      return Promise.resolve(runWatch(rollupConfig))
+      return Promise.resolve(runWatch(pkg, rollupConfig))
     }
-    return runBundle(rollupConfig)
+    return runBundle(pkg, rollupConfig)
   }
 
   if (isSingleEntry) {
@@ -80,20 +80,28 @@ function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Promise<a
           export: packageExports[entryExport]
         }
 
-        const rollupConfig = createRollupConfig(resolve(cwd!, source), npmPackage, options)
+        const rollupConfig = createRollupConfig(resolve(cwd!, source), pkg, options)
         return rollupConfig
-      })
+      }).filter(v => !!v)
 
-      return Promise.all(rollupConfigs.filter(Boolean).map((rollupConfig) => bundleOrWatch(rollupConfig!)))
+      return Promise.all(rollupConfigs.map((rollupConfig) => bundleOrWatch(rollupConfig!)))
     }
   }
 
-  const rollupConfig = createRollupConfig(entryPath, npmPackage, options)
+  const rollupConfig = createRollupConfig(entryPath, pkg, options)
 
   return bundleOrWatch(rollupConfig)
 }
 
-function runWatch({ input, output }: BuncheeRollupConfig): RollupWatcher {
+// . -> pkg name
+// ./lite -> <pkg name>/lite
+function getExportPath(pkg: PackageMetadata, exportName?: string) {
+  const name = pkg.name || '<package>'
+  if (exportName === '.' || !exportName) return name
+  return join(name, exportName)
+}
+
+function runWatch(pkg: PackageMetadata, { exportName, input, output }: BuncheeRollupConfig): RollupWatcher {
   const watchOptions: RollupWatchOptions[] = [
     {
       ...input,
@@ -104,19 +112,45 @@ function runWatch({ input, output }: BuncheeRollupConfig): RollupWatcher {
     },
   ]
   const watcher = rollupWatch(watchOptions)
+  const exportPath = getExportPath(pkg, exportName)
+  let startTime = Date.now()
   watcher.on('event', (event) => {
-    if (event.code === 'ERROR') {
-      onError(event.error)
+    switch (event.code) {
+      case 'ERROR': {
+        return onError(event.error)
+      }
+      case 'START': {
+        startTime = Date.now()
+        logger.log(`Start building ${exportPath} ...`)
+      }
+      case 'END': {
+        const duration = Date.now() - startTime
+        if (duration > 0) {
+          logger.log(`✨ Built ${exportPath}`)
+        }
+      }
+      default: return
     }
   })
   return watcher
 }
 
-function runBundle({ input, output }: BuncheeRollupConfig) {
-  return rollup(input).then((bundle: RollupBuild) => {
-    const writeJobs = output.map((options: OutputOptions) => bundle.write(options))
-    return Promise.all(writeJobs)
-  }, onError)
+function runBundle(pkg: PackageMetadata, { exportName, input, output }: BuncheeRollupConfig) {
+  let startTime = Date.now()
+  return rollup(input)
+    .then(
+      (bundle: RollupBuild) => {
+        const writeJobs = output.map((options: OutputOptions) => bundle.write(options))
+        return Promise.all(writeJobs)
+      },
+      onError
+    )
+    .then(() => {
+      const duration = Date.now() - startTime
+      if (duration > 0) {
+        logger.log(`✨ Built ${getExportPath(pkg, exportName)}`)
+      }
+    })
 }
 
 function onError(error: any) {

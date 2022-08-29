@@ -57,14 +57,22 @@ async function run(args: any) {
   const entry = source ? path.resolve(cwd, source) : ''
   const { bundle } = require('./lib')
 
+  let timeStart = Date.now()
+  let timeEnd
   try {
-    return await bundle(entry, outputConfig)
+    await bundle(entry, outputConfig)
+    timeEnd = Date.now()
   } catch (err: any) {
     if (err.name === 'NOT_EXISTED') {
       help()
       return exit(err)
     }
     throw err
+  }
+
+  const duration = timeEnd - timeStart
+  if (!watch) {
+    logger.log(`✅ Finished in ${duration} ms`)
   }
 }
 
