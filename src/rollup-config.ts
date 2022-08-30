@@ -104,7 +104,7 @@ function createInputConfig(
         // override options
         jsx: 'react',
         module: 'ES6',
-        target: 'ES5',
+        target: jscTarget,
         // Disable `noEmitOnError` for watch mode to avoid plugin error
         noEmitOnError: !options.watch,
         sourceMap: options.sourcemap,
