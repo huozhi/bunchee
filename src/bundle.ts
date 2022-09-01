@@ -2,7 +2,7 @@ import type { RollupWatcher, RollupWatchOptions, OutputOptions, RollupBuild, Rol
 import type { BuncheeRollupConfig, CliArgs, PackageMetadata } from './types'
 
 import fs from 'fs'
-import { resolve, join } from 'path'
+import { resolve, join, basename } from 'path'
 import { watch as rollupWatch, rollup } from 'rollup'
 import createRollupConfig from './rollup-config'
 import { getPackageMeta, logger } from './utils'
@@ -96,7 +96,7 @@ function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Promise<a
 // . -> pkg name
 // ./lite -> <pkg name>/lite
 function getExportPath(pkg: PackageMetadata, exportName?: string) {
-  const name = pkg.name || '<package>'
+  const name = pkg.name || basename(config.rootDir)
   if (exportName === '.' || !exportName) return name
   return join(name, exportName)
 }

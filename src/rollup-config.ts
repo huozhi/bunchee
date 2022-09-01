@@ -358,7 +358,7 @@ function createRollupConfig(
   return {
     input: inputOptions,
     output: outputConfigs,
-    exportName: options.exportCondition?.name || pkg.name,
+    exportName: options.exportCondition?.name || '.',
   }
 }
 
