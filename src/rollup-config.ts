@@ -190,7 +190,7 @@ function createOutputOptions(
   return {
     name: pkg.name,
     file,
-    format: format || 'es',
+    format,
     exports: 'named',
     esModule: useEsModuleMark && format !== 'umd',
     freeze: false,

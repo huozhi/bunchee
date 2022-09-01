@@ -3,6 +3,7 @@ const path = require('path')
 const { fork, execSync } = require('child_process')
 
 const resolve = filepath => path.resolve(__dirname, '../test', filepath)
+const fixturesDir = resolve('fixtures')
 
 const testCases = [
   {
@@ -16,7 +17,7 @@ const testCases = [
   },
   {
     name: 'format',
-    args: [resolve('fixtures/hello.js'), '-f', 'cjs', '-o', resolve('dist/hello.cjs')],
+    args: [resolve('fixtures/hello.js'), '--cwd', fixturesDir,  '-f', 'cjs', '-o', resolve('dist/hello.cjs')],
     expected(distFile) {
       return [
         [fs.existsSync(distFile), true],
@@ -96,6 +97,7 @@ for (const testCase of testCases) {
     // Delete dist folder (as last argument)
     const dist = args[args.length - 1]
     execSync(`rm -rf ${path.dirname(dist)}`)
+    console.log(`Command: bunchee ${args.join(' ')}`)
     const ps = fork(
       __dirname + '/../dist/cli.js',
       args,
