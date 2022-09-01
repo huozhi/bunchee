@@ -190,7 +190,7 @@ function createOutputOptions(
   return {
     name: pkg.name,
     file,
-    format,
+    format: format || 'es',
     exports: 'named',
     esModule: useEsModuleMark && format !== 'umd',
     freeze: false,
@@ -344,7 +344,7 @@ function createRollupConfig(
         {
           ...cliArgs,
           file,
-          format: format || cliArgs.format,
+          format: cliArgs.format || format,
           useTypescript,
         },
         pkg,

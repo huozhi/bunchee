@@ -52,7 +52,9 @@ for (const unitName of unitTestDirs) {
 
     const distFile = resolve(dir, 'dist/bundle.js')
     const minifiedDistFile = distFile.replace('.js', '.min.js')
-    const pkgJson = fs.existsSync(`${dir}/package.json`) ? require(`${dir}/package.json`) : {}
+    const pkgJson = fs.existsSync(resolve(dir, 'package.json'))
+      ? JSON.parse(fs.readFileSync(resolve(dir, `package.json`), { encoding: 'utf-8' }))
+      : {}
 
     const baseOptions = {
       cwd: dir,

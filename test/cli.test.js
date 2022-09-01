@@ -15,6 +15,16 @@ const testCases = [
     }
   },
   {
+    name: 'format',
+    args: [resolve('fixtures/hello.js'), '-f', 'cjs', '-o', resolve('dist/hello.cjs')],
+    expected(distFile) {
+      return [
+        [fs.existsSync(distFile), true],
+        [fs.readFileSync(distFile, { encoding: 'utf-8' }).includes('exports.'), true],
+      ]
+    }
+  },
+  {
     name: 'compress',
     args: [resolve('fixtures/hello.js'), '-m', '-o', resolve('dist/hello.bundle.min.js')],
     expected(distFile) {
