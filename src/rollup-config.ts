@@ -344,7 +344,7 @@ function createRollupConfig(
         {
           ...cliArgs,
           file,
-          format: format || cliArgs.format,
+          format: cliArgs.format || format,
           useTypescript,
         },
         pkg,
