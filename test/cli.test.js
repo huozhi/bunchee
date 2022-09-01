@@ -1,6 +1,6 @@
-const fs = require('fs');
-const path = require('path');
-const { fork, execSync } = require('child_process');
+const fs = require('fs')
+const path = require('path')
+const { fork, execSync } = require('child_process')
 
 const resolve = filepath => path.resolve(__dirname, '../test', filepath)
 
@@ -81,7 +81,7 @@ const testCases = [
 ]
 
 for (const testCase of testCases) {
-  const {name, args, expected} = testCase;
+  const {name, args, expected} = testCase
   test(`cli ${name} should work properly`, async () => {
     // Delete dist folder (as last argument)
     const dist = args[args.length - 1]
@@ -90,21 +90,21 @@ for (const testCase of testCases) {
       __dirname + '/../dist/cli.js',
       args,
       {stdio: 'pipe'}
-    );
-    let stderr = '', stdout = '';
-    ps.stdout.on('data', chunk => stdout += chunk.toString());
-    ps.stderr.on('data', chunk => stderr += chunk.toString());
+    )
+    let stderr = '', stdout = ''
+    ps.stdout.on('data', chunk => stdout += chunk.toString())
+    ps.stderr.on('data', chunk => stderr += chunk.toString())
     const code = await new Promise((resolve) => {
-      ps.on('close', resolve);
-    });
-    stdout && console.log(stdout);
-    stderr && console.error(stderr);
-    const distFile = args[args.length - 1];
+      ps.on('close', resolve)
+    })
+    stdout && console.log(stdout)
+    stderr && console.error(stderr)
+    const distFile = args[args.length - 1]
     for (const conditions of expected(distFile, { stdout, stderr })) {
-      const [left, right] = conditions;
-      expect(left).toBe(right);
+      const [left, right] = conditions
+      expect(left).toBe(right)
     }
-    expect(fs.existsSync(distFile)).toBe(true);
-    expect(code).toBe(0);
-  });
+    expect(fs.existsSync(distFile)).toBe(true)
+    expect(code).toBe(0)
+  })
 }
