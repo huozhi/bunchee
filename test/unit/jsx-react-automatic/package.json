@@ -1,0 +1,6 @@
+{
+  "name": "jsx-react-automatic",
+  "peerDependencies": {
+    "react": "*"
+  }
+}

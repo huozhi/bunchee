@@ -1,0 +1,16 @@
+import { jsxs, Fragment, jsx } from 'react/jsx-runtime';
+
+function Jsx() {
+    return jsxs(Fragment, {
+        children: [
+            jsx("div", {
+                children: "hello"
+            }),
+            jsx("h1", {
+                children: "yep"
+            })
+        ]
+    });
+}
+
+export { Jsx as default };

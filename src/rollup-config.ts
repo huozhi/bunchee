@@ -24,7 +24,7 @@ const minifyOptions: JsMinifyOptions = {
 }
 
 let hasLoggedTsWarning = false
-function resolveTypescript() {
+function resolveTypescript(): typeof import('typescript') {
   let ts
   const m = new Module('', null)
   m.paths = Module._nodeModulePaths(config.rootDir)
@@ -47,7 +47,12 @@ function getDistPath(distPath: string) {
 function createInputConfig(
   entry: string,
   pkg: PackageMetadata,
-  options: BundleOptions
+  options: BundleOptions,
+  {
+    tsCompilerOptions
+  } : {
+    tsCompilerOptions: any
+  }
 ): InputOptions {
   const externals = [pkg.peerDependencies, pkg.dependencies, pkg.peerDependenciesMeta]
     .filter(<T>(n?: T): n is T => Boolean(n))
@@ -102,7 +107,7 @@ function createInputConfig(
         tsconfig: tsPath,
         typescript: resolveTypescript(),
         // override options
-        jsx: 'react',
+        jsx: tsCompilerOptions?.jsx || 'react',
         module: 'ES6',
         target: jscTarget,
         // Disable `noEmitOnError` for watch mode to avoid plugin error
@@ -129,6 +134,13 @@ function createInputConfig(
           privateMethod: true,
           classPrivateProperty: true,
           exportDefaultFrom: true,
+        },
+        transform: {
+          react: {
+            runtime: ['react-jsx', 'react-jsx-dev'].includes(tsCompilerOptions?.jsx)
+              ? 'automatic'
+              : 'classic'
+          }
         },
         ...(minify && { minify: { ...minifyOptions, sourceMap: options.sourcemap } }),
       },
@@ -158,24 +170,20 @@ function createInputConfig(
   }
 }
 
-function createOutputOptions(options: BundleOptions, pkg: PackageMetadata): OutputOptions {
-  const { format, useTypescript } = options
-  let tsCompilerOptions = {} as any
-
-  if (useTypescript) {
-    const ts = resolveTypescript()
-    const tsconfigPath = resolve(config.rootDir, 'tsconfig.json')
-    if (fs.existsSync(tsconfigPath)) {
-      const tsconfigJSON = ts.readConfigFile(tsconfigPath, ts.sys.readFile).config
-      tsCompilerOptions = ts.parseJsonConfigFileContent(tsconfigJSON, ts.sys, './').options
-    }
+function createOutputOptions(
+  options: BundleOptions,
+  pkg: PackageMetadata,
+  {
+    tsCompilerOptions
+  }: {
+    tsCompilerOptions: any
   }
-
+): OutputOptions {
+  const { format } = options
   const exportPaths = getExportPaths(pkg)
 
   // respect if tsconfig.json has `esModuleInterop` config;
   // add esmodule mark if cjs and esmodule are both generated;
-
   const useEsModuleMark = Boolean(tsCompilerOptions.esModuleInterop || (exportPaths.main && exportPaths.module))
 
   const file = resolve(options.file!)
@@ -297,7 +305,18 @@ function createRollupConfig(
   const useTypescript: boolean = ext === '.ts' || ext === '.tsx'
   const options = { ...cliArgs, useTypescript }
 
-  const inputOptions = createInputConfig(entry, pkg, options)
+  let tsCompilerOptions = {} as any
+
+  if (useTypescript) {
+    const ts = resolveTypescript()
+    const tsconfigPath = resolve(config.rootDir, 'tsconfig.json')
+    if (fs.existsSync(tsconfigPath)) {
+      const tsconfigJSON = ts.readConfigFile(tsconfigPath, ts.sys.readFile).config
+      tsCompilerOptions = ts.parseJsonConfigFileContent(tsconfigJSON, ts.sys, './').options
+    }
+  }
+
+  const inputOptions = createInputConfig(entry, pkg, options, { tsCompilerOptions })
   const outputExports = options.exportCondition
     ? getSubExportDist(pkg, options.exportCondition.export)
     : getExportDist(pkg)
@@ -310,7 +329,10 @@ function createRollupConfig(
         format: exportDist.format,
         useTypescript,
       },
-      pkg
+      pkg,
+      {
+        tsCompilerOptions
+      }
     )
   })
 
@@ -325,7 +347,10 @@ function createRollupConfig(
           format: format || cliArgs.format,
           useTypescript,
         },
-        pkg
+        pkg,
+        {
+          tsCompilerOptions
+        }
       ),
     ]
   }
