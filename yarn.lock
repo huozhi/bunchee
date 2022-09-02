@@ -997,13 +997,6 @@ brace-expansion@^1.1.7:
     balanced-match "^1.0.0"
     concat-map "0.0.1"
 
-brace-expansion@^2.0.1:
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/brace-expansion/-/brace-expansion-2.0.1.tgz#1edc459e0f0c548486ecf9fc99f2221364b9a0ae"
-  integrity sha512-XnAIvQ8eM+kC6aULx6wuQiwVsnzsi9d3WxzV3FpWTGA19F621kwdbsAcFKXgKUHZWsy+mY6iL1sHTxWEFCytDA==
-  dependencies:
-    balanced-match "^1.0.0"
-
 braces@^3.0.2:
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/braces/-/braces-3.0.2.tgz#3454e1a462ee8d599e236df336cd9ea4f8afe107"
@@ -1602,17 +1595,6 @@ glob@^7.1.3, glob@^7.1.4, glob@^7.1.6:
     once "^1.3.0"
     path-is-absolute "^1.0.0"
 
-glob@^8.0.3:
-  version "8.0.3"
-  resolved "https://registry.yarnpkg.com/glob/-/glob-8.0.3.tgz#415c6eb2deed9e502c68fa44a272e6da6eeca42e"
-  integrity sha512-ull455NHSHI/Y1FqGaaYFaLGkNMMJbavMrEGFXG/PGrg6y7sutWHUHrz6gy6WEBH6akM1M414dWKCNs+IhKdiQ==
-  dependencies:
-    fs.realpath "^1.0.0"
-    inflight "^1.0.4"
-    inherits "2"
-    minimatch "^5.0.1"
-    once "^1.3.0"
-
 globals@^11.1.0:
   version "11.12.0"
   resolved "https://registry.yarnpkg.com/globals/-/globals-11.12.0.tgz#ab8795338868a0babd8525758018c2a7eb95c42e"
@@ -2166,10 +2148,10 @@ json5@^2.2.1:
   resolved "https://registry.yarnpkg.com/json5/-/json5-2.2.1.tgz#655d50ed1e6f95ad1a3caababd2b0efda10b395c"
   integrity sha512-1hqLFMSrGHRHxav9q9gNjJ5EXznIxGVO09xQRrwplcS8qs28pZ8s8hupZAmqDwZUmVZ2Qb2jnyPOWcDH8m8dlA==
 
-jsonc-parser@^3.0.0:
-  version "3.1.0"
-  resolved "https://registry.yarnpkg.com/jsonc-parser/-/jsonc-parser-3.1.0.tgz#73b8f0e5c940b83d03476bc2e51a20ef0932615d"
-  integrity sha512-DRf0QjnNeCUds3xTjKlQQ3DpJD51GvDjJfnxUVWg6PZTo2otSm+slzNAxU/35hF8/oJIKoG9slq30JYOsF2azg==
+jsonc-parser@^3.2.0:
+  version "3.2.0"
+  resolved "https://registry.yarnpkg.com/jsonc-parser/-/jsonc-parser-3.2.0.tgz#31ff3f4c2b9793f89c67212627c51c6394f88e76"
+  integrity sha512-gfFQZrcTc8CnKXp6Y4/CBT3fTc0OVuDofpre4aEeEpSBPV5X5v4+Vmx+8snU7RLPrNHPKSgLxGo9YuQzz20o+w==
 
 kleur@^3.0.3:
   version "3.0.3"
@@ -2207,11 +2189,6 @@ lru-cache@^6.0.0:
   dependencies:
     yallist "^4.0.0"
 
-lunr@^2.3.9:
-  version "2.3.9"
-  resolved "https://registry.yarnpkg.com/lunr/-/lunr-2.3.9.tgz#18b123142832337dd6e964df1a5a7707b25d35e1"
-  integrity sha512-zTU3DaZaF3Rt9rhN3uBMGQD3dD2/vFQqnvZCDv4dl5iOzq2IZQqTxu90r4E5J+nP70J3ilqVCrbho2eWaeW8Ow==
-
 magic-string@^0.25.7:
   version "0.25.9"
   resolved "https://registry.yarnpkg.com/magic-string/-/magic-string-0.25.9.tgz#de7f9faf91ef8a1c91d02c2e5314c8277dbcdd1c"
@@ -2232,11 +2209,6 @@ makeerror@1.0.12:
   integrity sha512-JmqCvUhmt43madlpFzG4BQzG2Z3m6tvQDNKdClZnO3VbIudJYmxsT0FNJMeiB2+JTSlTQTSbU8QdesVmwJcmLg==
   dependencies:
     tmpl "1.0.5"
-
-marked@^4.0.16:
-  version "4.0.19"
-  resolved "https://registry.yarnpkg.com/marked/-/marked-4.0.19.tgz#d36198d1ac1255525153c351c68c75bc1d7aee46"
-  integrity sha512-rgQF/OxOiLcvgUAj1Q1tAf4Bgxn5h5JZTp04Fx4XUkVhs7B+7YA9JEWJhJpoO8eJt8MkZMwqLCNeNqj1bCREZQ==
 
 merge-stream@^2.0.0:
   version "2.0.0"
@@ -2262,13 +2234,6 @@ minimatch@^3.0.4, minimatch@^3.1.1:
   integrity sha512-J7p63hRiAjw1NDEww1W7i37+ByIrOWO5XQQAzZ3VOcL0PNybwpfmV/N05zFAzwQ9USyEcX6t3UO+K5aqBQOIHw==
   dependencies:
     brace-expansion "^1.1.7"
-
-minimatch@^5.0.1, minimatch@^5.1.0:
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-5.1.0.tgz#1717b464f4971b144f6aabe8f2d0b8e4511e09c7"
-  integrity sha512-9TPBGGak4nHfGZsPBohm9AWg6NoT7QTCehS3BIJABslyZbzxfV78QM2Y6+i741OPZIafFAaiiEMh5OyIrJPgtg==
-  dependencies:
-    brace-expansion "^2.0.1"
 
 ms@2.1.2:
   version "2.1.2"
@@ -2461,16 +2426,15 @@ rollup-plugin-preserve-shebang@1.0.1:
   dependencies:
     magic-string "^0.25.7"
 
-rollup-plugin-swc3@0.4.1:
-  version "0.4.1"
-  resolved "https://registry.yarnpkg.com/rollup-plugin-swc3/-/rollup-plugin-swc3-0.4.1.tgz#045dcb21487d072a6327b0beefdc49720f6e2ee0"
-  integrity sha512-+dB5AJlVjyTTXWgpyhp07vGtv3CLLkvXUS6Y1kABRac7gEpMEfLW70+W0tGyPAeMIs2iQgputMt8eVjNToVfJQ==
+rollup-plugin-swc3@0.5.0:
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/rollup-plugin-swc3/-/rollup-plugin-swc3-0.5.0.tgz#caf745811d1377226ebb41e368eb0a38c70a30c1"
+  integrity sha512-Y5zJAsvksM39YAmjNje9rWtRMrJefaieDfkv52B2H7PsFj9EuYsrgGJRRUZCiOjMkQwdkiAEYfobqMZFV1X6pg==
   dependencies:
     "@rollup/pluginutils" "^4.2.1"
     deepmerge "^4.2.2"
     joycon "^3.1.1"
-    jsonc-parser "^3.0.0"
-    typedoc "^0.22.15"
+    jsonc-parser "^3.2.0"
 
 rollup@2.74.1:
   version "2.74.1"
@@ -2507,15 +2471,6 @@ shebang-regex@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/shebang-regex/-/shebang-regex-3.0.0.tgz#ae16f1644d873ecad843b0307b143362d4c42172"
   integrity sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==
-
-shiki@^0.10.1:
-  version "0.10.1"
-  resolved "https://registry.yarnpkg.com/shiki/-/shiki-0.10.1.tgz#6f9a16205a823b56c072d0f1a0bcd0f2646bef14"
-  integrity sha512-VsY7QJVzU51j5o1+DguUd+6vmCmZ5v/6gYu4vyYAhzjuNQU6P/vmSy4uQaOhvje031qQMiW0d2BwgMH52vqMng==
-  dependencies:
-    jsonc-parser "^3.0.0"
-    vscode-oniguruma "^1.6.1"
-    vscode-textmate "5.2.0"
 
 signal-exit@^3.0.3, signal-exit@^3.0.7:
   version "3.0.7"
@@ -2703,17 +2658,6 @@ type-fest@^0.21.3:
   resolved "https://registry.yarnpkg.com/type-fest/-/type-fest-0.21.3.tgz#d260a24b0198436e133fa26a524a6d65fa3b2e37"
   integrity sha512-t0rzBq87m3fVcduHDUFhKmyyX+9eo6WQjZvf51Ea/M0Q7+T374Jp1aUiyUl0GKxp8M/OETVHSDvmkyPgvX+X2w==
 
-typedoc@^0.22.15:
-  version "0.22.18"
-  resolved "https://registry.yarnpkg.com/typedoc/-/typedoc-0.22.18.tgz#1d000c33b66b88fd8cdfea14a26113a83b7e6591"
-  integrity sha512-NK9RlLhRUGMvc6Rw5USEYgT4DVAUFk7IF7Q6MYfpJ88KnTZP7EneEa4RcP+tX1auAcz7QT1Iy0bUSZBYYHdoyA==
-  dependencies:
-    glob "^8.0.3"
-    lunr "^2.3.9"
-    marked "^4.0.16"
-    minimatch "^5.1.0"
-    shiki "^0.10.1"
-
 typescript@4.8.2:
   version "4.8.2"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.8.2.tgz#e3b33d5ccfb5914e4eeab6699cf208adee3fd790"
@@ -2735,16 +2679,6 @@ v8-to-istanbul@^9.0.1:
     "@jridgewell/trace-mapping" "^0.3.12"
     "@types/istanbul-lib-coverage" "^2.0.1"
     convert-source-map "^1.6.0"
-
-vscode-oniguruma@^1.6.1:
-  version "1.6.2"
-  resolved "https://registry.yarnpkg.com/vscode-oniguruma/-/vscode-oniguruma-1.6.2.tgz#aeb9771a2f1dbfc9083c8a7fdd9cccaa3f386607"
-  integrity sha512-KH8+KKov5eS/9WhofZR8M8dMHWN2gTxjMsG4jd04YhpbPR91fUj7rYQ2/XjeHCJWbg7X++ApRIU9NUwM2vTvLA==
-
-vscode-textmate@5.2.0:
-  version "5.2.0"
-  resolved "https://registry.yarnpkg.com/vscode-textmate/-/vscode-textmate-5.2.0.tgz#01f01760a391e8222fe4f33fbccbd1ad71aed74e"
-  integrity sha512-Uw5ooOQxRASHgu6C7GVvUxisKXfSgW4oFlO+aa+PAkgmH89O3CXxEEzNRNtHSqtXFTl0nAC1uYj0GMSH27uwtQ==
 
 walker@^1.0.8:
   version "1.0.8"

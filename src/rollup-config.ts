@@ -11,6 +11,11 @@ import { InputOptions, OutputOptions, Plugin } from 'rollup'
 import config from './config'
 import { logger } from './utils'
 
+type TypescriptOptions = {
+  tsconfigPath: string | undefined,
+  tsCompilerOptions: any,
+}
+
 const { Module } = require('module')
 
 const minifyOptions: JsMinifyOptions = {
@@ -49,10 +54,9 @@ function createInputConfig(
   pkg: PackageMetadata,
   options: BundleOptions,
   {
+    tsconfigPath,
     tsCompilerOptions
-  } : {
-    tsCompilerOptions: any
-  }
+  } : TypescriptOptions
 ): InputOptions {
   const externals = [pkg.peerDependencies, pkg.dependencies, pkg.peerDependenciesMeta]
     .filter(<T>(n?: T): n is T => Boolean(n))
@@ -123,7 +127,7 @@ function createInputConfig(
     swc({
       include: /\.(m|c)?[jt]sx?$/,
       exclude: 'node_modules',
-      tsconfig: 'tsconfig.json',
+      tsconfig: tsconfigPath,
       jsc: {
         target: jscTarget,
         loose: true, // Use loose mode
@@ -134,13 +138,6 @@ function createInputConfig(
           privateMethod: true,
           classPrivateProperty: true,
           exportDefaultFrom: true,
-        },
-        transform: {
-          react: {
-            runtime: ['react-jsx', 'react-jsx-dev'].includes(tsCompilerOptions?.jsx)
-              ? 'automatic'
-              : 'classic'
-          }
         },
         ...(minify && { minify: { ...minifyOptions, sourceMap: options.sourcemap } }),
       },
@@ -175,9 +172,7 @@ function createOutputOptions(
   pkg: PackageMetadata,
   {
     tsCompilerOptions
-  }: {
-    tsCompilerOptions: any
-  }
+  }: TypescriptOptions
 ): OutputOptions {
   const { format } = options
   const exportPaths = getExportPaths(pkg)
@@ -306,17 +301,23 @@ function createRollupConfig(
   const options = { ...cliArgs, useTypescript }
 
   let tsCompilerOptions = {} as any
+  let tsconfigPath: string | undefined
 
   if (useTypescript) {
     const ts = resolveTypescript()
-    const tsconfigPath = resolve(config.rootDir, 'tsconfig.json')
+    tsconfigPath = resolve(config.rootDir, 'tsconfig.json')
     if (fs.existsSync(tsconfigPath)) {
       const tsconfigJSON = ts.readConfigFile(tsconfigPath, ts.sys.readFile).config
       tsCompilerOptions = ts.parseJsonConfigFileContent(tsconfigJSON, ts.sys, './').options
     }
   }
 
-  const inputOptions = createInputConfig(entry, pkg, options, { tsCompilerOptions })
+  const typescriptOptions = {
+    tsconfigPath,
+    tsCompilerOptions,
+  }
+
+  const inputOptions = createInputConfig(entry, pkg, options, typescriptOptions)
   const outputExports = options.exportCondition
     ? getSubExportDist(pkg, options.exportCondition.export)
     : getExportDist(pkg)
@@ -330,9 +331,7 @@ function createRollupConfig(
         useTypescript,
       },
       pkg,
-      {
-        tsCompilerOptions
-      }
+      typescriptOptions
     )
   })
 
@@ -348,9 +347,7 @@ function createRollupConfig(
           useTypescript,
         },
         pkg,
-        {
-          tsCompilerOptions
-        }
+        typescriptOptions
       ),
     ]
   }
