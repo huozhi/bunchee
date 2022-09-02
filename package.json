@@ -32,6 +32,10 @@
     "*.md"
   ],
   "author": "huozhi (github.com/huozhi)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/huozhi/bunchee.git"
+  },
   "license": "MIT",
   "dependencies": {
     "@rollup/plugin-commonjs": "22.0.2",
