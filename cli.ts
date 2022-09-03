@@ -3,7 +3,7 @@
 import type { CliArgs } from './src/types'
 
 import path from 'path'
-import { parseCliArgs, logger } from './src/utils'
+import { parseCliArgs, logger, exit } from './src/utils'
 import { version } from './package.json'
 
 const helpMessage = `
@@ -27,10 +27,6 @@ function help() {
   console.log(helpMessage)
 }
 
-function exit(err: Error) {
-  logger.error(err)
-  process.exit(1)
-}
 
 async function run(args: any) {
   const { source, format, watch, minify, sourcemap, target, runtime } = args

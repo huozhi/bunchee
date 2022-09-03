@@ -9,10 +9,10 @@ import json from '@rollup/plugin-json'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import { InputOptions, OutputOptions, Plugin } from 'rollup'
 import config from './config'
-import { logger } from './utils'
+import { exit } from './utils'
 
 type TypescriptOptions = {
-  tsconfigPath: string | undefined,
+  tsConfigPath: string | undefined,
   tsCompilerOptions: any,
 }
 
@@ -38,8 +38,7 @@ function resolveTypescript(): typeof import('typescript') {
   } catch (_) {
     if (!hasLoggedTsWarning) {
       hasLoggedTsWarning = true
-      logger.error('Could not load TypeScript compiler. Try `yarn add --dev typescript`')
-      process.exit(1)
+      exit('Could not load TypeScript compiler. Try `yarn add --dev typescript`')
     }
   }
   return ts
@@ -54,7 +53,7 @@ function createInputConfig(
   pkg: PackageMetadata,
   options: BundleOptions,
   {
-    tsconfigPath,
+    tsConfigPath,
     tsCompilerOptions
   } : TypescriptOptions
 ): InputOptions {
@@ -127,7 +126,7 @@ function createInputConfig(
     swc({
       include: /\.(m|c)?[jt]sx?$/,
       exclude: 'node_modules',
-      tsconfig: tsconfigPath,
+      tsconfig: tsConfigPath,
       jsc: {
         target: jscTarget,
         loose: true, // Use loose mode
@@ -301,19 +300,22 @@ function createRollupConfig(
   const options = { ...cliArgs, useTypescript }
 
   let tsCompilerOptions = {} as any
-  let tsconfigPath: string | undefined
+  let tsConfigPath: string | undefined
 
   if (useTypescript) {
     const ts = resolveTypescript()
-    tsconfigPath = resolve(config.rootDir, 'tsconfig.json')
-    if (fs.existsSync(tsconfigPath)) {
-      const tsconfigJSON = ts.readConfigFile(tsconfigPath, ts.sys.readFile).config
+    tsConfigPath = resolve(config.rootDir, 'tsconfig.json')
+    if (fs.existsSync(tsConfigPath)) {
+      const tsconfigJSON = ts.readConfigFile(tsConfigPath, ts.sys.readFile).config
       tsCompilerOptions = ts.parseJsonConfigFileContent(tsconfigJSON, ts.sys, './').options
+    } else {
+      tsConfigPath = undefined
+      exit('tsconfig.json is missing in your project directory')
     }
   }
 
   const typescriptOptions = {
-    tsconfigPath,
+    tsConfigPath,
     tsCompilerOptions,
   }
 
