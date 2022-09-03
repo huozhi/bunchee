@@ -4,6 +4,11 @@ import path from 'path'
 import config from './config'
 import type { PackageMetadata } from './types'
 
+export function exit(err: string | Error) {
+  logger.error(err)
+  process.exit(1)
+}
+
 export function getPackageMeta(): PackageMetadata {
   const pkgFilePath = path.resolve(config.rootDir, 'package.json')
   let targetPackageJson = {}
@@ -66,13 +71,13 @@ export function parseCliArgs(argv: string[]) {
 }
 
 export const logger = {
-  log(...args: any[]) {
-    console.log(...args)
+  log(arg: any) {
+    console.log(arg)
   },
-  warn(...args: any[]) {
-    console.log('\x1b[33m', ...args, '\x1b[0m')
+  warn(arg: any[]) {
+    console.log('\x1b[33m' + arg + '\x1b[0m')
   },
-  error(...args: any[]) {
-    console.error('\x1b[31m', ...args, '\x1b[0m')
+  error(arg: any) {
+    console.error('\x1b[31m' + arg + '\x1b[0m')
   },
 }
