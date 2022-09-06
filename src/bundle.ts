@@ -2,25 +2,25 @@ import type { RollupWatcher, RollupWatchOptions, OutputOptions, RollupBuild, Rol
 import type { BuncheeRollupConfig, CliArgs, PackageMetadata } from './types'
 
 import fs from 'fs'
-import { resolve, join, basename } from 'path'
+import { resolve, join, basename, extname } from 'path'
 import { watch as rollupWatch, rollup } from 'rollup'
-import createRollupConfig from './rollup-config'
-import { getPackageMeta, logger } from './utils'
+import buildConfig from './rollup-config'
+import { getPackageMeta, isTypescript, logger } from './utils'
 import config from './config'
 
 function assignDefault(options: CliArgs, name: keyof CliArgs, defaultValue: any) {
   if (!(name in options) || options[name] == null) {
-    options[name] = defaultValue
+    (options[name] as CliArgs[keyof CliArgs]) = defaultValue
   }
 }
 
 // Map '.' -> './index.[ext]'
 // Map './lite' -> './lite.[ext]'
-function getSourcePathFromExportPath(cwd: string, exportPath: string) {
+function getSourcePathFromExportPath(cwd: string, exportPath: string): string | undefined {
   const exts = ['js', 'cjs', 'mjs', 'jsx', 'ts', 'tsx']
   for (const ext of exts) {
     // ignore package.json
-    if (exportPath.endsWith('package.json')) return
+    if (exportPath.endsWith('package.json')) return undefined
     if (exportPath === '.') exportPath = './index'
     const filename = resolve(cwd, `${exportPath}.${ext}`)
 
@@ -28,10 +28,9 @@ function getSourcePathFromExportPath(cwd: string, exportPath: string) {
       return filename
     }
   }
-  return
 }
 
-function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Promise<any> {
+async function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Promise<any> {
   config.rootDir = resolve(process.cwd(), cwd || '')
   assignDefault(options, 'format', 'es')
   assignDefault(options, 'minify', false)
@@ -46,6 +45,29 @@ function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Promise<a
   const { exports: packageExports } = pkg
   const isSingleEntry = typeof packageExports === 'string'
   const hasMultiEntries = packageExports && !isSingleEntry && Object.keys(packageExports).length > 0
+  if (isSingleEntry) {
+    entryPath = getSourcePathFromExportPath(config.rootDir, '.') as string
+  }
+
+  function buildEntryConfig(dtsOnly: boolean) {
+    const configs = Object.keys(packageExports).map((entryExport) => {
+      const source = getSourcePathFromExportPath(config.rootDir, entryExport)
+      if (!source) return undefined
+      if (dtsOnly && !isTypescript(source)) return
+
+      options.exportCondition = {
+        source,
+        name: entryExport,
+        export: packageExports[entryExport]
+      }
+
+      const entry = resolve(cwd!, source)
+      const rollupConfig = buildConfig(entry, pkg, options, dtsOnly)
+      return rollupConfig
+    }).filter(v => !!v)
+
+    return configs
+  }
 
   const bundleOrWatch = (
     rollupConfig: BuncheeRollupConfig
@@ -54,10 +76,6 @@ function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Promise<a
       return Promise.resolve(runWatch(pkg, rollupConfig))
     }
     return runBundle(pkg, rollupConfig)
-  }
-
-  if (isSingleEntry) {
-    entryPath = getSourcePathFromExportPath(config.rootDir, '.') as string
   }
 
   if (!fs.existsSync(entryPath)) {
@@ -70,26 +88,19 @@ function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Promise<a
     }
 
     if (hasMultiEntries) {
-      const rollupConfigs = Object.keys(packageExports).map((entryExport) => {
-        const source = getSourcePathFromExportPath(config.rootDir, entryExport)
-        if (!source) return
+      const assetsJobs = buildEntryConfig(false).map((rollupConfig) => bundleOrWatch(rollupConfig!))
+      const typesJobs = buildEntryConfig(true).map((rollupConfig) => bundleOrWatch(rollupConfig!))
 
-        options.exportCondition = {
-          source,
-          name: entryExport,
-          export: packageExports[entryExport]
-        }
-
-        const rollupConfig = createRollupConfig(resolve(cwd!, source), pkg, options)
-        return rollupConfig
-      }).filter(v => !!v)
-
-      return Promise.all(rollupConfigs.map((rollupConfig) => bundleOrWatch(rollupConfig!)))
+      return await Promise.all(assetsJobs.concat(typesJobs))
     }
   }
 
-  const rollupConfig = createRollupConfig(entryPath, pkg, options)
+  // Generate types
+  if (isTypescript(entryPath)) {
+    await bundleOrWatch(buildConfig(entryPath, pkg, options, true))
+  }
 
+  const rollupConfig = buildConfig(entryPath, pkg, options, false)
   return bundleOrWatch(rollupConfig)
 }
 

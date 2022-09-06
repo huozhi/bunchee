@@ -1,12 +1,12 @@
 import { jsxs, Fragment, jsx } from 'react/jsx-runtime';
 
 function Jsx() {
-    return jsxs(Fragment, {
+    return /*#__PURE__*/ jsxs(Fragment, {
         children: [
-            jsx("div", {
+            /*#__PURE__*/ jsx("div", {
                 children: "hello"
             }),
-            jsx("h1", {
+            /*#__PURE__*/ jsx("h1", {
                 children: "yep"
             })
         ]

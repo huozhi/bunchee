@@ -1,7 +1,7 @@
 import type { PackageMetadata, BuncheeRollupConfig, ExportCondition, CliArgs, BundleOptions, ExportType } from './types'
 import type { JsMinifyOptions } from '@swc/core'
 import fs from 'fs'
-import { resolve, extname, dirname } from 'path'
+import { resolve, dirname } from 'path'
 import { swc } from 'rollup-plugin-swc3'
 import commonjs from '@rollup/plugin-commonjs'
 import shebang from 'rollup-plugin-preserve-shebang'
@@ -9,11 +9,14 @@ import json from '@rollup/plugin-json'
 import nodeResolve from '@rollup/plugin-node-resolve'
 import { InputOptions, OutputOptions, Plugin } from 'rollup'
 import config from './config'
-import { exit } from './utils'
+import { exit, isTypescript } from './utils'
+import dts from 'rollup-plugin-dts'
 
 type TypescriptOptions = {
-  tsConfigPath: string | undefined,
-  tsCompilerOptions: any,
+  tsConfigPath: string | undefined
+  tsCompilerOptions: any
+  dtsOnly: boolean
+  declarationDir: string | undefined
 }
 
 const { Module } = require('module')
@@ -48,13 +51,14 @@ function getDistPath(distPath: string) {
   return resolve(config.rootDir, distPath)
 }
 
-function createInputConfig(
+function buildInputConfig(
   entry: string,
   pkg: PackageMetadata,
   options: BundleOptions,
   {
     tsConfigPath,
-    tsCompilerOptions
+    tsCompilerOptions,
+    dtsOnly
   } : TypescriptOptions
 ): InputOptions {
   const externals = [pkg.peerDependencies, pkg.dependencies, pkg.peerDependenciesMeta]
@@ -64,37 +68,11 @@ function createInputConfig(
     .concat((options.external ?? []).concat(pkg.name ? [pkg.name] : []))
 
   const { useTypescript, runtime, target: jscTarget, minify, exportCondition } = options
-  const typings: string | undefined = pkg.types || pkg.typings
-  const cwd: string = config.rootDir
-
-  let tsPath: string | undefined
-  let declarationDir: string | undefined
-  if (useTypescript) {
-    const tsconfig = resolve(cwd, 'tsconfig.json')
-    tsPath = fs.existsSync(tsconfig) ? tsconfig : undefined
-
-    if (typings) {
-      declarationDir = dirname(resolve(cwd, typings))
-    }
-
-    // Generate `declarationDir` based on the dist files of export condition
-    if (exportCondition) {
-      const exportConditionDistFolder =
-        dirname(
-          typeof exportCondition.export === 'string'
-            ? exportCondition.export
-            : Object.values(exportCondition.export)[0]
-          )
-      declarationDir = resolve(
-        config.rootDir,
-        exportConditionDistFolder
-      )
-    }
-  }
+  const tsPath = fs.existsSync(tsConfigPath) ? tsConfigPath : undefined
 
   const isMainExport = !exportCondition || exportCondition.name === '.'
 
-  const plugins: Plugin[] = [
+  const plugins: Plugin[] = !dtsOnly ? [
     nodeResolve({
       preferBuiltins: runtime === 'node',
       extensions: ['.mjs', '.js', '.json', '.node', '.jsx'],
@@ -105,24 +83,9 @@ function createInputConfig(
     json(),
     shebang(),
     // Use typescript only emit types once for main export compilation
-    useTypescript && isMainExport &&
-      require('@rollup/plugin-typescript')({
-        tsconfig: tsPath,
-        typescript: resolveTypescript(),
-        // override options
-        jsx: tsCompilerOptions?.jsx || 'react',
-        module: 'ES6',
-        target: jscTarget,
-        // Disable `noEmitOnError` for watch mode to avoid plugin error
-        noEmitOnError: !options.watch,
-        sourceMap: options.sourcemap,
-        declaration: !!typings,
-        // Only emit types, use swc to emit js
-        emitDeclarationOnly: true,
-        ...(!!typings && {
-          declarationDir,
-        }),
-      }),
+    // useTypescript && isMainExport &&
+    //   require('@rollup/plugin-typescript')(tsPluginOptions),
+
     swc({
       include: /\.(m|c)?[jt]sx?$/,
       exclude: 'node_modules',
@@ -144,6 +107,28 @@ function createInputConfig(
       inlineSourcesContent: false,
     }),
   ].filter((n: Plugin | false): n is Plugin => Boolean(n))
+    : [
+
+      shebang(),
+      useTypescript && dts({
+        compilerOptions: {
+          ...tsCompilerOptions,
+          // declarationDir,
+          declaration: true,
+
+          noEmit: false,
+          noEmitOnError: true,
+          emitDeclarationOnly: true,
+          checkJs: false,
+          declarationMap: false,
+          skipLibCheck: true,
+          preserveSymlinks: false,
+          target: 'esnext',
+          module: 'esnext',
+          jsx: tsCompilerOptions?.jsx || 'react',
+        }
+      }),
+    ]
 
   return {
     input: entry,
@@ -166,11 +151,13 @@ function createInputConfig(
   }
 }
 
-function createOutputOptions(
+function buildOutputConfigs(
   options: BundleOptions,
   pkg: PackageMetadata,
   {
-    tsCompilerOptions
+    tsCompilerOptions,
+    dtsOnly,
+    declarationDir
   }: TypescriptOptions
 ): OutputOptions {
   const { format } = options
@@ -179,11 +166,21 @@ function createOutputOptions(
   // respect if tsconfig.json has `esModuleInterop` config;
   // add esmodule mark if cjs and esmodule are both generated;
   const useEsModuleMark = Boolean(tsCompilerOptions.esModuleInterop || (exportPaths.main && exportPaths.module))
+  const typings: string | undefined = pkg.types || pkg.typings
+  const file = options.file && resolve(options.file)
+  // handle more cases
+  const dtsDir = typings ? dirname(resolve(config.rootDir, typings)) : resolve(config.rootDir, 'dist')
 
-  const file = resolve(options.file!)
+  const dtsFile = options.exportCondition?.name
+    ? resolve(dtsDir, (options.exportCondition.name === '.' ? 'index' : options.exportCondition.name) + '.d.ts')
+    : typings
+
   return {
     name: pkg.name,
-    file,
+    ...(dtsOnly
+      ? (dtsFile ? { file: dtsFile } : { dir: dtsDir })
+      : { file: file }
+    ),
     format,
     exports: 'named',
     esModule: useEsModuleMark && format !== 'umd',
@@ -289,18 +286,48 @@ function getSubExportDist(pkg: PackageMetadata, exportCondition: ExportCondition
   return dist
 }
 
-function createRollupConfig(
+function buildConfig(
   entry: string,
   pkg: PackageMetadata,
-  cliArgs: CliArgs
+  cliArgs: CliArgs,
+  dtsOnly: boolean
 ): BuncheeRollupConfig {
   const { file } = cliArgs
-  const ext = extname(entry)
-  const useTypescript: boolean = ext === '.ts' || ext === '.tsx'
+  const useTypescript = isTypescript(entry)
   const options = { ...cliArgs, useTypescript }
-
   let tsCompilerOptions = {} as any
   let tsConfigPath: string | undefined
+
+  const typings: string | undefined = pkg.types || pkg.typings
+  const cwd: string = config.rootDir
+  const { exportCondition } = options
+
+  let tsPath: string | undefined
+  let declarationDir: string | undefined
+  if (useTypescript) {
+    // const tsconfig = resolve(cwd, 'tsconfig.json')
+    // tsPath = fs.existsSync(tsconfig) ? tsconfig : undefined
+
+    if (typings) {
+      declarationDir = dirname(resolve(cwd, typings))
+    }
+
+    // Generate `declarationDir` based on the dist files of export condition
+    if (exportCondition) {
+
+      const exportConditionDistFolder =
+        dirname(
+          typeof exportCondition.export === 'string'
+            ? exportCondition.export
+            : Object.values(exportCondition.export)[0]
+          )
+
+      declarationDir = resolve(
+        config.rootDir,
+        exportConditionDistFolder
+      )
+    }
+  }
 
   if (useTypescript) {
     const ts = resolveTypescript()
@@ -314,44 +341,64 @@ function createRollupConfig(
     }
   }
 
-  const typescriptOptions = {
+  const typescriptOptions: TypescriptOptions = {
+    dtsOnly,
     tsConfigPath,
     tsCompilerOptions,
+    declarationDir,
   }
 
-  const inputOptions = createInputConfig(entry, pkg, options, typescriptOptions)
+  const inputOptions = buildInputConfig(entry, pkg, options, typescriptOptions)
   const outputExports = options.exportCondition
     ? getSubExportDist(pkg, options.exportCondition.export)
     : getExportDist(pkg)
 
-  let outputConfigs = outputExports.map((exportDist) => {
-    return createOutputOptions(
-      {
-        ...cliArgs,
-        file: exportDist.file,
-        format: exportDist.format,
-        useTypescript,
-      },
-      pkg,
-      typescriptOptions
-    )
-  })
+  let outputConfigs = []
 
-  // CLI output option is always prioritized
-  if (file) {
-    const format = outputExports[0]?.format
+  // Generate dts job - single config
+  if (dtsOnly) {
     outputConfigs = [
-      createOutputOptions(
+      buildOutputConfigs(
         {
           ...cliArgs,
-          file,
-          format: cliArgs.format || format,
+          file: undefined,
+          format: 'es',
           useTypescript,
         },
         pkg,
         typescriptOptions
-      ),
+      )
     ]
+  } else {
+    // multi outputs with specified format
+    outputConfigs = outputExports.map((exportDist) => {
+      return buildOutputConfigs(
+        {
+          ...cliArgs,
+          file: exportDist.file,
+          format: exportDist.format,
+          useTypescript,
+        },
+        pkg,
+        typescriptOptions
+      )
+    })
+    // CLI output option is always prioritized
+    if (file) {
+      const format = outputExports[0]?.format
+      outputConfigs = [
+        buildOutputConfigs(
+          {
+            ...cliArgs,
+            file,
+            format: cliArgs.format || format,
+            useTypescript,
+          },
+          pkg,
+          typescriptOptions
+        ),
+      ]
+    }
   }
 
   return {
@@ -361,4 +408,4 @@ function createRollupConfig(
   }
 }
 
-export default createRollupConfig
+export default buildConfig
