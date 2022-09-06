@@ -1,12 +1,16 @@
 import type { RollupWatcher, RollupWatchOptions, OutputOptions, RollupBuild, RollupOutput } from 'rollup'
-import type { BuncheeRollupConfig, CliArgs, PackageMetadata } from './types'
+import type { BuncheeRollupConfig, CliArgs, ExportCondition, PackageMetadata } from './types'
 
 import fs from 'fs'
-import { resolve, join, basename, extname } from 'path'
+import { resolve, join, basename } from 'path'
 import { watch as rollupWatch, rollup } from 'rollup'
 import buildConfig from './rollup-config'
 import { getPackageMeta, isTypescript, logger } from './utils'
 import config from './config'
+
+function logJobForPath(exportPath: string, dtsOnly: boolean) {
+  logger.log(`✨ ${dtsOnly ? 'Generate types for' : 'Built'} ${exportPath}`)
+}
 
 function assignDefault(options: CliArgs, name: keyof CliArgs, defaultValue: any) {
   if (!(name in options) || options[name] == null) {
@@ -20,7 +24,7 @@ function getSourcePathFromExportPath(cwd: string, exportPath: string): string | 
   const exts = ['js', 'cjs', 'mjs', 'jsx', 'ts', 'tsx']
   for (const ext of exts) {
     // ignore package.json
-    if (exportPath.endsWith('package.json')) return undefined
+    if (exportPath.endsWith('package.json')) return
     if (exportPath === '.') exportPath = './index'
     const filename = resolve(cwd, `${exportPath}.${ext}`)
 
@@ -28,6 +32,7 @@ function getSourcePathFromExportPath(cwd: string, exportPath: string): string | 
       return filename
     }
   }
+  return
 }
 
 async function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Promise<any> {
@@ -42,14 +47,14 @@ async function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Pro
   }
 
   const pkg = getPackageMeta()
-  const { exports: packageExports } = pkg
+  const packageExports = pkg.exports || {}
   const isSingleEntry = typeof packageExports === 'string'
   const hasMultiEntries = packageExports && !isSingleEntry && Object.keys(packageExports).length > 0
   if (isSingleEntry) {
     entryPath = getSourcePathFromExportPath(config.rootDir, '.') as string
   }
 
-  function buildEntryConfig(dtsOnly: boolean) {
+  function buildEntryConfig(packageExports: Record<string, ExportCondition>, dtsOnly: boolean) {
     const configs = Object.keys(packageExports).map((entryExport) => {
       const source = getSourcePathFromExportPath(config.rootDir, entryExport)
       if (!source) return undefined
@@ -88,8 +93,8 @@ async function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Pro
     }
 
     if (hasMultiEntries) {
-      const assetsJobs = buildEntryConfig(false).map((rollupConfig) => bundleOrWatch(rollupConfig!))
-      const typesJobs = buildEntryConfig(true).map((rollupConfig) => bundleOrWatch(rollupConfig!))
+      const assetsJobs = buildEntryConfig(packageExports, false).map((rollupConfig) => bundleOrWatch(rollupConfig!))
+      const typesJobs = buildEntryConfig(packageExports, true).map((rollupConfig) => bundleOrWatch(rollupConfig!))
 
       return await Promise.all(assetsJobs.concat(typesJobs))
     }
@@ -112,7 +117,7 @@ function getExportPath(pkg: PackageMetadata, exportName?: string) {
   return join(name, exportName)
 }
 
-function runWatch(pkg: PackageMetadata, { exportName, input, output }: BuncheeRollupConfig): RollupWatcher {
+function runWatch(pkg: PackageMetadata, { exportName, input, output, dtsOnly }: BuncheeRollupConfig): RollupWatcher {
   const watchOptions: RollupWatchOptions[] = [
     {
       ...input,
@@ -137,7 +142,7 @@ function runWatch(pkg: PackageMetadata, { exportName, input, output }: BuncheeRo
       case 'END': {
         const duration = Date.now() - startTime
         if (duration > 0) {
-          logger.log(`✨ Built ${exportPath}`)
+          logJobForPath(exportPath, dtsOnly)
         }
       }
       default: return
@@ -146,7 +151,7 @@ function runWatch(pkg: PackageMetadata, { exportName, input, output }: BuncheeRo
   return watcher
 }
 
-function runBundle(pkg: PackageMetadata, { exportName, input, output }: BuncheeRollupConfig) {
+function runBundle(pkg: PackageMetadata, { exportName, input, output, dtsOnly }: BuncheeRollupConfig) {
   let startTime = Date.now()
   return rollup(input)
     .then(
@@ -159,7 +164,7 @@ function runBundle(pkg: PackageMetadata, { exportName, input, output }: BuncheeR
     .then(() => {
       const duration = Date.now() - startTime
       if (duration > 0) {
-        logger.log(`✨ Built ${getExportPath(pkg, exportName)}`)
+        logJobForPath(getExportPath(pkg, exportName), dtsOnly)
       }
     })
 }

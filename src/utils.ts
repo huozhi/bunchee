@@ -6,7 +6,6 @@ import type { PackageMetadata } from './types'
 
 export function exit(err: string | Error) {
   logger.error(err)
-  console.trace(err)
   process.exit(1)
 }
 
@@ -87,3 +86,5 @@ export function isTypescript(filename: string): boolean {
   const ext = path.extname(filename)
   return ext === '.ts' || ext === '.tsx'
 }
+
+export const isNotNull = <T>(n: T | false): n is T => Boolean(n)
