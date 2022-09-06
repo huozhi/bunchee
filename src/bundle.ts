@@ -7,6 +7,7 @@ import { watch as rollupWatch, rollup } from 'rollup'
 import buildConfig from './rollup-config'
 import { getPackageMeta, isTypescript, logger } from './utils'
 import config from './config'
+import { getTypings } from './exports'
 
 function logJobForPath(exportPath: string, dtsOnly: boolean) {
   logger.log(`✨ ${dtsOnly ? 'Generate types for' : 'Built'} ${exportPath}`)
@@ -80,16 +81,27 @@ async function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Pro
   }
 
   if (!fs.existsSync(entryPath)) {
-    const hasEntryFile = entryPath === '' ? '' : fs.statSync(entryPath).isFile()
+    const hasSpecifiedEntryFile = entryPath === '' ? false : fs.statSync(entryPath).isFile()
 
-    if (!hasEntryFile && !hasMultiEntries) {
-      const err = new Error('Entry file is not existed')
+    if (!hasSpecifiedEntryFile && !hasMultiEntries) {
+      const err = new Error(`Entry file \`${entryPath}\` is not existed`)
       err.name = 'NOT_EXISTED'
       return Promise.reject(err)
     }
 
+    // has `types` field in package.json or has `types` exports in any export condition for multi-entries
+    const hasTypes =
+      !!getTypings(pkg) ||
+      typeof packageExports === 'object' && Array.from(Object.values(packageExports || {})).some(condition => condition.hasOwnProperty('types'))
+
+    // If there's no entry file specified, should enable dts bundling based on package.json exports info
+    if (!hasSpecifiedEntryFile) {
+      options.dts = hasTypes
+    }
+
     if (hasMultiEntries) {
       const assetsJobs = buildEntryConfig(packageExports, false).map((rollupConfig) => bundleOrWatch(rollupConfig!))
+
       const typesJobs = options.dts
         ? buildEntryConfig(packageExports, true).map((rollupConfig) => bundleOrWatch(rollupConfig!))
         : []

@@ -2,6 +2,10 @@ import type { PackageMetadata, ExportCondition, ExportType } from './types'
 import { resolve } from 'path'
 import config from './config'
 
+export function getTypings(pkg: PackageMetadata) {
+  return pkg.types || pkg.typings
+}
+
 function getDistPath(distPath: string) {
   return resolve(config.rootDir, distPath)
 }

@@ -11,6 +11,7 @@ import nodeResolve from '@rollup/plugin-node-resolve'
 import dts from 'rollup-plugin-dts'
 import config from './config'
 import {
+  getTypings,
   getExportDist,
   getExportPaths,
   getExportConditionDist,
@@ -154,7 +155,7 @@ function buildOutputConfigs(
   // respect if tsconfig.json has `esModuleInterop` config;
   // add ESModule mark if cjs and ESModule are both generated;
   const useEsModuleMark = Boolean(tsCompilerOptions.esModuleInterop || (exportPaths.main && exportPaths.module))
-  const typings: string | undefined = pkg.types || pkg.typings
+  const typings: string | undefined = getTypings(pkg)
   const file = options.file && resolve(options.file)
 
   const dtsDir = typings ? dirname(resolve(config.rootDir, typings)) : resolve(config.rootDir, 'dist')

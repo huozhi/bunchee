@@ -26,7 +26,7 @@ Options:
 `
 
 function help() {
-  console.log(helpMessage)
+  logger.log(helpMessage)
 }
 
 function parseCliArgs(argv: string[]) {
@@ -95,7 +95,7 @@ async function run(args: any) {
     sourcemap: sourcemap === false ? false : true,
   }
   if (args.version) {
-    return console.log(version)
+    return logger.log(version)
   }
   if (args.help) {
     return help()
