@@ -1,3 +1,5 @@
+jest.setTimeout(10 * 60 * 1000)
+
 const fs = require('fs')
 const { execSync, fork } = require('child_process')
 const { resolve, join } = require('path')

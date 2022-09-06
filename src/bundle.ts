@@ -37,14 +37,10 @@ function getSourcePathFromExportPath(cwd: string, exportPath: string): string | 
 
 async function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Promise<any> {
   config.rootDir = resolve(process.cwd(), cwd || '')
+  assignDefault(options, 'dts', false)
   assignDefault(options, 'format', 'es')
   assignDefault(options, 'minify', false)
   assignDefault(options, 'target', 'es5')
-
-  // alias for 'es' in rollup
-  if (options.format === 'esm') {
-    options.format = 'es'
-  }
 
   const pkg = getPackageMeta()
   const packageExports = pkg.exports || {}
@@ -94,14 +90,16 @@ async function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Pro
 
     if (hasMultiEntries) {
       const assetsJobs = buildEntryConfig(packageExports, false).map((rollupConfig) => bundleOrWatch(rollupConfig!))
-      const typesJobs = buildEntryConfig(packageExports, true).map((rollupConfig) => bundleOrWatch(rollupConfig!))
+      const typesJobs = options.dts
+        ? buildEntryConfig(packageExports, true).map((rollupConfig) => bundleOrWatch(rollupConfig!))
+        : []
 
       return await Promise.all(assetsJobs.concat(typesJobs))
     }
   }
 
   // Generate types
-  if (isTypescript(entryPath)) {
+  if (isTypescript(entryPath) && options.dts) {
     await bundleOrWatch(buildConfig(entryPath, pkg, options, true))
   }
 

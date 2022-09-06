@@ -5,6 +5,7 @@ type ExportType = 'require' | 'export' | 'default' | string // omit other names
 
 // Shared config for each build entry
 type CommonConfig = {
+  dts?: boolean
   format?: OutputOptions['format']
   minify?: boolean
   sourcemap?: boolean

@@ -77,8 +77,9 @@ Options:
   -h, --help             output usage information
   --target <target>      js features target: swc target es versions. "es5" by default
   --runtime <runtime>    build runtime: "nodejs", "browser". "browser" by default
-  --sourcemap            enable sourcemap generation, false by default
   --cwd <cwd>            specify current working directory
+  --sourcemap            enable sourcemap generation, false by default
+  --dts                  determine if need to generate types, false by default
 
 Usage:
   $ bunchee ./src/index.js # if you set main fields in package.json
