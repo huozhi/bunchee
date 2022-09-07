@@ -2,24 +2,20 @@
   "include": [
     "./src",
     "*.d.ts",
-    "*.ts",
-    "test/**/*.test.ts"
+    "./*.ts"
   ],
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "bunchee": ["./lib.ts"]
-    },
+
     "rootDir": ".",
     "outDir": "./dist",
     "target": "es5",
     "module": "CommonJS",
     "lib": ["ES6"],
+    "moduleResolution": "node",
     "removeComments": true,
     "strict": true,
     "noUnusedLocals": true,
     "noImplicitReturns": true,
-    "moduleResolution": "node",
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
