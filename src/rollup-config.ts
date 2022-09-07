@@ -161,14 +161,16 @@ function buildOutputConfigs(
   const file = options.file && resolve(config.rootDir, options.file)
 
   const dtsDir = typings ? dirname(resolve(config.rootDir, typings)) : resolve(config.rootDir, 'dist')
+  // file base name without extension
+  const name = file ? file.replace(new RegExp(`${extname(file)}$`), '') : undefined
   const dtsFile = exportCondition?.name
     ? resolve(dtsDir, (exportCondition.name === '.' ? 'index' : exportCondition.name) + '.d.ts')
-    : file ? file.replace(new RegExp(`${extname(file!)}$`), '.d.ts') : typings
+    : file ? name + '.d.ts' : typings
 
   // If there's dts file, use `output.file`
   const dtsPathConfig = dtsFile ? { file: dtsFile } : { dir: dtsDir }
   return {
-    name: pkg.name,
+    name: pkg.name || name,
     ...(dtsOnly ? dtsPathConfig : { file: file }),
     format,
     exports: 'named',

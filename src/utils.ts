@@ -1,6 +1,5 @@
 import fs from 'fs'
 import path from 'path'
-import config from './config'
 import type { PackageMetadata } from './types'
 
 export function exit(err: string | Error) {
@@ -8,18 +7,14 @@ export function exit(err: string | Error) {
   process.exit(1)
 }
 
-export function getPackageMeta(): PackageMetadata {
-  const pkgFilePath = path.resolve(config.rootDir, 'package.json')
+export function getPackageMeta(cwd: string): PackageMetadata {
+  const pkgFilePath = path.resolve(cwd, 'package.json')
   let targetPackageJson = {}
   try {
     targetPackageJson = JSON.parse(fs.readFileSync(pkgFilePath, { encoding: 'utf-8' }))
   } catch (_) {}
 
   return targetPackageJson
-}
-
-export function resolvePackagePath(pathname: string): string {
-  return path.resolve(config.rootDir, pathname)
 }
 
 export const logger = {
