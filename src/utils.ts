@@ -1,5 +1,4 @@
 import fs from 'fs'
-import arg from 'arg'
 import path from 'path'
 import config from './config'
 import type { PackageMetadata } from './types'
@@ -23,53 +22,6 @@ export function resolvePackagePath(pathname: string): string {
   return path.resolve(config.rootDir, pathname)
 }
 
-export function parseCliArgs(argv: string[]) {
-  let args: arg.Result<any> | undefined
-  args = arg(
-    {
-      '--cwd': String,
-      '--output': String,
-      '--format': String,
-      '--watch': Boolean,
-      '--minify': Boolean,
-      '--help': Boolean,
-      '--version': Boolean,
-      '--runtime': String,
-      '--target': String,
-      '--sourcemap': Boolean,
-      '--external': [String],
-
-      '-h': '--help',
-      '-v': '--version',
-      '-w': '--watch',
-      '-o': '--output',
-      '-f': '--format',
-      '-m': '--minify',
-      '-e': '--external',
-    },
-    {
-      permissive: true,
-      argv,
-    }
-  )
-  const source: string = args._[0]
-  const parsedArgs = {
-    source,
-    format: args['--format'],
-    file: args['--output'],
-    watch: args['--watch'],
-    minify: args['--minify'],
-    sourcemap: !!args['--sourcemap'],
-    cwd: args['--cwd'],
-    help: args['--help'],
-    version: args['--version'],
-    runtime: args['--runtime'],
-    target: args['--target'],
-    external: args['--external'],
-  }
-  return parsedArgs
-}
-
 export const logger = {
   log(arg: any) {
     console.log(arg)
@@ -81,3 +33,10 @@ export const logger = {
     console.error('\x1b[31m' + arg + '\x1b[0m')
   },
 }
+
+export function isTypescript(filename: string): boolean {
+  const ext = path.extname(filename)
+  return ext === '.ts' || ext === '.tsx'
+}
+
+export const isNotNull = <T>(n: T | false): n is T => Boolean(n)

@@ -89,6 +89,18 @@ const testCases = [
       ]
     }
   },
+  {
+    name: 'dts',
+    // need working directory for tsconfig.json
+    args: ['./base.ts', '--dts', '--cwd', fixturesDir, '-o', path.resolve(fixturesDir, './dist/base.js')],
+    expected(distFile) {
+      return [
+        [fs.existsSync(distFile), true],
+        // same name with input file
+        [fs.existsSync(distFile.replace('.js', '.d.ts')), true],
+      ]
+    }
+  },
 ]
 
 for (const testCase of testCases) {
@@ -96,6 +108,7 @@ for (const testCase of testCases) {
   test(`cli ${name} should work properly`, async () => {
     // Delete dist folder (as last argument)
     const dist = args[args.length - 1]
+    // TODO: specify working directory for each test
     execSync(`rm -rf ${path.dirname(dist)}`)
     console.log(`Command: bunchee ${args.join(' ')}`)
     const ps = fork(
