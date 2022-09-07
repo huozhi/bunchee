@@ -24,7 +24,7 @@ type TypescriptOptions = {
   dtsOnly: boolean
 }
 
-const { Module } = require('module')
+import { Module } from 'module'
 
 const minifyOptions: JsMinifyOptions = {
   compress: true,
@@ -37,16 +37,17 @@ const minifyOptions: JsMinifyOptions = {
 }
 
 let hasLoggedTsWarning = false
-function resolveTypescript(): typeof import('typescript') {
+function resolveTypescript(cwd: string) {
   let ts
-  const m = new Module('', null)
-  m.paths = Module._nodeModulePaths(config.rootDir)
+  const m = new Module('', undefined)
+  m.paths = (Module as any)._nodeModulePaths(cwd)
   try {
     ts = m.require('typescript')
   } catch (_) {
+    console.error(_)
     if (!hasLoggedTsWarning) {
       hasLoggedTsWarning = true
-      exit('Could not load TypeScript compiler. Try `yarn add --dev typescript`')
+      exit('Could not load TypeScript compiler. Try to install `typescript` as dev dependency')
     }
   }
   return ts
@@ -154,23 +155,26 @@ function buildOutputConfigs(
 
   // respect if tsconfig.json has `esModuleInterop` config;
   // add ESModule mark if cjs and ESModule are both generated;
+  // TODO: support `import` in exportCondition
   const useEsModuleMark = Boolean(tsCompilerOptions.esModuleInterop || (exportPaths.main && exportPaths.module))
   const typings: string | undefined = getTypings(pkg)
   const file = options.file && resolve(config.rootDir, options.file)
 
   const dtsDir = typings ? dirname(resolve(config.rootDir, typings)) : resolve(config.rootDir, 'dist')
+  // file base name without extension
+  const name = file ? file.replace(new RegExp(`${extname(file)}$`), '') : undefined
   const dtsFile = exportCondition?.name
     ? resolve(dtsDir, (exportCondition.name === '.' ? 'index' : exportCondition.name) + '.d.ts')
-    : file ? file.replace(new RegExp(`${extname(file!)}$`), '.d.ts') : typings
+    : file ? name + '.d.ts' : typings
 
   // If there's dts file, use `output.file`
   const dtsPathConfig = dtsFile ? { file: dtsFile } : { dir: dtsDir }
   return {
-    name: pkg.name,
+    name: pkg.name || name,
     ...(dtsOnly ? dtsPathConfig : { file: file }),
     format,
     exports: 'named',
-    esModule: useEsModuleMark && format !== 'umd',
+    esModule: useEsModuleMark,
     freeze: false,
     strict: false,
     sourcemap: options.sourcemap,
@@ -185,7 +189,7 @@ function buildConfig(entry: string, pkg: PackageMetadata, cliArgs: CliArgs, dtsO
   let tsConfigPath: string | undefined
 
   if (useTypescript) {
-    const ts = resolveTypescript()
+    const ts = resolveTypescript(config.rootDir)
     tsConfigPath = resolve(config.rootDir, 'tsconfig.json')
     if (fs.existsSync(tsConfigPath)) {
       const tsconfigJSON = ts.readConfigFile(tsConfigPath, ts.sys.readFile).config

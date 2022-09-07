@@ -42,7 +42,7 @@ async function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Pro
   assignDefault(options, 'minify', false)
   assignDefault(options, 'target', 'es5')
 
-  const pkg = getPackageMeta()
+  const pkg = getPackageMeta(config.rootDir)
   const packageExports = pkg.exports || {}
   const isSingleEntry = typeof packageExports === 'string'
   const hasMultiEntries = packageExports && !isSingleEntry && Object.keys(packageExports).length > 0
