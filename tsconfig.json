@@ -3,7 +3,7 @@
     "./src",
     "*.d.ts",
     "*.ts",
-    "test"
+    "test/**/*.test.ts"
   ],
   "compilerOptions": {
     "baseUrl": ".",
