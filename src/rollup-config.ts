@@ -2,7 +2,7 @@ import type { PackageMetadata, BuncheeRollupConfig, CliArgs, BundleOptions } fro
 import type { JsMinifyOptions } from '@swc/core'
 import type { InputOptions, OutputOptions, Plugin } from 'rollup'
 import fs from 'fs'
-import { resolve, dirname } from 'path'
+import { resolve, dirname, extname } from 'path'
 import { swc } from 'rollup-plugin-swc3'
 import commonjs from '@rollup/plugin-commonjs'
 import shebang from 'rollup-plugin-preserve-shebang'
@@ -156,12 +156,12 @@ function buildOutputConfigs(
   // add ESModule mark if cjs and ESModule are both generated;
   const useEsModuleMark = Boolean(tsCompilerOptions.esModuleInterop || (exportPaths.main && exportPaths.module))
   const typings: string | undefined = getTypings(pkg)
-  const file = options.file && resolve(options.file)
+  const file = options.file && resolve(config.rootDir, options.file)
 
   const dtsDir = typings ? dirname(resolve(config.rootDir, typings)) : resolve(config.rootDir, 'dist')
   const dtsFile = exportCondition?.name
     ? resolve(dtsDir, (exportCondition.name === '.' ? 'index' : exportCondition.name) + '.d.ts')
-    : typings
+    : file ? file.replace(new RegExp(`${extname(file!)}$`), '.d.ts') : typings
 
   // If there's dts file, use `output.file`
   const dtsPathConfig = dtsFile ? { file: dtsFile } : { dir: dtsDir }

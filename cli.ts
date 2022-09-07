@@ -81,8 +81,8 @@ function parseCliArgs(argv: string[]) {
 async function run(args: any) {
   const { source, format, watch, minify, sourcemap, target, runtime, dts } = args
   const cwd = args.cwd || process.cwd()
-  const file = args.file ? path.resolve(cwd, args.file) : args.file
-  const outputConfig: CliArgs = {
+  const file = args.file ? path.resolve(cwd, args.file) : undefined
+  const cliArgs: CliArgs = {
     dts,
     file,
     format,
@@ -102,12 +102,12 @@ async function run(args: any) {
   }
 
   const entry = source ? path.resolve(cwd, source) : ''
-  const { bundle } = require('./lib')
+  const { bundle } = require('./lib') as typeof import('./lib')
 
   let timeStart = Date.now()
   let timeEnd
   try {
-    await bundle(entry, outputConfig)
+    await bundle(entry, cliArgs)
     timeEnd = Date.now()
   } catch (err: any) {
     if (err.name === 'NOT_EXISTED') {

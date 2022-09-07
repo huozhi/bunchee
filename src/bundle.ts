@@ -38,7 +38,6 @@ function getSourcePathFromExportPath(cwd: string, exportPath: string): string | 
 
 async function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Promise<any> {
   config.rootDir = resolve(process.cwd(), cwd || '')
-  assignDefault(options, 'dts', false)
   assignDefault(options, 'format', 'es')
   assignDefault(options, 'minify', false)
   assignDefault(options, 'target', 'es5')
@@ -90,13 +89,13 @@ async function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Pro
     }
 
     // has `types` field in package.json or has `types` exports in any export condition for multi-entries
-    const hasTypes =
-      !!getTypings(pkg) ||
-      typeof packageExports === 'object' && Array.from(Object.values(packageExports || {})).some(condition => condition.hasOwnProperty('types'))
+    const hasTypings =
+      !!getTypings(pkg)
+      || typeof packageExports === 'object' && Array.from(Object.values(packageExports || {})).some(condition => condition.hasOwnProperty('types'))
 
     // If there's no entry file specified, should enable dts bundling based on package.json exports info
-    if (!hasSpecifiedEntryFile) {
-      options.dts = hasTypes
+    if (!hasSpecifiedEntryFile && hasTypings) {
+      options.dts = hasTypings
     }
 
     if (hasMultiEntries) {
