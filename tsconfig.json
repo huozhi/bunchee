@@ -2,9 +2,14 @@
   "include": [
     "./src",
     "*.d.ts",
-    "*.ts"
+    "*.ts",
+    "test"
   ],
   "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "bunchee": ["./lib.ts"]
+    },
     "rootDir": ".",
     "outDir": "./dist",
     "target": "es5",

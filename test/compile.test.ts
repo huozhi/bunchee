@@ -1,17 +1,19 @@
-const fs = require('fs')
-const { resolve, dirname } = require('path')
-const { bundle } = require('bunchee')
+import fs from 'fs'
+import { resolve, dirname } from 'path'
+import { bundle } from 'bunchee'
 
 const baseUnitTestDir = resolve(__dirname, 'unit')
 const unitTestDirs = fs.readdirSync(baseUnitTestDir)
 
-function ensureDir(dir) {
+type CompareFn = (a: string, b: string | undefined) => void
+
+function ensureDir(dir: string) {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true })
   }
 }
 
-function compareOrUpdateSnapshot(filename, unitName, onCompare) {
+function compareOrUpdateSnapshot(filename: string, unitName: string, onCompare: CompareFn) {
   const dirPath = resolve(baseUnitTestDir, unitName)
   const bundledAssetContent = fs.readFileSync(filename, {encoding: 'utf-8'}).replace(/\r\n/g, '\n')
   const outputFilePath = resolve(
@@ -58,14 +60,14 @@ for (const unitName of unitTestDirs) {
 
     const baseOptions = {
       cwd: dir,
-      format: pkgJson.main ? 'cjs' : 'es',
+      format: (pkgJson.main ? 'cjs' : 'esm') as 'cjs' | 'esm',
     }
 
     // build dist file and minified file
     await bundle(inputFileName, { ...baseOptions, file: distFile })
     await bundle(inputFileName, { ...baseOptions, file: minifiedDistFile, minify: true })
 
-    const compareSnapshot = (bundledAssetContent, currentOutputSnapshot) => {
+    const compareSnapshot: CompareFn = (bundledAssetContent, currentOutputSnapshot) => {
       expect(bundledAssetContent).toEqual(currentOutputSnapshot)
     }
 

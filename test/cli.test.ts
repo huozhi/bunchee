@@ -1,44 +1,54 @@
-const fs = require('fs')
-const path = require('path')
-const { fork, execSync } = require('child_process')
+import fs from 'fs'
+import path from 'path'
+import { fork, execSync } from 'child_process'
 
-const resolve = filepath => path.resolve(__dirname, '../test', filepath)
-const fixturesDir = resolve('fixtures')
+const resolveFromTest = (filepath: string) => path.resolve(__dirname, '../test', filepath)
+const fixturesDir = resolveFromTest('fixtures')
 
-const testCases = [
+const testCases: {
+  name: string
+  args: string[]
+  expected(f: string, { stderr, stdout }: { stderr: string; stdout: string }): [boolean, boolean][]
+}[] = [
   {
     name: 'basic',
-    args: [resolve('fixtures/hello.js'), '-o', resolve('dist/hello.bundle.js')],
+    args: [resolveFromTest('fixtures/hello.js'), '-o', resolveFromTest('dist/hello.bundle.js')],
     expected(distFile) {
-      return [
-        [fs.existsSync(distFile), true],
-      ]
-    }
+      return [[fs.existsSync(distFile), true]]
+    },
   },
   {
     name: 'format',
-    args: [resolve('fixtures/hello.js'), '--cwd', fixturesDir,  '-f', 'cjs', '-o', resolve('dist/hello.cjs')],
+    args: [
+      resolveFromTest('fixtures/hello.js'),
+      '--cwd',
+      fixturesDir,
+      '-f',
+      'cjs',
+      '-o',
+      resolveFromTest('dist/hello.cjs'),
+    ],
     expected(distFile) {
       return [
         [fs.existsSync(distFile), true],
         [fs.readFileSync(distFile, { encoding: 'utf-8' }).includes('exports.'), true],
       ]
-    }
+    },
   },
   {
     name: 'compress',
-    args: [resolve('fixtures/hello.js'), '-m', '-o', resolve('dist/hello.bundle.min.js')],
+    args: [resolveFromTest('fixtures/hello.js'), '-m', '-o', resolveFromTest('dist/hello.bundle.min.js')],
     expected(distFile) {
       return [
         [fs.existsSync(distFile), true],
         // original function name is compressed
         [fs.readFileSync(distFile, { encoding: 'utf-8' }).includes('sayHello'), false],
       ]
-    }
+    },
   },
   {
     name: 'with sourcemap',
-    args: [resolve('fixtures/hello.js'), '--sourcemap', '-o', resolve('dist/hello.js')],
+    args: [resolveFromTest('fixtures/hello.js'), '--sourcemap', '-o', resolveFromTest('dist/hello.js')],
     expected(distFile) {
       return [
         [fs.existsSync(distFile), true],
@@ -46,11 +56,11 @@ const testCases = [
         [fs.readFileSync(distFile, { encoding: 'utf-8' }).includes('sourceMappingURL'), true],
         [fs.existsSync(distFile + '.map'), true],
       ]
-    }
+    },
   },
   {
     name: 'minified with sourcemap',
-    args: [resolve('fixtures/hello.js'), '-m', '--sourcemap', '-o', resolve('dist/hello.min.js')],
+    args: [resolveFromTest('fixtures/hello.js'), '-m', '--sourcemap', '-o', resolveFromTest('dist/hello.min.js')],
     expected(distFile) {
       return [
         [fs.existsSync(distFile), true],
@@ -58,27 +68,39 @@ const testCases = [
         [fs.readFileSync(distFile, { encoding: 'utf-8' }).includes('sourceMappingURL'), true],
         [fs.existsSync(distFile + '.map'), true],
       ]
-    }
+    },
   },
   {
     name: 'externals',
-    args: [resolve('fixtures/with-externals.js'), '-e', 'foo', '-o', resolve('dist/with-externals.bundle.js')],
+    args: [
+      resolveFromTest('fixtures/with-externals.js'),
+      '-e',
+      'foo',
+      '-o',
+      resolveFromTest('dist/with-externals.bundle.js'),
+    ],
     expected(distFile, { stdout, stderr }) {
       const output = stdout + stderr
       return [
         [fs.existsSync(distFile), true],
-        [output.includes(
-          `'bar' is imported by test/fixtures/with-externals.js, but could not be resolved – treating it as an external dependency`
-        ), true],
-        [output.includes(
-          `'foo' is imported by test/fixtures/with-externals.js, but could not be resolved – treating it as an external dependency`
-        ), false]
+        [
+          output.includes(
+            `'bar' is imported by test/fixtures/with-externals.js, but could not be resolved – treating it as an external dependency`
+          ),
+          true,
+        ],
+        [
+          output.includes(
+            `'foo' is imported by test/fixtures/with-externals.js, but could not be resolved – treating it as an external dependency`
+          ),
+          false,
+        ],
       ]
-    }
+    },
   },
   {
     name: 'es2020-target',
-    args: [resolve('fixtures/es2020.ts'), '--target', 'es2020', '-o', resolve('dist/es2020.js')],
+    args: [resolveFromTest('fixtures/es2020.ts'), '--target', 'es2020', '-o', resolveFromTest('dist/es2020.js')],
     expected(distFile, { stdout, stderr }) {
       const content = fs.readFileSync(distFile, { encoding: 'utf-8' })
       return [
@@ -87,7 +109,7 @@ const testCases = [
         [content.includes(`async function`), true],
         [content.includes(`class A`), true],
       ]
-    }
+    },
   },
   {
     name: 'dts',
@@ -99,26 +121,23 @@ const testCases = [
         // same name with input file
         [fs.existsSync(distFile.replace('.js', '.d.ts')), true],
       ]
-    }
+    },
   },
 ]
 
 for (const testCase of testCases) {
-  const {name, args, expected} = testCase
+  const { name, args, expected } = testCase
   test(`cli ${name} should work properly`, async () => {
     // Delete dist folder (as last argument)
     const dist = args[args.length - 1]
     // TODO: specify working directory for each test
     execSync(`rm -rf ${path.dirname(dist)}`)
     console.log(`Command: bunchee ${args.join(' ')}`)
-    const ps = fork(
-      __dirname + '/../dist/cli.js',
-      args,
-      {stdio: 'pipe'}
-    )
-    let stderr = '', stdout = ''
-    ps.stdout.on('data', chunk => stdout += chunk.toString())
-    ps.stderr.on('data', chunk => stderr += chunk.toString())
+    const ps = fork(__dirname + '/../dist/cli.js', args, { stdio: 'pipe' })
+    let stderr = ''
+    let stdout = ''
+    ps.stdout?.on('data', (chunk) => (stdout += chunk.toString()))
+    ps.stderr?.on('data', (chunk) => (stderr += chunk.toString()))
     const code = await new Promise((resolve) => {
       ps.on('close', resolve)
     })
