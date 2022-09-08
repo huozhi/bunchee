@@ -91,7 +91,7 @@ async function runBundle(
   _args: string[]
 ): Promise<{ code: number | null; stdout: string; stderr: string }> {
   const args = _args.concat(['--cwd', dir])
-  const ps = fork(__dirname + '/../dist/cli.js', args, { stdio: 'pipe' })
+  const ps = fork(`${__dirname + '/../node_modules/.bin/tsx'}`, [__dirname + '/../cli.ts'].concat(args), { stdio: 'pipe' })
   let stderr = '',
     stdout = ''
   ps.stdout?.on('data', (chunk: any) => (stdout += chunk.toString()))
