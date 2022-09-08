@@ -119,7 +119,7 @@ async function run(args: any) {
 
   const duration = timeEnd - timeStart
   if (!watch) {
-    logger.log(`✅ Finished in ${duration} ms`)
+    logger.log(`✨  Finished in ${duration} ms`)
   }
 }
 

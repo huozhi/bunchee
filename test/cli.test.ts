@@ -87,7 +87,7 @@ const testCases: {
           output.includes(
             `'bar' is imported by test/fixtures/with-externals.js, but could not be resolved – treating it as an external dependency`
           ),
-          true,
+          false,
         ],
         [
           output.includes(
@@ -133,7 +133,7 @@ for (const testCase of testCases) {
     // TODO: specify working directory for each test
     execSync(`rm -rf ${path.dirname(dist)}`)
     console.log(`Command: bunchee ${args.join(' ')}`)
-    const ps = fork(__dirname + '/../dist/cli.js', args, { stdio: 'pipe' })
+    const ps = fork(`${__dirname + '/../node_modules/.bin/tsx'}`, [__dirname + '/../cli.ts'].concat(args), { stdio: 'pipe' })
     let stderr = ''
     let stdout = ''
     ps.stdout?.on('data', (chunk) => (stdout += chunk.toString()))

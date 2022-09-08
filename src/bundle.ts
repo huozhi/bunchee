@@ -9,8 +9,8 @@ import { getPackageMeta, isTypescript, logger } from './utils'
 import config from './config'
 import { getTypings } from './exports'
 
-function logJobForPath(exportPath: string, dtsOnly: boolean) {
-  logger.log(`✨ ${dtsOnly ? 'Generate types for' : 'Built'} ${exportPath}`)
+function logBuild(exportPath: string, dtsOnly: boolean, duration: number) {
+  logger.log(` ✓  ${dtsOnly ? 'Generated types' : 'Built'} ${exportPath} in ${duration}ms`)
 }
 
 function assignDefault(options: CliArgs, name: keyof CliArgs, defaultValue: any) {
@@ -150,9 +150,7 @@ function runWatch(pkg: PackageMetadata, { exportName, input, output, dtsOnly }: 
       }
       case 'END': {
         const duration = Date.now() - startTime
-        if (duration > 0) {
-          logJobForPath(exportPath, dtsOnly)
-        }
+        logBuild(exportPath, dtsOnly, duration)
       }
       default: return
     }
@@ -161,7 +159,7 @@ function runWatch(pkg: PackageMetadata, { exportName, input, output, dtsOnly }: 
 }
 
 function runBundle(pkg: PackageMetadata, { exportName, input, output, dtsOnly }: BuncheeRollupConfig) {
-  let startTime = Date.now()
+  const startTime = Date.now()
   return rollup(input)
     .then(
       (bundle: RollupBuild) => {
@@ -172,9 +170,7 @@ function runBundle(pkg: PackageMetadata, { exportName, input, output, dtsOnly }:
     )
     .then(() => {
       const duration = Date.now() - startTime
-      if (duration > 0) {
-        logJobForPath(getExportPath(pkg, exportName), dtsOnly)
-      }
+      logBuild(getExportPath(pkg, exportName), dtsOnly, duration)
     })
 }
 
