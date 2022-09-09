@@ -8,7 +8,6 @@ import commonjs from '@rollup/plugin-commonjs'
 import shebang from 'rollup-plugin-preserve-shebang'
 import json from '@rollup/plugin-json'
 import nodeResolve from '@rollup/plugin-node-resolve'
-import dts from 'rollup-plugin-dts'
 import config from './config'
 import {
   getTypings,
@@ -72,7 +71,7 @@ function buildInputConfig(
       ? [
           shebang(),
           useTypescript &&
-            dts({
+            require('rollup-plugin-dts').default({
               compilerOptions: {
                 ...tsCompilerOptions,
                 declaration: true,
