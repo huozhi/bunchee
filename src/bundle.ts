@@ -14,7 +14,7 @@ type BuildMetadata = {
 }
 
 function logBuild(exportPath: string, dtsOnly: boolean, _duration: number) {
-  logger.log(` ✓  ${dtsOnly ? 'Generated types' : 'Built'} ${exportPath}`)
+  logger.log(` ✓  ${dtsOnly ? 'Typed' : 'Built'} ${exportPath}`)
 }
 
 function assignDefault(options: CliArgs, name: keyof CliArgs, defaultValue: any) {
@@ -45,6 +45,10 @@ async function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Pro
   assignDefault(options, 'format', 'es')
   assignDefault(options, 'minify', false)
   assignDefault(options, 'target', 'es5')
+
+  if (options.dts === undefined && isTypescript(entryPath)) {
+    options.dts = true
+  }
 
   const pkg = getPackageMeta(config.rootDir)
   const packageExports = pkg.exports || {}

@@ -68,7 +68,7 @@ function parseCliArgs(argv: string[]) {
     minify: args['--minify'],
     sourcemap: !!args['--sourcemap'],
     cwd: args['--cwd'],
-    dts: !!args['--dts'],
+    dts: args['--dts'],
     help: args['--help'],
     version: args['--version'],
     runtime: args['--runtime'],

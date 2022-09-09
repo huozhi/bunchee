@@ -85,6 +85,7 @@ function buildInputConfig(
                 preserveSymlinks: false,
                 target: 'esnext',
                 module: 'esnext',
+                incremental: false,
                 jsx: tsCompilerOptions?.jsx || 'react',
               },
             }),
