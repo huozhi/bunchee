@@ -1,3 +1,5 @@
+jest.setTimeout(10 * 60 * 1000)
+
 import fs from 'fs'
 import path from 'path'
 import { fork, execSync } from 'child_process'
