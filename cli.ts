@@ -4,7 +4,7 @@ import type { CliArgs } from './src/types'
 
 import path from 'path'
 import arg from 'arg'
-import { logger, exit } from './src/utils'
+import { logger, exit, formatDuration } from './src/utils'
 import { version } from './package.json'
 
 const helpMessage = `
@@ -119,7 +119,7 @@ async function run(args: any) {
 
   const duration = timeEnd - timeStart
   if (!watch) {
-    logger.log(`✨  Finished in ${duration} ms`)
+    logger.log(`✨  Finished in ${formatDuration(duration)}`)
   }
 }
 

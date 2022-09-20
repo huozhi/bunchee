@@ -5,7 +5,7 @@ import fs from 'fs'
 import { resolve, join, basename, relative } from 'path'
 import { watch as rollupWatch, rollup } from 'rollup'
 import buildConfig from './rollup-config'
-import { getPackageMeta, isTypescript, logger } from './utils'
+import { getPackageMeta, isTypescript, logger, formatDuration } from './utils'
 import config from './config'
 import { getTypings } from './exports'
 
@@ -13,8 +13,8 @@ type BuildMetadata = {
   source: string
 }
 
-function logBuild(exportPath: string, dtsOnly: boolean, _duration: number) {
-  logger.log(` ✓  ${dtsOnly ? 'Typed' : 'Built'} ${exportPath}`)
+function logBuild(exportPath: string, dtsOnly: boolean, duration: number) {
+  logger.log(` ✓  ${dtsOnly ? 'Typed' : 'Built'} ${exportPath} ${formatDuration(duration)}`)
 }
 
 function assignDefault(options: CliArgs, name: keyof CliArgs, defaultValue: any) {
@@ -168,10 +168,12 @@ function runWatch(
       case 'START': {
         startTime = Date.now()
         logger.log(`Start building ${metadata.source} ...`)
+        break
       }
       case 'END': {
         const duration = Date.now() - startTime
         logBuild(metadata.source, dtsOnly, duration)
+        break
       }
       default: return
     }
