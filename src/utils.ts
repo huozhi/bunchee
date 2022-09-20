@@ -7,6 +7,9 @@ export function exit(err: string | Error) {
   process.exit(1)
 }
 
+export const formatDuration = (duration: number) =>
+  duration >= 1000 ? `${duration / 1000}s` : `${duration}ms`
+
 export function getPackageMeta(cwd: string): PackageMetadata {
   const pkgFilePath = path.resolve(cwd, 'package.json')
   let targetPackageJson = {}
