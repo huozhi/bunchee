@@ -100,10 +100,20 @@ bunchee ./src/index.js -f esm -o ./dist/bundle.esm.js
 ### Node.js API
 
 ```js
+import path from 'path'
 import { bundle } from 'bunchee'
 
-// options is same to CLI options
-await bundle(entryFilePath, options)
+// The definition of these options can be found in help information
+await bundle(path.resolve('./src/index.ts'), {
+  dts: false,
+  watch: false,
+  minify: false,
+  sourcemap: false,
+  external: [],
+  format: 'esm',
+  target: 'es2016',
+  runtime: 'nodejs',
+})
 ```
 
 ### Typescript
