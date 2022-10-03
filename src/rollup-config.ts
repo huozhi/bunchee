@@ -105,7 +105,6 @@ function buildInputConfig(
             tsconfig: tsConfigPath,
             jsc: {
               target: jscTarget,
-              loose: true, // Use loose mode
               externalHelpers: false,
               parser: {
                 syntax: useTypescript ? 'typescript' : 'ecmascript',
