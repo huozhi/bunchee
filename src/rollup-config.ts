@@ -163,9 +163,12 @@ function buildOutputConfigs(
   const dtsDir = typings ? dirname(resolve(config.rootDir, typings)) : resolve(config.rootDir, 'dist')
   // file base name without extension
   const name = file ? file.replace(new RegExp(`${extname(file)}$`), '') : undefined
-  const dtsFile = exportCondition?.name
-    ? resolve(dtsDir, (exportCondition.name === '.' ? 'index' : exportCondition.name) + '.d.ts')
-    : file ? name + '.d.ts' : typings
+
+  const dtsFile =
+    file ? name + '.d.ts' :
+    exportCondition?.name
+      ? resolve(dtsDir, (exportCondition.name === '.' ? 'index' : exportCondition.name) + '.d.ts')
+      : typings
 
   // If there's dts file, use `output.file`
   const dtsPathConfig = dtsFile ? { file: dtsFile } : { dir: dtsDir }
@@ -219,7 +222,6 @@ function buildConfig(entry: string, pkg: PackageMetadata, cliArgs: CliArgs, dtsO
       buildOutputConfigs(
         {
           ...cliArgs,
-          file: undefined,
           format: 'es',
           useTypescript,
         },
@@ -243,13 +245,13 @@ function buildConfig(entry: string, pkg: PackageMetadata, cliArgs: CliArgs, dtsO
     })
     // CLI output option is always prioritized
     if (file) {
-      const format = outputExports[0]?.format
+      const fallbackFormat = outputExports[0]?.format
       outputConfigs = [
         buildOutputConfigs(
           {
             ...cliArgs,
             file,
-            format: cliArgs.format || format,
+            format: cliArgs.format || fallbackFormat,
             useTypescript,
           },
           pkg,
