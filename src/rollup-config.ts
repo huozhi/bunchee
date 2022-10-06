@@ -7,7 +7,7 @@ import { swc } from 'rollup-plugin-swc3'
 import commonjs from '@rollup/plugin-commonjs'
 import shebang from 'rollup-plugin-preserve-shebang'
 import json from '@rollup/plugin-json'
-import nodeResolve from '@rollup/plugin-node-resolve'
+import { nodeResolve } from '@rollup/plugin-node-resolve'
 import config from './config'
 import {
   getTypings,
