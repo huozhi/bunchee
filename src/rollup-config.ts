@@ -168,7 +168,7 @@ function buildOutputConfigs(
     file ? name + '.d.ts' :
     exportCondition?.name
       ? resolve(dtsDir, (exportCondition.name === '.' ? 'index' : exportCondition.name) + '.d.ts')
-      : typings
+      : resolve(config.rootDir, typings)
 
   // If there's dts file, use `output.file`
   const dtsPathConfig = dtsFile ? { file: dtsFile } : { dir: dtsDir }
