@@ -156,7 +156,8 @@ function buildOutputConfigs(
   // respect if tsconfig.json has `esModuleInterop` config;
   // add ESModule mark if cjs and ESModule are both generated;
   // TODO: support `import` in exportCondition
-  const useEsModuleMark = Boolean(tsCompilerOptions.esModuleInterop || (exportPaths.main && exportPaths.module))
+  const mainExport = exportPaths['.']
+  const useEsModuleMark = Boolean(tsCompilerOptions.esModuleInterop || (mainExport.main && mainExport.module))
   const typings: string | undefined = getTypings(pkg)
   const file = options.file && resolve(config.rootDir, options.file)
 
