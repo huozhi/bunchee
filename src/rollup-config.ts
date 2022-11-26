@@ -193,11 +193,12 @@ function buildConfig(entry: string, pkg: PackageMetadata, cliArgs: CliArgs, dtsO
   let tsConfigPath: string | undefined
 
   if (useTypescript) {
-    const ts = resolveTypescript(config.rootDir)
+    const ts = resolveTypescript(config.rootDir) as typeof import('typescript')
     tsConfigPath = resolve(config.rootDir, 'tsconfig.json')
     if (fs.existsSync(tsConfigPath)) {
+      const basePath = tsConfigPath ? dirname(tsConfigPath) : config.rootDir
       const tsconfigJSON = ts.readConfigFile(tsConfigPath, ts.sys.readFile).config
-      tsCompilerOptions = ts.parseJsonConfigFileContent(tsconfigJSON, ts.sys, './').options
+      tsCompilerOptions = ts.parseJsonConfigFileContent(tsconfigJSON, ts.sys, basePath).options
     } else {
       tsConfigPath = undefined
       exit('tsconfig.json is missing in your project directory')
