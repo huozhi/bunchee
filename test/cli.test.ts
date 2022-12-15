@@ -103,7 +103,7 @@ const testCases: {
   },
   {
     name: 'es2020-target',
-    args: [resolveFromTest('fixtures/es2020.ts'), '--target', 'es2020', '-o', resolveFromTest('dist/es2020.js')],
+    args: [resolveFromTest('fixtures/es2020.ts'), '--cwd', fixturesDir, '--target', 'es2020', '-o', resolveFromTest('dist/es2020.js')],
     expected(distFile, { stdout, stderr }) {
       const content = fs.readFileSync(distFile, { encoding: 'utf-8' })
       return [

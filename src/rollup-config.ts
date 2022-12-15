@@ -1,6 +1,7 @@
 import type { PackageMetadata, BuncheeRollupConfig, CliArgs, BundleOptions } from './types'
 import type { JsMinifyOptions } from '@swc/core'
 import type { InputOptions, OutputOptions, Plugin } from 'rollup'
+import type { CompilerOptions } from 'typescript'
 import fs from 'fs'
 import { resolve, dirname, extname } from 'path'
 import { swc } from 'rollup-plugin-swc3'
@@ -19,7 +20,7 @@ import { exit, isTypescript, isNotNull } from './utils'
 
 type TypescriptOptions = {
   tsConfigPath: string | undefined
-  tsCompilerOptions: any
+  tsCompilerOptions: CompilerOptions
   dtsOnly: boolean
 }
 
@@ -66,6 +67,7 @@ function buildInputConfig(
     .concat((options.external ?? []).concat(pkg.name ? [pkg.name] : []))
 
   const { useTypescript, runtime, target: jscTarget, minify } = options
+  const hasSpecifiedTsTarget = Boolean(tsCompilerOptions?.target && tsConfigPath)
   const plugins: Plugin[] = (
     dtsOnly
       ? [
@@ -85,7 +87,7 @@ function buildInputConfig(
                 target: 'esnext',
                 module: 'esnext',
                 incremental: false,
-                jsx: tsCompilerOptions?.jsx || 'react',
+                jsx: tsCompilerOptions.jsx || 'react',
               },
             }),
         ]
@@ -104,7 +106,9 @@ function buildInputConfig(
             exclude: 'node_modules',
             tsconfig: tsConfigPath,
             jsc: {
-              target: jscTarget,
+              ...(!hasSpecifiedTsTarget && {
+                target: jscTarget
+              }),
               loose: true, // Use loose mode
               externalHelpers: false,
               parser: {
@@ -189,7 +193,7 @@ function buildConfig(entry: string, pkg: PackageMetadata, cliArgs: CliArgs, dtsO
   const { file } = cliArgs
   const useTypescript = isTypescript(entry)
   const options = { ...cliArgs, useTypescript }
-  let tsCompilerOptions = {} as any
+  let tsCompilerOptions: CompilerOptions = {}
   let tsConfigPath: string | undefined
 
   if (useTypescript) {
