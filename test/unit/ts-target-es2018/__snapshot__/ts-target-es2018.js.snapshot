@@ -1,0 +1,11 @@
+async function asyncFunc() {
+    await new Promise((r)=>r(2));
+}
+const spread = {
+    ...{
+        x: 1,
+        y: 2
+    }
+};
+
+export { asyncFunc, spread };
