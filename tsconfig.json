@@ -7,7 +7,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "./dist",
-    "target": "es5",
+    "target": "es2015",
     "module": "CommonJS",
     "lib": ["ES6"],
     "moduleResolution": "node",

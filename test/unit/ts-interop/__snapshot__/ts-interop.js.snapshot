@@ -1,9 +1,9 @@
 Object.defineProperty(exports, '__esModule', { value: true });
 
-var a = {
+const a = {
     x: 1
 };
-var b = "hello";
+const b = 'hello';
 
 exports.b = b;
 exports.default = a;

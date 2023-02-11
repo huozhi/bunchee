@@ -44,7 +44,7 @@ async function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Pro
   config.rootDir = resolve(process.cwd(), cwd || '')
   assignDefault(options, 'format', 'es')
   assignDefault(options, 'minify', false)
-  assignDefault(options, 'target', 'es5')
+  assignDefault(options, 'target', 'es2015')
 
   if (options.dts === undefined && isTypescript(entryPath)) {
     options.dts = true
