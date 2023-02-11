@@ -121,8 +121,10 @@ function buildInputConfig(
                 exportDefaultFrom: true,
               },
               ...(minify && {
-                ...minifyOptions,
-                sourceMap: options.sourcemap,
+                minify: {
+                  ...minifyOptions,
+                  sourceMap: options.sourcemap,
+                }
               })
             },
             sourceMaps: options.sourcemap,
