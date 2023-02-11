@@ -13,10 +13,7 @@
   </a>
 </p>
 
-Bunchee can help you to bundle your library into one file with zero configuration. It's built on top of rollup and SWC ⚡️.
-
-Let you focus on writing code and can generate multiple types of module (CommonJS, ESModules) at the same time.
-
+Bunchee makes bundling your library into one file effortless, with zero configuration required. It is built on top of Rollup and SWC ⚡️, allowing you to focus on writing code and generating multiple module types (CommonJS, ESModules) simultaneously.
 
 ## Installation
 
@@ -25,12 +22,11 @@ npm install --save-dev bunchee
 ```
 
 ## Usage
-### Basic
+### Package.json Configuration
 
-Declare your main field and module field in package.json, then call bunchee cli in build scripts. If you're using typescript, types will be generated automatically based on your package.json field `typings` or `types`.
+Declare the main and module fields in your package.json file, then call the bunchee CLI in the build scripts. If you are using TypeScript, types will be generated automatically based on the typings or types field in your package.json file.
 
-
-* `main` + `module`
+#### Configure `main` and `module` fields
 
 You can have Commonjs + ESModules output as the simple config
 
@@ -45,9 +41,12 @@ You can have Commonjs + ESModules output as the simple config
 }
 ```
 
-* `exports` [sugar](https://nodejs.org/api/packages.html#exports-sugar)
+#### Configure `exports` field
 
-Leverage `exports` field to support different conditions would be also ideal. Most of the bundler such as `webpack` can already handle the [`package exports`](https://webpack.js.org/guides/package-exports/) well. It's convenient to define multiple conditions in exports.
+[exports sugar in Node.js](https://nodejs.org/api/packages.html#exports-sugar)
+
+You can use the exports field to support different conditions and leverage the same functionality as other bundlers, such as webpack. The exports field allows you to define multiple conditions.
+
 
 ```json
 {
@@ -116,6 +115,10 @@ await bundle(path.resolve('./src/index.ts'), {
 })
 ```
 
+#### Watch Mode
+
+Bunchee offers a convenient watch mode for rebuilding your library whenever changes are made to the source files. To enable this feature, use either -w or --watch.
+
 ### Typescript
 
 By default bunchee includes Typescript v3.9.x inside as a dependency. If you want to use your own version, just install typescript as another dev dependency then bunchee will automatically pick it.
@@ -128,6 +131,10 @@ Create `tsconfig.json` to specify any compiler options for TypeScript.
 
 This library requires at least [TypeScript 3.7](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html).
 
+
+#### `target`
+
+If you specify `target` option in `tsconfig.json`, then you don't have to pass it again through CLI.
 
 ## Advanced
 
