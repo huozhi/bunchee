@@ -4,7 +4,7 @@ import type { InputOptions, OutputOptions, Plugin } from 'rollup'
 import type { CompilerOptions } from 'typescript'
 import fs from 'fs'
 import { resolve, dirname, extname } from 'path'
-import { swc } from 'rollup-plugin-swc3'
+import { swc, minify as swcMinify } from 'rollup-plugin-swc3'
 import commonjs from '@rollup/plugin-commonjs'
 import shebang from 'rollup-plugin-preserve-shebang'
 import json from '@rollup/plugin-json'
@@ -33,7 +33,9 @@ const minifyOptions: JsMinifyOptions = {
     wrapFuncArgs: false,
     preserveAnnotations: true,
   },
-  mangle: true,
+  mangle: {
+    toplevel: true
+  },
 }
 
 let hasLoggedTsWarning = false
@@ -118,11 +120,15 @@ function buildInputConfig(
                 classPrivateProperty: true,
                 exportDefaultFrom: true,
               },
-              ...(minify && { minify: { ...minifyOptions, sourceMap: options.sourcemap } }),
+
             },
             sourceMaps: options.sourcemap,
             inlineSourcesContent: false,
           }),
+          minify && swcMinify({
+            ...minifyOptions,
+            sourceMap: options.sourcemap
+          })
         ]
   ).filter(isNotNull<Plugin>)
 
