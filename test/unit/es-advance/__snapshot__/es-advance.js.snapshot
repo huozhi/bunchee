@@ -2,6 +2,6 @@ var foo = {
     bar: "hello"
 };
 console.log("bar", foo == null ? void 0 : foo.bar);
-var _bar;
-var prop = (_bar = foo.bar) != null ? _bar : "default";
+var _foo_bar;
+var prop = (_foo_bar = foo.bar) != null ? _foo_bar : "default";
 console.log("name", prop);

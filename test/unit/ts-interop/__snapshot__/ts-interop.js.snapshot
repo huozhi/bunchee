@@ -6,4 +6,4 @@ var a = {
 var b = "hello";
 
 exports.b = b;
-exports["default"] = a;
+exports.default = a;

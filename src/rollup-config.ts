@@ -3,6 +3,7 @@ import type { JsMinifyOptions } from '@swc/core'
 import type { InputOptions, OutputOptions, Plugin } from 'rollup'
 import type { CompilerOptions } from 'typescript'
 import fs from 'fs'
+import { Module } from 'module'
 import { resolve, dirname, extname } from 'path'
 import { swc } from 'rollup-plugin-swc3'
 import commonjs from '@rollup/plugin-commonjs'
@@ -24,7 +25,6 @@ type TypescriptOptions = {
   dtsOnly: boolean
 }
 
-import { Module } from 'module'
 
 const minifyOptions: JsMinifyOptions = {
   compress: true,
@@ -33,7 +33,9 @@ const minifyOptions: JsMinifyOptions = {
     wrapFuncArgs: false,
     preserveAnnotations: true,
   },
-  mangle: true,
+  mangle: {
+    toplevel: true
+  },
 }
 
 let hasLoggedTsWarning = false
@@ -118,7 +120,12 @@ function buildInputConfig(
                 classPrivateProperty: true,
                 exportDefaultFrom: true,
               },
-              ...(minify && { minify: { ...minifyOptions, sourceMap: options.sourcemap } }),
+              ...(minify && {
+                minify: {
+                  ...minifyOptions,
+                  sourceMap: options.sourcemap,
+                }
+              })
             },
             sourceMaps: options.sourcemap,
             inlineSourcesContent: false,
