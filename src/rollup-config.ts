@@ -3,8 +3,9 @@ import type { JsMinifyOptions } from '@swc/core'
 import type { InputOptions, OutputOptions, Plugin } from 'rollup'
 import type { CompilerOptions } from 'typescript'
 import fs from 'fs'
+import { Module } from 'module'
 import { resolve, dirname, extname } from 'path'
-import { swc, minify as swcMinify } from 'rollup-plugin-swc3'
+import { swc } from 'rollup-plugin-swc3'
 import commonjs from '@rollup/plugin-commonjs'
 import shebang from 'rollup-plugin-preserve-shebang'
 import json from '@rollup/plugin-json'
@@ -24,7 +25,6 @@ type TypescriptOptions = {
   dtsOnly: boolean
 }
 
-import { Module } from 'module'
 
 const minifyOptions: JsMinifyOptions = {
   compress: true,
@@ -120,14 +120,14 @@ function buildInputConfig(
                 classPrivateProperty: true,
                 exportDefaultFrom: true,
               },
+              ...(minify && {
+                ...minifyOptions,
+                sourceMap: options.sourcemap,
+              })
             },
             sourceMaps: options.sourcemap,
             inlineSourcesContent: false,
           }),
-          minify && swcMinify({
-            ...minifyOptions,
-            sourceMap: options.sourcemap
-          })
         ]
   ).filter(isNotNull<Plugin>)
 
