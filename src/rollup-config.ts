@@ -120,7 +120,6 @@ function buildInputConfig(
                 classPrivateProperty: true,
                 exportDefaultFrom: true,
               },
-
             },
             sourceMaps: options.sourcemap,
             inlineSourcesContent: false,
