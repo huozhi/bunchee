@@ -74,7 +74,7 @@ Options:
   -f, --format <format>  type of output (esm, amd, cjs, iife, umd, system), default: esm
   -e, --external <mod>   specify an external dependency
   -h, --help             output usage information
-  --target <target>      js features target: swc target es versions. default: es5
+  --target <target>      js features target: swc target es versions. default: es2015
   --runtime <runtime>    build runtime (nodejs, browser). default: browser
   --cwd <cwd>            specify current working directory
   --sourcemap            enable sourcemap generation, default: false
