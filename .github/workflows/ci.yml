@@ -76,8 +76,8 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ needs.install_and_test.steps.yarn-cache-dir-path.outputs.cache_dir }}
-          key: ${{ needs.install_and_test.steps.yarn-cache-dir-path.outputs.cache_key }
-          restore-keys: ${{ needs.install_and_test.steps.yarn-cache-dir-path.outputs.cache_key }
+          key: ${{ needs.install_and_test.steps.yarn-cache-dir-path.outputs.cache_key }}
+          restore-keys: ${{ needs.install_and_test.steps.yarn-cache-dir-path.outputs.cache_key }}
 
       - name: Add auth token to npmrc
         run: |
