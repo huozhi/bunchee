@@ -28,17 +28,18 @@ jobs:
 
       - name: Get Yarn Cache Directory Path
         id: yarn-cache-dir-path
-        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+        run: |
+          echo "cache_dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+          echo "cache_key=${{ runner.os }}-node-${{ matrix.node-version }}-yarn-" >> $GITHUB_OUTPUT
+
 
 
       - name: Cache Dependencies
         uses: actions/cache@v3
         with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-node-${{ matrix.node-version }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-node-${{ matrix.node-version }}-yarn-
-            ${{ runner.os }}-node-
+          path: ${{ steps.yarn-cache-dir-path.outputs.cache_dir }}
+          key: ${{ steps.yarn-cache-dir-path.outputs.cache_key }
+          restore-keys: ${{ steps.yarn-cache-dir-path.outputs.cache_key }
 
       - name: Install Dependencies
         run: yarn install --frozen-lockfile --prefer-offline
@@ -74,11 +75,9 @@ jobs:
       - name: Restore Cached Dependencies
         uses: actions/cache@v3
         with:
-          path: ${{ needs.install_and_test.steps.yarn-cache-dir-path.outputs.dir }}
-          key: ${{ runner.os }}-node-${{ matrix.node-version }}-yarn-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-node-${{ matrix.node-version }}-yarn-
-            ${{ runner.os }}-node-
+          path: ${{ needs.install_and_test.steps.yarn-cache-dir-path.outputs.cache_dir }}
+          key: ${{ needs.install_and_test.steps.yarn-cache-dir-path.outputs.cache_key }
+          restore-keys: ${{ needs.install_and_test.steps.yarn-cache-dir-path.outputs.cache_key }
 
       - name: Add auth token to npmrc
         run: |
@@ -87,8 +86,8 @@ jobs:
       - name: Publish to tagged channel
         if: steps.determine_channel.outputs.channel != ''
         run: |
-          echo "Publishing to ${{steps.determine_channel.outputs.channel}} channel"
-          npm publish --tag ${{steps.determine_channel.outputs.channel}}
+          echo "Publishing to ${{ steps.determine_channel.outputs.channel }} channel"
+          npm publish --tag ${{ steps.determine_channel.outputs.channel }}
 
       - name: Publish to latest
         if: steps.determine_channel.outputs.channel == ''
