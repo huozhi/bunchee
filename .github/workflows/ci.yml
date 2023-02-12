@@ -29,13 +29,12 @@ jobs:
       - name: Get Yarn Cache Directory Path
         id: cache_keys
         run: |
-          echo "CACHE_DIR=$(yarn cache dir)" >> $GITHUB_OUTPUT
           echo "CACHE_KEY=${{ runner.os }}-node-${{ matrix.node-version }}-yarn-" >> $GITHUB_OUTPUT
 
       - name: Cache Dependencies
         uses: actions/cache@v3
         with:
-          path: ${{ steps.cache_keys.outputs.CACHE_DIR }}
+          path: ./*
           key: yarn-cache-${{ steps.cache_keys.outputs.CACHE_KEY }}
           restore-keys: |
             yarn-cache-
@@ -70,7 +69,7 @@ jobs:
       - name: Restore Cached Dependencies
         uses: actions/cache@v3
         with:
-          path: ${{ needs.install_and_test.steps.cache_keys.outputs.CACHE_DIR }}
+          path: ./*
           key: yarn-cache-${{ needs.install_and_test.steps.cache_keys.outputs.CACHE_KEY }}
           restore-keys: |
             yarn-cache-
