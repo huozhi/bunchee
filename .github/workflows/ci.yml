@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - main
-    tags:
-      - "v*"
   pull_request:
 
 jobs:
@@ -65,21 +63,6 @@ jobs:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
     steps:
-      - name: Get tag name
-        id: get_tag
-        run: echo "::set-output name=tag_name::$(echo ${{github.ref}} | cut -d '/' -f 3)"
-      - name: Determine if the tag is a beta, alpha or rc tag
-        id: determine_channel
-        run: |
-          if [[ ${{steps.get_tag.outputs.tag_name}} == *"beta"* ]]; then
-            echo "::set-output name=channel::beta"
-          elif [[ ${{steps.get_tag.outputs.tag_name}} == *"alpha"* ]]; then
-            echo "::set-output name=channel::alpha"
-          elif [[ ${{steps.get_tag.outputs.tag_name}} == *"rc"* ]]; then
-            echo "::set-output name=channel::rc"
-          else
-            echo "::set-output name=channel::stable"
-
       - name: Add auth token to npmrc
         run: |
           echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
