@@ -67,11 +67,13 @@ jobs:
         run: |
           echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
 
-      - name: Publish
+      - name: Publish to tagged channel
         if: steps.determine_channel.outputs.channel != ''
         run: |
           echo "Publishing to ${{steps.determine_channel.outputs.channel}} channel"
           npm publish --tag ${{steps.determine_channel.outputs.channel}}
+
+      - name: Publish to latest
         if: steps.determine_channel.outputs.channel == ''
         run: |
           echo "Publishing to latest channel"
