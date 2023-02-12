@@ -45,8 +45,8 @@ jobs:
       - name: Lint
         run: |
           yarn typecheck
-          yarn test
           yarn build
+          yarn test
 
   determine_channel:
     runs-on: ubuntu-latest
