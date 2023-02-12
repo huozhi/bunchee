@@ -72,7 +72,7 @@ jobs:
         run: |
           echo "Publishing to ${{steps.determine_channel.outputs.channel}} channel"
           npm publish --tag ${{steps.determine_channel.outputs.channel}}
-        else:
+        if: steps.determine_channel.outputs.channel == ''
         run: |
-          echo "Publishing to default channel"
+          echo "Publishing to latest channel"
           npm publish
