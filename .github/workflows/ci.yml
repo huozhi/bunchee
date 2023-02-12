@@ -28,7 +28,8 @@ jobs:
 
       - name: Get Yarn Cache Directory Path
         id: yarn-cache-dir-path
-        run: echo "::set-output name=dir::$(yarn cache dir)"
+        run: echo "dir=$(yarn cache dir)" >> $GITHUB_OUTPUT
+
 
       - name: Cache Dependencies
         uses: actions/cache@v3
@@ -57,7 +58,7 @@ jobs:
       - name: Determine channel
         id: determine_channel
         run: |
-          echo "::set-output name=channel::$(echo $GITHUB_REF | grep -Eo 'alpha|beta|rc')"
+          echo "channel=$(echo $GITHUB_REF | grep -Eo 'alpha|beta|rc')" >> $GITHUB_OUTPUT
 
   release:
     runs-on: ubuntu-latest
@@ -73,7 +74,7 @@ jobs:
       - name: Restore Cached Dependencies
         uses: actions/cache@v3
         with:
-          path: ${{ steps.yarn-cache-dir-path.outputs.dir }}
+          path: ${{ needs.install_and_test.steps.yarn-cache-dir-path.outputs.dir }}
           key: ${{ runner.os }}-node-${{ matrix.node-version }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
             ${{ runner.os }}-node-${{ matrix.node-version }}-yarn-
