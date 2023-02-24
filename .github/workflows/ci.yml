@@ -18,27 +18,14 @@ jobs:
 
     name: Node ${{ matrix.node-version }}
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Use Node ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-
-      - name: Get Yarn Cache Directory Path
-        id: cache_keys
-        run: |
-          echo "CACHE_KEY=${{ runner.os }}-node-${{ matrix.node-version }}-yarn-{{ github.sha }}" >> $GITHUB_OUTPUT
-
-      - name: Cache Dependencies
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: yarn-cache-${{ steps.cache_keys.outputs.CACHE_KEY }}
-          restore-keys: |
-            yarn-cache-
-            yarn-cache-${{ steps.cache_keys.outputs.CACHE_KEY }}
+          cache: yarn
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install Dependencies
         run: yarn install --frozen-lockfile --prefer-offline
@@ -58,26 +45,22 @@ jobs:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        
+      - name: Use Node ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: yarn
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile --prefer-offline
 
       - name: Determine tag
         id: determine_tag
         run: |
           echo "tag=$(echo $GITHUB_REF | grep -Eo 'alpha|beta|rc')" >> $GITHUB_OUTPUT
-
-      - name: Restore Cached Dependencies
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: yarn-cache-${{ needs.install_and_test.steps.cache_keys.outputs.CACHE_KEY }}
-          restore-keys: |
-            yarn-cache-
-            yarn-cache-${{ needs.install_and_test.steps.cache_keys.outputs.CACHE_KEY }}
-
-      - name: Add auth token to npmrc
-        run: |
-          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
 
       - name: Publish to versioned tag
         if: steps.determine_tag.outputs.tag != ''
