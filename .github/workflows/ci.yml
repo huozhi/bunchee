@@ -18,8 +18,7 @@ jobs:
 
     name: Node ${{ matrix.node-version }}
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Use Node ${{ matrix.node-version }}
         uses: actions/setup-node@v3
@@ -46,8 +45,17 @@ jobs:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        
+      - name: Use Node ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: yarn
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile --prefer-offline
 
       - name: Determine tag
         id: determine_tag
