@@ -39,7 +39,7 @@ const minifyOptions: JsMinifyOptions = {
 }
 
 let hasLoggedTsWarning = false
-function resolveTypescript(cwd: string) {
+function resolveTypescript(cwd: string): typeof import('typescript') {
   let ts
   const m = new Module('', undefined)
   m.paths = (Module as any)._nodeModulePaths(cwd)
@@ -65,7 +65,7 @@ function buildInputConfig(
   const externals = [pkg.peerDependencies, pkg.dependencies, pkg.peerDependenciesMeta]
     .filter(<T>(n?: T): n is T => Boolean(n))
     .map((o: { [key: string]: any }): string[] => Object.keys(o))
-    .reduce((a: string[], b: string[]) => a.concat(b), [] as string[])
+    .reduce((a: string[], b: string[]) => a.concat(b), [])
     .concat((options.external ?? []).concat(pkg.name ? [pkg.name] : []))
 
   const { useTypescript, runtime, target: jscTarget, minify } = options
@@ -204,7 +204,7 @@ function buildConfig(entry: string, pkg: PackageMetadata, cliArgs: CliArgs, dtsO
   let tsConfigPath: string | undefined
 
   if (useTypescript) {
-    const ts = resolveTypescript(config.rootDir) as typeof import('typescript')
+    const ts = resolveTypescript(config.rootDir)
     tsConfigPath = resolve(config.rootDir, 'tsconfig.json')
     if (fs.existsSync(tsConfigPath)) {
       const basePath = tsConfigPath ? dirname(tsConfigPath) : config.rootDir

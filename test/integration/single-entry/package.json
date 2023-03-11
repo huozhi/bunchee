@@ -1,8 +1,5 @@
 {
   "name": "single-entry",
   "types": "./dist/index.d.ts",
-  "exports": "./dist/index.js",
-  "bunchee": {
-    "entry": "./src/index.js"
-  }
+  "exports": "./dist/index.js"
 }

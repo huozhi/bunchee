@@ -4,3 +4,4 @@ dist
 *.log
 .yalc
 yalc.lock
+test/**/*.js.map

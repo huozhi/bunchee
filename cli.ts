@@ -102,7 +102,7 @@ async function run(args: any) {
   }
 
   const entry = source ? path.resolve(cwd, source) : ''
-  const { bundle } = require('./lib') as typeof import('./lib')
+  const bundle: typeof import('./lib').bundle = require('./lib').bundle
 
   let timeStart = Date.now()
   let timeEnd
