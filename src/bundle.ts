@@ -19,12 +19,13 @@ function logBuild(exportPath: string, dtsOnly: boolean, duration: number) {
 
 function assignDefault(options: CliArgs, name: keyof CliArgs, defaultValue: any) {
   if (!(name in options) || options[name] == null) {
-    (options[name] as CliArgs[keyof CliArgs]) = defaultValue
+    options[name] = defaultValue
   }
 }
 
 // Map '.' -> './index.[ext]'
 // Map './lite' -> './lite.[ext]'
+// Return undefined if no match or if it's package.json exports
 function getSourcePathFromExportPath(cwd: string, exportPath: string): string | undefined {
   const exts = ['js', 'cjs', 'mjs', 'jsx', 'ts', 'tsx']
   for (const ext of exts) {
@@ -55,7 +56,9 @@ async function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Pro
   const isSingleEntry = typeof packageExports === 'string'
   const hasMultiEntries = packageExports && !isSingleEntry && Object.keys(packageExports).length > 0
   if (isSingleEntry) {
-    entryPath = getSourcePathFromExportPath(config.rootDir, '.') as string
+    // Use specified string file path if possible, then fallback to the default behavior entry picking logic
+    // e.g. "exports": "./dist/index.js" -> use "./index.<ext>" as entry
+    entryPath = entryPath || getSourcePathFromExportPath(config.rootDir, '.') || ''
   }
 
   function buildEntryConfig(packageExports: Record<string, ExportCondition>, dtsOnly: boolean) {
