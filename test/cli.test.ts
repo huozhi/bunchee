@@ -139,6 +139,17 @@ const testCases: {
       ]
     }
   },
+  // single entry with custom entry path
+  {
+    name: 'single-entry',
+    dist: path.join(fixturesDir, './single-entry/dist'),
+    args: ['src/index.js', '--cwd', path.join(fixturesDir, './single-entry')],
+    expected(distFile) {
+      return [
+        [fs.existsSync(distFile), true],
+      ]
+    },
+  }
 ]
 
 for (const testCase of testCases) {
