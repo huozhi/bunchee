@@ -4,7 +4,7 @@ import type { CliArgs } from './src/types'
 
 import path from 'path'
 import arg from 'arg'
-import { logger, exit, formatDuration } from './src/utils'
+import { logger, exit, formatDuration, getPackageMeta } from './src/utils'
 import { version } from './package.json'
 
 const helpMessage = `
@@ -27,6 +27,21 @@ Options:
 
 function help() {
   logger.log(helpMessage)
+}
+
+async function lintPackage(cwd: string) {
+  const { publint } = await import('publint')
+  const { printMessage } = await import('publint/utils')
+
+  const messages = await publint({
+    pkgDir: cwd,
+    level: 'error',
+  })
+
+  const pkg = getPackageMeta(cwd)
+  for (const message of messages) {
+    console.log(printMessage(message, pkg))
+  }
 }
 
 function parseCliArgs(argv: string[]) {
@@ -118,9 +133,16 @@ async function run(args: any) {
   }
 
   const duration = timeEnd - timeStart
-  if (!watch) {
-    logger.log(`✨  Finished in ${formatDuration(duration)}`)
+  // watching mode
+  if (watch) {
+    logger.log(`🔍  Watching assets in ${cwd}...`)
+    return
   }
+
+  // build mode
+  logger.log(`✨  Finished in ${formatDuration(duration)}`)
+
+  await lintPackage(cwd)
 }
 
 async function main() {
