@@ -84,6 +84,14 @@ const testCases: {
       expect(distFiles.every((f) => fs.existsSync(f))).toBe(true)
     },
   },
+  {
+    name: 'publint',
+    args: [],
+    expected(dir, { stdout }) {
+      expect(stdout).toContain('pkg.types is ./dist/missing.d.ts but the file does not exist.')
+      expect(stdout).toContain('pkg.exports["."].types is ./dist/missing.d.ts but the file does not exist.')
+    }
+  },
 ]
 
 async function runBundle(
