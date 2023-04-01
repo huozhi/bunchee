@@ -31,6 +31,9 @@
     "dist",
     "*.md"
   ],
+  "engines": {
+    "node": ">= 16"
+  },
   "author": "huozhi (github.com/huozhi)",
   "repository": {
     "type": "git",
