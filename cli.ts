@@ -29,6 +29,21 @@ function help() {
   logger.log(helpMessage)
 }
 
+async function lintPackage(cwd: string) {
+  const { publint } = await import('publint')
+  const { printMessage } = await import('publint/utils')
+
+  const messages = await publint({
+    pkgDir: cwd,
+    level: 'error',
+  })
+
+  const pkg = getPackageMeta(cwd)
+  for (const message of messages) {
+    console.log(printMessage(message, pkg))
+  }
+}
+
 function parseCliArgs(argv: string[]) {
   let args: arg.Result<any> | undefined
   args = arg(
@@ -127,18 +142,7 @@ async function run(args: any) {
   // build mode
   logger.log(`✨  Finished in ${formatDuration(duration)}`)
 
-  const { publint } = await import('publint')
-  const { printMessage } = await import('publint/utils')
-
-  const messages = await publint({
-    pkgDir: cwd,
-    level: 'error',
-  })
-
-  const pkg = getPackageMeta(cwd)
-  for (const message of messages) {
-    console.log(printMessage(message, pkg))
-  }
+  await lintPackage(cwd)
 }
 
 async function main() {
