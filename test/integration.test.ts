@@ -4,6 +4,11 @@ import fs from 'fs'
 import { execSync, fork } from 'child_process'
 import { resolve, join } from 'path'
 
+function stripANSIColor(str: string) {
+  return str.replace(
+    /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
+}
+
 const integrationTestDir = resolve(__dirname, 'integration')
 
 const getPath = (filepath: string) => join(integrationTestDir, filepath)
@@ -88,8 +93,9 @@ const testCases: {
     name: 'publint',
     args: [],
     expected(dir, { stdout }) {
-      expect(stdout).toContain('pkg.types is ./dist/missing.d.ts but the file does not exist.')
-      expect(stdout).toContain('pkg.exports["."].types is ./dist/missing.d.ts but the file does not exist.')
+      const text = stripANSIColor(stdout)
+      expect(text).toContain('pkg.types is ./dist/missing.d.ts but the file does not exist.')
+      expect(text).toContain('pkg.exports["."].types is ./dist/missing.d.ts but the file does not exist.')
     }
   },
 ]
