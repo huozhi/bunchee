@@ -37,6 +37,7 @@ const testCases: {
   },
   {
     name: 'format',
+    dist: createTempDir,
     args: [
       resolveFromTest('fixtures/hello.js'),
       '--cwd',
@@ -55,7 +56,8 @@ const testCases: {
   },
   {
     name: 'compress',
-    args: [resolveFromTest('fixtures/hello.js'), '-m', '-o', resolveFromTest('dist/hello.bundle.min.js')],
+    dist: createTempDir,
+    args: [resolveFromTest('fixtures/hello.js'), '-m', '-o', 'dist/hello.bundle.min.js'],
     expected(distFile) {
       return [
         [fs.existsSync(distFile), true],
@@ -92,6 +94,7 @@ const testCases: {
   },
   {
     name: 'externals',
+    dist: createTempDir,
     args: [
       resolveFromTest('fixtures/with-externals.js'),
       '-e',
@@ -120,7 +123,8 @@ const testCases: {
   },
   {
     name: 'es2020-target',
-    args: [resolveFromTest('fixtures/es2020.ts'), '--cwd', fixturesDir, '--target', 'es2020', '-o', resolveFromTest('dist/es2020.js')],
+    dist: createTempDir,
+    args: [resolveFromTest('fixtures/es2020.ts'), '--cwd', fixturesDir, '--target', 'es2020', '-o', 'dist/es2020.js'],
     expected(distFile, { stdout, stderr }) {
       const content = fs.readFileSync(distFile, { encoding: 'utf-8' })
       return [
@@ -133,6 +137,7 @@ const testCases: {
   },
   {
     name: 'dts',
+    dist: createTempDir,
     // need working directory for tsconfig.json
     args: ['./base.ts', '--dts', '--cwd', fixturesDir, '-o', './dist/base.js'],
     expected(distFile) {
