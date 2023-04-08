@@ -1,8 +1,8 @@
 {
   "include": [
     "./src",
-    "*.d.ts",
-    "./*.ts"
+    "./*.ts",
+    "./*.d.ts"
   ],
   "compilerOptions": {
     "rootDir": ".",
@@ -13,7 +13,7 @@
     "moduleResolution": "node",
     "removeComments": true,
     "strict": true,
-    "noUnusedLocals": true,
+    // "noUnusedLocals": true,
     "noImplicitReturns": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,

@@ -10,6 +10,7 @@ import commonjs from '@rollup/plugin-commonjs'
 import shebang from 'rollup-plugin-preserve-shebang'
 import json from '@rollup/plugin-json'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
+import replace from '@rollup/plugin-replace'
 import config from './config'
 import {
   getTypings,
@@ -55,6 +56,21 @@ function resolveTypescript(cwd: string): typeof import('typescript') {
   return ts
 }
 
+function getBuildEnv(envString: string | undefined) {
+  const envs = envString?.split(',') || []
+  if (!envs.includes('NODE_ENV')) {
+    envs.push('NODE_ENV')
+  }
+  const envVars = envs.reduce((acc: Record<string, string>, key) => {
+    const value = process.env[key]
+    if (typeof value !== 'undefined') {
+      acc['process.env.' + key] = JSON.stringify(value)
+    }
+    return acc
+  }, {})
+
+  return envVars
+}
 
 function buildInputConfig(
   entry: string,
@@ -94,6 +110,10 @@ function buildInputConfig(
             }),
         ]
       : [
+          replace({
+            values: getBuildEnv(options.env),
+            preventAssignment: true,
+          }),
           nodeResolve({
             preferBuiltins: runtime === 'node',
             extensions: ['.mjs', '.js', '.json', '.node', '.jsx'],

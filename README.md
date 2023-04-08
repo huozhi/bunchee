@@ -76,6 +76,7 @@ Options:
   -h, --help             output usage information
   --target <target>      js features target: swc target es versions. default: es2015
   --runtime <runtime>    build runtime (nodejs, browser). default: browser
+  --env <env>            process env variables to be inlined. default: NODE_ENV
   --cwd <cwd>            specify current working directory
   --sourcemap            enable sourcemap generation, default: false
   --dts                  determine if need to generate types, default: false

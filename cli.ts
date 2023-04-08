@@ -7,6 +7,8 @@ import arg from 'arg'
 import { logger, exit, formatDuration, getPackageMeta } from './src/utils'
 import { version } from './package.json'
 
+// TODO: add more usage for `bunchee` without options
+
 const helpMessage = `
 Usage: bunchee [options]
 
@@ -20,6 +22,7 @@ Options:
   -h, --help             output usage information
   --target <target>      js features target: swc target es versions. default: es2015
   --runtime <runtime>    build runtime (nodejs, browser). default: browser
+  --env <env>            process env variables to be inlined. default: NODE_ENV
   --cwd <cwd>            specify current working directory
   --sourcemap            enable sourcemap generation, default: false
   --dts                  determine if need to generate types, default: false
@@ -59,7 +62,9 @@ function parseCliArgs(argv: string[]) {
       '--runtime': String,
       '--target': String,
       '--sourcemap': Boolean,
+      // TODO: change --external to String, separate by comma
       '--external': [String],
+      '--env': String,
 
       '-h': '--help',
       '-v': '--version',
@@ -75,7 +80,7 @@ function parseCliArgs(argv: string[]) {
     }
   )
   const source: string = args._[0]
-  const parsedArgs = {
+  const parsedArgs: CliArgs = {
     source,
     format: args['--format'],
     file: args['--output'],
@@ -89,12 +94,13 @@ function parseCliArgs(argv: string[]) {
     runtime: args['--runtime'],
     target: args['--target'],
     external: args['--external'],
+    env: args['--env'],
   }
   return parsedArgs
 }
 
-async function run(args: any) {
-  const { source, format, watch, minify, sourcemap, target, runtime, dts } = args
+async function run(args: CliArgs) {
+  const { source, format, watch, minify, sourcemap, target, runtime, dts, env } = args
   const cwd = args.cwd || process.cwd()
   const file = args.file ? path.resolve(cwd, args.file) : undefined
   const cliArgs: CliArgs = {
@@ -108,6 +114,7 @@ async function run(args: any) {
     watch: !!watch,
     minify: !!minify,
     sourcemap: sourcemap === false ? false : true,
+    env,
   }
   if (args.version) {
     return logger.log(version)

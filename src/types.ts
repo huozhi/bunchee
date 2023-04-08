@@ -4,7 +4,7 @@ import type { InputOptions, OutputOptions, RollupOptions } from 'rollup'
 type ExportType = 'require' | 'export' | 'default' | string // omit other names
 
 // Shared config for each build entry
-type CommonConfig = {
+type BundleConfig = {
   dts?: boolean
   format?: OutputOptions['format']
   minify?: boolean
@@ -42,11 +42,15 @@ type BuncheeRollupConfig = Partial<Omit<RollupOptions, 'input' | 'output'>> & {
   dtsOnly: boolean
 }
 
-type CliArgs = CommonConfig & {
+type CliArgs = BundleConfig & {
+  source? : string
   file?: string
   watch?: boolean
   cwd?: string
   target?: JscTarget
+  help?: boolean
+  version?: boolean
+  env?: string
 }
 
 type BundleOptions = CliArgs & {
