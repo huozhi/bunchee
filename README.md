@@ -23,13 +23,14 @@ npm install --save-dev bunchee
 
 ## Usage
 
-### Create your entry file
+Create your library
 
 ```sh
-cd ./my-lib
+mkdir ./my-lib && cd ./my-lib
 touch ./index.js
+touch package.json
 ```
-### Configure module exports
+Configure module exports
 
 [exports sugar in Node.js](https://nodejs.org/api/packages.html#exports-sugar)
 
@@ -62,9 +63,11 @@ Using pure ESM package?
 
 Then just run `npm run build`, or `pnpm build` / `yarn build` if you're using these package managers.
 
-### CLI
+## Configuration
 
-## Configurations
+`bunchee` CLI provides few options to create different bundles or generating types.
+
+### CLI Options
 
 - Output (`-o <file>`): Specify output filename.
 - Format (`-f <format>`): Set output format (default: `'esm'`).
@@ -77,7 +80,7 @@ Then just run `npm run build`, or `pnpm build` / `yarn build` if you're using th
 - Minify (`-m`): Compress output.
 - Watch (`-w`): Watch for source file changes.
 
-#### Basic Example
+### Basic Example
 
 ```sh
 cd <project-root-dir>
@@ -119,20 +122,18 @@ bunchee --env=ENV1,ENV2,ENV3
 Replace `ENV1`, `ENV2`, and `ENV3` with the names of the environment variables you want to include in your bundled code. These environment variables will be inlined during the bundling process.
 
 
-## Entry Files Convention
+### Entry Files Convention
 
 While `exports` filed is becoming the standard of exporting in node.js, bunchee also supports to build multiple exports all in one command.
 
 What you need to do is just add an entry file with the name (`[name].[ext]`) that matches the exported name from exports field in package.json. For instance:
 
-* `index.ts` will match `"."` export name or the if there's only one main export.
-* `lite.ts` will match `"./lite"` export name.
+* `<cwd>/index.ts` will match `"."` export name or the if there's only one main export.
+* `<cwd>/lite.ts` will match `"./lite"` export name.
 
 The build script will be simplified to just `bunchee` in package.json without configure any input sources for each exports. Of course you can still specify other arguments as you need.
 
-#### How it works
-
-Assuming you have main entry export `"."` and subpath export `"./lite"` with different exports condition listed in package.json
+Assuming you have default export package as `"."` and subpath export `"./lite"` with different exports condition listed in package.json
 
 ```json
 {
@@ -160,7 +161,7 @@ Then you need to add two entry files `index.ts` and `lite.ts` in project root di
   |- package.json
 ```
 
-### Package lint
+#### Package lint
 
 `bunchee` has support for checking the package bundles are matched with package exports configuration.
 
