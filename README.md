@@ -26,8 +26,8 @@ npm install --save-dev bunchee
 Create your library
 
 ```sh
-mkdir ./my-lib && cd ./my-lib
-touch ./index.js
+cd ./my-lib && mkdir src
+touch ./src/index.js
 touch package.json
 ```
 Configure module exports
@@ -128,8 +128,8 @@ While `exports` filed is becoming the standard of exporting in node.js, bunchee 
 
 What you need to do is just add an entry file with the name (`[name].[ext]`) that matches the exported name from exports field in package.json. For instance:
 
-* `<cwd>/index.ts` will match `"."` export name or the if there's only one main export.
-* `<cwd>/lite.ts` will match `"./lite"` export name.
+* `<cwd>/src/index.ts` will match `"."` export name or the if there's only one main export.
+* `<cwd>/src/lite.ts` will match `"./lite"` export name.
 
 The build script will be simplified to just `bunchee` in package.json without configure any input sources for each exports. Of course you can still specify other arguments as you need.
 
@@ -154,10 +154,10 @@ Assuming you have default export package as `"."` and subpath export `"./lite"` 
 Then you need to add two entry files `index.ts` and `lite.ts` in project root directory to match the export name `"."` and `"./lite"`, bunchee will associate these entry files with export names then use them as input source and output paths information.
 
 ```
-- example/
-  |- lite.ts
-  |- index.ts
+- my-lib/
   |- src/
+    |- lite.ts
+    |- index.ts
   |- package.json
 ```
 

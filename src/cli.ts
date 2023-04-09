@@ -1,13 +1,11 @@
 #!/usr/bin/env node
 
-import type { CliArgs, BundleConfig } from './src/types'
+import type { CliArgs, BundleConfig } from './types'
 
 import path from 'path'
 import arg from 'arg'
-import { logger, exit, formatDuration, getPackageMeta } from './src/utils'
-import { version } from './package.json'
-
-// TODO: add more usage for `bunchee` without options
+import { logger, exit, formatDuration, getPackageMeta } from './utils'
+import { version } from '../package.json'
 
 const helpMessage = `
 Usage: bunchee [options]
@@ -42,7 +40,7 @@ async function lintPackage(cwd: string) {
     level: 'error',
   })
 
-  const pkg = getPackageMeta(cwd)
+  const pkg = await getPackageMeta(cwd)
   for (const message of messages) {
     console.log(printMessage(message, pkg))
   }
@@ -124,7 +122,7 @@ async function run(args: CliArgs) {
   }
 
   const entry = source ? path.resolve(cwd, source) : ''
-  const bundle: typeof import('./lib').bundle = require('./lib').bundle
+  const bundle: typeof import('./index').bundle = require('./index').bundle
 
   let timeStart = Date.now()
   let timeEnd

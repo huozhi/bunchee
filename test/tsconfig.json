@@ -3,7 +3,7 @@
   "compilerOptions": {
     "baseUrl": "..",
     "paths": {
-      "bunchee": ["./lib.ts"]
+      "bunchee": ["./src/index.ts"]
     },
   },
   "include": [

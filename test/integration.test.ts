@@ -105,7 +105,7 @@ async function runBundle(
   _args: string[]
 ): Promise<{ code: number | null; stdout: string; stderr: string }> {
   const args = _args.concat(['--cwd', dir])
-  const ps = fork(`${__dirname + '/../node_modules/.bin/tsx'}`, [__dirname + '/../cli.ts'].concat(args), { stdio: 'pipe' })
+  const ps = fork(`${__dirname + '/../node_modules/.bin/tsx'}`, [__dirname + '/../src/cli.ts'].concat(args), { stdio: 'pipe' })
   let stderr = '',
     stdout = ''
   ps.stdout?.on('data', (chunk: any) => (stdout += chunk.toString()))
@@ -130,7 +130,7 @@ function runTests() {
     const { name, args, expected } = testCase
     const dir = getPath(name)
     test(`integration ${name}`, async () => {
-      console.log(`Command: bunchee ${args.join(' ')}`)
+      if (process.env.DEBUG_TEST) console.log(`Command: bunchee ${args.join(' ')}`)
       execSync(`rm -rf ${join(dir, 'dist')}`)
       const { stdout, stderr } = await runBundle(dir, args)
       if (process.env.DEBUG_TEST) {
