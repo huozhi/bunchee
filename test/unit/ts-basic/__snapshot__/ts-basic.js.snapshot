@@ -14,7 +14,7 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
         Promise.resolve(value).then(_next, _throw);
     }
 }
-function _asyncToGenerator(fn) {
+function _async_to_generator(fn) {
     return function() {
         var self = this, args = arguments;
         return new Promise(function(resolve, reject) {
@@ -53,7 +53,7 @@ function asyncFunc() {
     return _asyncFunc.apply(this, arguments);
 }
 function _asyncFunc() {
-    _asyncFunc = _asyncToGenerator(function*() {
+    _asyncFunc = _async_to_generator(function*() {
         yield new Promise((r)=>r(1));
     });
     return _asyncFunc.apply(this, arguments);
