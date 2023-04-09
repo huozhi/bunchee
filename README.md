@@ -175,7 +175,7 @@ yarn add -D bunchee typescript
 
 Create `tsconfig.json` to specify any compiler options for TypeScript.
 
-This library requires at least [TypeScript 3.7](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html).
+This library requires at least TypeScript 4.1.x.
 
 
 Adding `"types"` or `"typing"` field in your package.json, types will be generated with that path.
