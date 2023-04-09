@@ -1,5 +1,5 @@
 import type { RollupWatcher, RollupWatchOptions, OutputOptions, RollupBuild, RollupOutput } from 'rollup'
-import type { BuncheeRollupConfig, CliArgs, ExportCondition, PackageMetadata } from './types'
+import type { BuncheeRollupConfig, BundleConfig, ExportCondition, PackageMetadata } from './types'
 
 import fs from 'fs'
 import { resolve, join, basename, relative } from 'path'
@@ -17,7 +17,7 @@ function logBuild(exportPath: string, dtsOnly: boolean, duration: number) {
   logger.log(` ✓  ${dtsOnly ? 'Typed' : 'Built'} ${exportPath} ${formatDuration(duration)}`)
 }
 
-function assignDefault(options: CliArgs, name: keyof CliArgs, defaultValue: any) {
+function assignDefault(options: BundleConfig, name: keyof BundleConfig, defaultValue: any) {
   if (!(name in options) || options[name] == null) {
     options[name] = defaultValue
   }
@@ -41,7 +41,7 @@ function getSourcePathFromExportPath(cwd: string, exportPath: string): string | 
   return
 }
 
-async function bundle(entryPath: string, { cwd, ...options }: CliArgs = {}): Promise<any> {
+async function bundle(entryPath: string, { cwd, ...options }: BundleConfig = {}): Promise<any> {
   config.rootDir = resolve(process.cwd(), cwd || '')
   assignDefault(options, 'format', 'es')
   assignDefault(options, 'minify', false)

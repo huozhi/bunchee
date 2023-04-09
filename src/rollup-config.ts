@@ -1,4 +1,4 @@
-import type { PackageMetadata, BuncheeRollupConfig, CliArgs, BundleOptions } from './types'
+import type { PackageMetadata, BuncheeRollupConfig, BundleOptions, BundleConfig } from './types'
 import type { JsMinifyOptions } from '@swc/core'
 import type { InputOptions, OutputOptions, Plugin } from 'rollup'
 import type { CompilerOptions } from 'typescript'
@@ -56,8 +56,7 @@ function resolveTypescript(cwd: string): typeof import('typescript') {
   return ts
 }
 
-function getBuildEnv(envString: string | undefined) {
-  const envs = envString?.split(',') || []
+function getBuildEnv(envs: string[]) {
   if (!envs.includes('NODE_ENV')) {
     envs.push('NODE_ENV')
   }
@@ -78,11 +77,13 @@ function buildInputConfig(
   options: BundleOptions,
   { tsConfigPath, tsCompilerOptions, dtsOnly }: TypescriptOptions
 ): InputOptions {
-  const externals = [pkg.peerDependencies, pkg.dependencies, pkg.peerDependenciesMeta]
-    .filter(<T>(n?: T): n is T => Boolean(n))
-    .map((o: { [key: string]: any }): string[] => Object.keys(o))
-    .reduce((a: string[], b: string[]) => a.concat(b), [])
-    .concat((options.external ?? []).concat(pkg.name ? [pkg.name] : []))
+  const externals = options.noExternal
+    ? []
+    : [pkg.peerDependencies, pkg.dependencies, pkg.peerDependenciesMeta]
+      .filter(<T>(n?: T): n is T => Boolean(n))
+      .map((o: { [key: string]: any }): string[] => Object.keys(o))
+      .reduce((a: string[], b: string[]) => a.concat(b), [])
+      .concat((options.external ?? []).concat(pkg.name ? [pkg.name] : []))
 
   const { useTypescript, runtime, target: jscTarget, minify } = options
   const hasSpecifiedTsTarget = Boolean(tsCompilerOptions?.target && tsConfigPath)
@@ -111,7 +112,7 @@ function buildInputConfig(
         ]
       : [
           replace({
-            values: getBuildEnv(options.env),
+            values: getBuildEnv(options.env || []),
             preventAssignment: true,
           }),
           nodeResolve({
@@ -216,10 +217,10 @@ function buildOutputConfigs(
   }
 }
 
-function buildConfig(entry: string, pkg: PackageMetadata, cliArgs: CliArgs, dtsOnly: boolean): BuncheeRollupConfig {
-  const { file } = cliArgs
+function buildConfig(entry: string, pkg: PackageMetadata, bundleConfig: BundleConfig, dtsOnly: boolean): BuncheeRollupConfig {
+  const { file } = bundleConfig
   const useTypescript = isTypescript(entry)
-  const options = { ...cliArgs, useTypescript }
+  const options = { ...bundleConfig, useTypescript }
   let tsCompilerOptions: CompilerOptions = {}
   let tsConfigPath: string | undefined
 
@@ -254,7 +255,7 @@ function buildConfig(entry: string, pkg: PackageMetadata, cliArgs: CliArgs, dtsO
     outputConfigs = [
       buildOutputConfigs(
         {
-          ...cliArgs,
+          ...bundleConfig,
           format: 'es',
           useTypescript,
         },
@@ -267,7 +268,7 @@ function buildConfig(entry: string, pkg: PackageMetadata, cliArgs: CliArgs, dtsO
     outputConfigs = outputExports.map((exportDist) => {
       return buildOutputConfigs(
         {
-          ...cliArgs,
+          ...bundleConfig,
           file: exportDist.file,
           format: exportDist.format,
           useTypescript,
@@ -282,9 +283,9 @@ function buildConfig(entry: string, pkg: PackageMetadata, cliArgs: CliArgs, dtsO
       outputConfigs = [
         buildOutputConfigs(
           {
-            ...cliArgs,
+            ...bundleConfig,
             file,
-            format: cliArgs.format || fallbackFormat,
+            format: bundleConfig.format || fallbackFormat,
             useTypescript,
           },
           pkg,
