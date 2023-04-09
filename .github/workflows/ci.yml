@@ -65,11 +65,13 @@ jobs:
       - name: Publish to versioned tag
         if: steps.determine_tag.outputs.tag != ''
         run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
           echo "Publishing to ${{ steps.determine_tag.outputs.tag }} tag"
           npm publish --tag ${{ steps.determine_tag.outputs.tag }}
 
       - name: Publish to latest
         if: steps.determine_tag.outputs.tag == ''
         run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
           echo "Publishing to latest"
           npm publish
