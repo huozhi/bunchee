@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import type { CliArgs } from './src/types'
+import type { CliArgs, BundleConfig } from './src/types'
 
 import path from 'path'
 import arg from 'arg'
@@ -18,11 +18,11 @@ Options:
   -m, --minify           compress output. default: false
   -o, --output <file>    specify output filename
   -f, --format <format>  type of output (esm, amd, cjs, iife, umd, system), default: esm
-  -e, --external <mod>   specify an external dependency
+  -e, --external <mod>   specify an external dependency, separate by comma
   -h, --help             output usage information
   --target <target>      js features target: swc target es versions. default: es2015
   --runtime <runtime>    build runtime (nodejs, browser). default: browser
-  --env <env>            process env variables to be inlined. default: NODE_ENV
+  --env <env>            inlined process env variables, separate by comma. default: NODE_ENV
   --cwd <cwd>            specify current working directory
   --sourcemap            enable sourcemap generation, default: false
   --dts                  determine if need to generate types, default: false
@@ -62,9 +62,9 @@ function parseCliArgs(argv: string[]) {
       '--runtime': String,
       '--target': String,
       '--sourcemap': Boolean,
-      // TODO: change --external to String, separate by comma
-      '--external': [String],
       '--env': String,
+      '--external': String,
+      '--no-external': Boolean,
 
       '-h': '--help',
       '-v': '--version',
@@ -72,7 +72,6 @@ function parseCliArgs(argv: string[]) {
       '-o': '--output',
       '-f': '--format',
       '-m': '--minify',
-      '-e': '--external',
     },
     {
       permissive: true,
@@ -93,7 +92,7 @@ function parseCliArgs(argv: string[]) {
     version: args['--version'],
     runtime: args['--runtime'],
     target: args['--target'],
-    external: args['--external'],
+    external: !!args['--no-external'] ? null : args['--external'],
     env: args['--env'],
   }
   return parsedArgs
@@ -103,18 +102,18 @@ async function run(args: CliArgs) {
   const { source, format, watch, minify, sourcemap, target, runtime, dts, env } = args
   const cwd = args.cwd || process.cwd()
   const file = args.file ? path.resolve(cwd, args.file) : undefined
-  const cliArgs: CliArgs = {
+  const bundleConfig: BundleConfig = {
     dts,
     file,
     format,
     cwd,
     target,
     runtime,
-    external: args.external || [],
+    external: args.external?.split(',') || [],
     watch: !!watch,
     minify: !!minify,
     sourcemap: sourcemap === false ? false : true,
-    env,
+    env: env?.split(',') || [],
   }
   if (args.version) {
     return logger.log(version)
@@ -129,7 +128,7 @@ async function run(args: CliArgs) {
   let timeStart = Date.now()
   let timeEnd
   try {
-    await bundle(entry, cliArgs)
+    await bundle(entry, bundleConfig)
     timeEnd = Date.now()
   } catch (err: any) {
     if (err.name === 'NOT_EXISTED') {

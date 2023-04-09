@@ -3,13 +3,19 @@ import type { InputOptions, OutputOptions, RollupOptions } from 'rollup'
 
 type ExportType = 'require' | 'export' | 'default' | string // omit other names
 
-// Shared config for each build entry
+// configs which are normalized from cli args
 type BundleConfig = {
-  dts?: boolean
+  file?: string
+  cwd?: string
+  watch?: boolean
+  target?: JscTarget
   format?: OutputOptions['format']
   minify?: boolean
   sourcemap?: boolean
   external?: string[]
+  noExternal?: boolean
+  env?: string[]
+  dts?: boolean
   runtime?: string
 
   // assigned extra config
@@ -42,7 +48,10 @@ type BuncheeRollupConfig = Partial<Omit<RollupOptions, 'input' | 'output'>> & {
   dtsOnly: boolean
 }
 
-type CliArgs = BundleConfig & {
+type CliArgs = {
+  format?: OutputOptions['format']
+  minify?: boolean
+  sourcemap?: boolean
   source? : string
   file?: string
   watch?: boolean
@@ -51,10 +60,22 @@ type CliArgs = BundleConfig & {
   help?: boolean
   version?: boolean
   env?: string
+  external?: string
+  dts?: boolean
+  runtime?: string
+  noExternal?: boolean
 }
 
-type BundleOptions = CliArgs & {
+type BundleOptions = BundleConfig & {
   useTypescript: boolean
 }
 
-export type { CliArgs, ExportType, BundleOptions, ExportCondition, PackageMetadata, BuncheeRollupConfig }
+export type {
+  CliArgs,
+  ExportType,
+  BundleConfig,
+  BundleOptions,
+  ExportCondition,
+  PackageMetadata,
+  BuncheeRollupConfig
+}
