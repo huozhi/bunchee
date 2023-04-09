@@ -26,26 +26,18 @@ npm install --save-dev bunchee
 
 Declare the main and module fields in your package.json file, then call the bunchee CLI in the build scripts. If you are using TypeScript, types will be generated automatically based on the typings or types field in your package.json file.
 
-#### Configure `main` and `module` fields
 
-You can have Commonjs + ESModules output as the simple config
+### Create your entry file
 
-```json
-{
-  "main": "dist/pkg.cjs.js",
-  "module": "dist/pkg.esm.js",
-  "scripts": {
-    "build": "bunchee ./src/index.js"
-  },
-  "types": "dist/types/index.d.ts"
-}
+```sh
+cd ./my-lib
+touch ./index.js
 ```
-
-#### Configure `exports` field
+### Configure module exports
 
 [exports sugar in Node.js](https://nodejs.org/api/packages.html#exports-sugar)
 
-You can use the exports field to support different conditions and leverage the same functionality as other bundlers, such as webpack. The exports field allows you to define multiple conditions.
+You can use the `exports` field to support different conditions and leverage the same functionality as other bundlers, such as webpack. The exports field allows you to define multiple conditions.
 
 
 ```json
@@ -56,13 +48,38 @@ You can use the exports field to support different conditions and leverage the s
     "module": "dist/index.esm.js"
   },
   "scripts": {
-    "build": "bunchee ./src/index.js"
+    "build": "bunchee"
   },
 }
 ```
 
-### CLI
+Using pure ESM package?
 
+```json
+{
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "bunchee"
+  }
+}
+```
+
+Or you can use `main` and `module` fields. `bunchee` supports legacy package exports configuration field `module` field for exporting esm assets at the same time.
+
+```json
+{
+  "main": "dist/pkg.cjs.js",
+  "module": "dist/pkg.esm.js",
+  "scripts": {
+    "build": "bunchee"
+  },
+}
+```
+
+Then just run `npm run build`, or `pnpm build` / `yarn build` if you're using these package managers.
+
+### CLI
 
 Run bunchee via CLI
 
@@ -162,7 +179,7 @@ Replace `ENV1`, `ENV2`, and `ENV3` with the names of the environment variables y
 
 `bunchee` has support for checking the package bundles are matched with package exports configuration.
 
-### Typescript
+### TypeScript
 
 By default bunchee includes Typescript v3.9.x inside as a dependency. If you want to use your own version, just install typescript as another dev dependency then bunchee will automatically pick it.
 
@@ -173,6 +190,15 @@ yarn add -D bunchee typescript
 Create `tsconfig.json` to specify any compiler options for TypeScript.
 
 This library requires at least [TypeScript 3.7](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html).
+
+
+Adding `"types"` or `"typing"` field in your package.json, types will be generated with that path.
+
+```json
+{
+  "types": "dist/types/index.d.ts"
+}
+```
 
 ### Node.js API
 
