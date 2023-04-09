@@ -1,7 +1,7 @@
 # bunchee
 > zero config bundler for JavaScript/TypeScript/JSX library
 
-![bunchee](https://user-images.githubusercontent.com/4800338/98430015-7ce64f00-20e5-11eb-8c64-41addfbd4ede.png)
+![bunchee](https://repository-images.githubusercontent.com/154026156/5d132698-0ff5-4644-a4fd-d9570e6229bc)
 
 <p align="left">
   <a href="https://npm.im/bunchee">
