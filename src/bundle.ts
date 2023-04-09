@@ -1,17 +1,16 @@
 import type { RollupWatcher, RollupWatchOptions, OutputOptions, RollupBuild, RollupOutput } from 'rollup'
 import type { BuncheeRollupConfig, BundleConfig, ExportCondition, PackageMetadata } from './types'
 
-import fs from 'fs'
+import fs from 'fs/promises'
 import { resolve, join, basename, relative } from 'path'
 import { watch as rollupWatch, rollup } from 'rollup'
 import buildConfig from './rollup-config'
-import { getPackageMeta, isTypescript, logger, formatDuration } from './utils'
+import { getPackageMeta, isTypescript, logger, formatDuration, fileExists } from './utils'
 import config from './config'
 import { getTypings } from './exports'
+import type { BuildMetadata } from './types'
 
-type BuildMetadata = {
-  source: string
-}
+const SRC = 'src' // resolve from src/ directory
 
 function logBuild(exportPath: string, dtsOnly: boolean, duration: number) {
   logger.log(` ✓  ${dtsOnly ? 'Typed' : 'Built'} ${exportPath} ${formatDuration(duration)}`)
@@ -23,18 +22,22 @@ function assignDefault(options: BundleConfig, name: keyof BundleConfig, defaultV
   }
 }
 
+function resolveSourceFile(cwd: string, filename: string) {
+  return resolve(cwd, SRC, filename)
+}
+
 // Map '.' -> './index.[ext]'
 // Map './lite' -> './lite.[ext]'
 // Return undefined if no match or if it's package.json exports
-function getSourcePathFromExportPath(cwd: string, exportPath: string): string | undefined {
+async function getSourcePathFromExportPath(cwd: string, exportPath: string): Promise<string | undefined> {
   const exts = ['js', 'cjs', 'mjs', 'jsx', 'ts', 'tsx']
   for (const ext of exts) {
     // ignore package.json
     if (exportPath.endsWith('package.json')) return
     if (exportPath === '.') exportPath = './index'
-    const filename = resolve(cwd, `${exportPath}.${ext}`)
+    const filename = resolveSourceFile(cwd, `${exportPath}.${ext}`)
 
-    if (fs.existsSync(filename)) {
+    if (await fileExists(filename)) {
       return filename
     }
   }
@@ -51,19 +54,22 @@ async function bundle(entryPath: string, { cwd, ...options }: BundleConfig = {})
     options.dts = true
   }
 
-  const pkg = getPackageMeta(config.rootDir)
+  const pkg = await getPackageMeta(config.rootDir)
   const packageExports = pkg.exports || {}
   const isSingleEntry = typeof packageExports === 'string'
   const hasMultiEntries = packageExports && !isSingleEntry && Object.keys(packageExports).length > 0
   if (isSingleEntry) {
     // Use specified string file path if possible, then fallback to the default behavior entry picking logic
     // e.g. "exports": "./dist/index.js" -> use "./index.<ext>" as entry
-    entryPath = entryPath || getSourcePathFromExportPath(config.rootDir, '.') || ''
+    entryPath = entryPath || await getSourcePathFromExportPath(config.rootDir, '.') || ''
   }
 
-  function buildEntryConfig(packageExports: Record<string, ExportCondition>, dtsOnly: boolean) {
-    const configs = Object.keys(packageExports).map((entryExport) => {
-      const source = getSourcePathFromExportPath(config.rootDir, entryExport)
+  async function buildEntryConfig(
+    packageExports: Record<string, ExportCondition>,
+    dtsOnly: boolean
+  ): Promise<BuncheeRollupConfig[]> {
+    const configs = Object.keys(packageExports).map(async (entryExport) => {
+      const source = await getSourcePathFromExportPath(config.rootDir, entryExport)
       if (!source) return undefined
       if (dtsOnly && !isTypescript(source)) return
 
@@ -73,12 +79,12 @@ async function bundle(entryPath: string, { cwd, ...options }: BundleConfig = {})
         export: packageExports[entryExport]
       }
 
-      const entry = resolve(cwd!, source)
+      const entry = resolveSourceFile(cwd!, source)
       const rollupConfig = buildConfig(entry, pkg, options, dtsOnly)
       return rollupConfig
-    }).filter(v => !!v)
+    })
 
-    return configs
+    return (await Promise.all(configs)).filter(<T>(n?: T): n is T => Boolean(n))
   }
 
   const bundleOrWatch = (
@@ -100,8 +106,8 @@ async function bundle(entryPath: string, { cwd, ...options }: BundleConfig = {})
     return runBundle(rollupConfig, buildMetadata)
   }
 
-  if (!fs.existsSync(entryPath)) {
-    const hasSpecifiedEntryFile = entryPath === '' ? false : fs.statSync(entryPath).isFile()
+  if (!(await fileExists(entryPath))) {
+    const hasSpecifiedEntryFile = entryPath === '' ? false : (await fs.stat(entryPath)).isFile()
 
     if (!hasSpecifiedEntryFile && !hasMultiEntries) {
       const err = new Error(`Entry file \`${entryPath}\` is not existed`)
@@ -120,10 +126,11 @@ async function bundle(entryPath: string, { cwd, ...options }: BundleConfig = {})
     }
 
     if (hasMultiEntries) {
-      const assetsJobs = buildEntryConfig(packageExports, false).map((rollupConfig) => bundleOrWatch(rollupConfig!))
+      const buildConfigs = await buildEntryConfig(packageExports, false)
+      const assetsJobs = buildConfigs.map((rollupConfig) => bundleOrWatch(rollupConfig))
 
       const typesJobs = options.dts
-        ? buildEntryConfig(packageExports, true).map((rollupConfig) => bundleOrWatch(rollupConfig!))
+        ? (await buildEntryConfig(packageExports, true)).map((rollupConfig) => bundleOrWatch(rollupConfig))
         : []
 
       return await Promise.all(assetsJobs.concat(typesJobs))

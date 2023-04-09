@@ -70,6 +70,10 @@ type BundleOptions = BundleConfig & {
   useTypescript: boolean
 }
 
+type BuildMetadata = {
+  source: string
+}
+
 export type {
   CliArgs,
   ExportType,
@@ -77,5 +81,6 @@ export type {
   BundleOptions,
   ExportCondition,
   PackageMetadata,
+  BuildMetadata,
   BuncheeRollupConfig
 }

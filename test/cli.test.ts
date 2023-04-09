@@ -218,11 +218,11 @@ describe('cli', () => {
       execSync(`rm -rf ${distDir}`)
       if (process.env.TEST_DBEUG) {
         console.log(`Command: rm -rf ${distDir}`)
+        console.log(`Command: bunchee ${args.join(' ')}`)
       }
-      console.log(`Command: bunchee ${args.join(' ')}`)
       const ps = fork(
         `${__dirname + '/../node_modules/.bin/tsx'}`,
-        [__dirname + '/../cli.ts'].concat(args),
+        [__dirname + '/../src/cli.ts'].concat(args),
         {
           stdio: 'pipe',
           env,
