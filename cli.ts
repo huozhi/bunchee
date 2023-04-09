@@ -18,9 +18,10 @@ Options:
   -m, --minify           compress output. default: false
   -o, --output <file>    specify output filename
   -f, --format <format>  type of output (esm, amd, cjs, iife, umd, system), default: esm
-  -e, --external <mod>   specify an external dependency, separate by comma
   -h, --help             output usage information
-  --target <target>      js features target: swc target es versions. default: es2015
+  --external <mod>       specify an external dependency, separate by comma
+  --no-external          do not bundle external dependencies
+  --target <target>      js features target: swc target es versions. default: es2016
   --runtime <runtime>    build runtime (nodejs, browser). default: browser
   --env <env>            inlined process env variables, separate by comma. default: NODE_ENV
   --cwd <cwd>            specify current working directory
