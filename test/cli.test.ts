@@ -97,27 +97,33 @@ const testCases: {
     dist: createTempDir,
     args: [
       resolveFromTest('fixtures/with-externals.js'),
-      '-e',
-      'foo',
+      '--external',
+      '@huozhi/testing-package',
       '-o',
       'dist/with-externals.bundle.js',
     ],
-    expected(distFile, { stdout, stderr }) {
-      const output = stdout + stderr
+    expected(distFile) {
+      const content = fs.readFileSync(distFile, { encoding: 'utf-8' })
       return [
-        [fs.existsSync(distFile), true],
-        [
-          output.includes(
-            `'bar' is imported by test/fixtures/with-externals.js, but could not be resolved – treating it as an external dependency`
-          ),
-          false,
-        ],
-        [
-          output.includes(
-            `'foo' is imported by test/fixtures/with-externals.js, but could not be resolved – treating it as an external dependency`
-          ),
-          false,
-        ],
+        [content.includes('@@test_expected_string@@'), false],
+        [content.includes('bar-package'), true],
+      ]
+    },
+  },
+  {
+    name: 'no-externals',
+    dist: createTempDir,
+    args: [
+      resolveFromTest('fixtures/with-externals.js'),
+      '--no-external',
+      '-o',
+      'dist/with-externals.bundle.js',
+    ],
+    expected(distFile) {
+      const content = fs.readFileSync(distFile, { encoding: 'utf-8' })
+      return [
+        [content.includes('@@test_expected_string@@'), true],
+        [content.includes('bar-package'), true],
       ]
     },
   },
@@ -210,7 +216,9 @@ describe('cli', () => {
 
       // TODO: specify working directory for each test
       execSync(`rm -rf ${distDir}`)
-      console.log(`Command: rm -rf ${distDir}`)
+      if (process.env.TEST_DBEUG) {
+        console.log(`Command: rm -rf ${distDir}`)
+      }
       console.log(`Command: bunchee ${args.join(' ')}`)
       const ps = fork(
         `${__dirname + '/../node_modules/.bin/tsx'}`,
@@ -236,7 +244,9 @@ describe('cli', () => {
       }
       expect(fs.existsSync(distFile)).toBe(true)
       expect(code).toBe(0)
-      console.log(`Clean up ${distDir}`)
+      if (process.env.TEST_DBEUG) {
+        console.log(`Clean up ${distDir}`)
+      }
       await removeDirectory(distDir)
     })
   }
