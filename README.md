@@ -63,29 +63,6 @@ You can use the exports field to support different conditions and leverage the s
 
 ### CLI
 
-```
-Usage: bunchee [options]
-
-Options:
-  -v, --version          output the version number
-  -w, --watch            watch src files changes
-  -m, --minify           compress output. default: false
-  -o, --output <file>    specify output filename
-  -f, --format <format>  type of output (esm, amd, cjs, iife, umd, system), default: esm
-  -h, --help             output usage information
-  --external <mod>       specify an external dependency, separate by comma
-  --no-external          do not bundle external dependencies
-  --target <target>      js features target: swc target es versions. default: es2015
-  --runtime <runtime>    build runtime (nodejs, browser). default: browser
-  --env <env>            process env variables to be inlined. default: NODE_ENV
-  --cwd <cwd>            specify current working directory
-  --sourcemap            enable sourcemap generation, default: false
-  --dts                  determine if need to generate types, default: false
-
-Usage:
-  $ bunchee ./src/index.js # if you set main fields in package.json
-  $ bunchee ./src/index.ts -o ./dist/bundle.js # specify the dist file path
-```
 
 Run bunchee via CLI
 
@@ -94,32 +71,22 @@ cd <project-root-dir>
 bunchee ./src/index.js -f cjs -o ./dist/bundle.js
 
 bunchee ./src/index.js -f esm -o ./dist/bundle.esm.js
-# if you don't specify format type, default format is ESModule
-# bunchee ./src/index.js -o ./dist/bundle.esm.js
 ```
 
-### Node.js API
 
-```js
-import path from 'path'
-import { bundle } from 'bunchee'
+## Configurations
 
-// The definition of these options can be found in help information
-await bundle(path.resolve('./src/index.ts'), {
-  dts: false,
-  watch: false,
-  minify: false,
-  sourcemap: false,
-  external: [],
-  format: 'esm',
-  target: 'es2016',
-  runtime: 'nodejs',
-})
-```
+- Output (`-o <file>`): Specify output filename.
+- Format (`-f <format>`): Set output format (default: `'esm'`).
+- External (`--external <dep,>`): Specifying extra external dependencies, by default it is the list of `dependencies` and `peerDependencies` from `package.json`. Values are separate by comma.
+- Target (`--target <target>`): Set ECMAScript target (default: `'es2016'`).
+- Runtime (`--runtime <runtime>`): Set build runtime (default: `'browser'`).
+- Environment (`--env <env,>`): Define environment variables. (default: `NODE_ENV`, separate by comma)
+- Working Directory (`--cwd <cwd>`): Set current working directory.
+- Minify (`-m`): Compress output.
+- Watch (`-w`): Watch for source file changes.
+- TS Types: Generate TypeScript declaration files. (use `--dts` to enable).
 
-#### Watch Mode
-
-Bunchee offers a convenient watch mode for rebuilding your library whenever changes are made to the source files. To enable this feature, use either -w or --watch.
 
 ## Entry Files Convention
 
@@ -207,6 +174,29 @@ Create `tsconfig.json` to specify any compiler options for TypeScript.
 
 This library requires at least [TypeScript 3.7](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html).
 
+### Node.js API
+
+```ts
+import path from 'path'
+import { bundle, type BundleConfig } from 'bunchee'
+
+// The definition of these options can be found in help information
+await bundle(path.resolve('./src/index.ts'), {
+  dts: false, // Boolean
+  watch: false, // Boolean
+  minify: false, // Boolean
+  sourcemap: false, // Boolean
+  external: [], // string[]
+  format: 'esm', // 'esm' | 'cjs'
+  target: 'es2016', // ES syntax target
+  runtime: 'nodejs', // 'browser' | 'nodejs'
+  cwd: process.cwd(), // string
+})
+```
+
+#### Watch Mode
+
+Bunchee offers a convenient watch mode for rebuilding your library whenever changes are made to the source files. To enable this feature, use either -w or --watch.
 
 #### `target`
 

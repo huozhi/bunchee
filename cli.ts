@@ -21,7 +21,7 @@ Options:
   -h, --help             output usage information
   --external <mod>       specify an external dependency, separate by comma
   --no-external          do not bundle external dependencies
-  --target <target>      js features target: swc target es versions. default: es2015
+  --target <target>      js features target: swc target es versions. default: es2016
   --runtime <runtime>    build runtime (nodejs, browser). default: browser
   --env <env>            inlined process env variables, separate by comma. default: NODE_ENV
   --cwd <cwd>            specify current working directory
