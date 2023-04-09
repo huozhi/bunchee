@@ -60,6 +60,9 @@
   "peerDependenciesMeta": {
     "typescript": {
       "optional": true
+    },
+    "@swc/helpers": {
+      "optional": true
     }
   },
   "devDependencies": {
