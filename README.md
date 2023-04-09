@@ -72,8 +72,9 @@ Options:
   -m, --minify           compress output. default: false
   -o, --output <file>    specify output filename
   -f, --format <format>  type of output (esm, amd, cjs, iife, umd, system), default: esm
-  -e, --external <mod>   specify an external dependency
   -h, --help             output usage information
+  --external <mod>       specify an external dependency, separate by comma
+  --no-external          do not bundle external dependencies
   --target <target>      js features target: swc target es versions. default: es2015
   --runtime <runtime>    build runtime (nodejs, browser). default: browser
   --env <env>            process env variables to be inlined. default: NODE_ENV
@@ -120,26 +121,7 @@ await bundle(path.resolve('./src/index.ts'), {
 
 Bunchee offers a convenient watch mode for rebuilding your library whenever changes are made to the source files. To enable this feature, use either -w or --watch.
 
-### Typescript
-
-By default bunchee includes Typescript v3.9.x inside as a dependency. If you want to use your own version, just install typescript as another dev dependency then bunchee will automatically pick it.
-
-```sh
-yarn add -D bunchee typescript
-```
-
-Create `tsconfig.json` to specify any compiler options for TypeScript.
-
-This library requires at least [TypeScript 3.7](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html).
-
-
-#### `target`
-
-If you specify `target` option in `tsconfig.json`, then you don't have to pass it again through CLI.
-
-## Advanced
-
-### Multiple Exports
+## Entry Files Convention
 
 While `exports` filed is becoming the standard of exporting in node.js, bunchee also supports to build multiple exports all in one command.
 
@@ -179,6 +161,56 @@ Then you need to add two entry files `index.ts` and `lite.ts` in project root di
   |- src/
   |- package.json
 ```
+
+### Externals
+
+#### Specifying extra external dependencies
+
+If you want to mark specific dependencies as external and not include them in the bundle, use the `--external` option followed by a comma-separated list of dependency names:
+
+```sh
+bunchee --external=dependency1,dependency2,dependency3
+```
+
+Replace `dependency1`, `dependency2`, and `dependency3` with the names of the dependencies you want to exclude from the bundle.
+
+#### Bundling everything without external dependencies
+To bundle your library without external dependencies, use the `--no-external` option:
+
+```sh
+bunchee --no-external
+```
+This will include all dependencies within your output bundle.
+
+### Environment Variables
+To pass environment variables to your bundled code, use the --env option followed by a comma-separated list of environment variable names:
+
+```bash
+bunchee --env=ENV1,ENV2,ENV3
+```
+
+Replace `ENV1`, `ENV2`, and `ENV3` with the names of the environment variables you want to include in your bundled code. These environment variables will be inlined during the bundling process.
+
+### Package lint
+
+`bunchee` has support for checking the package bundles are matched with package exports configuration.
+
+### Typescript
+
+By default bunchee includes Typescript v3.9.x inside as a dependency. If you want to use your own version, just install typescript as another dev dependency then bunchee will automatically pick it.
+
+```sh
+yarn add -D bunchee typescript
+```
+
+Create `tsconfig.json` to specify any compiler options for TypeScript.
+
+This library requires at least [TypeScript 3.7](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html).
+
+
+#### `target`
+
+If you specify `target` option in `tsconfig.json`, then you don't have to pass it again through CLI.
 
 ### License
 
