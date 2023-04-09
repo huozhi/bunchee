@@ -22,10 +22,6 @@ npm install --save-dev bunchee
 ```
 
 ## Usage
-### Package.json Configuration
-
-Declare the main and module fields in your package.json file, then call the bunchee CLI in the build scripts. If you are using TypeScript, types will be generated automatically based on the typings or types field in your package.json file.
-
 
 ### Create your entry file
 
@@ -38,7 +34,6 @@ touch ./index.js
 [exports sugar in Node.js](https://nodejs.org/api/packages.html#exports-sugar)
 
 You can use the `exports` field to support different conditions and leverage the same functionality as other bundlers, such as webpack. The exports field allows you to define multiple conditions.
-
 
 ```json
 {
@@ -65,31 +60,9 @@ Using pure ESM package?
 }
 ```
 
-Or you can use `main` and `module` fields. `bunchee` supports legacy package exports configuration field `module` field for exporting esm assets at the same time.
-
-```json
-{
-  "main": "dist/pkg.cjs.js",
-  "module": "dist/pkg.esm.js",
-  "scripts": {
-    "build": "bunchee"
-  },
-}
-```
-
 Then just run `npm run build`, or `pnpm build` / `yarn build` if you're using these package managers.
 
 ### CLI
-
-Run bunchee via CLI
-
-```sh
-cd <project-root-dir>
-bunchee ./src/index.js -f cjs -o ./dist/bundle.js
-
-bunchee ./src/index.js -f esm -o ./dist/bundle.esm.js
-```
-
 
 ## Configurations
 
@@ -99,10 +72,51 @@ bunchee ./src/index.js -f esm -o ./dist/bundle.esm.js
 - Target (`--target <target>`): Set ECMAScript target (default: `'es2016'`).
 - Runtime (`--runtime <runtime>`): Set build runtime (default: `'browser'`).
 - Environment (`--env <env,>`): Define environment variables. (default: `NODE_ENV`, separate by comma)
-- Working Directory (`--cwd <cwd>`): Set current working directory.
+- Working Directory (`--cwd <cwd>`): Set current working directory where containing `package.json`.
+- Types only (`--dts`): Generate TypeScript declaration files without assets.
 - Minify (`-m`): Compress output.
 - Watch (`-w`): Watch for source file changes.
-- TS Types: Generate TypeScript declaration files. (use `--dts` to enable).
+
+#### Basic Example
+
+```sh
+cd <project-root-dir>
+
+# specifying input, output and format
+
+bunchee ./src/index.js -f cjs -o ./dist/bundle.js
+bunchee ./src/index.js -f esm -o ./dist/bundle.esm.js
+
+# build node.js library, or change target to es2019
+bunchee ./src/index.js --runtime node --target es2019
+```
+
+#### Specifying extra external dependencies
+
+If you want to mark specific dependencies as external and not include them in the bundle, use the `--external` option followed by a comma-separated list of dependency names:
+
+```sh
+bunchee --external=dependency1,dependency2,dependency3
+```
+
+Replace `dependency1`, `dependency2`, and `dependency3` with the names of the dependencies you want to exclude from the bundle.
+
+#### Bundling everything without external dependencies
+To bundle your library without external dependencies, use the `--no-external` option:
+
+```sh
+bunchee --no-external
+```
+This will include all dependencies within your output bundle.
+
+### Environment Variables
+To pass environment variables to your bundled code, use the --env option followed by a comma-separated list of environment variable names:
+
+```bash
+bunchee --env=ENV1,ENV2,ENV3
+```
+
+Replace `ENV1`, `ENV2`, and `ENV3` with the names of the environment variables you want to include in your bundled code. These environment variables will be inlined during the bundling process.
 
 
 ## Entry Files Convention
@@ -145,35 +159,6 @@ Then you need to add two entry files `index.ts` and `lite.ts` in project root di
   |- src/
   |- package.json
 ```
-
-### Externals
-
-#### Specifying extra external dependencies
-
-If you want to mark specific dependencies as external and not include them in the bundle, use the `--external` option followed by a comma-separated list of dependency names:
-
-```sh
-bunchee --external=dependency1,dependency2,dependency3
-```
-
-Replace `dependency1`, `dependency2`, and `dependency3` with the names of the dependencies you want to exclude from the bundle.
-
-#### Bundling everything without external dependencies
-To bundle your library without external dependencies, use the `--no-external` option:
-
-```sh
-bunchee --no-external
-```
-This will include all dependencies within your output bundle.
-
-### Environment Variables
-To pass environment variables to your bundled code, use the --env option followed by a comma-separated list of environment variable names:
-
-```bash
-bunchee --env=ENV1,ENV2,ENV3
-```
-
-Replace `ENV1`, `ENV2`, and `ENV3` with the names of the environment variables you want to include in your bundled code. These environment variables will be inlined during the bundling process.
 
 ### Package lint
 
