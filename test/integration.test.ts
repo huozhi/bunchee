@@ -85,7 +85,7 @@ const testCases: {
     name: 'single-entry',
     args: [],
     expected(dir) {
-      const distFiles = [join(dir, './dist/index.js')]
+      const distFiles = [join(dir, './dist/index.js'), join(dir, './dist/index.d.ts')]
       expect(distFiles.every((f) => fs.existsSync(f))).toBe(true)
     },
   },
@@ -112,7 +112,7 @@ async function runBundle(
   ps.stderr?.on('data', (chunk) => (stderr += chunk.toString()))
   return new Promise((resolve) => {
     ps.on('close', (code) => {
-      if (process.env.TEST_DEBUG) {
+      if (process.env.DEBUG_TEST) {
         stdout && console.log(stdout)
         stderr && console.error(stderr)
       }

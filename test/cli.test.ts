@@ -187,7 +187,6 @@ const testCases: {
     },
     expected(distFile) {
       const content = fs.readFileSync(distFile, { encoding: 'utf-8' })
-      console.log('content', content)
       return [
         [content.includes('my-test-value'), true],
       ]

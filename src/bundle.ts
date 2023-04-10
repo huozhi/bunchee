@@ -44,6 +44,16 @@ async function getSourcePathFromExportPath(cwd: string, exportPath: string): Pro
   return
 }
 
+function hasMultiEntryExport(pkg: PackageMetadata): boolean {
+  const packageExportsField = pkg.exports || {}
+  if (typeof packageExportsField === 'string')  return false
+
+  const exportKeys = (packageExportsField ? Object.keys(packageExportsField) : [])
+    .filter(key => key !== './package.json')
+
+  return exportKeys.length > 0 && exportKeys.every(name => name.startsWith('.'))
+}
+
 async function bundle(entryPath: string, { cwd, ...options }: BundleConfig = {}): Promise<any> {
   config.rootDir = resolve(process.cwd(), cwd || '')
   assignDefault(options, 'format', 'es')
@@ -55,10 +65,11 @@ async function bundle(entryPath: string, { cwd, ...options }: BundleConfig = {})
   }
 
   const pkg = await getPackageMeta(config.rootDir)
-  const packageExports = pkg.exports || {}
-  const isSingleEntry = typeof packageExports === 'string'
-  const hasMultiEntries = packageExports && !isSingleEntry && Object.keys(packageExports).length > 0
-  if (isSingleEntry) {
+  const packageExportsField = pkg.exports || {}
+  const isMultiEntries = hasMultiEntryExport(pkg)
+
+  // Handle single entry file
+  if (!isMultiEntries) {
     // Use specified string file path if possible, then fallback to the default behavior entry picking logic
     // e.g. "exports": "./dist/index.js" -> use "./index.<ext>" as entry
     entryPath = entryPath || await getSourcePathFromExportPath(config.rootDir, '.') || ''
@@ -106,35 +117,37 @@ async function bundle(entryPath: string, { cwd, ...options }: BundleConfig = {})
     return runBundle(rollupConfig, buildMetadata)
   }
 
-  if (!(await fileExists(entryPath))) {
-    const hasSpecifiedEntryFile = entryPath === '' ? false : (await fs.stat(entryPath)).isFile()
+  const hasSpecifiedEntryFile = entryPath
+    ? (await fileExists(entryPath)) && (await fs.stat(entryPath)).isFile()
+    : false
 
-    if (!hasSpecifiedEntryFile && !hasMultiEntries) {
-      const err = new Error(`Entry file \`${entryPath}\` is not existed`)
-      err.name = 'NOT_EXISTED'
-      return Promise.reject(err)
-    }
+  if (!hasSpecifiedEntryFile && !isMultiEntries) {
+    const err = new Error(`Entry file \`${entryPath}\` is not existed`)
+    err.name = 'NOT_EXISTED'
+    return Promise.reject(err)
+  }
 
-    // has `types` field in package.json or has `types` exports in any export condition for multi-entries
-    const hasTypings =
-      !!getTypings(pkg)
-      || typeof packageExports === 'object' && Array.from(Object.values(packageExports || {})).some(condition => condition.hasOwnProperty('types'))
+  // has `types` field in package.json or has `types` exports in any export condition for multi-entries
+  const hasTypings =
+    !!getTypings(pkg)
+    || typeof packageExportsField === 'object' && Array.from(Object.values(packageExportsField || {})).some(condition => condition.hasOwnProperty('types'))
 
-    // If there's no entry file specified, should enable dts bundling based on package.json exports info
-    if (!hasSpecifiedEntryFile && hasTypings) {
-      options.dts = hasTypings
-    }
+  // Enable types generation if it's types field specified in package.json
+  if (hasTypings) {
+    options.dts = hasTypings
+  }
 
-    if (hasMultiEntries) {
-      const buildConfigs = await buildEntryConfig(packageExports, false)
-      const assetsJobs = buildConfigs.map((rollupConfig) => bundleOrWatch(rollupConfig))
+  if (isMultiEntries) {
+    const pkgExports = packageExportsField as Record<string, ExportCondition>
+    const buildConfigs = await buildEntryConfig(pkgExports, false)
+    const assetsJobs = buildConfigs.map((rollupConfig) => bundleOrWatch(rollupConfig))
 
-      const typesJobs = options.dts
-        ? (await buildEntryConfig(packageExports, true)).map((rollupConfig) => bundleOrWatch(rollupConfig))
-        : []
 
-      return await Promise.all(assetsJobs.concat(typesJobs))
-    }
+    const typesJobs = options.dts
+      ? (await buildEntryConfig(pkgExports, true)).map((rollupConfig) => bundleOrWatch(rollupConfig))
+      : []
+
+    return await Promise.all(assetsJobs.concat(typesJobs))
   }
 
   // Generate types
