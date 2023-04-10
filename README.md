@@ -124,7 +124,7 @@ Replace `ENV1`, `ENV2`, and `ENV3` with the names of the environment variables y
 
 ### Entry Files Convention
 
-While `exports` filed is becoming the standard of exporting in node.js, bunchee also supports to build multiple exports all in one command.
+While `exports` field is becoming the standard of exporting in node.js, bunchee also supports to build multiple exports all in one command.
 
 What you need to do is just add an entry file with the name (`[name].[ext]`) that matches the exported name from exports field in package.json. For instance:
 
