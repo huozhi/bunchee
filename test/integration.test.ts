@@ -3,11 +3,7 @@ jest.setTimeout(10 * 60 * 1000)
 import fs from 'fs'
 import { execSync, fork } from 'child_process'
 import { resolve, join } from 'path'
-
-function stripANSIColor(str: string) {
-  return str.replace(
-    /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '')
-}
+import { stripANSIColor } from './testing-utils'
 
 const integrationTestDir = resolve(__dirname, 'integration')
 

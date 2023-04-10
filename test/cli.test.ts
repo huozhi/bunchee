@@ -4,6 +4,7 @@ import fs, { promises as fsp } from 'fs'
 import path from 'path'
 import os from 'os'
 import { fork, execSync } from 'child_process'
+import { stripANSIColor } from './testing-utils'
 
 const resolveFromTest = (filepath: string) => path.resolve(__dirname, '../test', filepath)
 const fixturesDir = resolveFromTest('fixtures')
@@ -169,12 +170,14 @@ const testCases: {
   },
   // single entry with custom entry path
   {
-    name: 'single-entry',
-    dist: path.join(fixturesDir, './single-entry/dist'),
-    args: ['src/index.js', '--cwd', path.join(fixturesDir, './single-entry')],
-    expected(distFile) {
+    name: 'single-entry-js',
+    dist: path.join(fixturesDir, './single-entry-js/dist'),
+    args: ['src/index.js', '--cwd', path.join(fixturesDir, './single-entry-js')],
+    expected(distFile, { stdout }) {
       return [
         [fs.existsSync(distFile), true],
+        // specifying types in package.json for js entry file won't work
+        [stripANSIColor(stdout).includes('pkg.types is ./dist/index.d.ts but the file does not exist.'), true]
       ]
     },
   },

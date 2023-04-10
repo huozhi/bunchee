@@ -76,7 +76,7 @@ Then just run `npm run build`, or `pnpm build` / `yarn build` if you're using th
 - Runtime (`--runtime <runtime>`): Set build runtime (default: `'browser'`).
 - Environment (`--env <env,>`): Define environment variables. (default: `NODE_ENV`, separate by comma)
 - Working Directory (`--cwd <cwd>`): Set current working directory where containing `package.json`.
-- Types only (`--dts`): Generate TypeScript declaration files without assets.
+- Types (`--dts`): Generate TypeScript declaration files along with assets.
 - Minify (`-m`): Compress output.
 - Watch (`-w`): Watch for source file changes.
 
