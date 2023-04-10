@@ -60,10 +60,6 @@ async function bundle(entryPath: string, { cwd, ...options }: BundleConfig = {})
   assignDefault(options, 'minify', false)
   assignDefault(options, 'target', 'es2015')
 
-  if (options.dts === undefined && isTypescript(entryPath)) {
-    options.dts = true
-  }
-
   const pkg = await getPackageMeta(config.rootDir)
   const packageExportsField = pkg.exports || {}
   const isMultiEntries = hasMultiEntryExport(pkg)
