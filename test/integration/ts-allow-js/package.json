@@ -1,0 +1,5 @@
+{
+  "name": "ts-allow-js",
+  "types": "./dist/index.d.ts",
+  "exports": "./dist/index.js"
+}

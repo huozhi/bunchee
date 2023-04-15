@@ -78,11 +78,6 @@ async function bundle(
     dtsOnly: false,
   }
 
-  // const useTypescript = isTypescriptFile(entryPath)
-  // if (useTypescript && !hasTsConfig) {
-  //   return exit(`tsconfig.json is missing in project directory ${cwd}`)
-  // }
-
   // Handle single entry file
   if (!isMultiEntries) {
     // Use specified string file path if possible, then fallback to the default behavior entry picking logic

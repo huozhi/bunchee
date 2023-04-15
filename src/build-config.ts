@@ -263,7 +263,7 @@ function buildConfig(
   tsOptions: TypescriptOptions
 ): BuncheeRollupConfig {
   const { file } = bundleConfig
-  const useTypescript = isTypescriptFile(entry)
+  const useTypescript = Boolean(tsOptions.tsConfigPath) // isTypescriptFile(entry)
   const options = { ...bundleConfig, useTypescript }
   const inputOptions = buildInputConfig(entry, pkg, options, tsOptions)
   const outputExports = options.exportCondition
