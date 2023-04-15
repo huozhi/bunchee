@@ -128,7 +128,7 @@ async function runBundle(
   ps.stderr?.on('data', (chunk) => (stderr += chunk.toString()))
   return new Promise((resolve) => {
     ps.on('close', (code) => {
-      if (process.env.DEBUG_TEST) {
+      if (process.env.TEST_DEBUG) {
         stdout && console.log(stdout)
         stderr && console.error(stderr)
       }
@@ -146,10 +146,10 @@ function runTests() {
     const { name, args, expected } = testCase
     const dir = getPath(name)
     test(`integration ${name}`, async () => {
-      if (process.env.DEBUG_TEST) console.log(`Command: bunchee ${args.join(' ')}`)
+      if (process.env.TEST_DEBUG) console.log(`Command: bunchee ${args.join(' ')}`)
       execSync(`rm -rf ${join(dir, 'dist')}`)
       const { stdout, stderr } = await runBundle(dir, args)
-      if (process.env.DEBUG_TEST) {
+      if (process.env.TEST_DEBUG) {
         stdout && console.log(stdout)
         stderr && console.error(stderr)
       }
