@@ -16,6 +16,7 @@ import shebang from 'rollup-plugin-preserve-shebang'
 import json from '@rollup/plugin-json'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import replace from '@rollup/plugin-replace'
+import createChunkSizeCollector from './plugins/size-plugin'
 import {
   getTypings,
   getExportDist,
@@ -40,6 +41,9 @@ const minifyOptions: JsMinifyOptions = {
   },
 }
 
+// This can also be passed down as stats from top level
+export const sizeCollector = createChunkSizeCollector()
+
 function getBuildEnv(envs: string[]) {
   if (!envs.includes('NODE_ENV')) {
     envs.push('NODE_ENV')
@@ -59,6 +63,7 @@ function buildInputConfig(
   entry: string,
   pkg: PackageMetadata,
   options: BundleOptions,
+  cwd: string,
   { tsConfigPath, tsCompilerOptions }: TypescriptOptions,
   dtsOnly: boolean
 ): InputOptions {
@@ -74,10 +79,15 @@ function buildInputConfig(
   const hasSpecifiedTsTarget = Boolean(
     tsCompilerOptions?.target && tsConfigPath
   )
+  const sizePlugin = sizeCollector.plugin(cwd)
+  const commonPlugins = [
+    shebang(),
+    sizePlugin,
+  ]
   const plugins: Plugin[] = (
     dtsOnly
       ? [
-          shebang(),
+          ...commonPlugins,
           useTypescript &&
             require('rollup-plugin-dts').default({
               compilerOptions: {
@@ -98,6 +108,7 @@ function buildInputConfig(
             }),
         ]
       : [
+          ...commonPlugins,
           replace({
             values: getBuildEnv(options.env || []),
             preventAssignment: true,
@@ -110,7 +121,6 @@ function buildInputConfig(
             include: /node_modules\//,
           }),
           json(),
-          shebang(),
           swc({
             include: /\.(m|c)?[jt]sx?$/,
             exclude: 'node_modules',
@@ -268,7 +278,7 @@ function buildConfig(
   const { file } = bundleConfig
   const useTypescript = Boolean(tsOptions.tsConfigPath)
   const options = { ...bundleConfig, useTypescript }
-  const inputOptions = buildInputConfig(entry, pkg, options, tsOptions, dtsOnly)
+  const inputOptions = buildInputConfig(entry, pkg, options, cwd, tsOptions, dtsOnly)
   const outputExports = options.exportCondition
     ? getExportConditionDist(pkg, options.exportCondition.export, cwd)
     : getExportDist(pkg, cwd)
@@ -330,7 +340,6 @@ function buildConfig(
     input: inputOptions,
     output: outputConfigs,
     exportName: options.exportCondition?.name || '.',
-    dtsOnly,
   }
 }
 

@@ -18,7 +18,6 @@ import buildConfig, { buildEntryConfig } from './build-config'
 import {
   getPackageMeta,
   logger,
-  formatDuration,
   fileExists,
   getSourcePathFromExportPath,
   getExportPath,
@@ -26,14 +25,7 @@ import {
 import { getTypings } from './exports'
 import type { BuildMetadata } from './types'
 import { TypescriptOptions, resolveTsConfig } from './typescript'
-
-function logBuild(exportPath: string, dtsOnly: boolean, duration: number) {
-  logger.log(
-    ` ✓  ${dtsOnly ? 'Typed' : 'Built'} ${exportPath} ${formatDuration(
-      duration
-    )}`
-  )
-}
+import { logSizeStats } from './logging'
 
 function assignDefault(
   options: BundleConfig,
@@ -104,7 +96,7 @@ async function bundle(
     if (options.watch) {
       return Promise.resolve(runWatch(rollupConfig, buildMetadata))
     }
-    return runBundle(rollupConfig, buildMetadata)
+    return runBundle(rollupConfig)
   }
 
   const hasSpecifiedEntryFile = entryPath
@@ -130,6 +122,7 @@ async function bundle(
     options.dts = hasTypings
   }
 
+  let result
   if (isMultiEntries) {
     const buildConfigs = await buildEntryConfig(
       pkg,
@@ -148,24 +141,25 @@ async function bundle(
         ).map((rollupConfig) => bundleOrWatch(rollupConfig))
       : []
 
-    return await Promise.all(assetsJobs.concat(typesJobs))
+    result = await Promise.all(assetsJobs.concat(typesJobs))
+  } else {
+    // Generate types
+    if (hasTsConfig && options.dts) {
+      await bundleOrWatch(
+        buildConfig(entryPath, pkg, options, cwd, defaultTsOptions, true)
+      )
+    }
+
+    const rollupConfig = buildConfig(entryPath, pkg, options, cwd, defaultTsOptions, false)
+    result = await bundleOrWatch(rollupConfig)
   }
 
-  // Generate types
-  if (hasTsConfig && options.dts) {
-    await bundleOrWatch(
-      buildConfig(entryPath, pkg, options, cwd, defaultTsOptions, true)
-    )
-  }
-
-  const rollupConfig = buildConfig(entryPath, pkg, options, cwd, defaultTsOptions, false)
-  return bundleOrWatch(rollupConfig)
+  logSizeStats()
+  return result
 }
 
-
-
 function runWatch(
-  { input, output, dtsOnly }: BuncheeRollupConfig,
+  { input, output }: BuncheeRollupConfig,
   metadata: BuildMetadata
 ): RollupWatcher {
   const watchOptions: RollupWatchOptions[] = [
@@ -179,20 +173,16 @@ function runWatch(
   ]
   const watcher = rollupWatch(watchOptions)
 
-  let startTime = Date.now()
   watcher.on('event', (event) => {
     switch (event.code) {
       case 'ERROR': {
         return onError(event.error)
       }
       case 'START': {
-        startTime = Date.now()
         logger.log(`Start building ${metadata.source} ...`)
         break
       }
       case 'END': {
-        const duration = Date.now() - startTime
-        logBuild(metadata.source, dtsOnly, duration)
         break
       }
       default:
@@ -203,11 +193,8 @@ function runWatch(
 }
 
 function runBundle(
-  { input, output, dtsOnly }: BuncheeRollupConfig,
-  jobOptions: BuildMetadata
+  { input, output }: BuncheeRollupConfig
 ) {
-  const startTime = Date.now()
-
   return rollup(input)
     .then((bundle: RollupBuild) => {
       const writeJobs = output.map((options: OutputOptions) =>
@@ -215,10 +202,6 @@ function runBundle(
       )
       return Promise.all(writeJobs)
     }, onError)
-    .then(() => {
-      const duration = Date.now() - startTime
-      logBuild(jobOptions.source, dtsOnly, duration)
-    })
 }
 
 function onError(error: any) {

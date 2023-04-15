@@ -25,7 +25,7 @@ export async function getPackageMeta(cwd: string): Promise<PackageMetadata> {
 }
 
 export const logger = {
-  log(arg: any) {
+  log(arg?: any) {
     console.log(arg)
   },
   warn(arg: any[]) {

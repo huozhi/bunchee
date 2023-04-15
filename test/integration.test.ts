@@ -65,7 +65,7 @@ const testCases: {
   {
     name: 'multi-entries',
     args: [],
-    async expected(dir) {
+    async expected(dir, { stdout }) {
       const distFiles = [
         join(dir, './dist/index.js'),
         join(dir, './dist/lite.js'),
@@ -81,17 +81,41 @@ const testCases: {
       for (const f of distFiles) {
         expect(await existsFile(f)).toBe(true)
       }
+
+      const log = `\
+      ✓  Typed dist/client.d.ts      - 74 B
+      ✓  Typed dist/index.d.ts       - 65 B
+      ✓  Typed dist/lite.d.ts        - 70 B
+      ✓  Typed dist/client.d.ts      - 74 B
+      ✓  Built dist/index.js         - 110 B
+      ✓  Built dist/lite.js          - 132 B
+      ✓  Built dist/client/index.cjs - 138 B
+      ✓  Built dist/client/index.mjs - 78 B`
+
+      const rawStdout = stripANSIColor(stdout)
+      log.split('\n').forEach((line: string) => {
+        expect(rawStdout).toContain(line.trim())
+      })
     },
   },
   {
     name: 'single-entry',
     args: [],
-    async expected(dir) {
+    async expected(dir, { stdout }) {
       const distFiles = [join(dir, './dist/index.js'), join(dir, './dist/index.d.ts')]
       for (const f of distFiles) {
         expect(await existsFile(f)).toBe(true)
       }
       expect(await fs.readFile(distFiles[1], 'utf-8')).toContain('declare const _default: () => string;')
+
+      const log = `\
+      ✓  Typed dist/index.d.ts - 70 B
+      ✓  Built dist/index.js   - 56 B`
+
+      const rawStdout = stripANSIColor(stdout)
+      log.split('\n').forEach((line: string) => {
+        expect(rawStdout).toContain(line.trim())
+      })
     },
   },
   {
@@ -128,10 +152,6 @@ async function runBundle(
   ps.stderr?.on('data', (chunk) => (stderr += chunk.toString()))
   return new Promise((resolve) => {
     ps.on('close', (code) => {
-      if (process.env.DEBUG_TEST) {
-        stdout && console.log(stdout)
-        stderr && console.error(stderr)
-      }
       resolve({
         code,
         stdout,
@@ -146,10 +166,10 @@ function runTests() {
     const { name, args, expected } = testCase
     const dir = getPath(name)
     test(`integration ${name}`, async () => {
-      if (process.env.DEBUG_TEST) console.log(`Command: bunchee ${args.join(' ')}`)
+      if (process.env.TEST_DEBUG) console.log(`Command: bunchee ${args.join(' ')}`)
       execSync(`rm -rf ${join(dir, 'dist')}`)
       const { stdout, stderr } = await runBundle(dir, args)
-      if (process.env.DEBUG_TEST) {
+      if (process.env.TEST_DEBUG) {
         stdout && console.log(stdout)
         stderr && console.error(stderr)
       }
