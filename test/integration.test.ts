@@ -91,7 +91,7 @@ const testCases: {
       for (const f of distFiles) {
         expect(await existsFile(f)).toBe(true)
       }
-      expect(await fs.readFile(distFiles[1], 'utf-8')).toContain('declare function _default(): string;')
+      expect(await fs.readFile(distFiles[1], 'utf-8')).toContain('declare const _default: () => string;')
     },
   },
   {

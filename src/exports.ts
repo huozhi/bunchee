@@ -82,16 +82,14 @@ export function getExportDist(pkg: PackageMetadata, cwd: string) {
 }
 
 export function getExportConditionDist(pkg: PackageMetadata, exportCondition: ExportCondition, cwd: string) {
-  // const pkgExports = pkg.exports || {}
   const dist: { format: 'cjs' | 'esm'; file: string }[] = []
   // "exports": "..."
   if (typeof exportCondition === 'string') {
     dist.push({ format: pkg.type === 'module' ? 'esm' : 'cjs', file: getDistPath(exportCondition, cwd) })
   } else {
     // "./<subexport>": { }
-    const subExports = exportCondition // pkgExports[subExport]
+    const subExports = exportCondition
     // Ignore json exports, like "./package.json"
-    // if (subExport.endsWith('.json')) return dist
     if (typeof subExports === 'string') {
       dist.push({ format: 'esm', file: getDistPath(subExports, cwd) })
     } else {

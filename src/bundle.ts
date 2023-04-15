@@ -75,7 +75,6 @@ async function bundle(
   const defaultTsOptions: TypescriptOptions = {
     tsConfigPath: tsConfig?.tsConfigPath,
     tsCompilerOptions: tsConfig?.tsCompilerOptions || {},
-    dtsOnly: false,
   }
 
   // Handle single entry file
@@ -136,10 +135,8 @@ async function bundle(
       pkg,
       options,
       cwd,
-      {
-        ...defaultTsOptions,
-        dtsOnly: false,
-      }
+      defaultTsOptions,
+      false,
     )
     const assetsJobs = buildConfigs.map((rollupConfig) =>
       bundleOrWatch(rollupConfig)
@@ -147,10 +144,7 @@ async function bundle(
 
     const typesJobs = options.dts
       ? (
-          await buildEntryConfig(pkg, options, cwd, {
-            ...defaultTsOptions,
-            dtsOnly: true,
-          })
+          await buildEntryConfig(pkg, options, cwd, defaultTsOptions, true)
         ).map((rollupConfig) => bundleOrWatch(rollupConfig))
       : []
 
@@ -160,17 +154,11 @@ async function bundle(
   // Generate types
   if (hasTsConfig && options.dts) {
     await bundleOrWatch(
-      buildConfig(entryPath, pkg, options, cwd, {
-        ...defaultTsOptions,
-        dtsOnly: true,
-      })
+      buildConfig(entryPath, pkg, options, cwd, defaultTsOptions, true)
     )
   }
 
-  const rollupConfig = buildConfig(entryPath, pkg, options, cwd, {
-    ...defaultTsOptions,
-    dtsOnly: false,
-  })
+  const rollupConfig = buildConfig(entryPath, pkg, options, cwd, defaultTsOptions, false)
   return bundleOrWatch(rollupConfig)
 }
 

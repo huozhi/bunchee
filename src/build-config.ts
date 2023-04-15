@@ -23,7 +23,6 @@ import {
   getExportConditionDist,
 } from './exports'
 import {
-  isTypescriptFile,
   isNotNull,
   getSourcePathFromExportPath,
   resolveSourceFile,
@@ -60,7 +59,8 @@ function buildInputConfig(
   entry: string,
   pkg: PackageMetadata,
   options: BundleOptions,
-  { tsConfigPath, tsCompilerOptions, dtsOnly }: TypescriptOptions
+  { tsConfigPath, tsCompilerOptions }: TypescriptOptions,
+  dtsOnly: boolean
 ): InputOptions {
   const externals = options.noExternal
     ? []
@@ -179,7 +179,8 @@ function buildOutputConfigs(
   pkg: PackageMetadata,
   options: BundleOptions,
   cwd: string,
-  { tsCompilerOptions, dtsOnly }: TypescriptOptions
+  { tsCompilerOptions }: TypescriptOptions,
+  dtsOnly: boolean
 ): OutputOptions {
   const { format, exportCondition } = options
   const exportPaths = getExportPaths(pkg)
@@ -230,7 +231,8 @@ export async function buildEntryConfig(
   pkg: PackageMetadata,
   bundleConfig: BundleConfig,
   cwd: string,
-  tsOptions: TypescriptOptions
+  tsOptions: TypescriptOptions,
+  dtsOnly: boolean
 ): Promise<BuncheeRollupConfig[]> {
   const packageExports = (pkg.exports || {}) as Record<string, ExportCondition>
   const configs = Object.keys(packageExports).map(async (entryExport) => {
@@ -239,7 +241,7 @@ export async function buildEntryConfig(
       entryExport
     )
     if (!source) return undefined
-    if (tsOptions.dtsOnly && !tsOptions?.tsConfigPath) return
+    if (dtsOnly && !tsOptions?.tsConfigPath) return
 
     bundleConfig.exportCondition = {
       source,
@@ -248,7 +250,7 @@ export async function buildEntryConfig(
     }
 
     const entry = resolveSourceFile(cwd!, source)
-    const rollupConfig = buildConfig(entry, pkg, bundleConfig, cwd, tsOptions)
+    const rollupConfig = buildConfig(entry, pkg, bundleConfig, cwd, tsOptions, dtsOnly)
     return rollupConfig
   })
 
@@ -260,12 +262,13 @@ function buildConfig(
   pkg: PackageMetadata,
   bundleConfig: BundleConfig,
   cwd: string,
-  tsOptions: TypescriptOptions
+  tsOptions: TypescriptOptions,
+  dtsOnly: boolean
 ): BuncheeRollupConfig {
   const { file } = bundleConfig
-  const useTypescript = Boolean(tsOptions.tsConfigPath) // isTypescriptFile(entry)
+  const useTypescript = Boolean(tsOptions.tsConfigPath)
   const options = { ...bundleConfig, useTypescript }
-  const inputOptions = buildInputConfig(entry, pkg, options, tsOptions)
+  const inputOptions = buildInputConfig(entry, pkg, options, tsOptions, dtsOnly)
   const outputExports = options.exportCondition
     ? getExportConditionDist(pkg, options.exportCondition.export, cwd)
     : getExportDist(pkg, cwd)
@@ -273,7 +276,7 @@ function buildConfig(
   let outputConfigs = []
 
   // Generate dts job - single config
-  if (tsOptions.dtsOnly) {
+  if (dtsOnly) {
     outputConfigs = [
       buildOutputConfigs(
         pkg,
@@ -283,7 +286,8 @@ function buildConfig(
           useTypescript,
         },
         cwd,
-        tsOptions
+        tsOptions,
+        dtsOnly
       ),
     ]
   } else {
@@ -298,7 +302,8 @@ function buildConfig(
           useTypescript,
         },
         cwd,
-        tsOptions
+        tsOptions,
+        dtsOnly
       )
     })
     // CLI output option is always prioritized
@@ -314,7 +319,8 @@ function buildConfig(
             useTypescript,
           },
           cwd,
-          tsOptions
+          tsOptions,
+          dtsOnly
         ),
       ]
     }
@@ -324,7 +330,7 @@ function buildConfig(
     input: inputOptions,
     output: outputConfigs,
     exportName: options.exportCondition?.name || '.',
-    dtsOnly: tsOptions.dtsOnly,
+    dtsOnly,
   }
 }
 

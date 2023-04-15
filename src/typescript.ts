@@ -6,7 +6,6 @@ import { exit, fileExists } from './utils'
 export type TypescriptOptions = {
   tsConfigPath: string | undefined
   tsCompilerOptions: CompilerOptions
-  dtsOnly: boolean
 }
 
 let hasLoggedTsWarning = false
