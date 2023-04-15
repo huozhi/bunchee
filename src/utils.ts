@@ -10,6 +10,10 @@ export function exit(err: string | Error) {
 export const formatDuration = (duration: number) =>
   duration >= 1000 ? `${duration / 1000}s` : `${duration}ms`
 
+export async function hasPackageJson(cwd: string) {
+  return await fileExists(path.resolve(cwd, 'package.json'))
+}
+
 export async function getPackageMeta(cwd: string): Promise<PackageMetadata> {
   const pkgFilePath = path.resolve(cwd, 'package.json')
   let targetPackageJson = {}
@@ -32,7 +36,7 @@ export const logger = {
   },
 }
 
-export function isTypescript(filename: string): boolean {
+export function isTypescriptFile(filename: string): boolean {
   const ext = path.extname(filename)
   return ext === '.ts' || ext === '.tsx'
 }
@@ -49,4 +53,34 @@ export async function fileExists(filePath: string) {
   }
 }
 
+// . -> pkg name
+// ./lite -> <pkg name>/lite
+export function getExportPath(pkg: PackageMetadata, cwd: string, exportName?: string) {
+  const name = pkg.name || path.basename(cwd)
+  if (exportName === '.' || !exportName) return name
+  return path.join(name, exportName)
+}
+
 export const isNotNull = <T>(n: T | false): n is T => Boolean(n)
+
+const SRC = 'src' // resolve from src/ directory
+export function resolveSourceFile(cwd: string, filename: string) {
+  return path.resolve(cwd, SRC, filename)
+}
+// Map '.' -> './index.[ext]'
+// Map './lite' -> './lite.[ext]'
+// Return undefined if no match or if it's package.json exports
+export async function getSourcePathFromExportPath(cwd: string, exportPath: string): Promise<string | undefined> {
+  const exts = ['js', 'cjs', 'mjs', 'jsx', 'ts', 'tsx']
+  for (const ext of exts) {
+    // ignore package.json
+    if (exportPath.endsWith('package.json')) return
+    if (exportPath === '.') exportPath = './index'
+    const filename = resolveSourceFile(cwd, `${exportPath}.${ext}`)
+
+    if (await fileExists(filename)) {
+      return filename
+    }
+  }
+  return
+}

@@ -1,13 +1,12 @@
 import type { PackageMetadata, ExportCondition, ExportType } from './types'
 import { resolve } from 'path'
-import config from './config'
 
 export function getTypings(pkg: PackageMetadata) {
   return pkg.types || pkg.typings
 }
 
-function getDistPath(distPath: string) {
-  return resolve(config.rootDir, distPath)
+function getDistPath(distPath: string, cwd: string) {
+  return resolve(cwd, distPath)
 }
 
 function findExport(field: any): string | undefined {
@@ -62,45 +61,43 @@ export function getExportPaths(pkg: PackageMetadata) {
   return pathsMap
 }
 
-export function getExportDist(pkg: PackageMetadata) {
+export function getExportDist(pkg: PackageMetadata, cwd: string) {
   const paths = getExportPaths(pkg)['.']
   const dist: { format: 'cjs' | 'esm'; file: string }[] = []
   if (paths.main) {
-    dist.push({ format: 'cjs', file: getDistPath(paths.main) })
+    dist.push({ format: 'cjs', file: getDistPath(paths.main, cwd) })
   }
   if (paths.module) {
-    dist.push({ format: 'esm', file: getDistPath(paths.module) })
+    dist.push({ format: 'esm', file: getDistPath(paths.module, cwd) })
   }
   if (paths.export) {
-    dist.push({ format: 'esm', file: getDistPath(paths.export) })
+    dist.push({ format: 'esm', file: getDistPath(paths.export, cwd) })
   }
 
   // default fallback to output `dist/index.js` in default esm format
   if (dist.length === 0) {
-    dist.push({ format: 'esm', file: getDistPath('dist/index.js') })
+    dist.push({ format: 'esm', file: getDistPath('dist/index.js', cwd) })
   }
   return dist
 }
 
-export function getExportConditionDist(pkg: PackageMetadata, exportCondition: ExportCondition) {
-  // const pkgExports = pkg.exports || {}
+export function getExportConditionDist(pkg: PackageMetadata, exportCondition: ExportCondition, cwd: string) {
   const dist: { format: 'cjs' | 'esm'; file: string }[] = []
   // "exports": "..."
   if (typeof exportCondition === 'string') {
-    dist.push({ format: pkg.type === 'module' ? 'esm' : 'cjs', file: getDistPath(exportCondition) })
+    dist.push({ format: pkg.type === 'module' ? 'esm' : 'cjs', file: getDistPath(exportCondition, cwd) })
   } else {
     // "./<subexport>": { }
-    const subExports = exportCondition // pkgExports[subExport]
+    const subExports = exportCondition
     // Ignore json exports, like "./package.json"
-    // if (subExport.endsWith('.json')) return dist
     if (typeof subExports === 'string') {
-      dist.push({ format: 'esm', file: getDistPath(subExports) })
+      dist.push({ format: 'esm', file: getDistPath(subExports, cwd) })
     } else {
       if (subExports.require) {
-        dist.push({ format: 'cjs', file: getDistPath(subExports.require) })
+        dist.push({ format: 'cjs', file: getDistPath(subExports.require, cwd) })
       }
       if (subExports.import) {
-        dist.push({ format: 'esm', file: getDistPath(subExports.import) })
+        dist.push({ format: 'esm', file: getDistPath(subExports.import, cwd) })
       }
     }
   }

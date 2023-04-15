@@ -1,9 +1,9 @@
 jest.setTimeout(10 * 60 * 1000)
 
-import fs from 'fs'
+import fs from 'fs/promises'
 import { execSync, fork } from 'child_process'
 import { resolve, join } from 'path'
-import { stripANSIColor } from './testing-utils'
+import { stripANSIColor, existsFile } from './testing-utils'
 
 const integrationTestDir = resolve(__dirname, 'integration')
 
@@ -18,9 +18,9 @@ const testCases: {
   {
     name: 'externals',
     args: ['index.js', '-o', './dist/index.js'],
-    expected(dir) {
+    async expected(dir) {
       const distFile = join(dir, './dist/index.js')
-      const content = fs.readFileSync(distFile, { encoding: 'utf-8' })
+      const content = await fs.readFile(distFile, { encoding: 'utf-8' })
       expect(content).toMatch(/['"]peer-dep['"]/)
       expect(content).toMatch(/['"]peer-dep-meta['"]/)
     },
@@ -28,40 +28,44 @@ const testCases: {
   {
     name: 'ts-error',
     args: ['index.ts', '-o', './dist/index.js'],
-    expected(dir, { stdout, stderr }) {
+    async expected(dir, { stdout, stderr }) {
       const distFile = join(dir, './dist/index.js')
       expect(stderr).toMatch(/Could not load TypeScript compiler/)
-      expect(fs.existsSync(distFile)).toBe(false)
+      expect(await existsFile(distFile)).toBe(false)
     },
   },
   {
     name: 'no-ts-require-for-js',
     args: ['index.js', '-o', './dist/index.js'],
-    expected(dir) {
+    async expected(dir) {
       const distFile = join(dir, './dist/index.js')
-      expect(fs.existsSync(distFile)).toBe(true)
+      expect(await existsFile(distFile)).toBe(true)
     },
   },
   {
     name: 'pkg-exports',
     args: ['index.js'],
-    expected(dir) {
+    async expected(dir) {
       const distFiles = [join(dir, './dist/index.cjs'), join(dir, './dist/index.mjs'), join(dir, './dist/index.esm.js')]
-      expect(distFiles.every((f) => fs.existsSync(f))).toBe(true)
+      for (const f of distFiles) {
+        expect(await existsFile(f)).toBe(true)
+      }
     },
   },
   {
     name: 'pkg-exports-default',
     args: ['index.js'],
-    expected(dir) {
+    async expected(dir) {
       const distFiles = [join(dir, './dist/index.cjs'), join(dir, './dist/index.mjs')]
-      expect(distFiles.every((f) => fs.existsSync(f))).toBe(true)
+      for (const f of distFiles) {
+        expect(await existsFile(f)).toBe(true)
+      }
     },
   },
   {
     name: 'multi-entries',
     args: [],
-    expected(dir) {
+    async expected(dir) {
       const distFiles = [
         join(dir, './dist/index.js'),
         join(dir, './dist/lite.js'),
@@ -74,16 +78,32 @@ const testCases: {
         join(dir, './dist/lite.d.ts'),
       ]
 
-      expect(distFiles.every((f) => fs.existsSync(f))).toBe(true)
+      for (const f of distFiles) {
+        expect(await existsFile(f)).toBe(true)
+      }
     },
   },
   {
     name: 'single-entry',
     args: [],
-    expected(dir) {
+    async expected(dir) {
       const distFiles = [join(dir, './dist/index.js'), join(dir, './dist/index.d.ts')]
-      expect(distFiles.every((f) => fs.existsSync(f))).toBe(true)
+      for (const f of distFiles) {
+        expect(await existsFile(f)).toBe(true)
+      }
+      expect(await fs.readFile(distFiles[1], 'utf-8')).toContain('declare const _default: () => string;')
     },
+  },
+  {
+    name: 'ts-allow-js',
+    args: [],
+    async expected(dir) {
+      const distFiles = [join(dir, './dist/index.js'), join(dir, './dist/index.d.ts')]
+      for (const f of distFiles) {
+        expect(await existsFile(f)).toBe(true)
+      }
+      expect(await fs.readFile(distFiles[1], 'utf-8')).toContain('declare function _default(): string;')
+    }
   },
   {
     name: 'publint',
@@ -134,7 +154,7 @@ function runTests() {
         stderr && console.error(stderr)
       }
 
-      expected(dir, { stdout, stderr })
+      await expected(dir, { stdout, stderr })
     })
   }
 }

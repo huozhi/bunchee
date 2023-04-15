@@ -6,7 +6,8 @@ import os from 'os'
 import { fork, execSync } from 'child_process'
 import { stripANSIColor } from './testing-utils'
 
-const resolveFromTest = (filepath: string) => path.resolve(__dirname, '../test', filepath)
+const resolveFromTest = (filepath: string) =>
+  path.resolve(__dirname, '../test', filepath)
 const fixturesDir = resolveFromTest('fixtures')
 
 async function removeDirectory(tempDirPath: string) {
@@ -24,14 +25,19 @@ async function createTempDir(): Promise<string> {
 const testCases: {
   name: string
   args: string[]
+  distFile?: string
   env?: Record<string, string>
   dist?: (() => Promise<string>) | string
-  expected(f: string, { stderr, stdout }: { stderr: string; stdout: string }): [boolean, boolean][]
+  expected(
+    f: string,
+    { stderr, stdout }: { stderr: string; stdout: string }
+  ): [boolean, boolean][]
 }[] = [
   {
     name: 'basic',
     dist: createTempDir,
-    args: [resolveFromTest('fixtures/hello.js'), '-o', 'dist/hello.bundle.js'],
+    args: [resolveFromTest('fixtures/hello.js')],
+    distFile: 'dist/hello.bundle.js',
     expected(distFile) {
       return [[fs.existsSync(distFile), true]]
     },
@@ -39,43 +45,49 @@ const testCases: {
   {
     name: 'format',
     dist: createTempDir,
-    args: [
-      resolveFromTest('fixtures/hello.js'),
-      '--cwd',
-      fixturesDir,
-      '-f',
-      'cjs',
-      '-o',
-      'dist/hello.cjs',
-    ],
+    args: [resolveFromTest('fixtures/hello.js'), '-f', 'cjs'],
+    distFile: 'dist/hello.cjs',
     expected(distFile) {
       return [
         [fs.existsSync(distFile), true],
-        [fs.readFileSync(distFile, { encoding: 'utf-8' }).includes('exports.'), true],
+        [
+          fs.readFileSync(distFile, { encoding: 'utf-8' }).includes('exports.'),
+          true,
+        ],
       ]
     },
   },
   {
     name: 'compress',
     dist: createTempDir,
-    args: [resolveFromTest('fixtures/hello.js'), '-m', '-o', 'dist/hello.bundle.min.js'],
+    distFile: 'dist/hello.bundle.min.js',
+    args: [resolveFromTest('fixtures/hello.js'), '-m'],
     expected(distFile) {
       return [
         [fs.existsSync(distFile), true],
         // original function name is compressed
-        [fs.readFileSync(distFile, { encoding: 'utf-8' }).includes('sayHello'), false],
+        [
+          fs.readFileSync(distFile, { encoding: 'utf-8' }).includes('sayHello'),
+          false,
+        ],
       ]
     },
   },
   {
     name: 'with sourcemap',
     dist: createTempDir,
-    args: [resolveFromTest('fixtures/hello.js'), '--sourcemap', '-o', 'dist/hello.js'],
+    args: [resolveFromTest('fixtures/hello.js'), '--sourcemap'],
+    distFile: 'dist/hello.js',
     expected(distFile) {
       return [
         [fs.existsSync(distFile), true],
         //# sourceMappingURL is set
-        [fs.readFileSync(distFile, { encoding: 'utf-8' }).includes('sourceMappingURL'), true],
+        [
+          fs
+            .readFileSync(distFile, { encoding: 'utf-8' })
+            .includes('sourceMappingURL'),
+          true,
+        ],
         [fs.existsSync(distFile + '.map'), true],
       ]
     },
@@ -83,12 +95,18 @@ const testCases: {
   {
     name: 'minified with sourcemap',
     dist: createTempDir,
-    args: [resolveFromTest('fixtures/hello.js'), '-m', '--sourcemap', '-o', 'dist/hello.min.js'],
+    distFile: 'dist/hello.min.js',
+    args: [resolveFromTest('fixtures/hello.js'), '-m', '--sourcemap'],
     expected(distFile) {
       return [
         [fs.existsSync(distFile), true],
         //# sourceMappingURL is set
-        [fs.readFileSync(distFile, { encoding: 'utf-8' }).includes('sourceMappingURL'), true],
+        [
+          fs
+            .readFileSync(distFile, { encoding: 'utf-8' })
+            .includes('sourceMappingURL'),
+          true,
+        ],
         [fs.existsSync(distFile + '.map'), true],
       ]
     },
@@ -96,13 +114,13 @@ const testCases: {
   {
     name: 'externals',
     dist: createTempDir,
+    distFile: 'dist/with-externals.bundle.js',
     args: [
       resolveFromTest('fixtures/with-externals.js'),
       '--external',
       '@huozhi/testing-package',
-      '-o',
-      'dist/with-externals.bundle.js',
     ],
+
     expected(distFile) {
       const content = fs.readFileSync(distFile, { encoding: 'utf-8' })
       return [
@@ -114,11 +132,10 @@ const testCases: {
   {
     name: 'no-externals',
     dist: createTempDir,
+    distFile: 'dist/with-externals.bundle.js',
     args: [
       resolveFromTest('fixtures/with-externals.js'),
       '--no-external',
-      '-o',
-      'dist/with-externals.bundle.js',
     ],
     expected(distFile) {
       const content = fs.readFileSync(distFile, { encoding: 'utf-8' })
@@ -131,8 +148,13 @@ const testCases: {
   {
     name: 'es2020-target',
     dist: createTempDir,
-    args: [resolveFromTest('fixtures/es2020.ts'), '--cwd', fixturesDir, '--target', 'es2020', '-o', 'dist/es2020.js'],
-    expected(distFile, { stdout, stderr }) {
+    distFile: 'dist/es2020.js',
+    args: [
+      resolveFromTest('fixtures/es2020.ts'),
+      '--target',
+      'es2020',
+    ],
+    expected(distFile) {
       const content = fs.readFileSync(distFile, { encoding: 'utf-8' })
       return [
         [content.includes(`...globalThis`), true],
@@ -145,8 +167,9 @@ const testCases: {
   {
     name: 'dts',
     dist: createTempDir,
+    distFile: 'dist/base.d.ts',
     // need working directory for tsconfig.json
-    args: ['./base.ts', '--dts', '--cwd', fixturesDir, '-o', './dist/base.js'],
+    args: ['./base.ts', '--dts', '--cwd', fixturesDir],
     expected(distFile) {
       return [
         [fs.existsSync(distFile), true],
@@ -166,48 +189,63 @@ const testCases: {
         // same name with input file
         [fs.existsSync(distFile.replace('.mjs', '.d.ts')), true],
       ]
-    }
+    },
   },
   // single entry with custom entry path
   {
     name: 'single-entry-js',
     dist: path.join(fixturesDir, './single-entry-js/dist'),
-    args: ['src/index.js', '--cwd', path.join(fixturesDir, './single-entry-js')],
+    args: [
+      'src/index.js',
+      '--cwd',
+      path.join(fixturesDir, './single-entry-js'),
+    ],
     expected(distFile, { stdout }) {
       return [
         [fs.existsSync(distFile), true],
         // specifying types in package.json for js entry file won't work
-        [stripANSIColor(stdout).includes('pkg.types is ./dist/index.d.ts but the file does not exist.'), true]
+        // if there's no tsconfig.json and entry file is js
+        [
+          stripANSIColor(stdout).includes(
+            'pkg.types is ./dist/index.d.ts but the file does not exist.'
+          ),
+          true,
+        ],
       ]
     },
   },
   {
     name: 'env-var',
     dist: createTempDir,
-    args: [path.join(fixturesDir, './env-var-consumer/index.js'), '--env', 'MY_TEST_ENV'],
+    args: [
+      path.join(fixturesDir, './env-var-consumer/index.js'),
+      '--env',
+      'MY_TEST_ENV',
+    ],
     env: {
-      'MY_TEST_ENV': 'my-test-value'
+      MY_TEST_ENV: 'my-test-value',
     },
     expected(distFile) {
       const content = fs.readFileSync(distFile, { encoding: 'utf-8' })
-      return [
-        [content.includes('my-test-value'), true],
-      ]
+      return [[content.includes('my-test-value'), true]]
     },
-  }
+  },
 ]
 
 describe('cli', () => {
   for (const testCase of testCases) {
-    const { name, args, expected, dist, env } = testCase
+    const { name, args, expected, dist, distFile: _distFile, env } = testCase
     it(`cli ${name} should work properly`, async () => {
       // Delete the of dist folder: folder of dist file (as last argument) or `dist` option
       let distDir
       let distFile
       if (typeof dist === 'function') {
         distDir = await dist()
-        distFile = path.join(distDir, 'index.js')
+        distFile = path.join(distDir, _distFile || 'index.js')
         args.push('-o', distFile)
+        if (args.indexOf('--cwd') === -1) {
+          args.push('--cwd', path.dirname(args[0]))
+        }
       } else if (typeof dist === 'string') {
         distDir = dist
         distFile = args[args.length - 1]
@@ -218,7 +256,7 @@ describe('cli', () => {
 
       // TODO: specify working directory for each test
       execSync(`rm -rf ${distDir}`)
-      if (process.env.TEST_DBEUG) {
+      if (process.env.TEST_DEBUG) {
         console.log(`Command: rm -rf ${distDir}`)
         console.log(`Command: bunchee ${args.join(' ')}`)
       }
@@ -246,11 +284,10 @@ describe('cli', () => {
       }
       expect(fs.existsSync(distFile)).toBe(true)
       expect(code).toBe(0)
-      if (process.env.TEST_DBEUG) {
+      if (process.env.TEST_DEBUG) {
         console.log(`Clean up ${distDir}`)
       }
       await removeDirectory(distDir)
     })
   }
 })
-

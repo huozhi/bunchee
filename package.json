@@ -31,6 +31,10 @@
     "dist",
     "*.md"
   ],
+  "prettier": {
+    "semi": false,
+    "singleQuote": true
+  },
   "engines": {
     "node": ">= 16"
   },
