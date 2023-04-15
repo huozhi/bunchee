@@ -10,6 +10,10 @@ export function exit(err: string | Error) {
 export const formatDuration = (duration: number) =>
   duration >= 1000 ? `${duration / 1000}s` : `${duration}ms`
 
+export async function hasPackageJson(cwd: string) {
+  return await fileExists(path.resolve(cwd, 'package.json'))
+}
+
 export async function getPackageMeta(cwd: string): Promise<PackageMetadata> {
   const pkgFilePath = path.resolve(cwd, 'package.json')
   let targetPackageJson = {}

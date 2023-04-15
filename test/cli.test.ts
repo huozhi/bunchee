@@ -151,8 +151,6 @@ const testCases: {
     distFile: 'dist/es2020.js',
     args: [
       resolveFromTest('fixtures/es2020.ts'),
-      '--cwd',
-      fixturesDir,
       '--target',
       'es2020',
     ],
@@ -206,6 +204,7 @@ const testCases: {
       return [
         [fs.existsSync(distFile), true],
         // specifying types in package.json for js entry file won't work
+        // if there's no tsconfig.json and entry file is js
         [
           stripANSIColor(stdout).includes(
             'pkg.types is ./dist/index.d.ts but the file does not exist.'
