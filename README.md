@@ -39,9 +39,9 @@ You can use the `exports` field to support different conditions and leverage the
 ```json
 {
   "exports": {
-    "require": "dist/index.cjs",
+    "module": "dist/index.esm.js",
     "import": "dist/index.mjs",
-    "module": "dist/index.esm.js"
+    "require": "dist/index.cjs"
   },
   "scripts": {
     "build": "bunchee"
