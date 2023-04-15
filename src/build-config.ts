@@ -228,7 +228,7 @@ function buildOutputConfigs(
 // build configs for each entry from package exports
 export async function buildEntryConfig(
   pkg: PackageMetadata,
-  options: BundleConfig,
+  bundleConfig: BundleConfig,
   cwd: string,
   tsOptions: TypescriptOptions
 ): Promise<BuncheeRollupConfig[]> {
@@ -241,14 +241,14 @@ export async function buildEntryConfig(
     if (!source) return undefined
     if (tsOptions.dtsOnly && !tsOptions?.tsConfigPath) return
 
-    options.exportCondition = {
+    bundleConfig.exportCondition = {
       source,
       name: entryExport,
       export: packageExports[entryExport],
     }
 
     const entry = resolveSourceFile(cwd!, source)
-    const rollupConfig = buildConfig(entry, pkg, options, cwd, tsOptions)
+    const rollupConfig = buildConfig(entry, pkg, bundleConfig, cwd, tsOptions)
     return rollupConfig
   })
 
@@ -258,13 +258,13 @@ export async function buildEntryConfig(
 function buildConfig(
   entry: string,
   pkg: PackageMetadata,
-  _options: BundleConfig,
+  bundleConfig: BundleConfig,
   cwd: string,
   tsOptions: TypescriptOptions
 ): BuncheeRollupConfig {
-  const { file } = _options
+  const { file } = bundleConfig
   const useTypescript = isTypescriptFile(entry)
-  const options = { ..._options, useTypescript }
+  const options = { ...bundleConfig, useTypescript }
   const inputOptions = buildInputConfig(entry, pkg, options, tsOptions)
   const outputExports = options.exportCondition
     ? getExportConditionDist(pkg, options.exportCondition.export, cwd)
@@ -278,7 +278,7 @@ function buildConfig(
       buildOutputConfigs(
         pkg,
         {
-          ..._options,
+          ...bundleConfig,
           format: 'es',
           useTypescript,
         },
@@ -292,7 +292,7 @@ function buildConfig(
       return buildOutputConfigs(
         pkg,
         {
-          ..._options,
+          ...bundleConfig,
           file: exportDist.file,
           format: exportDist.format,
           useTypescript,
@@ -308,9 +308,9 @@ function buildConfig(
         buildOutputConfigs(
           pkg,
           {
-            ..._options,
+            ...bundleConfig,
             file,
-            format: _options.format || fallbackFormat,
+            format: bundleConfig.format || fallbackFormat,
             useTypescript,
           },
           cwd,
