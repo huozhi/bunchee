@@ -27,7 +27,6 @@ import type { BuildMetadata } from './types'
 import { TypescriptOptions, resolveTsConfig } from './typescript'
 
 async function logSizeStats() {
-  logger.log()
   const stats = await sizeCollector.getSizeStats()
   const maxLength = Math.max(...stats.map(([filename]) => filename.length))
   stats.forEach(([filename, prettiedSize]) => {
