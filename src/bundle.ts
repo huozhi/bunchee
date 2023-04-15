@@ -26,8 +26,8 @@ import { getTypings } from './exports'
 import type { BuildMetadata } from './types'
 import { TypescriptOptions, resolveTsConfig } from './typescript'
 
-async function logSizeStats() {
-  const stats = await sizeCollector.getSizeStats()
+function logSizeStats() {
+  const stats = sizeCollector.getSizeStats()
   const maxLength = Math.max(...stats.map(([filename]) => filename.length))
   stats.forEach(([filename, prettiedSize]) => {
     const padding = ' '.repeat(maxLength - filename.length)
@@ -162,7 +162,7 @@ async function bundle(
     result = await bundleOrWatch(rollupConfig)
   }
 
-  await logSizeStats()
+  logSizeStats()
   return result
 }
 

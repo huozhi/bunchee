@@ -6,7 +6,7 @@ type SizeStats = [string, string, number][]
 
 function chunkSizeCollector(): {
   plugin(cwd: string): Plugin,
-  getSizeStats(): Promise<SizeStats>
+  getSizeStats(): SizeStats
 } {
   const sizes: Map<string, number> = new Map()
 
@@ -32,8 +32,7 @@ function chunkSizeCollector(): {
         },
       }
     },
-    async getSizeStats() {
-
+    getSizeStats() {
       const sizeStats: SizeStats = []
       sizes.forEach((size, name) => {
         sizeStats.push([name, prettyBytes(size), size])
