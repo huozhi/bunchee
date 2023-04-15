@@ -45,7 +45,6 @@ type BuncheeRollupConfig = Partial<Omit<RollupOptions, 'input' | 'output'>> & {
   exportName?: string
   input: InputOptions
   output: OutputOptions[]
-  dtsOnly: boolean
 }
 
 type CliArgs = {

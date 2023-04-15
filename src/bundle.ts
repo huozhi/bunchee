@@ -14,7 +14,7 @@ import type {
 import fs from 'fs/promises'
 import { resolve, relative } from 'path'
 import { watch as rollupWatch, rollup } from 'rollup'
-import buildConfig, { buildEntryConfig, sizeCollector } from './build-config'
+import buildConfig, { buildEntryConfig } from './build-config'
 import {
   getPackageMeta,
   logger,
@@ -25,15 +25,7 @@ import {
 import { getTypings } from './exports'
 import type { BuildMetadata } from './types'
 import { TypescriptOptions, resolveTsConfig } from './typescript'
-
-function logSizeStats() {
-  const stats = sizeCollector.getSizeStats()
-  const maxLength = Math.max(...stats.map(([filename]) => filename.length))
-  stats.forEach(([filename, prettiedSize]) => {
-    const padding = ' '.repeat(maxLength - filename.length)
-    logger.log(` ✓  Build ${filename}${padding} - ${prettiedSize}`)
-  })
-}
+import { logSizeStats } from './logging'
 
 function assignDefault(
   options: BundleConfig,
@@ -166,10 +158,8 @@ async function bundle(
   return result
 }
 
-
-
 function runWatch(
-  { input, output, dtsOnly }: BuncheeRollupConfig,
+  { input, output }: BuncheeRollupConfig,
   metadata: BuildMetadata
 ): RollupWatcher {
   const watchOptions: RollupWatchOptions[] = [

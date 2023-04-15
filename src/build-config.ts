@@ -41,6 +41,7 @@ const minifyOptions: JsMinifyOptions = {
   },
 }
 
+// This can also be passed down as stats from top level
 export const sizeCollector = createChunkSizeCollector()
 
 function getBuildEnv(envs: string[]) {
@@ -78,10 +79,15 @@ function buildInputConfig(
   const hasSpecifiedTsTarget = Boolean(
     tsCompilerOptions?.target && tsConfigPath
   )
+  const sizePlugin = sizeCollector.plugin(cwd)
+  const commonPlugins = [
+    shebang(),
+    sizePlugin,
+  ]
   const plugins: Plugin[] = (
     dtsOnly
       ? [
-          shebang(),
+          ...commonPlugins,
           useTypescript &&
             require('rollup-plugin-dts').default({
               compilerOptions: {
@@ -102,6 +108,7 @@ function buildInputConfig(
             }),
         ]
       : [
+          ...commonPlugins,
           replace({
             values: getBuildEnv(options.env || []),
             preventAssignment: true,
@@ -114,7 +121,6 @@ function buildInputConfig(
             include: /node_modules\//,
           }),
           json(),
-          shebang(),
           swc({
             include: /\.(m|c)?[jt]sx?$/,
             exclude: 'node_modules',
@@ -142,7 +148,6 @@ function buildInputConfig(
             sourceMaps: options.sourcemap,
             inlineSourcesContent: false,
           }),
-          sizeCollector.plugin(cwd),
         ]
   ).filter(isNotNull<Plugin>)
 
@@ -335,7 +340,6 @@ function buildConfig(
     input: inputOptions,
     output: outputConfigs,
     exportName: options.exportCondition?.name || '.',
-    dtsOnly,
   }
 }
 

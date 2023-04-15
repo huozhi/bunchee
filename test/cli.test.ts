@@ -31,7 +31,7 @@ const testCases: {
   expected(
     f: string,
     { stderr, stdout }: { stderr: string; stdout: string }
-  ): [boolean, boolean][]
+  ): [boolean | string, boolean | string][]
 }[] = [
   {
     name: 'basic',
@@ -167,14 +167,17 @@ const testCases: {
   {
     name: 'dts',
     dist: createTempDir,
-    distFile: 'dist/base.d.ts',
+    distFile: 'dist/base.js',
     // need working directory for tsconfig.json
     args: ['./base.ts', '--dts', '--cwd', fixturesDir],
     expected(distFile) {
+      const typeFile = distFile.replace('.js', '.d.ts')
       return [
+        [path.basename(distFile), 'base.js'],
+        [path.basename(typeFile), 'base.d.ts'],
         [fs.existsSync(distFile), true],
         // same name with input file
-        [fs.existsSync(distFile.replace('.js', '.d.ts')), true],
+        [fs.existsSync(typeFile), true],
       ]
     },
   },
