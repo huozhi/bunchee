@@ -30,6 +30,47 @@ function parseExport(exportsCondition: ExportCondition) {
 }
 
 
+/**
+ * Get package exports paths
+ *
+ * Example:
+ *
+ * ```json
+ * {
+ *  "exports": {
+ *    ".": {
+ *      "require": "./dist/index.cjs",
+ *      "module": "./dist/index.esm.js",
+ *      "default": "./dist/index.esm.js"
+ *    },
+ *    "./foo": {
+ *      "require": "./dist/foo.cjs",
+ *      "module": "./dist/foo.esm.js",
+ *      "default": "./dist/foo.esm.js"
+ *   }
+ * }
+ *
+ * ```
+ *
+ * will be parsed to:
+ *
+ * ```js
+ * {
+ *   '.': {
+ *     main: './dist/index.cjs',
+ *     module: './dist/index.esm.js',
+ *     export: './dist/index.esm.js'
+ *   },
+ *   './foo': {
+ *     main: './dist/foo.cjs',
+ *     module: './dist/foo.esm.js',
+ *     export: './dist/foo.esm.js'
+ *   }
+ *
+ *
+ * pkg.main and pkg.module will be added to ['.'] if exists
+ */
+
 export function getExportPaths(pkg: PackageMetadata) {
   const pathsMap: Record<string, Record<string, string | undefined>> = {}
   const mainExport: Record<Exclude<ExportType, 'default'>, string> = {}
