@@ -60,6 +60,9 @@ const testCases: {
       for (const f of distFiles) {
         expect(await existsFile(f)).toBe(true)
       }
+      const cjsFile = await fs.readFile(join(dir, './dist/index.cjs'), { encoding: 'utf-8' })
+      expect(cjsFile).toContain(`function _interopDefault (e) { return e && e.__esModule ? e : { default: e }; }`)
+      expect(cjsFile).toContain(`Object.defineProperty(exports, '__esModule', { value: true });`)
     },
   },
   {

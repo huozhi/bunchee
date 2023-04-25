@@ -185,6 +185,21 @@ function buildInputConfig(
   }
 }
 
+function hasEsmExport(
+  exportPaths: ReturnType<typeof getExportPaths>,
+  tsCompilerOptions: TypescriptOptions['tsCompilerOptions']
+) {
+  let hasEsm = false
+  for (const key in exportPaths) {
+    const exportInfo = exportPaths[key]
+    if (exportInfo.import || exportInfo.module) {
+      hasEsm = true
+      break
+    }
+  }
+  return Boolean(hasEsm || tsCompilerOptions?.esModuleInterop)
+}
+
 function buildOutputConfigs(
   pkg: PackageMetadata,
   options: BundleOptions,
@@ -195,12 +210,8 @@ function buildOutputConfigs(
   const { format, exportCondition } = options
   const exportPaths = getExportPaths(pkg)
 
-  // respect if tsconfig.json has `esModuleInterop` config;
-  // add ESModule mark if cjs and ESModule are both generated;
-  const mainExport = exportPaths['.']
-  const useEsModuleMark = Boolean(
-    tsCompilerOptions.esModuleInterop || (mainExport.main && mainExport.module)
-  )
+  // Add esm mark and interop helper if esm export is detected
+  const useEsModuleMark = hasEsmExport(exportPaths, tsCompilerOptions)
   const typings: string | undefined = getTypings(pkg)
   const file = options.file && resolve(cwd, options.file)
 
@@ -229,7 +240,8 @@ function buildOutputConfigs(
     ...(dtsOnly ? dtsPathConfig : { file: file }),
     format,
     exports: 'named',
-    esModule: useEsModuleMark,
+    esModule: useEsModuleMark || 'if-default-prop',
+    interop: 'auto',
     freeze: false,
     strict: false,
     sourcemap: options.sourcemap,
