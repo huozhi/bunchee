@@ -45,7 +45,7 @@ You can use the `exports` field to support different conditions and leverage the
   },
   "scripts": {
     "build": "bunchee"
-  },
+  }
 }
 ```
 
