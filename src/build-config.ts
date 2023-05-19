@@ -10,6 +10,7 @@ import type { InputOptions, OutputOptions, Plugin } from 'rollup'
 import type { TypescriptOptions } from './typescript'
 
 import { resolve, dirname, extname } from 'path'
+import { wasm } from '@rollup/plugin-wasm'
 import { swc } from 'rollup-plugin-swc3'
 import commonjs from '@rollup/plugin-commonjs'
 import shebang from 'rollup-plugin-preserve-shebang'
@@ -121,6 +122,7 @@ function buildInputConfig(
             include: /node_modules\//,
           }),
           json(),
+          wasm(),
           swc({
             include: /\.(m|c)?[jt]sx?$/,
             exclude: 'node_modules',
