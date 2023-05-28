@@ -116,7 +116,7 @@ function buildInputConfig(
           }),
           nodeResolve({
             preferBuiltins: runtime === 'node',
-            extensions: ['.mjs', '.js', '.json', '.node', '.jsx'],
+            extensions: ['.mjs', '.cjs', '.js', '.json', '.node', '.jsx'],
           }),
           commonjs({
             include: /node_modules\//,
