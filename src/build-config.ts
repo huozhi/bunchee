@@ -298,10 +298,6 @@ function buildConfig(
   const inputOptions = buildInputConfig(entry, pkg, options, cwd, tsOptions, dtsOnly)
   const outputExports = getExportConditionDist(pkg, exportCondition, cwd)
 
-  // options.exportCondition
-  //   ? getExportConditionDist(pkg, options.exportCondition.export, cwd)
-  //   : getExportDist(pkg, cwd)
-
   let outputConfigs = []
 
   // Generate dts job - single config

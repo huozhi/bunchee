@@ -18,6 +18,40 @@ describe('lib exports', () => {
       })
     })
 
+    it('should handle types field', () => {
+      expect(
+        getExportPaths({
+          exports: {
+            '.': {
+              import: './dist/index.mjs',
+              types: './dist/index.d.ts',
+            },
+          },
+        })
+      ).toEqual({
+        '.': {
+          import: './dist/index.mjs',
+          types: './dist/index.d.ts',
+        },
+      })
+
+      expect(
+        getExportPaths({
+          typings: './dist/index.d.ts',
+          exports: {
+            '.': {
+              import: './dist/index.mjs',
+            },
+          },
+        })
+      ).toEqual({
+        '.': {
+          import: './dist/index.mjs',
+          types: './dist/index.d.ts',
+        },
+      })
+    })
+
     it('should handle the basic main fields paths (esm)', () => {
       const pkg: PackageMetadata = {
         type: 'module',

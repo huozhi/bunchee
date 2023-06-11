@@ -9,6 +9,7 @@ function getDistPath(distPath: string, cwd: string) {
   return resolve(cwd, distPath)
 }
 
+// Reached the end of the export path
 function isExportLike(field: any): field is string | FullExportCondition {
   if (typeof field === 'string') return true
   return Object.entries(field).every(
@@ -20,7 +21,7 @@ function isExportLike(field: any): field is string | FullExportCondition {
 
 function constructFullExportCondition(
   value: string | Record<string, string | undefined>,
-  packageType?: PackageType
+  packageType: PackageType
 ): FullExportCondition {
   const isCommonjs = packageType === 'commonjs'
   let result: FullExportCondition
@@ -83,7 +84,8 @@ function findExport(
  *   ".": {
  *     "sub": {
  *       "import": "./sub.js",
-*        "require": "./sub.cjs",
+ *       "require": "./sub.cjs",
+ *       "types": "./sub.d.ts
  *     }
  *   }
  * }
@@ -93,6 +95,7 @@ function findExport(
   *   "./sub": {
   *     "import": "./sub.js",
   *     "require": "./sub.cjs",
+  *     "types": "./sub.d.ts,
   *   }
   * }
   *
@@ -157,19 +160,24 @@ export function getExportPaths(pkg: PackageMetadata) {
   const pathsMap: Record<string, FullExportCondition> = {}
   const packageType: PackageType = pkg.type || 'commonjs'
 
-  pathsMap['.'] = constructFullExportCondition(
-    {
-      [packageType === 'commonjs' ? 'require' : 'import']: pkg.main,
-      'module': pkg.module,
-    },
-    packageType
-  )
-
   const { exports: exportsConditions } = pkg
   if (exportsConditions) {
     const paths = parseExport(exportsConditions, packageType)
     Object.assign(pathsMap, paths)
   }
+
+  // main export '.' from main/module/typings
+  const defaultMainExport = constructFullExportCondition(
+    {
+      [packageType === 'commonjs' ? 'require' : 'import']: pkg.main,
+      module: pkg.module,
+      types: getTypings(pkg),
+    },
+    packageType
+  )
+
+  // Merge the main export into '.' paths
+  pathsMap['.'] = Object.assign({}, pathsMap['.'], defaultMainExport)
 
   return pathsMap
 }
@@ -183,13 +191,12 @@ export function getExportConditionDist(
   const existed = new Set<string>()
 
   const exportTypes = Object.keys(parsedExportCondition.export)
-  console.log('exportTypes', exportTypes)
   for (const key of exportTypes) {
     const relativePath = parsedExportCondition.export[key]
     const distFile = getDistPath(relativePath, cwd)
 
     let format: 'cjs' | 'esm' = 'esm'
-    if ([ 'import', 'module', 'react-native', 'react-server', 'edge-light'].includes(key)) {
+    if (['import', 'module', 'react-native', 'react-server', 'edge-light'].includes(key)) {
       format = 'esm'
     } else if (['require', 'main', 'node', 'default']) {
       format = 'cjs'
@@ -200,14 +207,14 @@ export function getExportConditionDist(
     if (existed.has(distFile)) {
       continue
     }
-    console.log('add:distFile', distFile)
     existed.add(distFile)
     dist.push({ format, file: distFile })
   }
 
   if (dist.length === 0) {
-    // TODO: warn there's no exports detected
-    console.error(`Doesn't fin any exports in ${pkg.name}`)
+    // TODO: Deprecate this warning and behavior in v3
+    console.error(`Doesn't fin any exports in ${pkg.name}, using default dist path dist/index.js`)
+    dist.push({ format: 'esm', file: getDistPath('dist/index.js', cwd) })
   }
   return dist
 }

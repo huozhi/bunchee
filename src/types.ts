@@ -13,6 +13,7 @@ type ExportType =
   | 'react-native'
   | 'browser'
   | 'edge-light'
+  | 'types'
 
 type FullExportCondition = {
   [key: string]: string
