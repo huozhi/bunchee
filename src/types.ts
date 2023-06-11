@@ -1,7 +1,26 @@
 import type { JscTarget } from '@swc/core'
 import type { InputOptions, OutputOptions, RollupOptions } from 'rollup'
 
-type ExportType = 'require' | 'export' | 'default' | string // omit other names
+type PackageType = 'commonjs' | 'module'
+
+type ExportType =
+  | 'import'
+  | 'module'
+  | 'require'
+  | 'default'
+  | 'node'
+  | 'react-server'
+  | 'react-native'
+  | 'browser'
+  | 'edge-light'
+
+type FullExportCondition = {
+  [key: string]: string
+}
+
+type ExportCondition = string | {
+  [key: string]: ExportCondition | string
+}
 
 // configs which are normalized from cli args
 type BundleConfig = {
@@ -18,7 +37,7 @@ type BundleConfig = {
   dts?: boolean
   runtime?: string
 
-  // assigned extra config
+  // assigned extra config, default is '.' export
   exportCondition?: {
     source: string // detected source file
     name: string // export condition name
@@ -39,7 +58,6 @@ type PackageMetadata = {
   typings?: string
 }
 
-type ExportCondition = string | Record<ExportType, string>
 
 type BuncheeRollupConfig = Partial<Omit<RollupOptions, 'input' | 'output'>> & {
   exportName?: string
@@ -73,13 +91,22 @@ type BuildMetadata = {
   source: string
 }
 
+type ParsedExportCondition = {
+  source: string
+  name: string
+  export: FullExportCondition
+}
+
 export type {
-  CliArgs,
   ExportType,
+  CliArgs,
   BundleConfig,
   BundleOptions,
   ExportCondition,
   PackageMetadata,
   BuildMetadata,
-  BuncheeRollupConfig
+  FullExportCondition,
+  BuncheeRollupConfig,
+  PackageType,
+  ParsedExportCondition,
 }

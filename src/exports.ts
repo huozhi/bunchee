@@ -1,5 +1,5 @@
-import type { PackageMetadata, ExportCondition, ExportType } from './types'
-import { resolve } from 'path'
+import type { PackageMetadata, ExportCondition, FullExportCondition, PackageType, ParsedExportCondition } from './types'
+import { join, resolve } from 'path'
 
 export function getTypings(pkg: PackageMetadata) {
   return pkg.types || pkg.typings
@@ -9,22 +9,104 @@ function getDistPath(distPath: string, cwd: string) {
   return resolve(cwd, distPath)
 }
 
-function findExport(field: any): string | undefined {
-  if (!field) return
-  if (typeof field === 'string') return field
-  const value = field['.'] || field['import'] || field['module'] || field['default']
-  return findExport(value)
+function isExportLike(field: any): field is string | FullExportCondition {
+  if (typeof field === 'string') return true
+  return Object.entries(field).every(
+    // Every value is string and key is not start with '.'
+    // TODO: check key is ExportType
+    ([key, value]) => typeof value === 'string' && !key.startsWith('.')
+  )
 }
 
-function parseExport(exportsCondition: ExportCondition) {
-  const paths: Record<Exclude<ExportType, 'default'>, string | undefined> = {}
+function constructFullExportCondition(
+  value: string | Record<string, string | undefined>,
+  packageType?: PackageType
+): FullExportCondition {
+  const isCommonjs = packageType === 'commonjs'
+  let result: FullExportCondition
+  if (typeof value === 'string') {
+    // TODO: determine cjs or esm by "type" field in package.json
+    result = {
+      [isCommonjs ? 'require' : 'import']: value,
+    }
+  } else {
+    // TODO: valid export condition, warn if it's not valid
+    const keys: string[] = Object.keys(value)
+    result = {}
+    keys.forEach((key) => {
+      // Filter out nullable value
+      if ((key in value) && value[key]) {
+        result[key] = value[key] as string
+      }
+    })
+  }
+
+  return result
+}
+
+function joinRelativePath(...segments: string[]) {
+  let result = join(...segments)
+  // If the first segment starts with './', ensure the result does too.
+  if (segments[0] === '.' && !result.startsWith('./')) {
+    result = './' + result
+  }
+  return result
+}
+
+function findExport(
+  name: string,
+  value: ExportCondition,
+  paths: Record<string, FullExportCondition>,
+  packageType: 'commonjs' | 'module'
+): void {
+  // TODO: handle export condition based on package.type
+  if (isExportLike(value)) {
+    paths[name] = constructFullExportCondition(value, packageType)
+    return
+  }
+
+  Object.keys(value).forEach((subpath) => {
+    const nextName = joinRelativePath(name, subpath)
+
+    const nestedValue = value[subpath]
+    findExport(nextName, nestedValue, paths, packageType)
+  })
+}
+
+/**
+ *
+ * Convert package.exports field to paths mapping
+ * Example
+ *
+ * Input:
+ * {
+ *   ".": {
+ *     "sub": {
+ *       "import": "./sub.js",
+*        "require": "./sub.cjs",
+ *     }
+ *   }
+ * }
+ *
+ * Output:
+  * {
+  *   "./sub": {
+  *     "import": "./sub.js",
+  *     "require": "./sub.cjs",
+  *   }
+  * }
+  *
+ */
+function parseExport(exportsCondition: ExportCondition, packageType: PackageType) {
+  const paths: Record<string, FullExportCondition> = {}
 
   if (typeof exportsCondition === 'string') {
-    paths.export = exportsCondition
-  } else {
-    paths.main = paths.main || exportsCondition['require'] || exportsCondition['node'] || exportsCondition['default']
-    paths.module = paths.module || exportsCondition['module']
-    paths.export = findExport(exportsCondition)
+    paths['.'] = constructFullExportCondition(exportsCondition, packageType)
+  } else if (typeof exportsCondition === 'object') {
+    Object.keys(exportsCondition).forEach((key: string) => {
+      const value = exportsCondition[key]
+      findExport(key, value, paths, packageType)
+    })
   }
   return paths
 }
@@ -72,75 +154,60 @@ function parseExport(exportsCondition: ExportCondition) {
  */
 
 export function getExportPaths(pkg: PackageMetadata) {
-  const pathsMap: Record<string, Record<string, string | undefined>> = {}
-  const mainExport: Record<Exclude<ExportType, 'default'>, string> = {}
-  if (pkg.main) {
-    mainExport.main = pkg.main
-  }
-  if (pkg.module) {
-    mainExport.module = pkg.module
-  }
-  pathsMap['.'] = mainExport
+  const pathsMap: Record<string, FullExportCondition> = {}
+  const packageType: PackageType = pkg.type || 'commonjs'
+
+  pathsMap['.'] = constructFullExportCondition(
+    {
+      [packageType === 'commonjs' ? 'require' : 'import']: pkg.main,
+      'module': pkg.module,
+    },
+    packageType
+  )
 
   const { exports: exportsConditions } = pkg
   if (exportsConditions) {
-    if (typeof exportsConditions === 'string') {
-      mainExport.export = exportsConditions
-    } else {
-      const exportKeys = Object.keys(exportsConditions)
-      if (exportKeys.some((key) => key.startsWith('.'))) {
-        exportKeys.forEach((subExport) => {
-          pathsMap[subExport] = parseExport(exportsConditions[subExport])
-        })
-      } else {
-        Object.assign(mainExport, parseExport(exportsConditions as ExportCondition))
-      }
-    }
+    const paths = parseExport(exportsConditions, packageType)
+    Object.assign(pathsMap, paths)
   }
-  pathsMap['.'] = mainExport
 
   return pathsMap
 }
 
-export function getExportDist(pkg: PackageMetadata, cwd: string) {
-  const paths = getExportPaths(pkg)['.']
+export function getExportConditionDist(
+  pkg: PackageMetadata,
+  parsedExportCondition: ParsedExportCondition,
+  cwd: string
+) {
   const dist: { format: 'cjs' | 'esm'; file: string }[] = []
-  if (paths.main) {
-    dist.push({ format: 'cjs', file: getDistPath(paths.main, cwd) })
-  }
-  if (paths.module) {
-    dist.push({ format: 'esm', file: getDistPath(paths.module, cwd) })
-  }
-  if (paths.export) {
-    dist.push({ format: 'esm', file: getDistPath(paths.export, cwd) })
-  }
+  const existed = new Set<string>()
 
-  // default fallback to output `dist/index.js` in default esm format
-  if (dist.length === 0) {
-    dist.push({ format: 'esm', file: getDistPath('dist/index.js', cwd) })
-  }
-  return dist
-}
+  const exportTypes = Object.keys(parsedExportCondition.export)
+  console.log('exportTypes', exportTypes)
+  for (const key of exportTypes) {
+    const relativePath = parsedExportCondition.export[key]
+    const distFile = getDistPath(relativePath, cwd)
 
-export function getExportConditionDist(pkg: PackageMetadata, exportCondition: ExportCondition, cwd: string) {
-  const dist: { format: 'cjs' | 'esm'; file: string }[] = []
-  // "exports": "..."
-  if (typeof exportCondition === 'string') {
-    dist.push({ format: pkg.type === 'module' ? 'esm' : 'cjs', file: getDistPath(exportCondition, cwd) })
-  } else {
-    // "./<subexport>": { }
-    const subExports = exportCondition
-    // Ignore json exports, like "./package.json"
-    if (typeof subExports === 'string') {
-      dist.push({ format: 'esm', file: getDistPath(subExports, cwd) })
-    } else {
-      if (subExports.require) {
-        dist.push({ format: 'cjs', file: getDistPath(subExports.require, cwd) })
-      }
-      if (subExports.import) {
-        dist.push({ format: 'esm', file: getDistPath(subExports.import, cwd) })
-      }
+    let format: 'cjs' | 'esm' = 'esm'
+    if ([ 'import', 'module', 'react-native', 'react-server', 'edge-light'].includes(key)) {
+      format = 'esm'
+    } else if (['require', 'main', 'node', 'default']) {
+      format = 'cjs'
     }
+
+    // Deduplicate the same path jobs
+    // TODO: detect conflicts paths but with different format
+    if (existed.has(distFile)) {
+      continue
+    }
+    console.log('add:distFile', distFile)
+    existed.add(distFile)
+    dist.push({ format, file: distFile })
+  }
+
+  if (dist.length === 0) {
+    // TODO: warn there's no exports detected
+    console.error(`Doesn't fin any exports in ${pkg.name}`)
   }
   return dist
 }

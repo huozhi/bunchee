@@ -123,36 +123,37 @@ async function bundle(
   }
 
   let result
-  if (isMultiEntries) {
-    const buildConfigs = await buildEntryConfig(
-      pkg,
-      options,
-      cwd,
-      defaultTsOptions,
-      false,
-    )
-    const assetsJobs = buildConfigs.map((rollupConfig) =>
-      bundleOrWatch(rollupConfig)
-    )
+  const buildConfigs = await buildEntryConfig(
+    pkg,
+    options,
+    cwd,
+    defaultTsOptions,
+    false,
+  )
+  const assetsJobs = buildConfigs.map((rollupConfig) =>
+    bundleOrWatch(rollupConfig)
+  )
 
-    const typesJobs = options.dts
-      ? (
-          await buildEntryConfig(pkg, options, cwd, defaultTsOptions, true)
-        ).map((rollupConfig) => bundleOrWatch(rollupConfig))
-      : []
+  const typesJobs = options.dts
+    ? (
+        await buildEntryConfig(pkg, options, cwd, defaultTsOptions, true)
+      ).map((rollupConfig) => bundleOrWatch(rollupConfig))
+    : []
 
-    result = await Promise.all(assetsJobs.concat(typesJobs))
-  } else {
-    // Generate types
-    if (hasTsConfig && options.dts) {
-      await bundleOrWatch(
-        buildConfig(entryPath, pkg, options, cwd, defaultTsOptions, true)
-      )
-    }
+  result = await Promise.all(assetsJobs.concat(typesJobs))
+  // if (isMultiEntries) {
 
-    const rollupConfig = buildConfig(entryPath, pkg, options, cwd, defaultTsOptions, false)
-    result = await bundleOrWatch(rollupConfig)
-  }
+  // } else {
+  //   // Generate types
+  //   if (hasTsConfig && options.dts) {
+  //     await bundleOrWatch(
+  //       buildConfig(entryPath, pkg, options, cwd, defaultTsOptions, true)
+  //     )
+  //   }
+
+  //   const rollupConfig = buildConfig(entryPath, pkg, options, cwd, defaultTsOptions, false)
+  //   result = await bundleOrWatch(rollupConfig)
+  // }
 
   logSizeStats()
   return result

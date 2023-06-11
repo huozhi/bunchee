@@ -4,6 +4,8 @@ import type {
   BundleOptions,
   BundleConfig,
   ExportCondition,
+  FullExportCondition,
+  ParsedExportCondition,
 } from './types'
 import type { JsMinifyOptions } from '@swc/core'
 import type { InputOptions, OutputOptions, Plugin } from 'rollup'
@@ -20,7 +22,6 @@ import replace from '@rollup/plugin-replace'
 import createChunkSizeCollector from './plugins/size-plugin'
 import {
   getTypings,
-  getExportDist,
   getExportPaths,
   getExportConditionDist,
 } from './exports'
@@ -258,7 +259,8 @@ export async function buildEntryConfig(
   tsOptions: TypescriptOptions,
   dtsOnly: boolean
 ): Promise<BuncheeRollupConfig[]> {
-  const packageExports = (pkg.exports || {}) as Record<string, ExportCondition>
+  // const packageExports = (pkg.exports || {}) as Record<string, ExportCondition>
+  const packageExports = getExportPaths(pkg)
   const configs = Object.keys(packageExports).map(async (entryExport) => {
     const source = await getSourcePathFromExportPath(
       cwd,
@@ -267,14 +269,14 @@ export async function buildEntryConfig(
     if (!source) return undefined
     if (dtsOnly && !tsOptions?.tsConfigPath) return
 
-    bundleConfig.exportCondition = {
+    const exportCondition: ParsedExportCondition = {
       source,
       name: entryExport,
       export: packageExports[entryExport],
     }
 
     const entry = resolveSourceFile(cwd!, source)
-    const rollupConfig = buildConfig(entry, pkg, bundleConfig, cwd, tsOptions, dtsOnly)
+    const rollupConfig = buildConfig(entry, pkg, bundleConfig, exportCondition, cwd, tsOptions, dtsOnly)
     return rollupConfig
   })
 
@@ -285,6 +287,7 @@ function buildConfig(
   entry: string,
   pkg: PackageMetadata,
   bundleConfig: BundleConfig,
+  exportCondition: ParsedExportCondition,
   cwd: string,
   tsOptions: TypescriptOptions,
   dtsOnly: boolean
@@ -293,9 +296,11 @@ function buildConfig(
   const useTypescript = Boolean(tsOptions.tsConfigPath)
   const options = { ...bundleConfig, useTypescript }
   const inputOptions = buildInputConfig(entry, pkg, options, cwd, tsOptions, dtsOnly)
-  const outputExports = options.exportCondition
-    ? getExportConditionDist(pkg, options.exportCondition.export, cwd)
-    : getExportDist(pkg, cwd)
+  const outputExports = getExportConditionDist(pkg, exportCondition, cwd)
+
+  // options.exportCondition
+  //   ? getExportConditionDist(pkg, options.exportCondition.export, cwd)
+  //   : getExportDist(pkg, cwd)
 
   let outputConfigs = []
 
