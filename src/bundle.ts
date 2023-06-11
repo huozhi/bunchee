@@ -22,7 +22,7 @@ import {
   getSourcePathFromExportPath,
   getExportPath,
 } from './utils'
-import { constructDefaultExportCondition, getExportPaths, getPackageType, getTypings } from './exports'
+import { constructDefaultExportCondition, getExportPaths, getPackageType } from './exports'
 import type { BuildMetadata } from './types'
 import { TypescriptOptions, resolveTsConfig } from './typescript'
 import { logSizeStats } from './logging'
