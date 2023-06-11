@@ -25,7 +25,8 @@ function chunkSizeCollector(): {
           const dir = options.dir || (options.file && path.dirname(options.file))
           let fileName = chunk.fileName
           if (dir) {
-            fileName = path.relative(cwd, path.join(dir, fileName))
+            const filePath = path.join(dir, fileName)
+            fileName = filePath.startsWith(cwd) ? path.relative(cwd, filePath) : filePath
           }
           addSize(fileName, code.length)
           return null

@@ -8,13 +8,13 @@ import type {
 import type {
   BuncheeRollupConfig,
   BundleConfig,
-  PackageMetadata,
+  ExportPaths,
 } from './types'
 
 import fs from 'fs/promises'
 import { resolve, relative } from 'path'
 import { watch as rollupWatch, rollup } from 'rollup'
-import buildConfig, { buildEntryConfig } from './build-config'
+import { buildEntryConfig } from './build-config'
 import {
   getPackageMeta,
   logger,
@@ -22,7 +22,7 @@ import {
   getSourcePathFromExportPath,
   getExportPath,
 } from './utils'
-import { getTypings } from './exports'
+import { constructDefaultExportCondition, getExportPaths, getPackageType } from './exports'
 import type { BuildMetadata } from './types'
 import { TypescriptOptions, resolveTsConfig } from './typescript'
 import { logSizeStats } from './logging'
@@ -37,12 +37,9 @@ function assignDefault(
   }
 }
 
-function hasMultiEntryExport(pkg: PackageMetadata): boolean {
-  const packageExportsField = pkg.exports || {}
-  if (typeof packageExportsField === 'string') return false
-
+function hasMultiEntryExport(exportPaths: ExportPaths): boolean {
   const exportKeys = (
-    packageExportsField ? Object.keys(packageExportsField) : []
+   Object.keys(exportPaths)
   ).filter((key) => key !== './package.json')
 
   return (
@@ -60,8 +57,15 @@ async function bundle(
   assignDefault(options, 'target', 'es2015')
 
   const pkg = await getPackageMeta(cwd)
-  const packageExportsField = pkg.exports || {}
-  const isMultiEntries = hasMultiEntryExport(pkg)
+  const packageType = getPackageType(pkg)
+  const exportPaths = getExportPaths(pkg)
+
+  const exportKeys = (
+    Object.keys(exportPaths)
+   ).filter((key) => key !== './package.json')
+  // const exportPathsLength = Object.keys(exportPaths).length
+  const isMultiEntries = hasMultiEntryExport(exportPaths) // exportPathsLength > 1
+
   const tsConfig = await resolveTsConfig(cwd)
   const hasTsConfig = Boolean(tsConfig?.tsConfigPath)
   const defaultTsOptions: TypescriptOptions = {
@@ -77,6 +81,10 @@ async function bundle(
       entryPath ||
       (await getSourcePathFromExportPath(cwd, '.')) ||
       ''
+  }
+
+  if (exportKeys.length === 0 && entryPath) {
+    exportPaths['.'] = constructDefaultExportCondition(entryPath, packageType)
   }
 
   const bundleOrWatch = (
@@ -110,12 +118,8 @@ async function bundle(
   }
 
   // has `types` field in package.json or has `types` exports in any export condition for multi-entries
-  const hasTypings =
-    !!getTypings(pkg) ||
-    (typeof packageExportsField === 'object' &&
-      Array.from(Object.values(packageExportsField || {})).some((condition) =>
-        condition.hasOwnProperty('types')
-      ))
+  const hasTypings = Object.values(exportPaths)
+    .some((condition) => condition.hasOwnProperty('types'))
 
   // Enable types generation if it's types field specified in package.json
   if (hasTypings) {
@@ -123,36 +127,26 @@ async function bundle(
   }
 
   let result
-  if (isMultiEntries) {
-    const buildConfigs = await buildEntryConfig(
-      pkg,
-      options,
-      cwd,
-      defaultTsOptions,
-      false,
-    )
-    const assetsJobs = buildConfigs.map((rollupConfig) =>
-      bundleOrWatch(rollupConfig)
-    )
+  const buildConfigs = await buildEntryConfig(
+    pkg,
+    entryPath,
+    exportPaths,
+    options,
+    cwd,
+    defaultTsOptions,
+    false,
+  )
+  const assetsJobs = buildConfigs.map((rollupConfig) =>
+    bundleOrWatch(rollupConfig)
+  )
 
-    const typesJobs = options.dts
-      ? (
-          await buildEntryConfig(pkg, options, cwd, defaultTsOptions, true)
-        ).map((rollupConfig) => bundleOrWatch(rollupConfig))
-      : []
+  const typesJobs = hasTsConfig && options.dts
+    ? (
+        await buildEntryConfig(pkg, entryPath, exportPaths, options, cwd, defaultTsOptions, true)
+      ).map((rollupConfig) => bundleOrWatch(rollupConfig))
+    : []
 
-    result = await Promise.all(assetsJobs.concat(typesJobs))
-  } else {
-    // Generate types
-    if (hasTsConfig && options.dts) {
-      await bundleOrWatch(
-        buildConfig(entryPath, pkg, options, cwd, defaultTsOptions, true)
-      )
-    }
-
-    const rollupConfig = buildConfig(entryPath, pkg, options, cwd, defaultTsOptions, false)
-    result = await bundleOrWatch(rollupConfig)
-  }
+  result = await Promise.all(assetsJobs.concat(typesJobs))
 
   logSizeStats()
   return result

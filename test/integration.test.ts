@@ -12,7 +12,10 @@ const getPath = (filepath: string) => join(integrationTestDir, filepath)
 const testCases: {
   name: string
   args: string[]
-  expected(f: string, { stderr, stdout }: { stderr: string; stdout: string }): void
+  expected(
+    f: string,
+    { stderr, stdout }: { stderr: string; stdout: string }
+  ): void
 }[] = [
   // TODO: test externals/sub-path-export
   {
@@ -46,7 +49,11 @@ const testCases: {
     name: 'pkg-exports',
     args: ['index.js'],
     async expected(dir) {
-      const distFiles = [join(dir, './dist/index.cjs'), join(dir, './dist/index.mjs'), join(dir, './dist/index.esm.js')]
+      const distFiles = [
+        join(dir, './dist/index.cjs'),
+        join(dir, './dist/index.mjs'),
+        join(dir, './dist/index.esm.js'),
+      ]
       for (const f of distFiles) {
         expect(await existsFile(f)).toBe(true)
       }
@@ -56,13 +63,22 @@ const testCases: {
     name: 'pkg-exports-default',
     args: ['index.js'],
     async expected(dir) {
-      const distFiles = [join(dir, './dist/index.cjs'), join(dir, './dist/index.mjs')]
+      const distFiles = [
+        join(dir, './dist/index.cjs'),
+        join(dir, './dist/index.mjs'),
+      ]
       for (const f of distFiles) {
         expect(await existsFile(f)).toBe(true)
       }
-      const cjsFile = await fs.readFile(join(dir, './dist/index.cjs'), { encoding: 'utf-8' })
-      expect(cjsFile).toContain(`function _interopDefault (e) { return e && e.__esModule ? e : { default: e }; }`)
-      expect(cjsFile).toContain(`Object.defineProperty(exports, '__esModule', { value: true });`)
+      const cjsFile = await fs.readFile(join(dir, './dist/index.cjs'), {
+        encoding: 'utf-8',
+      })
+      expect(cjsFile).toContain(
+        `function _interopDefault (e) { return e && e.__esModule ? e : { default: e }; }`
+      )
+      expect(cjsFile).toContain(
+        `Object.defineProperty(exports, '__esModule', { value: true });`
+      )
     },
   },
   {
@@ -74,26 +90,32 @@ const testCases: {
         join(dir, './dist/lite.js'),
         join(dir, './dist/client/index.cjs'),
         join(dir, './dist/client/index.mjs'),
+        join(dir, './dist/edge.server/index.mjs'),
+        join(dir, './dist/edge.server/react-server.mjs'),
 
         // types
-        join(dir, './dist/client.d.ts'),
+        join(dir, './dist/client/index.d.ts'),
         join(dir, './dist/index.d.ts'),
         join(dir, './dist/lite.d.ts'),
       ]
 
       for (const f of distFiles) {
+        const ext = await existsFile(f)
+        if (!ext) console.log('missing', f)
         expect(await existsFile(f)).toBe(true)
       }
 
       const log = `\
-      ✓  Typed dist/client.d.ts      - 74 B
-      ✓  Typed dist/index.d.ts       - 65 B
-      ✓  Typed dist/lite.d.ts        - 70 B
-      ✓  Typed dist/client.d.ts      - 74 B
-      ✓  Built dist/index.js         - 110 B
-      ✓  Built dist/lite.js          - 132 B
-      ✓  Built dist/client/index.cjs - 138 B
-      ✓  Built dist/client/index.mjs - 78 B`
+      ✓  Typed dist/index.d.ts                   - 65 B
+      ✓  Typed dist/client/index.d.ts            - 74 B
+      ✓  Typed dist/edge.server.d.ts             - 53 B
+      ✓  Built dist/edge.server/index.mjs        - 45 B
+      ✓  Built dist/edge.server/react-server.mjs - 45 B
+      ✓  Built dist/lite.js                      - 132 B
+      ✓  Built dist/index.js                     - 110 B
+      ✓  Built dist/client/index.cjs             - 138 B
+      ✓  Built dist/client/index.mjs             - 78 B
+      `
 
       const rawStdout = stripANSIColor(stdout)
       log.split('\n').forEach((line: string) => {
@@ -105,15 +127,23 @@ const testCases: {
     name: 'single-entry',
     args: [],
     async expected(dir, { stdout }) {
-      const distFiles = [join(dir, './dist/index.js'), join(dir, './dist/index.d.ts')]
+      const distFiles = [
+        join(dir, './dist/index.js'),
+        join(dir, './dist/index.d.ts'),
+      ]
       for (const f of distFiles) {
         expect(await existsFile(f)).toBe(true)
       }
-      expect(await fs.readFile(distFiles[1], 'utf-8')).toContain('declare const _default: () => string;')
+      expect(await fs.readFile(distFiles[0], 'utf-8')).toContain(
+        `Object.defineProperty(exports, '__esModule', { value: true });`
+      )
+      expect(await fs.readFile(distFiles[1], 'utf-8')).toContain(
+        'declare const _default: () => string;'
+      )
 
       const log = `\
-      ✓  Typed dist/index.d.ts - 70 B
-      ✓  Built dist/index.js   - 56 B`
+      ✓  Typed dist/index.d.ts -
+      ✓  Built dist/index.js   -`
 
       const rawStdout = stripANSIColor(stdout)
       log.split('\n').forEach((line: string) => {
@@ -125,21 +155,30 @@ const testCases: {
     name: 'ts-allow-js',
     args: [],
     async expected(dir) {
-      const distFiles = [join(dir, './dist/index.js'), join(dir, './dist/index.d.ts')]
+      const distFiles = [
+        join(dir, './dist/index.js'),
+        join(dir, './dist/index.d.ts'),
+      ]
       for (const f of distFiles) {
         expect(await existsFile(f)).toBe(true)
       }
-      expect(await fs.readFile(distFiles[1], 'utf-8')).toContain('declare function _default(): string;')
-    }
+      expect(await fs.readFile(distFiles[1], 'utf-8')).toContain(
+        'declare function _default(): string;'
+      )
+    },
   },
   {
     name: 'publint',
     args: [],
     expected(dir, { stdout }) {
       const text = stripANSIColor(stdout)
-      expect(text).toContain('pkg.types is ./dist/missing.d.ts but the file does not exist.')
-      expect(text).toContain('pkg.exports["."].types is ./dist/missing.d.ts but the file does not exist.')
-    }
+      expect(text).toContain(
+        'pkg.types is ./dist/missing.d.ts but the file does not exist.'
+      )
+      expect(text).toContain(
+        'pkg.exports["."].types is ./dist/missing.d.ts but the file does not exist.'
+      )
+    },
   },
 ]
 
@@ -148,7 +187,11 @@ async function runBundle(
   _args: string[]
 ): Promise<{ code: number | null; stdout: string; stderr: string }> {
   const args = _args.concat(['--cwd', dir])
-  const ps = fork(`${__dirname + '/../node_modules/.bin/tsx'}`, [__dirname + '/../src/cli.ts'].concat(args), { stdio: 'pipe' })
+  const ps = fork(
+    `${__dirname + '/../node_modules/.bin/tsx'}`,
+    [__dirname + '/../src/cli.ts'].concat(args),
+    { stdio: 'pipe' }
+  )
   let stderr = '',
     stdout = ''
   ps.stdout?.on('data', (chunk: any) => (stdout += chunk.toString()))
@@ -169,7 +212,8 @@ function runTests() {
     const { name, args, expected } = testCase
     const dir = getPath(name)
     test(`integration ${name}`, async () => {
-      if (process.env.TEST_DEBUG) console.log(`Command: bunchee ${args.join(' ')}`)
+      if (process.env.TEST_DEBUG)
+        console.log(`Command: bunchee ${args.join(' ')}`)
       execSync(`rm -rf ${join(dir, 'dist')}`)
       const { stdout, stderr } = await runBundle(dir, args)
       if (process.env.TEST_DEBUG) {
