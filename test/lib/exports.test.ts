@@ -153,5 +153,22 @@ describe('lib exports', () => {
         { file: 'index.mjs', format: 'esm' },
       ])
     })
+
+    it('should handle special exports', () => {
+      const pkg: PackageMetadata = {
+        exports: {
+          '.': {
+            'require': './dist/index.cjs',
+            'edge-light': './dist/index.mjs',
+            'react-server': './dist/index.mjs',
+          }
+        }
+      }
+
+      expect(getExportConditionDistHelper(pkg)).toEqual([
+        { file: 'index.cjs', format: 'cjs' },
+        { file: 'index.mjs', format: 'esm' },
+      ])
+    })
   })
 })

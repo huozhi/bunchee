@@ -9,6 +9,10 @@
       "require": "./dist/client/index.cjs",
       "import": "./dist/client/index.mjs",
       "types": "./dist/client/index.d.ts"
+    },
+    "./edge.server": {
+      "edge-light": "./dist/edge.server/index.mjs",
+      "react-server": "./dist/edge.server/react-server.mjs"
     }
   }
 }
