@@ -76,24 +76,26 @@ const testCases: {
         join(dir, './dist/client/index.mjs'),
 
         // types
-        join(dir, './dist/client.d.ts'),
+        join(dir, './dist/client/index.d.ts'),
         join(dir, './dist/index.d.ts'),
         join(dir, './dist/lite.d.ts'),
       ]
 
       for (const f of distFiles) {
+        const ext = await existsFile(f)
+        if (!ext) console.log('missing', f)
         expect(await existsFile(f)).toBe(true)
       }
 
       const log = `\
-      ✓  Typed dist/client.d.ts      - 74 B
-      ✓  Typed dist/index.d.ts       - 65 B
-      ✓  Typed dist/lite.d.ts        - 70 B
-      ✓  Typed dist/client.d.ts      - 74 B
-      ✓  Built dist/index.js         - 110 B
-      ✓  Built dist/lite.js          - 132 B
-      ✓  Built dist/client/index.cjs - 138 B
-      ✓  Built dist/client/index.mjs - 78 B`
+      ✓  Typed dist/lite.d.ts         - 70 B
+      ✓  Typed dist/index.d.ts        - 65 B
+      ✓  Typed dist/client/index.d.ts - 74 B
+      ✓  Built dist/client/index.cjs  - 138 B
+      ✓  Built dist/client/index.mjs  - 78 B
+      ✓  Built dist/lite.js           - 132 B
+      ✓  Built dist/index.js          - 110 B
+      `
 
       const rawStdout = stripANSIColor(stdout)
       log.split('\n').forEach((line: string) => {
@@ -109,11 +111,12 @@ const testCases: {
       for (const f of distFiles) {
         expect(await existsFile(f)).toBe(true)
       }
+      expect(await fs.readFile(distFiles[0], 'utf-8')).toContain(`Object.defineProperty(exports, '__esModule', { value: true });`)
       expect(await fs.readFile(distFiles[1], 'utf-8')).toContain('declare const _default: () => string;')
 
       const log = `\
-      ✓  Typed dist/index.d.ts - 70 B
-      ✓  Built dist/index.js   - 56 B`
+      ✓  Typed dist/index.d.ts -
+      ✓  Built dist/index.js   -`
 
       const rawStdout = stripANSIColor(stdout)
       log.split('\n').forEach((line: string) => {

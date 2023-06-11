@@ -8,7 +8,7 @@ import type {
 import type {
   BuncheeRollupConfig,
   BundleConfig,
-  PackageMetadata,
+  ExportPaths,
 } from './types'
 
 import fs from 'fs/promises'
@@ -37,12 +37,9 @@ function assignDefault(
   }
 }
 
-function hasMultiEntryExport(pkg: PackageMetadata): boolean {
-  const packageExportsField = pkg.exports || {}
-  if (typeof packageExportsField === 'string') return false
-
+function hasMultiEntryExport(exportPaths: ExportPaths): boolean {
   const exportKeys = (
-    packageExportsField ? Object.keys(packageExportsField) : []
+   Object.keys(exportPaths)
   ).filter((key) => key !== './package.json')
 
   return (
@@ -63,9 +60,11 @@ async function bundle(
   const packageType = getPackageType(pkg)
   const exportPaths = getExportPaths(pkg)
 
-  const exportPathsLength = Object.keys(exportPaths).length
-  const isMultiEntries = exportPathsLength > 1
-  // const isEmptyEntries = exportPathsLength === 0
+  const exportKeys = (
+    Object.keys(exportPaths)
+   ).filter((key) => key !== './package.json')
+  // const exportPathsLength = Object.keys(exportPaths).length
+  const isMultiEntries = hasMultiEntryExport(exportPaths) // exportPathsLength > 1
 
   const tsConfig = await resolveTsConfig(cwd)
   const hasTsConfig = Boolean(tsConfig?.tsConfigPath)
@@ -73,8 +72,6 @@ async function bundle(
     tsConfigPath: tsConfig?.tsConfigPath,
     tsCompilerOptions: tsConfig?.tsCompilerOptions || {},
   }
-
-  // console.log('isMultiEntries', isMultiEntries)
 
   // Handle single entry file
   if (!isMultiEntries) {
@@ -86,12 +83,9 @@ async function bundle(
       ''
   }
 
-  console.log('entryPath', entryPath, 'exportPathsLength', exportPathsLength)
-  if (exportPathsLength === 0 && entryPath) {
+  if (exportKeys.length === 0 && entryPath) {
     exportPaths['.'] = constructDefaultExportCondition(entryPath, packageType)
   }
-
-  console.log('exportPaths', exportPaths)
 
   const bundleOrWatch = (
     rollupConfig: BuncheeRollupConfig

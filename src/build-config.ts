@@ -208,11 +208,12 @@ function buildOutputConfigs(
   pkg: PackageMetadata,
   exportPaths: ExportPaths,
   options: BundleOptions,
+  exportCondition: ParsedExportCondition,
   cwd: string,
   { tsCompilerOptions }: TypescriptOptions,
   dtsOnly: boolean
 ): OutputOptions {
-  const { format, exportCondition } = options
+  const { format } = options
 
   // Add esm mark and interop helper if esm export is detected
   const useEsModuleMark = hasEsmExport(exportPaths, tsCompilerOptions)
@@ -227,7 +228,10 @@ function buildOutputConfigs(
     ? file.replace(new RegExp(`${extname(file)}$`), '')
     : undefined
 
-  const dtsFile = file
+  // TODO: simplify dts file name detection
+  const dtsFile = exportCondition.export['types']
+    ? resolve(cwd, exportCondition.export['types'])
+    : file
     ? name + '.d.ts'
     : exportCondition?.name
     ? resolve(
@@ -271,7 +275,6 @@ export async function buildEntryConfig(
       ) || entryPath
 
     if (!source) return undefined
-    if (dtsOnly && !tsOptions?.tsConfigPath) return
 
     const exportCondition: ParsedExportCondition = {
       source,
@@ -325,6 +328,7 @@ function buildConfig(
           format: 'es',
           useTypescript,
         },
+        exportCondition,
         cwd,
         tsOptions,
         dtsOnly
@@ -342,6 +346,7 @@ function buildConfig(
           format: exportDist.format,
           useTypescript,
         },
+        exportCondition,
         cwd,
         tsOptions,
         dtsOnly
@@ -360,6 +365,7 @@ function buildConfig(
             format: bundleConfig.format || fallbackFormat,
             useTypescript,
           },
+          exportCondition,
           cwd,
           tsOptions,
           dtsOnly
@@ -371,7 +377,7 @@ function buildConfig(
   return {
     input: inputOptions,
     output: outputConfigs,
-    exportName: options.exportCondition?.name || '.',
+    exportName: exportCondition.name || '.',
   }
 }
 

@@ -37,13 +37,6 @@ type BundleConfig = {
   env?: string[]
   dts?: boolean
   runtime?: string
-
-  // assigned extra config, default is '.' export
-  exportCondition?: {
-    source: string // detected source file
-    name: string // export condition name
-    export: ExportCondition // export condition value
-  }
 }
 
 type PackageMetadata = {

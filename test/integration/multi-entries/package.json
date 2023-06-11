@@ -7,7 +7,8 @@
     "./lite": "./dist/lite.js",
     "./client": {
       "require": "./dist/client/index.cjs",
-      "import": "./dist/client/index.mjs"
+      "import": "./dist/client/index.mjs",
+      "types": "./dist/client/index.d.ts"
     }
   }
 }
