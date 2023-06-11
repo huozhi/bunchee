@@ -3,9 +3,8 @@ import type {
   BuncheeRollupConfig,
   BundleOptions,
   BundleConfig,
-  ExportCondition,
-  FullExportCondition,
   ParsedExportCondition,
+  ExportPaths,
 } from './types'
 import type { JsMinifyOptions } from '@swc/core'
 import type { InputOptions, OutputOptions, Plugin } from 'rollup'
@@ -24,6 +23,7 @@ import {
   getTypings,
   getExportPaths,
   getExportConditionDist,
+  isEsmExportName,
 } from './exports'
 import {
   isNotNull,
@@ -195,7 +195,8 @@ function hasEsmExport(
   let hasEsm = false
   for (const key in exportPaths) {
     const exportInfo = exportPaths[key]
-    if (exportInfo.import || exportInfo.module) {
+    const exportNames = Object.keys(exportInfo)
+    if (exportNames.some((name) => isEsmExportName(name))) {
       hasEsm = true
       break
     }
@@ -205,13 +206,13 @@ function hasEsmExport(
 
 function buildOutputConfigs(
   pkg: PackageMetadata,
+  exportPaths: ExportPaths,
   options: BundleOptions,
   cwd: string,
   { tsCompilerOptions }: TypescriptOptions,
   dtsOnly: boolean
 ): OutputOptions {
   const { format, exportCondition } = options
-  const exportPaths = getExportPaths(pkg)
 
   // Add esm mark and interop helper if esm export is detected
   const useEsModuleMark = hasEsmExport(exportPaths, tsCompilerOptions)
@@ -254,29 +255,41 @@ function buildOutputConfigs(
 // build configs for each entry from package exports
 export async function buildEntryConfig(
   pkg: PackageMetadata,
+  entryPath: string,
+  exportPaths: ExportPaths,
   bundleConfig: BundleConfig,
   cwd: string,
   tsOptions: TypescriptOptions,
   dtsOnly: boolean
 ): Promise<BuncheeRollupConfig[]> {
-  // const packageExports = (pkg.exports || {}) as Record<string, ExportCondition>
-  const packageExports = getExportPaths(pkg)
-  const configs = Object.keys(packageExports).map(async (entryExport) => {
-    const source = await getSourcePathFromExportPath(
-      cwd,
-      entryExport
-    )
+  const configs = Object.keys(exportPaths).map(async (entryExport) => {
+    // TODO: improve the source detection
+    const source =
+      await getSourcePathFromExportPath(
+        cwd,
+        entryExport
+      ) || entryPath
+
     if (!source) return undefined
     if (dtsOnly && !tsOptions?.tsConfigPath) return
 
     const exportCondition: ParsedExportCondition = {
       source,
       name: entryExport,
-      export: packageExports[entryExport],
+      export: exportPaths[entryExport],
     }
 
     const entry = resolveSourceFile(cwd!, source)
-    const rollupConfig = buildConfig(entry, pkg, bundleConfig, exportCondition, cwd, tsOptions, dtsOnly)
+    const rollupConfig = buildConfig(
+      entry,
+      pkg,
+      exportPaths,
+      bundleConfig,
+      exportCondition,
+      cwd,
+      tsOptions,
+      dtsOnly
+    )
     return rollupConfig
   })
 
@@ -286,6 +299,7 @@ export async function buildEntryConfig(
 function buildConfig(
   entry: string,
   pkg: PackageMetadata,
+  exportPaths: ExportPaths,
   bundleConfig: BundleConfig,
   exportCondition: ParsedExportCondition,
   cwd: string,
@@ -305,6 +319,7 @@ function buildConfig(
     outputConfigs = [
       buildOutputConfigs(
         pkg,
+        exportPaths,
         {
           ...bundleConfig,
           format: 'es',
@@ -320,6 +335,7 @@ function buildConfig(
     outputConfigs = outputExports.map((exportDist) => {
       return buildOutputConfigs(
         pkg,
+        exportPaths,
         {
           ...bundleConfig,
           file: exportDist.file,
@@ -337,6 +353,7 @@ function buildConfig(
       outputConfigs = [
         buildOutputConfigs(
           pkg,
+          exportPaths,
           {
             ...bundleConfig,
             file,

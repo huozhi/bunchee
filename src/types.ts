@@ -98,7 +98,10 @@ type ParsedExportCondition = {
   export: FullExportCondition
 }
 
+type ExportPaths = Record<string, FullExportCondition>
+
 export type {
+  ExportPaths,
   ExportType,
   CliArgs,
   BundleConfig,

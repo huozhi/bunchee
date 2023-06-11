@@ -158,7 +158,7 @@ function parseExport(exportsCondition: ExportCondition, packageType: PackageType
 
 export function getExportPaths(pkg: PackageMetadata) {
   const pathsMap: Record<string, FullExportCondition> = {}
-  const packageType: PackageType = pkg.type || 'commonjs'
+  const packageType = getPackageType(pkg)
 
   const { exports: exportsConditions } = pkg
   if (exportsConditions) {
@@ -177,9 +177,41 @@ export function getExportPaths(pkg: PackageMetadata) {
   )
 
   // Merge the main export into '.' paths
-  pathsMap['.'] = Object.assign({}, pathsMap['.'], defaultMainExport)
+  const mainExport = Object.assign({}, pathsMap['.'], defaultMainExport)
+  // main export is not empty
+  if (Object.keys(mainExport).length > 0) {
+    pathsMap['.'] = mainExport
+  }
 
   return pathsMap
+}
+
+export function getPackageType(pkg: PackageMetadata): PackageType {
+  return pkg.type || 'commonjs'
+}
+
+export function constructDefaultExportCondition(
+  value: string | Record<string, string | undefined>,
+  packageType: PackageType
+) {
+  const objValue =
+    typeof value === 'string'
+    ? {
+      [packageType === 'commonjs' ? 'require' : 'import']: value,
+      types: getTypings(value as PackageMetadata),
+    } : value
+  return constructFullExportCondition(
+    objValue,
+    packageType
+  )
+}
+
+export function isEsmExportName(name: string) {
+  return ['import', 'module', 'react-native', 'react-server', 'edge-light'].includes(name)
+}
+
+export function isCjsExportName(name: string) {
+  return ['require', 'main', 'node', 'default'].includes(name)
 }
 
 export function getExportConditionDist(
@@ -189,16 +221,19 @@ export function getExportConditionDist(
 ) {
   const dist: { format: 'cjs' | 'esm'; file: string }[] = []
   const existed = new Set<string>()
-
   const exportTypes = Object.keys(parsedExportCondition.export)
+
   for (const key of exportTypes) {
+    if (key === 'types') {
+      continue
+    }
     const relativePath = parsedExportCondition.export[key]
     const distFile = getDistPath(relativePath, cwd)
 
     let format: 'cjs' | 'esm' = 'esm'
-    if (['import', 'module', 'react-native', 'react-server', 'edge-light'].includes(key)) {
+    if (isEsmExportName(key)) {
       format = 'esm'
-    } else if (['require', 'main', 'node', 'default']) {
+    } else if (isCjsExportName(key)) {
       format = 'cjs'
     }
 

@@ -14,7 +14,7 @@ import type {
 import fs from 'fs/promises'
 import { resolve, relative } from 'path'
 import { watch as rollupWatch, rollup } from 'rollup'
-import buildConfig, { buildEntryConfig } from './build-config'
+import { buildEntryConfig } from './build-config'
 import {
   getPackageMeta,
   logger,
@@ -22,7 +22,7 @@ import {
   getSourcePathFromExportPath,
   getExportPath,
 } from './utils'
-import { getTypings } from './exports'
+import { constructDefaultExportCondition, getExportPaths, getPackageType, getTypings } from './exports'
 import type { BuildMetadata } from './types'
 import { TypescriptOptions, resolveTsConfig } from './typescript'
 import { logSizeStats } from './logging'
@@ -60,14 +60,21 @@ async function bundle(
   assignDefault(options, 'target', 'es2015')
 
   const pkg = await getPackageMeta(cwd)
-  const packageExportsField = pkg.exports || {}
-  const isMultiEntries = hasMultiEntryExport(pkg)
+  const packageType = getPackageType(pkg)
+  const exportPaths = getExportPaths(pkg)
+
+  const exportPathsLength = Object.keys(exportPaths).length
+  const isMultiEntries = exportPathsLength > 1
+  // const isEmptyEntries = exportPathsLength === 0
+
   const tsConfig = await resolveTsConfig(cwd)
   const hasTsConfig = Boolean(tsConfig?.tsConfigPath)
   const defaultTsOptions: TypescriptOptions = {
     tsConfigPath: tsConfig?.tsConfigPath,
     tsCompilerOptions: tsConfig?.tsCompilerOptions || {},
   }
+
+  // console.log('isMultiEntries', isMultiEntries)
 
   // Handle single entry file
   if (!isMultiEntries) {
@@ -78,6 +85,13 @@ async function bundle(
       (await getSourcePathFromExportPath(cwd, '.')) ||
       ''
   }
+
+  console.log('entryPath', entryPath, 'exportPathsLength', exportPathsLength)
+  if (exportPathsLength === 0 && entryPath) {
+    exportPaths['.'] = constructDefaultExportCondition(entryPath, packageType)
+  }
+
+  console.log('exportPaths', exportPaths)
 
   const bundleOrWatch = (
     rollupConfig: BuncheeRollupConfig
@@ -110,12 +124,8 @@ async function bundle(
   }
 
   // has `types` field in package.json or has `types` exports in any export condition for multi-entries
-  const hasTypings =
-    !!getTypings(pkg) ||
-    (typeof packageExportsField === 'object' &&
-      Array.from(Object.values(packageExportsField || {})).some((condition) =>
-        condition.hasOwnProperty('types')
-      ))
+  const hasTypings = Object.values(exportPaths)
+    .some((condition) => condition.hasOwnProperty('types'))
 
   // Enable types generation if it's types field specified in package.json
   if (hasTypings) {
@@ -125,6 +135,8 @@ async function bundle(
   let result
   const buildConfigs = await buildEntryConfig(
     pkg,
+    entryPath,
+    exportPaths,
     options,
     cwd,
     defaultTsOptions,
@@ -134,26 +146,13 @@ async function bundle(
     bundleOrWatch(rollupConfig)
   )
 
-  const typesJobs = options.dts
+  const typesJobs = hasTsConfig && options.dts
     ? (
-        await buildEntryConfig(pkg, options, cwd, defaultTsOptions, true)
+        await buildEntryConfig(pkg, entryPath, exportPaths, options, cwd, defaultTsOptions, true)
       ).map((rollupConfig) => bundleOrWatch(rollupConfig))
     : []
 
   result = await Promise.all(assetsJobs.concat(typesJobs))
-  // if (isMultiEntries) {
-
-  // } else {
-  //   // Generate types
-  //   if (hasTsConfig && options.dts) {
-  //     await bundleOrWatch(
-  //       buildConfig(entryPath, pkg, options, cwd, defaultTsOptions, true)
-  //     )
-  //   }
-
-  //   const rollupConfig = buildConfig(entryPath, pkg, options, cwd, defaultTsOptions, false)
-  //   result = await bundleOrWatch(rollupConfig)
-  // }
 
   logSizeStats()
   return result
