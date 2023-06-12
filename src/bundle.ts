@@ -83,8 +83,15 @@ async function bundle(
       ''
   }
 
-  if (exportKeys.length === 0 && entryPath) {
-    exportPaths['.'] = constructDefaultExportCondition(entryPath, packageType)
+  if (entryPath) {
+    // with -o option
+    if (options.file) {
+      exportPaths['.'] = constructDefaultExportCondition(options.file, packageType)
+    }
+    // without -o, use default path dist
+    else if (exportKeys.length === 0) {
+      exportPaths['.'] = constructDefaultExportCondition('dist/index.js', packageType)
+    }
   }
 
   const bundleOrWatch = (

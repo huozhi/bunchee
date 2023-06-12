@@ -268,11 +268,11 @@ export async function buildEntryConfig(
 ): Promise<BuncheeRollupConfig[]> {
   const configs = Object.keys(exportPaths).map(async (entryExport) => {
     // TODO: improve the source detection
-    const source =
+    const source = entryPath ||
       await getSourcePathFromExportPath(
         cwd,
         entryExport
-      ) || entryPath
+      )
 
     if (!source) return undefined
 

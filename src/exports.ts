@@ -26,7 +26,6 @@ function constructFullExportCondition(
   const isCommonjs = packageType === 'commonjs'
   let result: FullExportCondition
   if (typeof value === 'string') {
-    // TODO: determine cjs or esm by "type" field in package.json
     result = {
       [isCommonjs ? 'require' : 'import']: value,
     }
