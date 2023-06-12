@@ -104,23 +104,44 @@ describe('lib exports', () => {
     })
 
     it('should handle the mixed exports conditions', () => {
-      const pkg = {
-        main: './dist/index.cjs',
-        exports: {
-          '.': {
-            sub: {
-              require: './dist/index.cjs',
+      expect(
+        getExportPaths({
+          main: './dist/index.cjs',
+          exports: {
+            '.': {
+              sub: {
+                require: './dist/index.cjs',
+              },
             },
           },
-        },
-      }
-      const result = getExportPaths(pkg)
-      expect(result).toEqual({
+        })
+      ).toEqual({
         '.': {
           require: './dist/index.cjs',
         },
         './sub': {
           require: './dist/index.cjs',
+        },
+      })
+
+      expect(
+        getExportPaths({
+          main: './dist/index.js',
+          module: './dist/index.esm.js',
+          types: './dist/index.d.ts',
+          exports: {
+            types: './dist/index.d.ts',
+            import: './dist/index.mjs',
+            module: './dist/index.esm.js',
+            require: './dist/index.js',
+          },
+        })
+      ).toEqual({
+        '.': {
+          types: './dist/index.d.ts',
+          import: './dist/index.mjs',
+          module: './dist/index.esm.js',
+          require: './dist/index.js',
         },
       })
     })
@@ -138,8 +159,10 @@ describe('lib exports', () => {
         export: parsedExportCondition[exportName],
       }
       // Get only basename to skip path.resolve result for `file` property
-      return getExportConditionDist(pkg, parsedExport, '')
-        .map((item) => ({ ...item, file: path.basename(item.file) }))
+      return getExportConditionDist(pkg, parsedExport, '').map((item) => ({
+        ...item,
+        file: path.basename(item.file),
+      }))
     }
 
     it('should dedupe the same path import and module if they are the same path', () => {
@@ -158,11 +181,11 @@ describe('lib exports', () => {
       const pkg: PackageMetadata = {
         exports: {
           '.': {
-            'require': './dist/index.cjs',
+            require: './dist/index.cjs',
             'edge-light': './dist/index.mjs',
             'react-server': './dist/index.mjs',
-          }
-        }
+          },
+        },
       }
 
       expect(getExportConditionDistHelper(pkg)).toEqual([
