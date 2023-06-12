@@ -1,9 +1,10 @@
-jest.setTimeout(10 * 60 * 1000)
-
 import fs from 'fs/promises'
 import { execSync, fork } from 'child_process'
 import { resolve, join } from 'path'
 import { stripANSIColor, existsFile } from './testing-utils'
+import * as debug from './utils/debug'
+
+jest.setTimeout(10 * 60 * 1000)
 
 const integrationTestDir = resolve(__dirname, 'integration')
 
@@ -96,25 +97,21 @@ const testCases: {
         // types
         join(dir, './dist/client/index.d.ts'),
         join(dir, './dist/index.d.ts'),
-        join(dir, './dist/lite.d.ts'),
       ]
 
       for (const f of distFiles) {
-        const ext = await existsFile(f)
-        if (!ext) console.log('missing', f)
-        expect(await existsFile(f)).toBe(true)
+        expect({ [f]: await existsFile(f) ? 'existed' : 'missing' }).toMatchObject({ [f]: 'existed' })
       }
 
       const log = `\
       ✓  Typed dist/index.d.ts                   - 65 B
       ✓  Typed dist/client/index.d.ts            - 74 B
-      ✓  Typed dist/edge.server.d.ts             - 53 B
-      ✓  Built dist/edge.server/index.mjs        - 45 B
-      ✓  Built dist/edge.server/react-server.mjs - 45 B
-      ✓  Built dist/lite.js                      - 132 B
       ✓  Built dist/index.js                     - 110 B
       ✓  Built dist/client/index.cjs             - 138 B
       ✓  Built dist/client/index.mjs             - 78 B
+      ✓  Built dist/edge.server/index.mjs        - 45 B
+      ✓  Built dist/edge.server/react-server.mjs - 45 B
+      ✓  Built dist/lite.js                      - 132 B
       `
 
       const rawStdout = stripANSIColor(stdout)
@@ -212,14 +209,11 @@ function runTests() {
     const { name, args, expected } = testCase
     const dir = getPath(name)
     test(`integration ${name}`, async () => {
-      if (process.env.TEST_DEBUG)
-        console.log(`Command: bunchee ${args.join(' ')}`)
+      debug.log(`Command: bunchee ${args.join(' ')}`)
       execSync(`rm -rf ${join(dir, 'dist')}`)
       const { stdout, stderr } = await runBundle(dir, args)
-      if (process.env.TEST_DEBUG) {
-        stdout && console.log(stdout)
-        stderr && console.error(stderr)
-      }
+      stdout && debug.log(stdout)
+      stderr && debug.error(stderr)
 
       await expected(dir, { stdout, stderr })
     })

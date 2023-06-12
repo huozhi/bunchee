@@ -27,7 +27,7 @@ function resolveTypescript(cwd: string): typeof import('typescript') {
   return ts
 }
 
-export async function resolveTsConfig(cwd: string): Promise<null | Omit<TypescriptOptions, 'dtsOnly'>> {
+export async function resolveTsConfig(cwd: string): Promise<null | TypescriptOptions> {
   let tsCompilerOptions: CompilerOptions = {}
   let tsConfigPath: string | undefined
   const ts = resolveTypescript(cwd)

@@ -1,5 +1,6 @@
 import type { PackageMetadata, ExportCondition, FullExportCondition, PackageType, ParsedExportCondition } from './types'
-import { join, resolve } from 'path'
+import { join, resolve, dirname } from 'path'
+import { filenameWithoutExtension } from './utils'
 
 export function getTypings(pkg: PackageMetadata) {
   return pkg.types || pkg.typings
@@ -251,4 +252,25 @@ export function getExportConditionDist(
     dist.push({ format: 'esm', file: getDistPath('dist/index.js', cwd) })
   }
   return dist
+}
+
+export function getTypeFilePath(
+  entryFilePath: string,
+  exportCondition: ParsedExportCondition | undefined,
+  cwd: string
+): string {
+  const name = filenameWithoutExtension(entryFilePath)
+  const firstDistPath = exportCondition
+    ? Object.values(exportCondition.export)[0]
+    : undefined
+
+  const exportName = exportCondition?.name || 'index'
+
+  return entryFilePath
+    ? name + '.d.ts'
+    : resolve(
+        firstDistPath ? dirname(firstDistPath) : join(cwd, 'dist'),
+        (exportName === '.' ? 'index' : exportName) +
+          '.d.ts'
+      )
 }
