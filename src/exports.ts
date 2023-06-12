@@ -106,10 +106,14 @@ function parseExport(exportsCondition: ExportCondition, packageType: PackageType
   if (typeof exportsCondition === 'string') {
     paths['.'] = constructFullExportCondition(exportsCondition, packageType)
   } else if (typeof exportsCondition === 'object') {
-    Object.keys(exportsCondition).forEach((key: string) => {
-      const value = exportsCondition[key]
-      findExport(key, value, paths, packageType)
-    })
+    if (isExportLike(exportsCondition)) {
+      paths['.'] = constructFullExportCondition(exportsCondition, packageType)
+    } else {
+      Object.keys(exportsCondition).forEach((key: string) => {
+        const value = exportsCondition[key]
+        findExport(key, value, paths, packageType)
+      })
+    }
   }
   return paths
 }
