@@ -84,3 +84,10 @@ export async function getSourcePathFromExportPath(cwd: string, exportPath: strin
   }
   return
 }
+
+// Unlike path.basename, forcedly removing extension
+export function filenameWithoutExtension(file: string | undefined) {
+  return file
+    ? file.replace(new RegExp(`${path.extname(file)}$`), '')
+    : undefined
+}

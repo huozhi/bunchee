@@ -1,9 +1,9 @@
-jest.setTimeout(10 * 60 * 1000)
-
 import fs, { promises as fsp } from 'fs'
 import { resolve, dirname } from 'path'
 import { bundle } from 'bunchee'
 import { existsFile } from './testing-utils'
+
+jest.setTimeout(10 * 60 * 1000)
 
 const baseUnitTestDir = resolve(__dirname, 'unit')
 const unitTestDirs = fs.readdirSync(baseUnitTestDir)

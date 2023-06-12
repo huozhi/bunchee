@@ -22,7 +22,7 @@ import {
   getSourcePathFromExportPath,
   getExportPath,
 } from './utils'
-import { constructDefaultExportCondition, getExportPaths, getPackageType } from './exports'
+import { constructDefaultExportCondition, getExportPaths, getPackageType, getTypeFilePath } from './exports'
 import type { BuildMetadata } from './types'
 import { TypescriptOptions, resolveTsConfig } from './typescript'
 import { logSizeStats } from './logging'
@@ -66,6 +66,10 @@ async function bundle(
   // const exportPathsLength = Object.keys(exportPaths).length
   const isMultiEntries = hasMultiEntryExport(exportPaths) // exportPathsLength > 1
 
+  // has `types` field in package.json or has `types` exports in any export condition for multi-entries
+  const hasTypings = Object.values(exportPaths)
+    .some((condition) => condition.hasOwnProperty('types'))
+
   const tsConfig = await resolveTsConfig(cwd)
   const hasTsConfig = Boolean(tsConfig?.tsConfigPath)
   const defaultTsOptions: TypescriptOptions = {
@@ -84,13 +88,26 @@ async function bundle(
   }
 
   if (entryPath) {
+    let mainEntryPath: string | undefined
+    let typesEntryPath: string | undefined
     // with -o option
     if (options.file) {
-      exportPaths['.'] = constructDefaultExportCondition(options.file, packageType)
+      mainEntryPath = options.file
     }
     // without -o, use default path dist
     else if (exportKeys.length === 0) {
-      exportPaths['.'] = constructDefaultExportCondition('dist/index.js', packageType)
+      mainEntryPath = resolve(cwd, 'dist/index.js')
+    }
+
+    if (mainEntryPath) {
+      if (options.dts) {
+        typesEntryPath = getTypeFilePath(mainEntryPath, undefined, cwd)
+      }
+
+      exportPaths['.'] = constructDefaultExportCondition({
+        main: mainEntryPath,
+        types: typesEntryPath,
+      }, packageType)
     }
   }
 
@@ -123,10 +140,6 @@ async function bundle(
     err.name = 'NOT_EXISTED'
     return Promise.reject(err)
   }
-
-  // has `types` field in package.json or has `types` exports in any export condition for multi-entries
-  const hasTypings = Object.values(exportPaths)
-    .some((condition) => condition.hasOwnProperty('types'))
 
   // Enable types generation if it's types field specified in package.json
   if (hasTypings) {

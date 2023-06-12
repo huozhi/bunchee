@@ -1,10 +1,11 @@
-jest.setTimeout(10 * 60 * 1000)
-
 import fs, { promises as fsp } from 'fs'
 import path from 'path'
 import os from 'os'
 import { fork, execSync } from 'child_process'
 import { stripANSIColor } from './testing-utils'
+import * as debug from './utils/debug'
+
+jest.setTimeout(10 * 60 * 1000)
 
 const resolveFromTest = (filepath: string) =>
   path.resolve(__dirname, '../test', filepath)
@@ -259,10 +260,9 @@ describe('cli', () => {
 
       // TODO: specify working directory for each test
       execSync(`rm -rf ${distDir}`)
-      if (process.env.TEST_DEBUG) {
-        console.log(`Command: rm -rf ${distDir}`)
-        console.log(`Command: bunchee ${args.join(' ')}`)
-      }
+      debug.log(`Command: rm -rf ${distDir}`)
+      debug.log(`Command: bunchee ${args.join(' ')}`)
+
       const ps = fork(
         `${__dirname + '/../node_modules/.bin/tsx'}`,
         [__dirname + '/../src/cli.ts'].concat(args),
@@ -287,9 +287,8 @@ describe('cli', () => {
       }
       expect(fs.existsSync(distFile)).toBe(true)
       expect(code).toBe(0)
-      if (process.env.TEST_DEBUG) {
-        console.log(`Clean up ${distDir}`)
-      }
+      debug.log(`Clean up ${distDir}`)
+
       await removeDirectory(distDir)
     })
   }
