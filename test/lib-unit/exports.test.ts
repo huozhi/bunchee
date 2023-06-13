@@ -166,14 +166,24 @@ describe('lib exports', () => {
     }
 
     it('should dedupe the same path import and module if they are the same path', () => {
-      const pkg: PackageMetadata = {
+      // dedupe import and module are they have the same path
+      expect(getExportConditionDistHelper({
         type: 'module',
         main: './dist/index.mjs',
         module: './dist/index.mjs',
-      }
-
-      expect(getExportConditionDistHelper(pkg)).toEqual([
+      })).toEqual([
         { file: 'index.mjs', format: 'esm' },
+      ])
+
+      // Do not dedupe import and module are they're different paths
+      expect(getExportConditionDistHelper({
+        module: './dist/index.esm.js',
+        exports: {
+          import: './dist/index.mjs',
+        }
+      })).toEqual([
+        { file: 'index.mjs', format: 'esm' },
+        { file: 'index.esm.js', format: 'esm' },
       ])
     })
 
