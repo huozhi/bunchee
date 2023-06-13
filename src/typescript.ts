@@ -30,9 +30,9 @@ function resolveTypescript(cwd: string): typeof import('typescript') {
 export async function resolveTsConfig(cwd: string): Promise<null | TypescriptOptions> {
   let tsCompilerOptions: CompilerOptions = {}
   let tsConfigPath: string | undefined
-  const ts = resolveTypescript(cwd)
   tsConfigPath = resolve(cwd, 'tsconfig.json')
   if (await fileExists(tsConfigPath)) {
+    const ts = resolveTypescript(cwd)
     const basePath = tsConfigPath ? dirname(tsConfigPath) : cwd
     const tsconfigJSON = ts.readConfigFile(tsConfigPath, ts.sys.readFile).config
     tsCompilerOptions = ts.parseJsonConfigFileContent(
