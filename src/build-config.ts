@@ -5,6 +5,7 @@ import type {
   BundleConfig,
   ParsedExportCondition,
   ExportPaths,
+  FullExportCondition,
 } from './types'
 import type { JsMinifyOptions } from '@swc/core'
 import type { InputOptions, OutputOptions, Plugin } from 'rollup'
@@ -30,6 +31,8 @@ import {
   getSourcePathFromExportPath,
   resolveSourceFile,
   filenameWithoutExtension,
+  nonNullable,
+  availableExportConventions,
 } from './utils'
 
 const minifyOptions: JsMinifyOptions = {
@@ -196,8 +199,9 @@ function hasEsmExport(
   let hasEsm = false
   for (const key in exportPaths) {
     const exportInfo = exportPaths[key]
-    const exportNames = Object.keys(exportInfo)
-    if (exportNames.some((name) => isEsmExportName(name))) {
+    const exportInfoEntries = Object.entries(exportInfo)
+
+    if (exportInfoEntries.some(([exportType, file]) => isEsmExportName(exportType, file))) {
       hasEsm = true
       break
     }
@@ -263,40 +267,73 @@ export async function buildEntryConfig(
   tsOptions: TypescriptOptions,
   dts: boolean
 ): Promise<BuncheeRollupConfig[]> {
-  const configs = Object.keys(exportPaths).map(async (entryExport) => {
+  const configs: Promise<BuncheeRollupConfig | undefined>[] = []
+  Object.keys(exportPaths).forEach(async (entryExport) => {
     // TODO: improve the source detection
-    const source = entryPath ||
-      await getSourcePathFromExportPath(
-        cwd,
-        entryExport
-      )
+    const exportCond = exportPaths[entryExport]
+    const hasEdgeLight = !!exportCond['edge-light']
+    const hasReactServer = !!exportCond['react-server']
 
-    if (!source) return undefined
-
-    // For dts, only build types filed
-    if (dts && !exportPaths[entryExport]['types']) return undefined
-
-    const exportCondition: ParsedExportCondition = {
-      source,
-      name: entryExport,
-      export: exportPaths[entryExport],
+    const buildConfigs = [
+      createBuildConfig('', exportCond) // default config
+    ]
+    if (hasEdgeLight) {
+      buildConfigs.push(createBuildConfig('edge-light', exportCond))
+    }
+    if (hasReactServer) {
+      buildConfigs.push(createBuildConfig('react-server', exportCond))
     }
 
-    const entry = resolveSourceFile(cwd!, source)
-    const rollupConfig = buildConfig(
-      entry,
-      pkg,
-      exportPaths,
-      bundleConfig,
-      exportCondition,
-      cwd,
-      tsOptions,
-      dts
-    )
-    return rollupConfig
+    async function createBuildConfig(exportType: string, exportCondRef: FullExportCondition) {
+      let exportCondForType: FullExportCondition = { ...exportCondRef }
+      // Special cases of export type, only pass down the exportPaths for the type
+      if (availableExportConventions.includes(exportType)) {
+        exportCondForType = {
+          [entryExport]: exportCondRef[exportType]
+        }
+      // Basic export type, pass down the exportPaths with erasing the special ones
+      } else {
+        for (const exportType of availableExportConventions) {
+          delete exportCondForType[exportType]
+        }
+
+      }
+      const source = entryPath ||
+        await getSourcePathFromExportPath(
+          cwd,
+          entryExport,
+          exportType,
+        )
+
+      if (!source) return undefined
+
+      // For dts, only build types filed
+      if (dts && !exportCondRef['types']) return undefined
+
+      const exportCondition: ParsedExportCondition = {
+        source,
+        name: entryExport,
+        export: exportCondForType,
+      }
+
+      const entry = resolveSourceFile(cwd!, source)
+      const rollupConfig = buildConfig(
+        entry,
+        pkg,
+        exportPaths,
+        bundleConfig,
+        exportCondition,
+        cwd,
+        tsOptions,
+        dts
+      )
+      return rollupConfig
+    }
+
+    configs.push(...buildConfigs)
   })
 
-  return (await Promise.all(configs)).filter(<T>(n?: T): n is T => Boolean(n))
+  return (await Promise.all(configs)).filter(nonNullable)
 }
 
 function buildConfig(

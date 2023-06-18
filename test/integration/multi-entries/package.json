@@ -10,9 +10,13 @@
       "import": "./dist/client/index.mjs",
       "types": "./dist/client/index.d.ts"
     },
-    "./edge.server": {
-      "edge-light": "./dist/edge.server/index.mjs",
-      "react-server": "./dist/edge.server/react-server.mjs"
+    "./shared": {
+      "import": "./dist/shared/index.mjs",
+      "edge-light": "./dist/shared/edge-light.mjs"
+    },
+    "./server": {
+      "edge-light": "./dist/server/edge.mjs",
+      "react-server": "./dist/server/react-server.mjs"
     }
   }
 }
