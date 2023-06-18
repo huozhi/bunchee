@@ -61,7 +61,10 @@ Using pure ESM package?
 }
 ```
 
-Then just run `npm run build`, or `pnpm build` / `yarn build` if you're using these package managers.
+Then just run `npm run build`, or `pnpm build` / `yarn build` if you're using these package managers. The output format will based on the exports condition and also the file extension. Given an example:
+
+* It's CommonJS for `require` and ESM for `import` based on the exports condition.
+* It's CommonJS for `.js` and ESM for `.mjs` based on the extension regardless the exports condition. Then for export condition like "node" you could choose the format with your extension.
 
 ## Configuration
 
@@ -121,7 +124,6 @@ bunchee --env=ENV1,ENV2,ENV3
 
 Replace `ENV1`, `ENV2`, and `ENV3` with the names of the environment variables you want to include in your bundled code. These environment variables will be inlined during the bundling process.
 
-
 ### Entry Files Convention
 
 While `exports` field is becoming the standard of exporting in node.js, bunchee also supports to build multiple exports all in one command.
@@ -160,6 +162,35 @@ Then you need to add two entry files `index.ts` and `lite.ts` in project root di
     |- index.ts
   |- package.json
 ```
+
+It will also look up for `index.<ext>` file under the directory having the name of the export path. For example, if you have `"./lite": "./dist/lite.js"` in exports field, then it will look up for `./lite/index.js` as the entry file as well.
+
+### Special Exports Conventions
+
+For exports condition like `react-native`, `react-server` and `edge-light` as they're special platforms, they could have different exports or different code conditions. In this case bunchee provides an override input source file convention if you want to build them as different code bundle.
+
+For instance:
+
+```json
+{
+  "exports": {
+    "react-server": "./dist/react-server.mjs",
+    "edge-light": "./dist/edge-light.mjs",
+    "import": "./dist/index.mjs"
+  }
+}
+```
+
+You can use `index.<export-type>.<ext>` to override the input source file for specific export name. Or using `<export-path>/index.<export-type>.<ext>` also works. Such as:
+
+```
+|- src/
+  |- index/.ts
+  |- index.react-server.ts
+  |- index.edge-light.ts
+```
+
+This will match the export name `"react-server"` and `"edge-light"` then use the corresponding input source file to build the bundle.
 
 #### Package lint
 
