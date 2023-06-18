@@ -1,5 +1,5 @@
 import type { PackageMetadata, ExportCondition, FullExportCondition, PackageType, ParsedExportCondition } from './types'
-import { join, resolve, dirname } from 'path'
+import { join, resolve, dirname, extname } from 'path'
 import { filenameWithoutExtension } from './utils'
 
 export function getTypings(pkg: PackageMetadata) {
@@ -210,12 +210,12 @@ export function constructDefaultExportCondition(
   )
 }
 
-export function isEsmExportName(name: string) {
-  return ['import', 'module', 'react-native', 'react-server', 'edge-light'].includes(name)
+export function isEsmExportName(name: string, ext: string) {
+  return ['import', 'module'].includes(name) || ext === 'mjs'
 }
 
-export function isCjsExportName(name: string) {
-  return ['require', 'main', 'node', 'default'].includes(name)
+export function isCjsExportName(name: string, ext: string) {
+  return ['require', 'main', 'node', 'default'].includes(name) || ext === 'cjs'
 }
 
 export function getExportConditionDist(
@@ -231,13 +231,15 @@ export function getExportConditionDist(
     if (key === 'types') {
       continue
     }
+    const filePath = parsedExportCondition.export[key]
+    const ext = extname(filePath).slice(1)
     const relativePath = parsedExportCondition.export[key]
     const distFile = getDistPath(relativePath, cwd)
 
     let format: 'cjs' | 'esm' = 'esm'
-    if (isEsmExportName(key)) {
+    if (isEsmExportName(key, ext)) {
       format = 'esm'
-    } else if (isCjsExportName(key)) {
+    } else if (isCjsExportName(key, ext)) {
       format = 'cjs'
     }
 

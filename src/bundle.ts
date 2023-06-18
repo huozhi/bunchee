@@ -83,7 +83,7 @@ async function bundle(
     // e.g. "exports": "./dist/index.js" -> use "./index.<ext>" as entry
     entryPath =
       entryPath ||
-      (await getSourcePathFromExportPath(cwd, '.')) ||
+      (await getSourcePathFromExportPath(cwd, '.', 'default')) ||
       ''
   }
 

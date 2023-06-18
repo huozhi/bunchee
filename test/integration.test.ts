@@ -87,31 +87,53 @@ const testCases: {
     args: [],
     async expected(dir, { stdout }) {
       const distFiles = [
-        join(dir, './dist/index.js'),
-        join(dir, './dist/lite.js'),
-        join(dir, './dist/client/index.cjs'),
-        join(dir, './dist/client/index.mjs'),
-        join(dir, './dist/edge.server/index.mjs'),
-        join(dir, './dist/edge.server/react-server.mjs'),
+        './dist/index.js',
+        './dist/lite.js',
+        './dist/client/index.cjs',
+        './dist/client/index.mjs',
+        './dist/shared/index.mjs',
+        './dist/shared/edge-light.mjs',
+        './dist/server/edge.mjs',
+        './dist/server/react-server.mjs',
 
         // types
-        join(dir, './dist/client/index.d.ts'),
-        join(dir, './dist/index.d.ts'),
+        './dist/client/index.d.ts',
+        './dist/index.d.ts',
       ]
 
-      for (const f of distFiles) {
-        expect({ [f]: await existsFile(f) ? 'existed' : 'missing' }).toMatchObject({ [f]: 'existed' })
+      const contentsRegex = {
+        './dist/index.js': /'index'/,
+        './dist/shared/index.mjs': /'shared'/,
+        './dist/shared/edge-light.mjs': /'shared.edge-light'/,
+        './dist/server/edge.mjs': /'server.edge-light'/,
+        './dist/server/react-server.mjs': /'server.react-server'/,
+      }
+
+      for (const relativeFile of distFiles) {
+        const file = join(dir, relativeFile)
+        expect({
+          [file]: await existsFile(file) ? 'existed' : 'missing'
+        }).toMatchObject({ [file]: 'existed' })
+      }
+
+      for (const [file, regex] of Object.entries(contentsRegex)) {
+        const content = await fs.readFile(join(dir, file), {
+          encoding: 'utf-8',
+        })
+        expect(content).toMatch(regex)
       }
 
       const log = `\
-      ✓  Typed dist/index.d.ts                   - 65 B
-      ✓  Typed dist/client/index.d.ts            - 74 B
-      ✓  Built dist/index.js                     - 110 B
-      ✓  Built dist/client/index.cjs             - 138 B
-      ✓  Built dist/client/index.mjs             - 78 B
-      ✓  Built dist/edge.server/index.mjs        - 45 B
-      ✓  Built dist/edge.server/react-server.mjs - 45 B
-      ✓  Built dist/lite.js                      - 132 B
+      ✓  Typed dist/client/index.d.ts       - 74 B
+      ✓  Typed dist/index.d.ts              - 65 B
+      ✓  Built dist/client/index.cjs        - 138 B
+      ✓  Built dist/client/index.mjs        - 78 B
+      ✓  Built dist/index.js                - 110 B
+      ✓  Built dist/shared/index.mjs        - 53 B
+      ✓  Built dist/lite.js                 - 132 B
+      ✓  Built dist/shared/edge-light.mjs   - 84 B
+      ✓  Built dist/server/react-server.mjs - 53 B
+      ✓  Built dist/server/edge.mjs         - 51 B
       `
 
       const rawStdout = stripANSIColor(stdout)
