@@ -271,17 +271,22 @@ export async function buildEntryConfig(
   Object.keys(exportPaths).forEach(async (entryExport) => {
     // TODO: improve the source detection
     const exportCond = exportPaths[entryExport]
-    const hasEdgeLight = !!exportCond['edge-light']
-    const hasReactServer = !!exportCond['react-server']
-
     const buildConfigs = [
       createBuildConfig('', exportCond) // default config
     ]
-    if (hasEdgeLight) {
-      buildConfigs.push(createBuildConfig('edge-light', exportCond))
-    }
-    if (hasReactServer) {
-      buildConfigs.push(createBuildConfig('react-server', exportCond))
+
+    // For dts job, only build the default config.
+    // For assets job, build all configs.
+    if (!dts) {
+      if (exportCond['edge-light']) {
+        buildConfigs.push(createBuildConfig('edge-light', exportCond))
+      }
+      if (exportCond['react-server']) {
+        buildConfigs.push(createBuildConfig('react-server', exportCond))
+      }
+      if (exportCond['react-native']) {
+        buildConfigs.push(createBuildConfig('react-native', exportCond))
+      }
     }
 
     async function createBuildConfig(exportType: string, exportCondRef: FullExportCondition) {
