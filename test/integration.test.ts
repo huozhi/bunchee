@@ -1,7 +1,7 @@
 import fs from 'fs/promises'
 import { execSync, fork } from 'child_process'
 import { resolve, join } from 'path'
-import { stripANSIColor, existsFile } from './testing-utils'
+import { stripANSIColor, existsFile, assertFilesContent } from './testing-utils'
 import * as debug from './utils/debug'
 
 jest.setTimeout(10 * 60 * 1000)
@@ -12,7 +12,7 @@ const getPath = (filepath: string) => join(integrationTestDir, filepath)
 
 const testCases: {
   name: string
-  args: string[]
+  args?: string[]
   expected(
     f: string,
     { stderr, stdout }: { stderr: string; stdout: string }
@@ -58,6 +58,17 @@ const testCases: {
       for (const f of distFiles) {
         expect(await existsFile(f)).toBe(true)
       }
+    },
+  },
+  {
+    name: 'pkg-exports-ts-rsc',
+    async expected(dir) {
+      assertFilesContent(dir, {
+        './dist/index.mjs': /const shared = true/,
+        './dist/react-server.mjs': /'react-server'/,
+        './dist/react-native.js': /'react-native'/,
+        './dist/index.d.ts': /declare const shared = true/,
+      })
     },
   },
   {
@@ -109,19 +120,7 @@ const testCases: {
         './dist/server/react-server.mjs': /'server.react-server'/,
       }
 
-      for (const relativeFile of distFiles) {
-        const file = join(dir, relativeFile)
-        expect({
-          [file]: await existsFile(file) ? 'existed' : 'missing'
-        }).toMatchObject({ [file]: 'existed' })
-      }
-
-      for (const [file, regex] of Object.entries(contentsRegex)) {
-        const content = await fs.readFile(join(dir, file), {
-          encoding: 'utf-8',
-        })
-        expect(content).toMatch(regex)
-      }
+      assertFilesContent(dir, contentsRegex)
 
       const log = `\
       ✓  Typed dist/client/index.d.ts       - 74 B
@@ -203,9 +202,9 @@ const testCases: {
 
 async function runBundle(
   dir: string,
-  _args: string[]
+  args_: string[]
 ): Promise<{ code: number | null; stdout: string; stderr: string }> {
-  const args = _args.concat(['--cwd', dir])
+  const args = (args_ || []).concat(['--cwd', dir])
   const ps = fork(
     `${__dirname + '/../node_modules/.bin/tsx'}`,
     [__dirname + '/../src/cli.ts'].concat(args),
@@ -228,7 +227,7 @@ async function runBundle(
 
 function runTests() {
   for (const testCase of testCases) {
-    const { name, args, expected } = testCase
+    const { name, args = [], expected } = testCase
     const dir = getPath(name)
     test(`integration ${name}`, async () => {
       debug.log(`Command: bunchee ${args.join(' ')}`)
