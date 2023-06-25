@@ -1,7 +1,7 @@
 'use strict';
-'use client'
+
+import client from './client'
 
 export default () => {
-  React.useState(null)
-  return null
+  return client()
 }

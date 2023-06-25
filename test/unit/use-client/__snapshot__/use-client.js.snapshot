@@ -1,8 +1,11 @@
 'use strict';
 'use client'
+function client() {
+    return React.useState(null);
+}
+
 var input = (()=>{
-    React.useState(null);
-    return null;
+    return client();
 });
 
 export { input as default };
