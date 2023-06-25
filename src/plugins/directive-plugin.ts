@@ -13,11 +13,12 @@ export default function preserveDirectivePlugin(): Plugin {
       const directives: Set<string> = new Set()
 
       const replacedCode = code.replace(regex, (match) => {
-        directives.add(match);
+        // replace double quotes with single quotes
+        directives.add(match.replace(/["]/g, "'"))
         return ''
       })
 
-      fileDirectivesMap.set(id, directives)
+      if (directives.size) fileDirectivesMap.set(id, directives)
       return {
         code: replacedCode,
         map: null,
