@@ -1,0 +1,8 @@
+'use strict';
+'use client'
+var input = (()=>{
+    React.useState(null);
+    return null;
+});
+
+export { input as default };
