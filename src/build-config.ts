@@ -15,11 +15,11 @@ import { resolve, dirname } from 'path'
 import { wasm } from '@rollup/plugin-wasm'
 import { swc } from 'rollup-plugin-swc3'
 import commonjs from '@rollup/plugin-commonjs'
-import shebang from 'rollup-plugin-preserve-shebang'
 import json from '@rollup/plugin-json'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import replace from '@rollup/plugin-replace'
 import createChunkSizeCollector from './plugins/size-plugin'
+import preserveDirectivePlugin from './plugins/directive-plugin'
 import {
   getTypings,
   getExportPaths,
@@ -87,7 +87,7 @@ function buildInputConfig(
   )
   const sizePlugin = sizeCollector.plugin(cwd)
   const commonPlugins = [
-    shebang(),
+    preserveDirectivePlugin(),
     sizePlugin,
   ]
   const plugins: Plugin[] = (

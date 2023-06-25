@@ -1,25 +1,40 @@
-const MagicString = require('magic-string');
+import type { Plugin } from 'rollup'
+import MagicString from 'magic-string'
 
-module.exports = function useDirectivePlugin() {
+
+
+export default function preserveDirectivePlugin(): Plugin {
+  const fileDirectivesMap = new Map()
   return {
     name: 'use-directive',
 
     transform(code, id) {
-      let magicString = new MagicString(code);
-      let match;
-      let useDirective = '';
-      const regex = /^use [^\n;]*;/;
+      const regex = /^(?:['"]use[^'"]+['"][^\n]*|#![^\n]*)/gm
+      const directives: Set<string> = new Set()
 
-      if ((match = regex.exec(code)) !== null) {
-        useDirective = match[0];
-        magicString.remove(0, match[0].length);
-      }
+      const replacedCode = code.replace(regex, (match) => {
+        directives.add(match);
+        return ''
+      })
 
+      fileDirectivesMap.set(id, directives)
       return {
-        code: magicString.toString(),
-        map: magicString.generateMap({ hires: true }),
-        banner: useDirective,
-      };
+        code: replacedCode,
+        map: null,
+      }
+    },
+
+    renderChunk(code, chunk, { sourcemap }) {
+      let directives = fileDirectivesMap.get(chunk.facadeModuleId)
+			if (!directives) return null
+
+			const s = new MagicString(code)
+			s.prepend(`${[...directives].join('\n')}\n`)
+
+			return {
+				code: s.toString(),
+				map: sourcemap ? s.generateMap({ hires: true }) : null
+			}
     }
-  };
-};
+  }
+}
