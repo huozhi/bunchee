@@ -67,7 +67,7 @@ const testCases: {
         './dist/index.mjs': /const shared = true/,
         './dist/react-server.mjs': /'react-server'/,
         './dist/react-native.js': /'react-native'/,
-        './dist/index.d.ts': /declare const shared = true/,
+        './dist/index.d.mts': /declare const shared = true/,
       })
     },
   },
@@ -123,15 +123,18 @@ const testCases: {
       assertFilesContent(dir, contentsRegex)
 
       const log = `\
-      ✓  Typed dist/client/index.d.ts       - 74 B
+      ✓  Typed dist/server/index.d.mts      - 87 B
       ✓  Typed dist/index.d.ts              - 65 B
+      ✓  Typed dist/client/index.d.cts      - 74 B
+      ✓  Typed dist/client/index.d.mts      - 74 B
+      ✓  Built dist/index.js                - 110 B
+      ✓  Built dist/shared/edge-light.mjs   - 84 B
+      ✓  Built dist/lite.js                 - 132 B
       ✓  Built dist/client/index.cjs        - 138 B
       ✓  Built dist/client/index.mjs        - 78 B
-      ✓  Built dist/index.js                - 110 B
       ✓  Built dist/shared/index.mjs        - 53 B
-      ✓  Built dist/lite.js                 - 132 B
-      ✓  Built dist/shared/edge-light.mjs   - 84 B
       ✓  Built dist/server/react-server.mjs - 53 B
+      ✓  Built dist/server/index.mjs        - 71 B
       ✓  Built dist/server/edge.mjs         - 51 B
       `
 
@@ -139,6 +142,36 @@ const testCases: {
       log.split('\n').forEach((line: string) => {
         expect(rawStdout).toContain(line.trim())
       })
+    },
+  },
+  {
+    name: 'ts-dual-esm-cjs',
+    args: [],
+    async expected(dir) {
+      const distFiles = [
+        join(dir, './dist/index.js'),
+        join(dir, './dist/index.mjs'),
+        join(dir, './dist/index.d.ts'),
+        join(dir, './dist/index.d.mts'),
+      ]
+      for (const f of distFiles) {
+        expect(await existsFile(f)).toBe(true)
+      }
+    },
+  },
+  {
+    name: 'ts-dual-esm-cjs-type-module',
+    args: [],
+    async expected(dir) {
+      const distFiles = [
+        join(dir, './dist/index.js'),
+        join(dir, './dist/index.cjs'),
+        join(dir, './dist/index.d.ts'),
+        join(dir, './dist/index.d.cts'),
+      ]
+      for (const f of distFiles) {
+        expect(await existsFile(f)).toBe(true)
+      }
     },
   },
   {

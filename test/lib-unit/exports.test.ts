@@ -1,6 +1,6 @@
 import type { PackageMetadata } from 'src/types'
 import path from 'path'
-import { getExportPaths, getExportConditionDist } from '../../src/exports'
+import { getExportPaths, getExportConditionDist, getExportTypeDist } from '../../src/exports'
 
 describe('lib exports', () => {
   describe('getExportPaths', () => {
@@ -201,6 +201,54 @@ describe('lib exports', () => {
       expect(getExportConditionDistHelper(pkg)).toEqual([
         { file: 'index.cjs', format: 'cjs' },
         { file: 'index.mjs', format: 'esm' },
+      ])
+    })
+  })
+  describe('getExportTypeDist', () => {
+    function getExportTypeDistHelper(
+      pkg: PackageMetadata,
+      exportName: string = '.'
+    ) {
+      const parsedExportCondition = getExportPaths(pkg)
+      const parsedExport = {
+        source: `./src/${exportName === '.' ? 'index' : exportName}.ts`,
+        name: exportName,
+        export: parsedExportCondition[exportName],
+      }
+      // Get only basename to skip path.resolve result for `file` property
+      return getExportTypeDist(parsedExport, '').map(filename => path.basename(filename))
+    }
+    it('should handle the basic main fields paths (esm)', () => {
+      const pkg: PackageMetadata = {
+        "main": "./dist/index.js",
+        "types": "./dist/index.d.ts",
+        "module": "./dist/index.esm.js",
+        "exports": {
+          "import": "./dist/index.mjs",
+          "require": "./dist/index.js"
+        }
+      }
+      const result = getExportTypeDistHelper(pkg)
+      expect(result).toEqual([
+        "index.d.mts",
+        "index.d.ts",
+      ])
+    })
+    it('should handle type: module', () => {
+      const pkg: PackageMetadata = {
+        "main": "./dist/index.js",
+        "types": "./dist/index.d.ts",
+        "module": "./dist/index.esm.js",
+        "type": "module",
+        "exports": {
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      }
+      const result = getExportTypeDistHelper(pkg)
+      expect(result).toEqual([
+        "index.d.ts",
+        "index.d.cts",
       ])
     })
   })
