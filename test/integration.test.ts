@@ -67,7 +67,7 @@ const testCases: {
         './dist/index.mjs': /const shared = true/,
         './dist/react-server.mjs': /'react-server'/,
         './dist/react-native.js': /'react-native'/,
-        './dist/index.d.mts': /declare const shared = true/,
+        './dist/index.d.ts': /declare const shared = true/,
       })
     },
   },

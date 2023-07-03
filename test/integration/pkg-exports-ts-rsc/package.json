@@ -1,7 +1,7 @@
 {
   "name": "pkg-export-ts-rsc",
-  "types": "./dist/index.d.ts",
   "exports": {
+    "types": "./dist/index.d.ts",
     "react-server": "./dist/react-server.mjs",
     "react-native": "./dist/react-native.js",
     "import": "./dist/index.mjs"

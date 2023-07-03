@@ -1,7 +1,6 @@
 {
   "name": "ts-dual-esm-cjs-type-module",
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "type": "module",
   "exports": {
     "import": "./dist/index.js",
