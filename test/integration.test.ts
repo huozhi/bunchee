@@ -145,7 +145,7 @@ const testCases: {
     },
   },
   {
-    name: 'ts-dual-esm-cjs',
+    name: 'ts-dual-package-type-cjs',
     args: [],
     async expected(dir) {
       const distFiles = [
@@ -160,7 +160,7 @@ const testCases: {
     },
   },
   {
-    name: 'ts-dual-esm-cjs-type-module',
+    name: 'ts-dual-package-module',
     args: [],
     async expected(dir) {
       const distFiles = [
