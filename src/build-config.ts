@@ -322,9 +322,6 @@ export async function buildEntryConfig(
 
       if (!source) return undefined
 
-      // For dts, only build types filed
-      if (dts && !exportCondRef['types']) return undefined
-
       const exportCondition: ParsedExportCondition = {
         source,
         name: entryExport,

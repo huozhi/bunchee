@@ -6,6 +6,7 @@
     "bunchee": "./dist/cli.js"
   },
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "test": "jest --env node",
     "test:update": "TEST_UPDATE_SNAPSHOT=1 yarn test",

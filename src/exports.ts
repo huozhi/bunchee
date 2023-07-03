@@ -197,10 +197,18 @@ export const getExportTypeDist = (
   const existed = new Set<string>()
   const exportTypes = Object.keys(parsedExportCondition.export)
   for (const key of exportTypes) {
-    if (key === 'types' || key === 'module') {
+    if (key === 'module') {
       continue
     }
     const filePath = parsedExportCondition.export[key]
+    if (key === 'types') {
+      const typeFile = getDistPath(filePath, cwd)
+      if (existed.has(typeFile)) {
+        continue
+      }
+      existed.add(typeFile)
+      continue
+    }
     const ext = extname(filePath).slice(1)
     const dtsExtentions: Record<string, string> = {
       'js': '.d.ts',

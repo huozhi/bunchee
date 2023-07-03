@@ -250,6 +250,24 @@ describe('lib exports', () => {
         "index.d.ts",
         "index.d.cts",
       ])
+    }),
+    it('should also respect `types` field ', () => {
+      const pkg: PackageMetadata = {
+        "main": "./dist/index.js",
+        "types": "./dist/types.d.ts",
+        "module": "./dist/index.esm.js",
+        "type": "module",
+        "exports": {
+          "import": "./dist/index.js",
+          "require": "./dist/index.cjs"
+        }
+      }
+      const result = getExportTypeDistHelper(pkg)
+      expect(result).toEqual([
+        "index.d.ts",
+        "index.d.cts",
+        "types.d.ts"
+      ])
     })
   })
 })
