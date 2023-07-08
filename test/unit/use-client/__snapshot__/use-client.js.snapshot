@@ -1,5 +1,5 @@
 'use strict';
-'use client'
+'use client';
 function client() {
     return React.useState(null);
 }

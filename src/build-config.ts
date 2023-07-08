@@ -7,7 +7,6 @@ import type {
   ExportPaths,
   FullExportCondition,
 } from './types'
-import type { JsMinifyOptions } from '@swc/core'
 import type { InputOptions, OutputOptions, Plugin } from 'rollup'
 import type { TypescriptOptions } from './typescript'
 
@@ -19,7 +18,7 @@ import json from '@rollup/plugin-json'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import replace from '@rollup/plugin-replace'
 import createChunkSizeCollector from './plugins/size-plugin'
-import preserveDirectivePlugin from './plugins/directive-plugin'
+import swcRenderDirectivePlugin from './plugins/swc-render-directive-plugin'
 import {
   getTypings,
   getExportPaths,
@@ -35,7 +34,7 @@ import {
   availableExportConventions,
 } from './utils'
 
-const minifyOptions: JsMinifyOptions = {
+const swcMinifyOptions = {
   compress: true,
   format: {
     comments: 'some',
@@ -45,7 +44,7 @@ const minifyOptions: JsMinifyOptions = {
   mangle: {
     toplevel: true,
   },
-}
+} as const
 
 // This can also be passed down as stats from top level
 export const sizeCollector = createChunkSizeCollector()
@@ -81,13 +80,41 @@ function buildInputConfig(
         .reduce((a: string[], b: string[]) => a.concat(b), [])
         .concat((options.external ?? []).concat(pkg.name ? [pkg.name] : []))
 
-  const { useTypescript, runtime, target: jscTarget, minify } = options
+  const { useTypescript, runtime, target: jscTarget, minify: shouldMinify } = options
   const hasSpecifiedTsTarget = Boolean(
     tsCompilerOptions?.target && tsConfigPath
   )
+
+  const swcParserConfig = {
+    syntax: useTypescript ? 'typescript' : 'ecmascript',
+    [useTypescript ? 'tsx' : 'jsx']: true,
+    privateMethod: true,
+    classPrivateProperty: true,
+    exportDefaultFrom: true,
+  } as const
+
+  const swcOptions = {
+    jsc: {
+      ...(!hasSpecifiedTsTarget && {
+        target: jscTarget,
+      }),
+      loose: true, // Use loose mode
+      externalHelpers: false,
+      parser: swcParserConfig,
+      ...(shouldMinify && {
+        minify: {
+          ...swcMinifyOptions,
+          sourceMap: options.sourcemap,
+        }
+      }),
+    },
+    sourceMaps: options.sourcemap,
+    inlineSourcesContent: false,
+  } as const
+
   const sizePlugin = sizeCollector.plugin(cwd)
   const commonPlugins = [
-    preserveDirectivePlugin(),
+    swcRenderDirectivePlugin({ swcParserConfig }),
     sizePlugin,
   ]
   const plugins: Plugin[] = (
@@ -132,28 +159,8 @@ function buildInputConfig(
             include: /\.(m|c)?[jt]sx?$/,
             exclude: 'node_modules',
             tsconfig: tsConfigPath,
-            jsc: {
-              ...(!hasSpecifiedTsTarget && {
-                target: jscTarget,
-              }),
-              loose: true, // Use loose mode
-              externalHelpers: false,
-              parser: {
-                syntax: useTypescript ? 'typescript' : 'ecmascript',
-                [useTypescript ? 'tsx' : 'jsx']: true,
-                privateMethod: true,
-                classPrivateProperty: true,
-                exportDefaultFrom: true,
-              },
-              ...(minify && {
-                minify: {
-                  ...minifyOptions,
-                  sourceMap: options.sourcemap,
-                },
-              }),
-            },
-            sourceMaps: options.sourcemap,
-            inlineSourcesContent: false,
+            ...swcOptions,
+
           }),
         ]
   ).filter(isNotNull<Plugin>)
