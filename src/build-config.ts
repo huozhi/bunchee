@@ -18,7 +18,7 @@ import json from '@rollup/plugin-json'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import replace from '@rollup/plugin-replace'
 import createChunkSizeCollector from './plugins/size-plugin'
-import swcRenderDirectivePlugin from './plugins/swc-render-directive-plugin'
+import swcPreserveDirectivePlugin from 'rollup-swc-preserve-directives'
 import {
   getTypings,
   getExportPaths,
@@ -115,7 +115,7 @@ function buildInputConfig(
 
   const sizePlugin = sizeCollector.plugin(cwd)
   const commonPlugins = [
-    swcRenderDirectivePlugin({ swcParserConfig }),
+    swcPreserveDirectivePlugin(),
     sizePlugin,
   ]
   const plugins: Plugin[] = (

@@ -719,11 +719,6 @@
   resolved "https://registry.yarnpkg.com/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.4.14.tgz#add4c98d341472a289190b424efbdb096991bb24"
   integrity sha512-XPSJHWmi394fuUuzDnGz1wiKqWfo1yXecHQMRf2l6hztTO+nPru658AyDngaBe7isIxEkRsPR3FZh+s7iVa4Uw==
 
-"@jridgewell/sourcemap-codec@^1.4.15":
-  version "1.4.15"
-  resolved "https://registry.yarnpkg.com/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.4.15.tgz#d7c6e6755c78567a951e04ab52ef0fd26de59f32"
-  integrity sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg==
-
 "@jridgewell/trace-mapping@^0.3.12", "@jridgewell/trace-mapping@^0.3.15", "@jridgewell/trace-mapping@^0.3.9":
   version "0.3.15"
   resolved "https://registry.yarnpkg.com/@jridgewell/trace-mapping/-/trace-mapping-0.3.15.tgz#aba35c48a38d3fd84b37e66c9c0423f9744f9774"
@@ -731,6 +726,90 @@
   dependencies:
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
+
+"@napi-rs/magic-string-android-arm-eabi@0.3.4":
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/@napi-rs/magic-string-android-arm-eabi/-/magic-string-android-arm-eabi-0.3.4.tgz#bce4998f7c07efbd3d110c64b10fd5a794fb1cdf"
+  integrity sha512-sszAYxqtzzJ4FDerDNHcqL9NhqPhj8W4DNiOanXYy50mA5oojlRtaAFPiB5ZMrWDBM32v5Q30LrmxQ4eTtu2Dg==
+
+"@napi-rs/magic-string-android-arm64@0.3.4":
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/@napi-rs/magic-string-android-arm64/-/magic-string-android-arm64-0.3.4.tgz#635d484c129ed606f2cb1887bfd3e1265f7fd463"
+  integrity sha512-jdQ6HuO0X5rkX4MauTcWR4HWdgjakTOmmzqXg8L26+jOHVVG1LZE+Su5qvV4bP8vMb2h+vPE+JsnwqSmWymu3Q==
+
+"@napi-rs/magic-string-darwin-arm64@0.3.4":
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/@napi-rs/magic-string-darwin-arm64/-/magic-string-darwin-arm64-0.3.4.tgz#356f37d0460ce8a2921e41e6772725bbb8bf551a"
+  integrity sha512-6NmMtvURce9/oq09XBZmuIeI6lPLGtEJ2ZPO/QzL3nLZa6wygiCnO/sFACKYNg5/73ET5HMMTeuogE1JI+r2Lw==
+
+"@napi-rs/magic-string-darwin-x64@0.3.4":
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/@napi-rs/magic-string-darwin-x64/-/magic-string-darwin-x64-0.3.4.tgz#4d45ca902546b52a0dd41c1c8647967575ba4c01"
+  integrity sha512-f9LmfMiUAKDOtl0meOuLYeVb6OERrgGzrTg1Tn3R3fTAShM2kxRbfAuPE9ljuXxIFzOv/uqRNLSl/LqCJwpREA==
+
+"@napi-rs/magic-string-freebsd-x64@0.3.4":
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/@napi-rs/magic-string-freebsd-x64/-/magic-string-freebsd-x64-0.3.4.tgz#0cdfe1a0a886b3ab5eb5f6998f3aabf08d609690"
+  integrity sha512-rqduQ4odiDK4QdM45xHWRTU4wtFIfpp8g8QGpz+3qqg7ivldDqbbNOrBaf6Oeu77uuEvWggnkyuChotfKgJdJQ==
+
+"@napi-rs/magic-string-linux-arm-gnueabihf@0.3.4":
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/@napi-rs/magic-string-linux-arm-gnueabihf/-/magic-string-linux-arm-gnueabihf-0.3.4.tgz#58f0173472af7e8e592ca8197d5e2b667787a29e"
+  integrity sha512-pVaJEdEpiPqIfq3M4+yMAATS7Z9muDcWYn8H7GFH1ygh8GwgLgKfy/n/lG2M6zp18Mwd0x7E2E/qg9GgCyUzoQ==
+
+"@napi-rs/magic-string-linux-arm64-gnu@0.3.4":
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/@napi-rs/magic-string-linux-arm64-gnu/-/magic-string-linux-arm64-gnu-0.3.4.tgz#7a829d2a75ff812b43d07ed247ca4d666677dd5c"
+  integrity sha512-9FwoAih/0tzEZx0BjYYIxWkSRMjonIn91RFM3q3MBs/evmThXUYXUqLNa1PPIkK1JoksswtDi48qWWLt8nGflQ==
+
+"@napi-rs/magic-string-linux-arm64-musl@0.3.4":
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/@napi-rs/magic-string-linux-arm64-musl/-/magic-string-linux-arm64-musl-0.3.4.tgz#5a0b44382128c25c48fa529eccd9f46df706a34a"
+  integrity sha512-wCR7R+WPOcAKmVQc1s6h6HwfwW1vL9pM8BjUY9Ljkdb8wt1LmZEmV2Sgfc1SfbRQzbyl+pKeufP6adRRQVzYDA==
+
+"@napi-rs/magic-string-linux-x64-gnu@0.3.4":
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/@napi-rs/magic-string-linux-x64-gnu/-/magic-string-linux-x64-gnu-0.3.4.tgz#2bcfef49f5a42b3b5df265d8c1ac1baf4591d35a"
+  integrity sha512-sbxFDpYnt5WFbxQ1xozwOvh5A7IftqSI0WnE9O7KsQIOi0ej2dvFbfOW4tmFkvH/YP8KJELo5AhP2+kEq1DpYA==
+
+"@napi-rs/magic-string-linux-x64-musl@0.3.4":
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/@napi-rs/magic-string-linux-x64-musl/-/magic-string-linux-x64-musl-0.3.4.tgz#71f80f5fdb1cbca4dc0ff55c1b5ea171fc3eb8c4"
+  integrity sha512-jN4h/7e2Ul8v3UK5IZu38NXLMdzVWhY4uEDlnwuUAhwRh26wBQ1/pLD97Uy/Z3dFNBQPcsv60XS9fOM1YDNT6w==
+
+"@napi-rs/magic-string-win32-arm64-msvc@0.3.4":
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/@napi-rs/magic-string-win32-arm64-msvc/-/magic-string-win32-arm64-msvc-0.3.4.tgz#8f1063bbedbb1491cd2748e908d92b0ab05801bf"
+  integrity sha512-gMUyTRHLWpzX2ntJFCbW2Gnla9Y/WUmbkZuW5SBAo/Jo8QojHn76Y4PNgnoXdzcsV9b/45RBxurYKAfFg9WTyg==
+
+"@napi-rs/magic-string-win32-ia32-msvc@0.3.4":
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/@napi-rs/magic-string-win32-ia32-msvc/-/magic-string-win32-ia32-msvc-0.3.4.tgz#80c46a74580f0c4d05534ba9319418b6eb3629bd"
+  integrity sha512-QIMauMOvEHgL00K9np/c9CT/CRtLOz3mRTQqcZ9XGzSoAMrpxH71KSpDJrKl7h7Ro6TZ+hJ0C3T+JVuTCZNv4A==
+
+"@napi-rs/magic-string-win32-x64-msvc@0.3.4":
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/@napi-rs/magic-string-win32-x64-msvc/-/magic-string-win32-x64-msvc-0.3.4.tgz#b720b6691a20bdb30d334ed6ae9879942ace427b"
+  integrity sha512-V8FMSf828MzOI3P6/765MR7zHU6CUZqiyPhmAnwYoKFNxfv7oCviN/G6NcENeCdcYOvNgh5fYzaNLB96ndId5A==
+
+"@napi-rs/magic-string@^0.3.4":
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/@napi-rs/magic-string/-/magic-string-0.3.4.tgz#86c458578c857abee4ad53b7b42139774dfe6ac2"
+  integrity sha512-DEWl/B99RQsyMT3F9bvrXuhL01/eIQp/dtNSE3G1jQ4mTGRcP4iHWxoPZ577WrbjUinrNgvRA5+08g8fkPgimQ==
+  optionalDependencies:
+    "@napi-rs/magic-string-android-arm-eabi" "0.3.4"
+    "@napi-rs/magic-string-android-arm64" "0.3.4"
+    "@napi-rs/magic-string-darwin-arm64" "0.3.4"
+    "@napi-rs/magic-string-darwin-x64" "0.3.4"
+    "@napi-rs/magic-string-freebsd-x64" "0.3.4"
+    "@napi-rs/magic-string-linux-arm-gnueabihf" "0.3.4"
+    "@napi-rs/magic-string-linux-arm64-gnu" "0.3.4"
+    "@napi-rs/magic-string-linux-arm64-musl" "0.3.4"
+    "@napi-rs/magic-string-linux-x64-gnu" "0.3.4"
+    "@napi-rs/magic-string-linux-x64-musl" "0.3.4"
+    "@napi-rs/magic-string-win32-arm64-msvc" "0.3.4"
+    "@napi-rs/magic-string-win32-ia32-msvc" "0.3.4"
+    "@napi-rs/magic-string-win32-x64-msvc" "0.3.4"
 
 "@rollup/plugin-commonjs@~24.0.1":
   version "24.0.1"
@@ -2180,13 +2259,6 @@ magic-string@^0.30.0:
   dependencies:
     "@jridgewell/sourcemap-codec" "^1.4.13"
 
-magic-string@~0.30.0:
-  version "0.30.1"
-  resolved "https://registry.yarnpkg.com/magic-string/-/magic-string-0.30.1.tgz#ce5cd4b0a81a5d032bd69aab4522299b2166284d"
-  integrity sha512-mbVKXPmS0z0G4XqFDCTllmDQ6coZzn94aMlb0o/A4HEHJCKcanlDZwYJgwnkmgD3jyWhUgj9VsPrfd972yPffA==
-  dependencies:
-    "@jridgewell/sourcemap-codec" "^1.4.15"
-
 make-dir@^3.0.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/make-dir/-/make-dir-3.1.0.tgz#415e967046b3a7f1d185277d84aa58203726a13f"
@@ -2484,6 +2556,13 @@ rollup-plugin-swc3@~0.8.1:
     "@fastify/deepmerge" "^1.1.0"
     "@rollup/pluginutils" "^4.2.1"
     get-tsconfig "^4.2.0"
+
+rollup-swc-preserve-directives@~0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/rollup-swc-preserve-directives/-/rollup-swc-preserve-directives-0.1.0.tgz#29e46e9673b0fc644b6bff820b99b6027dee902a"
+  integrity sha512-jK2ZL0x9MOGp5g/zHxm9aZUWTyVn/D4Xbyl9d8688t+9c5y8HSqv/GXSxgwu+3Z/WYTpwjK2Uc8iZ12adRo+uA==
+  dependencies:
+    "@napi-rs/magic-string" "^0.3.4"
 
 rollup@~3.20.2:
   version "3.20.7"
