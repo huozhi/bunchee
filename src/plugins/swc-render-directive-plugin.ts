@@ -2,7 +2,6 @@ import type { Plugin } from 'rollup'
 import { parse, type ParserConfig } from '@swc/core'
 import MagicString from 'magic-string'
 
-
 const directiveRegex = /^use (\w+)$/
 
 export default function swcRenderDirectivePlugin(
@@ -42,7 +41,7 @@ export default function swcRenderDirectivePlugin(
         }
       }
 
-      return { code, meta }
+      return { code, map: null, meta }
     },
 
     renderChunk(code, _chunk, { sourcemap }) {
