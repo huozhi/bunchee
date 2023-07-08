@@ -26,7 +26,7 @@ export default function swcRenderDirectivePlugin(
   return {
     name: 'swc-render-directive',
     async transform(code, id) {
-      const ext = extname(id).slice(1)
+      const ext = extname(id)
       if (!availableESExtensionsRegex.test(ext)) return code
 
       const { body, interpreter } = await parse(code, parseOptions)
