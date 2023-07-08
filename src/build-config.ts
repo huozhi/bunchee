@@ -13,13 +13,12 @@ import type { TypescriptOptions } from './typescript'
 
 import { resolve, dirname } from 'path'
 import { wasm } from '@rollup/plugin-wasm'
-import { swc } from 'rollup-plugin-swc3'
+import { swc, preserveUseDirective as preserveDirectivePlugin } from 'rollup-plugin-swc3'
 import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import replace from '@rollup/plugin-replace'
 import createChunkSizeCollector from './plugins/size-plugin'
-import preserveDirectivePlugin from './plugins/directive-plugin'
 import {
   getTypings,
   getExportPaths,
