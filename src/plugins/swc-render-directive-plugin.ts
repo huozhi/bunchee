@@ -1,6 +1,8 @@
 import type { Plugin } from 'rollup'
+import { extname } from 'path'
 import { parse, type ParserConfig } from '@swc/core'
 import MagicString from 'magic-string'
+import { availableESExtensionsRegex } from '../utils'
 
 const directiveRegex = /^use (\w+)$/
 
@@ -23,7 +25,10 @@ export default function swcRenderDirectivePlugin(
 
   return {
     name: 'swc-render-directive',
-    async transform(code) {
+    async transform(code, id) {
+      const ext = extname(id).slice(1)
+      if (!availableESExtensionsRegex.test(ext)) return code
+
       const { body, interpreter } = await parse(code, parseOptions)
       if (interpreter) {
         meta.shebang = `#!${interpreter}`

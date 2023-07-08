@@ -98,8 +98,11 @@ async function findSourceEntryFile(
 // Map '.' -> './index.[ext]'
 // Map './lite' -> './lite.[ext]'
 // Return undefined if no match or if it's package.json exports
+// TODO: add mts and cts once the types generation for dual package is supported
 export const availableExtensions = ['js', 'cjs', 'mjs', 'jsx', 'ts', 'tsx']
 export const availableExportConventions = ['react-server', 'react-native', 'edge-light']
+export const availableESExtensionsRegex = /\.(m|c)?[jt]sx?$/
+
 export async function getSourcePathFromExportPath(
   cwd: string,
   exportPath: string,

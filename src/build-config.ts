@@ -32,6 +32,7 @@ import {
   filenameWithoutExtension,
   nonNullable,
   availableExportConventions,
+  availableESExtensionsRegex,
 } from './utils'
 
 const swcMinifyOptions = {
@@ -156,7 +157,7 @@ function buildInputConfig(
           json(),
           wasm(),
           swc({
-            include: /\.(m|c)?[jt]sx?$/,
+            include: availableESExtensionsRegex,
             exclude: 'node_modules',
             tsconfig: tsConfigPath,
             ...swcOptions,
