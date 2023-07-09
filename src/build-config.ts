@@ -32,9 +32,11 @@ import {
   resolveSourceFile,
   filenameWithoutExtension,
   nonNullable,
+} from './utils'
+import {
   availableExportConventions,
   availableESExtensionsRegex,
-} from './utils'
+} from './constants'
 
 const swcMinifyOptions = {
   compress: true,
