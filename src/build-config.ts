@@ -24,6 +24,7 @@ import {
   getExportPaths,
   getExportConditionDist,
   isEsmExportName,
+  getExportTypeDist,
 } from './exports'
 import {
   isNotNull,
@@ -241,10 +242,10 @@ function buildOutputConfigs(
   const name = filenameWithoutExtension(file)
 
   // TODO: simplify dts file name detection
-  const dtsFile = exportCondition.export['types']
-    ? resolve(cwd, exportCondition.export['types'])
-    : file
-    ? name + '.d.ts'
+  const dtsFile = file
+    ? file
+    : exportCondition.export['types']
+      ? resolve(cwd, exportCondition.export['types'])
     : resolve(
         dtsDir,
         (exportCondition.name === '.' ? 'index' : exportCondition.name) +
@@ -321,9 +322,6 @@ export async function buildEntryConfig(
 
       if (!source) return undefined
 
-      // For dts, only build types filed
-      if (dts && !exportCondRef['types']) return undefined
-
       const exportCondition: ParsedExportCondition = {
         source,
         name: entryExport,
@@ -370,7 +368,8 @@ function buildConfig(
 
   // Generate dts job - single config
   if (dts) {
-    outputConfigs = [
+    const typeOutputExports = getExportTypeDist(exportCondition, cwd)
+    outputConfigs = typeOutputExports.map(v =>
       buildOutputConfigs(
         pkg,
         exportPaths,
@@ -378,13 +377,14 @@ function buildConfig(
           ...bundleConfig,
           format: 'es',
           useTypescript,
+          file: v
         },
         exportCondition,
         cwd,
         tsOptions,
         dts
       ),
-    ]
+    )
   } else {
     // multi outputs with specified format
     outputConfigs = outputExports.map((exportDist) => {

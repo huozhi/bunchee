@@ -66,10 +66,6 @@ async function bundle(
   // const exportPathsLength = Object.keys(exportPaths).length
   const isMultiEntries = hasMultiEntryExport(exportPaths) // exportPathsLength > 1
 
-  // has `types` field in package.json or has `types` exports in any export condition for multi-entries
-  const hasTypings = Object.values(exportPaths)
-    .some((condition) => condition.hasOwnProperty('types'))
-
   const tsConfig = await resolveTsConfig(cwd)
   const hasTsConfig = Boolean(tsConfig?.tsConfigPath)
   const defaultTsOptions: TypescriptOptions = {
@@ -141,11 +137,6 @@ async function bundle(
     return Promise.reject(err)
   }
 
-  // Enable types generation if it's types field specified in package.json
-  if (hasTypings) {
-    options.dts = hasTypings
-  }
-
   let result
   const buildConfigs = await buildEntryConfig(
     pkg,
@@ -160,7 +151,7 @@ async function bundle(
     bundleOrWatch(rollupConfig)
   )
 
-  const typesJobs = hasTsConfig && options.dts
+  const typesJobs = hasTsConfig
     ? (
         await buildEntryConfig(pkg, entryPath, exportPaths, options, cwd, defaultTsOptions, true)
       ).map((rollupConfig) => bundleOrWatch(rollupConfig))
