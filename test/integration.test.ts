@@ -123,18 +123,22 @@ const testCases: {
       assertFilesContent(dir, contentsRegex)
 
       const log = `\
+      ✓  Typed dist/server/index.d.ts       - 87 B
       ✓  Typed dist/server/index.d.mts      - 87 B
-      ✓  Typed dist/index.d.ts              - 65 B
+      ✓  Typed dist/lite.d.ts               - 70 B
+      ✓  Typed dist/shared/index.d.mts      - 66 B
       ✓  Typed dist/client/index.d.cts      - 74 B
       ✓  Typed dist/client/index.d.mts      - 74 B
+      ✓  Typed dist/client/index.d.ts       - 74 B
+      ✓  Typed dist/index.d.ts              - 65 B
       ✓  Built dist/index.js                - 110 B
       ✓  Built dist/shared/edge-light.mjs   - 84 B
-      ✓  Built dist/lite.js                 - 132 B
       ✓  Built dist/client/index.cjs        - 138 B
       ✓  Built dist/client/index.mjs        - 78 B
+      ✓  Built dist/lite.js                 - 132 B
+      ✓  Built dist/server/index.mjs        - 71 B
       ✓  Built dist/shared/index.mjs        - 53 B
       ✓  Built dist/server/react-server.mjs - 53 B
-      ✓  Built dist/server/index.mjs        - 71 B
       ✓  Built dist/server/edge.mjs         - 51 B
       `
 

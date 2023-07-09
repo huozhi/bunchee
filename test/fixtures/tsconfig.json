@@ -1,5 +1,6 @@
+// for testing in fixtures
 {
-    "compilerOptions": {
-        "allowJs": true
-    }
+  "compilerOptions": {
+    "allowJs": true
+  }
 }

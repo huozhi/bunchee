@@ -1,6 +1,10 @@
 import type { PackageMetadata } from 'src/types'
 import path from 'path'
-import { getExportPaths, getExportConditionDist, getExportTypeDist } from '../../src/exports'
+import {
+  getExportPaths,
+  getExportConditionDist,
+  getExportTypeDist,
+} from '../../src/exports'
 
 describe('lib exports', () => {
   describe('getExportPaths', () => {
@@ -52,18 +56,20 @@ describe('lib exports', () => {
       })
     })
 
-    it('should handle the basic main fields paths (esm)', () => {
-      const pkg: PackageMetadata = {
-        type: 'module',
-        main: './dist/index.mjs',
-        module: './dist/index.esm.js',
-      }
-      const result = getExportPaths(pkg)
-      expect(result).toEqual({
-        '.': {
-          import: './dist/index.mjs',
+    describe('type:module', () => {
+      it('should handle the basic main fields paths (esm)', () => {
+        const pkg: PackageMetadata = {
+          type: 'module',
+          main: './dist/index.mjs',
           module: './dist/index.esm.js',
-        },
+        }
+        const result = getExportPaths(pkg)
+        expect(result).toEqual({
+          '.': {
+            import: './dist/index.mjs',
+            module: './dist/index.esm.js',
+          },
+        })
       })
     })
 
@@ -167,21 +173,23 @@ describe('lib exports', () => {
 
     it('should dedupe the same path import and module if they are the same path', () => {
       // dedupe import and module are they have the same path
-      expect(getExportConditionDistHelper({
-        type: 'module',
-        main: './dist/index.mjs',
-        module: './dist/index.mjs',
-      })).toEqual([
-        { file: 'index.mjs', format: 'esm' },
-      ])
+      expect(
+        getExportConditionDistHelper({
+          type: 'module',
+          main: './dist/index.mjs',
+          module: './dist/index.mjs',
+        })
+      ).toEqual([{ file: 'index.mjs', format: 'esm' }])
 
       // Do not dedupe import and module are they're different paths
-      expect(getExportConditionDistHelper({
-        module: './dist/index.esm.js',
-        exports: {
-          import: './dist/index.mjs',
-        }
-      })).toEqual([
+      expect(
+        getExportConditionDistHelper({
+          module: './dist/index.esm.js',
+          exports: {
+            import: './dist/index.mjs',
+          },
+        })
+      ).toEqual([
         { file: 'index.mjs', format: 'esm' },
         { file: 'index.esm.js', format: 'esm' },
       ])
@@ -204,8 +212,9 @@ describe('lib exports', () => {
       ])
     })
   })
+
   describe('getExportTypeDist', () => {
-    function getExportTypeDistHelper(
+    function getExportTypeByName(
       pkg: PackageMetadata,
       exportName: string = '.'
     ) {
@@ -216,58 +225,57 @@ describe('lib exports', () => {
         export: parsedExportCondition[exportName],
       }
       // Get only basename to skip path.resolve result for `file` property
-      return getExportTypeDist(parsedExport, '').map(filename => path.basename(filename))
+      return getExportTypeDist(parsedExport, '').map((filename) =>
+        path.basename(filename)
+      )
     }
-    it('should handle the basic main fields paths (esm)', () => {
-      const pkg: PackageMetadata = {
-        "main": "./dist/index.js",
-        "types": "./dist/index.d.ts",
-        "module": "./dist/index.esm.js",
-        "exports": {
-          "import": "./dist/index.mjs",
-          "require": "./dist/index.js"
+
+    describe('type: commonjs', () => {
+      it('should handle the basic main fields paths', () => {
+        const pkg: PackageMetadata = {
+          main: './dist/index.js',
+          types: './dist/index.d.ts',
+          module: './dist/index.esm.js',
+          exports: {
+            import: './dist/index.mjs',
+            require: './dist/index.js',
+          },
         }
-      }
-      const result = getExportTypeDistHelper(pkg)
-      expect(result).toEqual([
-        "index.d.mts",
-        "index.d.ts",
-      ])
+        const result = getExportTypeByName(pkg)
+        expect(result).toEqual(['index.d.mts', 'index.d.ts'])
+      })
     })
-    it('should handle type: module', () => {
-      const pkg: PackageMetadata = {
-        "main": "./dist/index.js",
-        "types": "./dist/index.d.ts",
-        "module": "./dist/index.esm.js",
-        "type": "module",
-        "exports": {
-          "import": "./dist/index.js",
-          "require": "./dist/index.cjs"
+
+    describe('type: module', () => {
+      it('should handle type: module', () => {
+        const pkg: PackageMetadata = {
+          main: './dist/index.js',
+          types: './dist/index.d.ts',
+          module: './dist/index.esm.js',
+          type: 'module',
+          exports: {
+            import: './dist/index.js',
+            require: './dist/index.cjs',
+          },
         }
-      }
-      const result = getExportTypeDistHelper(pkg)
-      expect(result).toEqual([
-        "index.d.ts",
-        "index.d.cts",
-      ])
-    }),
-    it('should also respect `types` field ', () => {
-      const pkg: PackageMetadata = {
-        "main": "./dist/index.js",
-        "types": "./dist/types.d.ts",
-        "module": "./dist/index.esm.js",
-        "type": "module",
-        "exports": {
-          "import": "./dist/index.js",
-          "require": "./dist/index.cjs"
+        const result = getExportTypeByName(pkg)
+        expect(result).toEqual(['index.d.ts', 'index.d.cts'])
+      })
+
+      it('should also respect `types` field ', () => {
+        const pkg: PackageMetadata = {
+          main: './dist/index.js',
+          types: './dist/types.d.ts',
+          module: './dist/index.esm.js',
+          type: 'module',
+          exports: {
+            import: './dist/index.js',
+            require: './dist/index.cjs',
+          },
         }
-      }
-      const result = getExportTypeDistHelper(pkg)
-      expect(result).toEqual([
-        "index.d.ts",
-        "index.d.cts",
-        "types.d.ts"
-      ])
+        const result = getExportTypeByName(pkg)
+        expect(result).toEqual(['index.d.ts', 'index.d.cts', 'types.d.ts'])
+      })
     })
   })
 })
