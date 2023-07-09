@@ -97,21 +97,6 @@ const testCases: {
     name: 'multi-entries',
     args: [],
     async expected(dir, { stdout }) {
-      const distFiles = [
-        './dist/index.js',
-        './dist/lite.js',
-        './dist/client/index.cjs',
-        './dist/client/index.mjs',
-        './dist/shared/index.mjs',
-        './dist/shared/edge-light.mjs',
-        './dist/server/edge.mjs',
-        './dist/server/react-server.mjs',
-
-        // types
-        './dist/client/index.d.ts',
-        './dist/index.d.ts',
-      ]
-
       const contentsRegex = {
         './dist/index.js': /'index'/,
         './dist/shared/index.mjs': /'shared'/,

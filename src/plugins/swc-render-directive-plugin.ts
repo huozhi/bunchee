@@ -2,7 +2,7 @@ import type { Plugin } from 'rollup'
 import { extname } from 'path'
 import { parse, type ParserConfig } from '@swc/core'
 import MagicString from 'magic-string'
-import { availableESExtensionsRegex } from '../utils'
+import { availableESExtensionsRegex } from '../constants'
 
 const directiveRegex = /^use (\w+)$/
 
