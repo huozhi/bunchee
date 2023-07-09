@@ -5,3 +5,4 @@ dist
 .yalc
 yalc.lock
 test/**/*.js.map
+.DS_Store

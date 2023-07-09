@@ -1,6 +1,17 @@
-import type { PackageMetadata, ExportCondition, FullExportCondition, PackageType, ParsedExportCondition } from './types'
+import fs from 'fs'
 import { join, resolve, dirname, extname } from 'path'
-import { filenameWithoutExtension } from './utils'
+import type {
+  PackageMetadata,
+  ExportCondition,
+  FullExportCondition,
+  PackageType,
+  ParsedExportCondition,
+} from './types'
+import {
+  availableExtensions,
+  availableExportConventions,
+  filenameWithoutExtension,
+} from './utils'
 
 export function getTypings(pkg: PackageMetadata) {
   return pkg.types || pkg.typings
@@ -72,6 +83,87 @@ function findExport(
     const nestedValue = value[subpath]
     findExport(nextName, nestedValue, paths, packageType)
   })
+}
+
+function getEntries(path: string, hasSrc: boolean): string[] {
+  const entryPath = hasSrc ? join(path, 'src') : path
+
+  const entries = fs.readdirSync(entryPath, { withFileTypes: true })
+
+  const availableExt = availableExtensions
+    .concat(availableExportConventions)
+    .map((ext) => `.${ext}`)
+
+  return entries.flatMap((entry) => {
+    if (entry.isDirectory()) {
+      if (entry.name === 'src') {
+        return getEntries(entryPath, (hasSrc = true))
+      }
+      return entry.name + '/index'
+    }
+
+    if (
+      entry.isFile() &&
+      availableExt.includes(extname(entry.name)) &&
+      !entry.name.includes('index')
+    ) {
+      return filenameWithoutExtension(entry.name)!
+    }
+    return []
+  })
+}
+
+function replaceWildcardsWithEntryName(
+  obj: ExportCondition,
+  dirName: string
+): ExportCondition {
+  if (typeof obj === 'string') {
+    return obj.replace('*', dirName)
+  } else if (typeof obj === 'object' && obj !== null) {
+    const newObj: { [key: string]: ExportCondition | string } = {}
+
+    for (let key in obj) {
+      newObj[key] = replaceWildcardsWithEntryName(obj[key], dirName)
+    }
+
+    return newObj
+  } else {
+    return obj
+  }
+}
+
+function resolveWildcardExports(
+  exportsConditions: ExportCondition,
+  cwd: string
+): { [key: string]: ExportCondition | string } {
+  const entryNames = getEntries(cwd, /*hasSrc=*/ false)
+
+  const exportPaths = Object.keys(exportsConditions)
+
+  const newExportsConditions: { [key: string]: ExportCondition | string } = {}
+
+  for (let [exportPath, exportValue] of Object.entries(exportsConditions)) {
+    if (exportPath.includes('*')) {
+      entryNames.forEach((entryName) => {
+        const newExportPath = exportPath
+          .replace('*', entryName)
+          .replace('/index', '')
+
+        if (exportPaths.some((path) => path.startsWith(newExportPath))) {
+          return
+        }
+        const newExportValue = replaceWildcardsWithEntryName(
+          exportValue,
+          entryName
+        )
+        newExportsConditions[newExportPath] = newExportValue
+      })
+    } else {
+      newExportsConditions[exportPath] = exportValue
+    }
+  }
+
+  return newExportsConditions
 }
 
 /**
@@ -160,13 +252,26 @@ function parseExport(exportsCondition: ExportCondition, packageType: PackageType
  * pkg.main and pkg.module will be added to ['.'] if exists
  */
 
-export function getExportPaths(pkg: PackageMetadata) {
+export function getExportPaths(pkg: PackageMetadata, cwd: string) {
   const pathsMap: Record<string, FullExportCondition> = {}
   const packageType = getPackageType(pkg)
 
   const { exports: exportsConditions } = pkg
   if (exportsConditions) {
-    const paths = parseExport(exportsConditions, packageType)
+    let validatedExportsConditions = exportsConditions
+
+    const hasWildCardExport = Object.keys(exportsConditions).some((key) =>
+      key.includes('*')
+    )
+
+    if (hasWildCardExport) {
+      validatedExportsConditions = resolveWildcardExports(
+        exportsConditions,
+        cwd
+      )
+      console.log(validatedExportsConditions, 'validatedExportsConditions')
+    }
+    const paths = parseExport(validatedExportsConditions, packageType)
     Object.assign(pathsMap, paths)
   }
 
