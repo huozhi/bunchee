@@ -2,6 +2,8 @@ import type { PackageMetadata } from 'src/types'
 import path from 'path'
 import { getExportPaths, getExportConditionDist } from '../../src/exports'
 
+const cwd = path.resolve(__dirname)
+
 describe('lib exports', () => {
   describe('getExportPaths', () => {
     it('should handle the basic main fields paths (cjs)', () => {
@@ -9,7 +11,7 @@ describe('lib exports', () => {
         main: './dist/index.cjs',
         module: './dist/index.esm.js',
       }
-      const result = getExportPaths(pkg)
+      const result = getExportPaths(pkg, cwd)
       expect(result).toEqual({
         '.': {
           require: './dist/index.cjs',
@@ -20,34 +22,74 @@ describe('lib exports', () => {
 
     it('should handle types field', () => {
       expect(
-        getExportPaths({
-          exports: {
-            '.': {
-              import: './dist/index.mjs',
-              types: './dist/index.d.ts',
+        getExportPaths(
+          {
+            exports: {
+              '.': {
+                import: './dist/index.mjs',
+                types: './dist/index.d.ts',
+              },
             },
           },
-        })
+          cwd
+        )
       ).toEqual({
         '.': {
           import: './dist/index.mjs',
           types: './dist/index.d.ts',
         },
       })
+    })
 
+    it('should handle wildcard exports', () => {
       expect(
-        getExportPaths({
-          typings: './dist/index.d.ts',
-          exports: {
-            '.': {
-              import: './dist/index.mjs',
+        getExportPaths(
+          {
+            exports: {
+              '.': {
+                types: './dist/index.d.ts',
+                import: './dist/index.js',
+              },
+              './server': {
+                types: './dist/server/index.d.ts',
+                'react-server': './dist/server/react-server.mjs',
+                'edge-light': './dist/server/edge.mjs',
+                import: './dist/server/index.mjs',
+              },
+              './*': {
+                types: './dist/*.d.ts',
+                import: './dist/*.js',
+              },
             },
           },
-        })
+          path.join(__dirname, '../integration/wildcard-exports')
+        )
       ).toEqual({
         '.': {
-          import: './dist/index.mjs',
           types: './dist/index.d.ts',
+          import: './dist/index.js',
+        },
+        './server': {
+          types: './dist/server/index.d.ts',
+          'react-server': './dist/server/react-server.mjs',
+          'edge-light': './dist/server/edge.mjs',
+          import: './dist/server/index.mjs',
+        },
+        './button': {
+          types: './dist/button.d.ts',
+          import: './dist/button.js',
+        },
+        './input': {
+          types: './dist/input.d.ts',
+          import: './dist/input.js',
+        },
+        './layout': {
+          types: './dist/layout/index.d.ts',
+          import: './dist/layout/index.js',
+        },
+        './lite': {
+          types: './dist/lite.d.ts',
+          import: './dist/lite.js',
         },
       })
     })
@@ -58,7 +100,7 @@ describe('lib exports', () => {
         main: './dist/index.mjs',
         module: './dist/index.esm.js',
       }
-      const result = getExportPaths(pkg)
+      const result = getExportPaths(pkg, cwd)
       expect(result).toEqual({
         '.': {
           import: './dist/index.mjs',
@@ -69,15 +111,18 @@ describe('lib exports', () => {
 
     it('should handle the exports conditions', () => {
       expect(
-        getExportPaths({
-          exports: {
-            '.': {
-              require: './dist/index.cjs',
-              module: './dist/index.esm.js',
-              default: './dist/index.esm.js',
+        getExportPaths(
+          {
+            exports: {
+              '.': {
+                require: './dist/index.cjs',
+                module: './dist/index.esm.js',
+                default: './dist/index.esm.js',
+              },
             },
           },
-        })
+          cwd
+        )
       ).toEqual({
         '.': {
           require: './dist/index.cjs',
@@ -87,14 +132,17 @@ describe('lib exports', () => {
       })
 
       expect(
-        getExportPaths({
-          exports: {
-            '.': {
-              import: './dist/index.mjs',
-              require: './dist/index.cjs',
+        getExportPaths(
+          {
+            exports: {
+              '.': {
+                import: './dist/index.mjs',
+                require: './dist/index.cjs',
+              },
             },
           },
-        })
+          cwd
+        )
       ).toEqual({
         '.': {
           import: './dist/index.mjs',
@@ -105,16 +153,19 @@ describe('lib exports', () => {
 
     it('should handle the mixed exports conditions', () => {
       expect(
-        getExportPaths({
-          main: './dist/index.cjs',
-          exports: {
-            '.': {
-              sub: {
-                require: './dist/index.cjs',
+        getExportPaths(
+          {
+            main: './dist/index.cjs',
+            exports: {
+              '.': {
+                sub: {
+                  require: './dist/index.cjs',
+                },
               },
             },
           },
-        })
+          cwd
+        )
       ).toEqual({
         '.': {
           require: './dist/index.cjs',
@@ -125,17 +176,20 @@ describe('lib exports', () => {
       })
 
       expect(
-        getExportPaths({
-          main: './dist/index.js',
-          module: './dist/index.esm.js',
-          types: './dist/index.d.ts',
-          exports: {
-            types: './dist/index.d.ts',
-            import: './dist/index.mjs',
+        getExportPaths(
+          {
+            main: './dist/index.js',
             module: './dist/index.esm.js',
-            require: './dist/index.js',
+            types: './dist/index.d.ts',
+            exports: {
+              types: './dist/index.d.ts',
+              import: './dist/index.mjs',
+              module: './dist/index.esm.js',
+              require: './dist/index.js',
+            },
           },
-        })
+          cwd
+        )
       ).toEqual({
         '.': {
           types: './dist/index.d.ts',
@@ -152,7 +206,7 @@ describe('lib exports', () => {
       pkg: PackageMetadata,
       exportName: string = '.'
     ) {
-      const parsedExportCondition = getExportPaths(pkg)
+      const parsedExportCondition = getExportPaths(pkg, cwd)
       const parsedExport = {
         source: `./src/${exportName === '.' ? 'index' : exportName}.ts`,
         name: exportName,
@@ -167,21 +221,23 @@ describe('lib exports', () => {
 
     it('should dedupe the same path import and module if they are the same path', () => {
       // dedupe import and module are they have the same path
-      expect(getExportConditionDistHelper({
-        type: 'module',
-        main: './dist/index.mjs',
-        module: './dist/index.mjs',
-      })).toEqual([
-        { file: 'index.mjs', format: 'esm' },
-      ])
+      expect(
+        getExportConditionDistHelper({
+          type: 'module',
+          main: './dist/index.mjs',
+          module: './dist/index.mjs',
+        })
+      ).toEqual([{ file: 'index.mjs', format: 'esm' }])
 
       // Do not dedupe import and module are they're different paths
-      expect(getExportConditionDistHelper({
-        module: './dist/index.esm.js',
-        exports: {
-          import: './dist/index.mjs',
-        }
-      })).toEqual([
+      expect(
+        getExportConditionDistHelper({
+          module: './dist/index.esm.js',
+          exports: {
+            import: './dist/index.mjs',
+          },
+        })
+      ).toEqual([
         { file: 'index.mjs', format: 'esm' },
         { file: 'index.esm.js', format: 'esm' },
       ])
