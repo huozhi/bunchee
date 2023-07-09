@@ -175,6 +175,22 @@ const testCases: {
     },
   },
   {
+    name: 'ts-exports-types',
+    args: [],
+    async expected(dir) {
+      const distFiles = [
+        join(dir, './dist/index.mjs'),
+        join(dir, './dist/index.cjs'),
+        join(dir, './dist/index.d.mts'),
+        join(dir, './dist/index.d.cts'),
+        join(dir, './dist/index.d.ts'),
+      ]
+      for (const f of distFiles) {
+        expect(await existsFile(f)).toBe(true)
+      }
+    },
+  },
+  {
     name: 'single-entry',
     args: [],
     async expected(dir, { stdout }) {
