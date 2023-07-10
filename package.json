@@ -9,13 +9,13 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "test": "jest --env node",
-    "test:update": "TEST_UPDATE_SNAPSHOT=1 yarn test",
+    "test:update": "TEST_UPDATE_SNAPSHOT=1 pnpm test",
     "clean": "rm -rf ./dist",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "yarn clean && yarn build && chmod +x ./dist/cli.js && yarn test",
+    "prepublishOnly": "pnpm run clean && pnpm build && chmod +x ./dist/cli.js && pnpm test",
     "build:cli": "tsx ./src/cli.ts ./src/cli.ts --runtime node -f cjs -o ./dist/cli.js",
     "build:main": "tsx ./src/cli.ts ./src/index.ts --runtime node -f cjs",
-    "build": "yarn build:main && yarn build:cli"
+    "build": "pnpm build:main && pnpm build:cli"
   },
   "type": "commonjs",
   "keywords": [
@@ -93,5 +93,6 @@
         "@swc/jest"
       ]
     }
-  }
+  },
+  "packageManager": "pnpm@7.24.3"
 }
