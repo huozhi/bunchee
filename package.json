@@ -15,7 +15,8 @@
     "prepublishOnly": "yarn clean && yarn build && chmod +x ./dist/cli.js && yarn test",
     "build:cli": "tsx ./src/cli.ts ./src/cli.ts --runtime node -f cjs -o ./dist/cli.js",
     "build:main": "tsx ./src/cli.ts ./src/index.ts --runtime node -f cjs",
-    "build": "yarn build:main && yarn build:cli"
+    "build": "yarn build:main && yarn build:cli",
+    "lint": "eslint . --ext js,jsx,ts,tsx,json"
   },
   "type": "commonjs",
   "keywords": [
@@ -76,6 +77,9 @@
     "@huozhi/testing-package": "1.0.0",
     "@swc/jest": "0.2.22",
     "@types/jest": "29.0.0",
+    "@typescript-eslint/eslint-plugin": "5.61.0",
+    "@typescript-eslint/parser": "5.61.0",
+    "eslint": "8.44.0",
     "jest": "29.0.1",
     "react": "18.2.0",
     "tsx": "3.12.6",
