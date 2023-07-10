@@ -85,19 +85,24 @@ function findExport(
   })
 }
 
-function getEntries(path: string, hasSrc: boolean): string[] {
+function getEntries(
+  path: string,
+  hasSrc: boolean,
+  outDirs: string[]
+): string[] {
   const entryPath = hasSrc ? join(path, 'src') : path
 
   const entries = fs.readdirSync(entryPath, { withFileTypes: true })
 
-  const availableExt = availableExtensions
-    .concat(availableExportConventions)
-    .map((ext) => `.${ext}`)
+  const availableExt = [
+    ...availableExtensions,
+    ...availableExportConventions,
+  ].map((ext) => `.${ext}`)
 
   return entries.flatMap((entry) => {
     if (entry.isDirectory()) {
-      if (entry.name === 'src') {
-        return getEntries(entryPath, (hasSrc = true))
+      if (entry.name === 'src' || outDirs.includes(entry.name)) {
+        return getEntries(entryPath, true, outDirs)
       }
       return entry.name + '/index'
     }
@@ -136,7 +141,19 @@ function resolveWildcardExports(
   exportsConditions: ExportCondition,
   cwd: string
 ): { [key: string]: ExportCondition | string } {
-  const entryNames = getEntries(cwd, /*hasSrc=*/ false)
+  const outDirs = [
+    ...new Set(
+      Object.values(exportsConditions).flatMap((value) =>
+        (typeof value === 'string' ? [value] : Object.values(value)).flatMap(
+          (innerValue) => (typeof innerValue === 'string' ? [innerValue] : [])
+        )
+      )
+    ),
+  ]
+    .map((value) => value.split('/')[1])
+    .filter(Boolean)
+
+  const entryNames = getEntries(cwd, false, outDirs)
 
   const exportPaths = Object.keys(exportsConditions)
 
@@ -269,7 +286,6 @@ export function getExportPaths(pkg: PackageMetadata, cwd: string) {
         exportsConditions,
         cwd
       )
-      console.log(validatedExportsConditions, 'validatedExportsConditions')
     }
     const paths = parseExport(validatedExportsConditions, packageType)
     Object.assign(pathsMap, paths)
