@@ -5,7 +5,7 @@ on:
     branches:
       - main
     tags:
-      - "v*"
+      - 'v*'
   pull_request:
 
 jobs:
@@ -37,7 +37,6 @@ jobs:
           pnpm typecheck
           pnpm build
           pnpm test
-
 
   release:
     runs-on: ubuntu-latest

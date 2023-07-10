@@ -1,4 +1,4 @@
-import {Parent} from './b';
+import { Parent } from './b'
 
 class A extends Parent {
   constructor() {
@@ -11,4 +11,4 @@ class A extends Parent {
 
 const a = new A()
 
-export default a;
+export default a

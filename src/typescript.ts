@@ -20,14 +20,16 @@ function resolveTypescript(cwd: string): typeof import('typescript') {
     if (!hasLoggedTsWarning) {
       hasLoggedTsWarning = true
       exit(
-        'Could not load TypeScript compiler. Try to install `typescript` as dev dependency'
+        'Could not load TypeScript compiler. Try to install `typescript` as dev dependency',
       )
     }
   }
   return ts
 }
 
-export async function resolveTsConfig(cwd: string): Promise<null | TypescriptOptions> {
+export async function resolveTsConfig(
+  cwd: string,
+): Promise<null | TypescriptOptions> {
   let tsCompilerOptions: CompilerOptions = {}
   let tsConfigPath: string | undefined
   tsConfigPath = resolve(cwd, 'tsconfig.json')
@@ -38,7 +40,7 @@ export async function resolveTsConfig(cwd: string): Promise<null | TypescriptOpt
     tsCompilerOptions = ts.parseJsonConfigFileContent(
       tsconfigJSON,
       ts.sys,
-      basePath
+      basePath,
     ).options
   } else {
     tsConfigPath = undefined

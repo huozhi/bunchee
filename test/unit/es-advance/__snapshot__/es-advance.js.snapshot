@@ -1,7 +1,8 @@
+var _foo;
 const foo = {
     bar: 'hello'
 };
-console.log('bar', foo == null ? void 0 : foo.bar);
+console.log('bar', (_foo = foo) == null ? void 0 : _foo.bar);
 var _foo_bar;
 const prop = (_foo_bar = foo.bar) != null ? _foo_bar : 'default';
 console.log('name', prop);

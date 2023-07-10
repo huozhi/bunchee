@@ -1,13 +1,9 @@
 {
-  "include": [
-    "./src",
-    "./*.ts",
-    "./*.d.ts"
-  ],
+  "include": ["./src", "./*.ts", "./*.d.ts"],
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "./dist",
-    "target": "es2015",
+    "target": "ES2019",
     "module": "CommonJS",
     "lib": ["ES6"],
     "moduleResolution": "node",

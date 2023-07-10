@@ -19,7 +19,7 @@ async function ensureDir(dir: string) {
 async function compareOrUpdateSnapshot(
   filename: string,
   unitName: string,
-  onCompare: CompareFn
+  onCompare: CompareFn,
 ) {
   const dirPath = resolve(baseUnitTestDir, unitName)
   const bundledAssetContent = (
@@ -28,7 +28,7 @@ async function compareOrUpdateSnapshot(
   const outputFilePath = resolve(
     dirPath,
     '__snapshot__',
-    `${unitName}${filename.endsWith('.min.js') ? '.min' : ''}.js.snapshot`
+    `${unitName}${filename.endsWith('.min.js') ? '.min' : ''}.js.snapshot`,
   )
 
   await ensureDir(dirname(outputFilePath))
@@ -42,7 +42,7 @@ async function compareOrUpdateSnapshot(
 
   if (bundledAssetContent !== currentOutputSnapshot) {
     console.log(
-      `Snapshot ${unitName} is not matched, use TEST_UPDATE_SNAPSHOT=1 yarn test to update it`
+      `Snapshot ${unitName} is not matched, use TEST_UPDATE_SNAPSHOT=1 yarn test to update it`,
     )
 
     if (process.env.TEST_UPDATE_SNAPSHOT) {
@@ -60,14 +60,16 @@ for (const unitName of unitTestDirs) {
     const inputFileName =
       inputFile +
       ['.js', '.jsx', '.ts', '.tsx'].find((ext) =>
-        fs.existsSync(`${inputFile}${ext}`)
+        fs.existsSync(`${inputFile}${ext}`),
       )
 
     const distFile = resolve(dir, 'dist/bundle.js')
     const minifiedDistFile = distFile.replace('.js', '.min.js')
-    const pkgJson = await existsFile(resolve(dir, 'package.json'))
+    const pkgJson = (await existsFile(resolve(dir, 'package.json')))
       ? JSON.parse(
-          await fsp.readFile(resolve(dir, `package.json`), { encoding: 'utf-8' })
+          await fsp.readFile(resolve(dir, `package.json`), {
+            encoding: 'utf-8',
+          }),
         )
       : {}
 
@@ -86,7 +88,7 @@ for (const unitName of unitTestDirs) {
 
     const compareSnapshot: CompareFn = (
       bundledAssetContent,
-      currentOutputSnapshot
+      currentOutputSnapshot,
     ) => {
       expect(bundledAssetContent).toEqual(currentOutputSnapshot)
     }

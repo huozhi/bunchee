@@ -1,4 +1,5 @@
 import { sizeCollector } from './build-config'
+import { dtsExtensionRegex } from './constants'
 import { logger } from './utils'
 
 export function logSizeStats() {
@@ -6,7 +7,7 @@ export function logSizeStats() {
   const maxLength = Math.max(...stats.map(([filename]) => filename.length))
   stats.forEach(([filename, prettiedSize]) => {
     const padding = ' '.repeat(maxLength - filename.length)
-    const action = filename.endsWith('.d.ts') ? 'Typed' : 'Built'
+    const action = dtsExtensionRegex.test(filename) ? 'Typed' : 'Built'
     logger.log(` ✓  ${action} ${filename}${padding} - ${prettiedSize}`)
   })
 }

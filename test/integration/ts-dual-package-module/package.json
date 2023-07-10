@@ -1,0 +1,9 @@
+{
+  "name": "ts-dual-esm-cjs-type-module",
+  "main": "./dist/index.js",
+  "type": "module",
+  "exports": {
+    "import": "./dist/index.js",
+    "require": "./dist/index.cjs"
+  }
+}
