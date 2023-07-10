@@ -34,7 +34,7 @@ jobs:
 
       - name: Lint
         run: |
-          pnpm run typecheck
+          pnpm typecheck
           pnpm build
           pnpm test
 

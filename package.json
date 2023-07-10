@@ -12,7 +12,7 @@
     "test:update": "TEST_UPDATE_SNAPSHOT=1 pnpm test",
     "clean": "rm -rf ./dist",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "pnpm run clean && pnpm build && chmod +x ./dist/cli.js && pnpm test",
+    "prepublishOnly": "pnpm clean && pnpm build && chmod +x ./dist/cli.js && pnpm test",
     "build:cli": "tsx ./src/cli.ts ./src/cli.ts --runtime node -f cjs -o ./dist/cli.js",
     "build:main": "tsx ./src/cli.ts ./src/index.ts --runtime node -f cjs",
     "build": "pnpm build:main && pnpm build:cli"
