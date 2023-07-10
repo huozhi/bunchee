@@ -85,6 +85,14 @@ function findExport(
   })
 }
 
+/**
+ * Get the entries (files and directories) within a given path.
+ *
+ * @param {string} path - The base path to search for entries.
+ * @param {boolean} hasSrc - Indicates whether the path has a 'src' directory.
+ * @param {string[]} outDirs - The list of output directories to consider.
+ * @returns {string[]} The array of entry names.
+ */
 function getEntries(
   path: string,
   hasSrc: boolean,
@@ -118,6 +126,13 @@ function getEntries(
   })
 }
 
+/**
+ * Replace wildcards in an ExportCondition object or string with the provided directory name.
+ *
+ * @param {ExportCondition | string} obj - The ExportCondition object or string to process.
+ * @param {string} dirName - The directory name to replace wildcards with.
+ * @returns {ExportCondition} The modified ExportCondition object or string.
+ */
 function replaceWildcardsWithEntryName(
   obj: ExportCondition,
   dirName: string
@@ -130,18 +145,20 @@ function replaceWildcardsWithEntryName(
     for (let key in obj) {
       newObj[key] = replaceWildcardsWithEntryName(obj[key], dirName)
     }
-
     return newObj
   } else {
     return obj
   }
 }
 
-function resolveWildcardExports(
-  exportsConditions: ExportCondition,
-  cwd: string
-): { [key: string]: ExportCondition | string } {
-  const outDirs = [
+/**
+ * Get the output directories from the given ExportCondition object.
+ *
+ * @param {ExportCondition} exportsConditions - The ExportCondition object to process.
+ * @returns {string[]} The array of output directories.
+ */
+function getOutDirs(exportsConditions: ExportCondition) {
+  return [
     ...new Set(
       Object.values(exportsConditions).flatMap((value) =>
         (typeof value === 'string' ? [value] : Object.values(value)).flatMap(
@@ -152,6 +169,49 @@ function resolveWildcardExports(
   ]
     .map((value) => value.split('/')[1])
     .filter(Boolean)
+}
+
+/**
+ * Resolve wildcard exports in the given ExportCondition object.
+ *
+ * @param {ExportCondition} exportsConditions - The ExportCondition object to process.
+ * @param {string} cwd - The current working directory.
+ * @returns {Object.<string, ExportCondition | string>} The resolved ExportCondition object with wildcard exports replaced to correct path.
+ * @example
+ * Input:
+ * {
+ *   ".": {
+ *    "types": "./dist/index.d.ts",
+ *    "import": "./dist/index.js"
+ *  },
+ *  "./*": {
+ *    "types": "./dist/*.d.ts",
+ *    "import": "./dist/*.js"
+ *  }
+ * }
+ *
+ * Output:
+ * {
+ *   ".": {
+ *     "types": "./dist/index.d.ts",
+ *     "import": "./dist/index.js"
+ *   },
+ *   "./button": {
+ *     "types": "./dist/button.d.ts",
+ *     "import": "./dist/button.js"
+ *   },
+ *   "./input": {
+ *     "types": "./dist/input.d.ts",
+ *     "import": "./dist/input.js"
+ *   },
+ *   // ...
+ * }
+ */
+function resolveWildcardExports(
+  exportsConditions: ExportCondition,
+  cwd: string
+): { [key: string]: ExportCondition | string } {
+  const outDirs = getOutDirs(exportsConditions)
 
   const entryNames = getEntries(cwd, false, outDirs)
 
