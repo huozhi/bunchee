@@ -7,7 +7,6 @@ import type {
   ExportPaths,
   FullExportCondition,
 } from './types'
-import type { JsMinifyOptions } from '@swc/core'
 import type { InputOptions, OutputOptions, Plugin } from 'rollup'
 import type { TypescriptOptions } from './typescript'
 
@@ -19,12 +18,13 @@ import json from '@rollup/plugin-json'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import replace from '@rollup/plugin-replace'
 import createChunkSizeCollector from './plugins/size-plugin'
-import preserveDirectivePlugin from './plugins/directive-plugin'
+import swcPreserveDirectivePlugin from 'rollup-swc-preserve-directives'
 import {
   getTypings,
   getExportPaths,
   getExportConditionDist,
   isEsmExportName,
+  getExportTypeDist,
 } from './exports'
 import {
   isNotNull,
@@ -32,10 +32,13 @@ import {
   resolveSourceFile,
   filenameWithoutExtension,
   nonNullable,
-  availableExportConventions,
 } from './utils'
+import {
+  availableExportConventions,
+  availableESExtensionsRegex,
+} from './constants'
 
-const minifyOptions: JsMinifyOptions = {
+const swcMinifyOptions = {
   compress: true,
   format: {
     comments: 'some',
@@ -45,7 +48,7 @@ const minifyOptions: JsMinifyOptions = {
   mangle: {
     toplevel: true,
   },
-}
+} as const
 
 // This can also be passed down as stats from top level
 export const sizeCollector = createChunkSizeCollector()
@@ -81,13 +84,41 @@ function buildInputConfig(
         .reduce((a: string[], b: string[]) => a.concat(b), [])
         .concat((options.external ?? []).concat(pkg.name ? [pkg.name] : []))
 
-  const { useTypescript, runtime, target: jscTarget, minify } = options
+  const { useTypescript, runtime, target: jscTarget, minify: shouldMinify } = options
   const hasSpecifiedTsTarget = Boolean(
     tsCompilerOptions?.target && tsConfigPath
   )
+
+  const swcParserConfig = {
+    syntax: useTypescript ? 'typescript' : 'ecmascript',
+    [useTypescript ? 'tsx' : 'jsx']: true,
+    privateMethod: true,
+    classPrivateProperty: true,
+    exportDefaultFrom: true,
+  } as const
+
+  const swcOptions = {
+    jsc: {
+      ...(!hasSpecifiedTsTarget && {
+        target: jscTarget,
+      }),
+      loose: true, // Use loose mode
+      externalHelpers: false,
+      parser: swcParserConfig,
+      ...(shouldMinify && {
+        minify: {
+          ...swcMinifyOptions,
+          sourceMap: options.sourcemap,
+        }
+      }),
+    },
+    sourceMaps: options.sourcemap,
+    inlineSourcesContent: false,
+  } as const
+
   const sizePlugin = sizeCollector.plugin(cwd)
   const commonPlugins = [
-    preserveDirectivePlugin(),
+    swcPreserveDirectivePlugin(),
     sizePlugin,
   ]
   const plugins: Plugin[] = (
@@ -129,31 +160,11 @@ function buildInputConfig(
           json(),
           wasm(),
           swc({
-            include: /\.(m|c)?[jt]sx?$/,
+            include: availableESExtensionsRegex,
             exclude: 'node_modules',
             tsconfig: tsConfigPath,
-            jsc: {
-              ...(!hasSpecifiedTsTarget && {
-                target: jscTarget,
-              }),
-              loose: true, // Use loose mode
-              externalHelpers: false,
-              parser: {
-                syntax: useTypescript ? 'typescript' : 'ecmascript',
-                [useTypescript ? 'tsx' : 'jsx']: true,
-                privateMethod: true,
-                classPrivateProperty: true,
-                exportDefaultFrom: true,
-              },
-              ...(minify && {
-                minify: {
-                  ...minifyOptions,
-                  sourceMap: options.sourcemap,
-                },
-              }),
-            },
-            sourceMaps: options.sourcemap,
-            inlineSourcesContent: false,
+            ...swcOptions,
+
           }),
         ]
   ).filter(isNotNull<Plugin>)
@@ -177,6 +188,7 @@ function buildInputConfig(
           'PREFER_NAMED_EXPORTS',
           'UNRESOLVED_IMPORT',
           'THIS_IS_UNDEFINED',
+          'MODULE_LEVEL_DIRECTIVE' // ignore warnings for directives like `use client`
         ].includes(code)
       )
         return
@@ -232,10 +244,10 @@ function buildOutputConfigs(
   const name = filenameWithoutExtension(file)
 
   // TODO: simplify dts file name detection
-  const dtsFile = exportCondition.export['types']
-    ? resolve(cwd, exportCondition.export['types'])
-    : file
-    ? name + '.d.ts'
+  const dtsFile = file
+    ? file
+    : exportCondition.export['types']
+      ? resolve(cwd, exportCondition.export['types'])
     : resolve(
         dtsDir,
         (exportCondition.name === '.' ? 'index' : exportCondition.name) +
@@ -312,9 +324,6 @@ export async function buildEntryConfig(
 
       if (!source) return undefined
 
-      // For dts, only build types filed
-      if (dts && !exportCondRef['types']) return undefined
-
       const exportCondition: ParsedExportCondition = {
         source,
         name: entryExport,
@@ -361,7 +370,8 @@ function buildConfig(
 
   // Generate dts job - single config
   if (dts) {
-    outputConfigs = [
+    const typeOutputExports = getExportTypeDist(exportCondition, cwd)
+    outputConfigs = typeOutputExports.map(v =>
       buildOutputConfigs(
         pkg,
         exportPaths,
@@ -369,13 +379,14 @@ function buildConfig(
           ...bundleConfig,
           format: 'es',
           useTypescript,
+          file: v
         },
         exportCondition,
         cwd,
         tsOptions,
         dts
       ),
-    ]
+    )
   } else {
     // multi outputs with specified format
     outputConfigs = outputExports.map((exportDist) => {

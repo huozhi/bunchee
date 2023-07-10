@@ -371,6 +371,40 @@ export function getExportPaths(pkg: PackageMetadata, cwd: string) {
   return pathsMap
 }
 
+export const getExportTypeDist = (
+  parsedExportCondition: ParsedExportCondition,
+  cwd: string
+) => {
+  const existed = new Set<string>()
+  const exportTypes = Object.keys(parsedExportCondition.export)
+  for (const key of exportTypes) {
+    if (key === 'module') {
+      continue
+    }
+    const filePath = parsedExportCondition.export[key]
+    if (key === 'types') {
+      const typeFile = getDistPath(filePath, cwd)
+      if (existed.has(typeFile)) {
+        continue
+      }
+      existed.add(typeFile)
+      continue
+    }
+    const ext = extname(filePath).slice(1)
+    const dtsExtentions: Record<string, string> = {
+      'js': '.d.ts',
+      'cjs': '.d.cts',
+      'mjs': '.d.mts',
+    }
+    const typeFile = getDistPath(`${filenameWithoutExtension(filePath) || ''}${dtsExtentions[ext]}`, cwd)
+    if (existed.has(typeFile)) {
+      continue
+    }
+    existed.add(typeFile)
+  }
+  return Array.from(existed)
+}
+
 export function getPackageType(pkg: PackageMetadata): PackageType {
   return pkg.type || 'commonjs'
 }

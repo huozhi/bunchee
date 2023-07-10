@@ -1,6 +1,10 @@
 import type { PackageMetadata } from 'src/types'
 import path from 'path'
-import { getExportPaths, getExportConditionDist } from '../../src/exports'
+import {
+  getExportPaths,
+  getExportConditionDist,
+  getExportTypeDist,
+} from '../../src/exports'
 
 const cwd = path.resolve(__dirname)
 
@@ -94,18 +98,20 @@ describe('lib exports', () => {
       })
     })
 
-    it('should handle the basic main fields paths (esm)', () => {
-      const pkg: PackageMetadata = {
-        type: 'module',
-        main: './dist/index.mjs',
-        module: './dist/index.esm.js',
-      }
-      const result = getExportPaths(pkg, cwd)
-      expect(result).toEqual({
-        '.': {
-          import: './dist/index.mjs',
+    describe('type:module', () => {
+      it('should handle the basic main fields paths (esm)', () => {
+        const pkg: PackageMetadata = {
+          type: 'module',
+          main: './dist/index.mjs',
           module: './dist/index.esm.js',
-        },
+        }
+        const result = getExportPaths(pkg)
+        expect(result).toEqual({
+          '.': {
+            import: './dist/index.mjs',
+            module: './dist/index.esm.js',
+          },
+        })
       })
     })
 
@@ -258,6 +264,72 @@ describe('lib exports', () => {
         { file: 'index.cjs', format: 'cjs' },
         { file: 'index.mjs', format: 'esm' },
       ])
+    })
+  })
+
+  describe('getExportTypeDist', () => {
+    function getExportTypeByName(
+      pkg: PackageMetadata,
+      exportName: string = '.'
+    ) {
+      const parsedExportCondition = getExportPaths(pkg)
+      const parsedExport = {
+        source: `./src/${exportName === '.' ? 'index' : exportName}.ts`,
+        name: exportName,
+        export: parsedExportCondition[exportName],
+      }
+      // Get only basename to skip path.resolve result for `file` property
+      return getExportTypeDist(parsedExport, '').map((filename) =>
+        path.basename(filename)
+      )
+    }
+
+    describe('type: commonjs', () => {
+      it('should handle the basic main fields paths', () => {
+        const pkg: PackageMetadata = {
+          main: './dist/index.js',
+          types: './dist/index.d.ts',
+          module: './dist/index.esm.js',
+          exports: {
+            import: './dist/index.mjs',
+            require: './dist/index.js',
+          },
+        }
+        const result = getExportTypeByName(pkg)
+        expect(result).toEqual(['index.d.mts', 'index.d.ts'])
+      })
+    })
+
+    describe('type: module', () => {
+      it('should handle type: module', () => {
+        const pkg: PackageMetadata = {
+          main: './dist/index.js',
+          types: './dist/index.d.ts',
+          module: './dist/index.esm.js',
+          type: 'module',
+          exports: {
+            import: './dist/index.js',
+            require: './dist/index.cjs',
+          },
+        }
+        const result = getExportTypeByName(pkg)
+        expect(result).toEqual(['index.d.ts', 'index.d.cts'])
+      })
+
+      it('should also respect `types` field ', () => {
+        const pkg: PackageMetadata = {
+          main: './dist/index.js',
+          types: './dist/types.d.ts',
+          module: './dist/index.esm.js',
+          type: 'module',
+          exports: {
+            import: './dist/index.js',
+            require: './dist/index.cjs',
+          },
+        }
+        const result = getExportTypeByName(pkg)
+        expect(result).toEqual(['index.d.ts', 'index.d.cts', 'types.d.ts'])
+      })
     })
   })
 })

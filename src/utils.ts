@@ -1,6 +1,7 @@
 import fs from 'fs/promises'
 import path from 'path'
 import type { PackageMetadata } from './types'
+import { availableExportConventions, availableExtensions } from './constants'
 
 export function exit(err: string | Error) {
   logger.error(err)
@@ -98,8 +99,6 @@ async function findSourceEntryFile(
 // Map '.' -> './index.[ext]'
 // Map './lite' -> './lite.[ext]'
 // Return undefined if no match or if it's package.json exports
-export const availableExtensions = ['js', 'cjs', 'mjs', 'jsx', 'ts', 'tsx']
-export const availableExportConventions = ['react-server', 'react-native', 'edge-light']
 export async function getSourcePathFromExportPath(
   cwd: string,
   exportPath: string,

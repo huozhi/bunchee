@@ -97,21 +97,6 @@ const testCases: {
     name: 'multi-entries',
     args: [],
     async expected(dir, { stdout }) {
-      const distFiles = [
-        './dist/index.js',
-        './dist/lite.js',
-        './dist/client/index.cjs',
-        './dist/client/index.mjs',
-        './dist/shared/index.mjs',
-        './dist/shared/edge-light.mjs',
-        './dist/server/edge.mjs',
-        './dist/server/react-server.mjs',
-
-        // types
-        './dist/client/index.d.ts',
-        './dist/index.d.ts',
-      ]
-
       const contentsRegex = {
         './dist/index.js': /'index'/,
         './dist/shared/index.mjs': /'shared'/,
@@ -123,14 +108,21 @@ const testCases: {
       assertFilesContent(dir, contentsRegex)
 
       const log = `\
+      ✓  Typed dist/server/index.d.ts       - 87 B
+      ✓  Typed dist/server/index.d.mts      - 87 B
+      ✓  Typed dist/lite.d.ts               - 70 B
+      ✓  Typed dist/shared/index.d.mts      - 66 B
+      ✓  Typed dist/client/index.d.cts      - 74 B
+      ✓  Typed dist/client/index.d.mts      - 74 B
       ✓  Typed dist/client/index.d.ts       - 74 B
       ✓  Typed dist/index.d.ts              - 65 B
+      ✓  Built dist/index.js                - 110 B
+      ✓  Built dist/shared/edge-light.mjs   - 84 B
       ✓  Built dist/client/index.cjs        - 138 B
       ✓  Built dist/client/index.mjs        - 78 B
-      ✓  Built dist/index.js                - 110 B
-      ✓  Built dist/shared/index.mjs        - 53 B
       ✓  Built dist/lite.js                 - 132 B
-      ✓  Built dist/shared/edge-light.mjs   - 84 B
+      ✓  Built dist/server/index.mjs        - 71 B
+      ✓  Built dist/shared/index.mjs        - 53 B
       ✓  Built dist/server/react-server.mjs - 53 B
       ✓  Built dist/server/edge.mjs         - 51 B
       `
@@ -139,6 +131,52 @@ const testCases: {
       log.split('\n').forEach((line: string) => {
         expect(rawStdout).toContain(line.trim())
       })
+    },
+  },
+  {
+    name: 'ts-dual-package-type-cjs',
+    args: [],
+    async expected(dir) {
+      const distFiles = [
+        join(dir, './dist/index.js'),
+        join(dir, './dist/index.mjs'),
+        join(dir, './dist/index.d.ts'),
+        join(dir, './dist/index.d.mts'),
+      ]
+      for (const f of distFiles) {
+        expect(await existsFile(f)).toBe(true)
+      }
+    },
+  },
+  {
+    name: 'ts-dual-package-module',
+    args: [],
+    async expected(dir) {
+      const distFiles = [
+        join(dir, './dist/index.js'),
+        join(dir, './dist/index.cjs'),
+        join(dir, './dist/index.d.ts'),
+        join(dir, './dist/index.d.cts'),
+      ]
+      for (const f of distFiles) {
+        expect(await existsFile(f)).toBe(true)
+      }
+    },
+  },
+  {
+    name: 'ts-exports-types',
+    args: [],
+    async expected(dir) {
+      const distFiles = [
+        join(dir, './dist/index.mjs'),
+        join(dir, './dist/index.cjs'),
+        join(dir, './dist/index.d.mts'),
+        join(dir, './dist/index.d.cts'),
+        join(dir, './dist/index.d.ts'),
+      ]
+      for (const f of distFiles) {
+        expect(await existsFile(f)).toBe(true)
+      }
     },
   },
   {
