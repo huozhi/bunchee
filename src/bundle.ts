@@ -5,11 +5,7 @@ import type {
   RollupBuild,
   RollupOutput,
 } from 'rollup'
-import type {
-  BuncheeRollupConfig,
-  BundleConfig,
-  ExportPaths,
-} from './types'
+import type { BuncheeRollupConfig, BundleConfig, ExportPaths } from './types'
 
 import fs from 'fs/promises'
 import { resolve, relative } from 'path'
@@ -22,7 +18,12 @@ import {
   getSourcePathFromExportPath,
   getExportPath,
 } from './utils'
-import { constructDefaultExportCondition, getExportPaths, getPackageType, getTypeFilePath } from './exports'
+import {
+  constructDefaultExportCondition,
+  getExportPaths,
+  getPackageType,
+  getTypeFilePath,
+} from './exports'
 import type { BuildMetadata } from './types'
 import { TypescriptOptions, resolveTsConfig } from './typescript'
 import { logSizeStats } from './logging'
@@ -30,7 +31,7 @@ import { logSizeStats } from './logging'
 function assignDefault(
   options: BundleConfig,
   name: keyof BundleConfig,
-  defaultValue: any
+  defaultValue: any,
 ) {
   if (!(name in options) || options[name] == null) {
     options[name] = defaultValue
@@ -38,9 +39,9 @@ function assignDefault(
 }
 
 function hasMultiEntryExport(exportPaths: ExportPaths): boolean {
-  const exportKeys = (
-   Object.keys(exportPaths)
-  ).filter((key) => key !== './package.json')
+  const exportKeys = Object.keys(exportPaths).filter(
+    (key) => key !== './package.json',
+  )
 
   return (
     exportKeys.length > 0 && exportKeys.every((name) => name.startsWith('.'))
@@ -49,7 +50,7 @@ function hasMultiEntryExport(exportPaths: ExportPaths): boolean {
 
 async function bundle(
   entryPath: string,
-  { cwd: _cwd, ...options }: BundleConfig = {}
+  { cwd: _cwd, ...options }: BundleConfig = {},
 ): Promise<any> {
   const cwd = resolve(process.cwd(), _cwd || '')
   assignDefault(options, 'format', 'es')
@@ -60,9 +61,9 @@ async function bundle(
   const packageType = getPackageType(pkg)
   const exportPaths = getExportPaths(pkg)
 
-  const exportKeys = (
-    Object.keys(exportPaths)
-   ).filter((key) => key !== './package.json')
+  const exportKeys = Object.keys(exportPaths).filter(
+    (key) => key !== './package.json',
+  )
   // const exportPathsLength = Object.keys(exportPaths).length
   const isMultiEntries = hasMultiEntryExport(exportPaths) // exportPathsLength > 1
 
@@ -100,23 +101,24 @@ async function bundle(
         typesEntryPath = getTypeFilePath(mainEntryPath, undefined, cwd)
       }
 
-      exportPaths['.'] = constructDefaultExportCondition({
-        main: mainEntryPath,
-        types: typesEntryPath,
-      }, packageType)
+      exportPaths['.'] = constructDefaultExportCondition(
+        {
+          main: mainEntryPath,
+          types: typesEntryPath,
+        },
+        packageType,
+      )
     }
   }
 
   const bundleOrWatch = (
-    rollupConfig: BuncheeRollupConfig
+    rollupConfig: BuncheeRollupConfig,
   ): Promise<RollupWatcher | RollupOutput[] | void> => {
     const { input, exportName } = rollupConfig
     const exportPath = getExportPath(pkg, cwd, exportName)
     // Log original entry file relative path
     const source =
-      typeof input.input === 'string'
-        ? relative(cwd, input.input)
-        : exportPath
+      typeof input.input === 'string' ? relative(cwd, input.input) : exportPath
 
     const buildMetadata: BuildMetadata = {
       source,
@@ -148,12 +150,20 @@ async function bundle(
     false,
   )
   const assetsJobs = buildConfigs.map((rollupConfig) =>
-    bundleOrWatch(rollupConfig)
+    bundleOrWatch(rollupConfig),
   )
 
   const typesJobs = hasTsConfig
     ? (
-        await buildEntryConfig(pkg, entryPath, exportPaths, options, cwd, defaultTsOptions, true)
+        await buildEntryConfig(
+          pkg,
+          entryPath,
+          exportPaths,
+          options,
+          cwd,
+          defaultTsOptions,
+          true,
+        )
       ).map((rollupConfig) => bundleOrWatch(rollupConfig))
     : []
 
@@ -165,7 +175,7 @@ async function bundle(
 
 function runWatch(
   { input, output }: BuncheeRollupConfig,
-  metadata: BuildMetadata
+  metadata: BuildMetadata,
 ): RollupWatcher {
   const watchOptions: RollupWatchOptions[] = [
     {
@@ -197,16 +207,13 @@ function runWatch(
   return watcher
 }
 
-function runBundle(
-  { input, output }: BuncheeRollupConfig
-) {
-  return rollup(input)
-    .then((bundle: RollupBuild) => {
-      const writeJobs = output.map((options: OutputOptions) =>
-        bundle.write(options)
-      )
-      return Promise.all(writeJobs)
-    }, onError)
+function runBundle({ input, output }: BuncheeRollupConfig) {
+  return rollup(input).then((bundle: RollupBuild) => {
+    const writeJobs = output.map((options: OutputOptions) =>
+      bundle.write(options),
+    )
+    return Promise.all(writeJobs)
+  }, onError)
 }
 
 function onError(error: any) {

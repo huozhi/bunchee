@@ -15,7 +15,7 @@ const testCases: {
   args?: string[]
   expected(
     f: string,
-    { stderr, stdout }: { stderr: string; stdout: string }
+    { stderr, stdout }: { stderr: string; stdout: string },
   ): void
 }[] = [
   // TODO: test externals/sub-path-export
@@ -86,10 +86,10 @@ const testCases: {
         encoding: 'utf-8',
       })
       expect(cjsFile).toContain(
-        `function _interopDefault (e) { return e && e.__esModule ? e : { default: e }; }`
+        `function _interopDefault (e) { return e && e.__esModule ? e : { default: e }; }`,
       )
       expect(cjsFile).toContain(
-        `Object.defineProperty(exports, '__esModule', { value: true });`
+        `Object.defineProperty(exports, '__esModule', { value: true });`,
       )
     },
   },
@@ -191,10 +191,10 @@ const testCases: {
         expect(await existsFile(f)).toBe(true)
       }
       expect(await fs.readFile(distFiles[0], 'utf-8')).toContain(
-        `Object.defineProperty(exports, '__esModule', { value: true });`
+        `Object.defineProperty(exports, '__esModule', { value: true });`,
       )
       expect(await fs.readFile(distFiles[1], 'utf-8')).toContain(
-        'declare const _default: () => string;'
+        'declare const _default: () => string;',
       )
 
       const log = `\
@@ -219,7 +219,7 @@ const testCases: {
         expect(await existsFile(f)).toBe(true)
       }
       expect(await fs.readFile(distFiles[1], 'utf-8')).toContain(
-        'declare function _default(): string;'
+        'declare function _default(): string;',
       )
     },
   },
@@ -229,10 +229,10 @@ const testCases: {
     expected(dir, { stdout }) {
       const text = stripANSIColor(stdout)
       expect(text).toContain(
-        'pkg.types is ./dist/missing.d.ts but the file does not exist.'
+        'pkg.types is ./dist/missing.d.ts but the file does not exist.',
       )
       expect(text).toContain(
-        'pkg.exports["."].types is ./dist/missing.d.ts but the file does not exist.'
+        'pkg.exports["."].types is ./dist/missing.d.ts but the file does not exist.',
       )
     },
   },
@@ -240,13 +240,13 @@ const testCases: {
 
 async function runBundle(
   dir: string,
-  args_: string[]
+  args_: string[],
 ): Promise<{ code: number | null; stdout: string; stderr: string }> {
   const args = (args_ || []).concat(['--cwd', dir])
   const ps = fork(
     `${__dirname + '/../node_modules/.bin/tsx'}`,
     [__dirname + '/../src/cli.ts'].concat(args),
-    { stdio: 'pipe' }
+    { stdio: 'pipe' },
   )
   let stderr = '',
     stdout = ''

@@ -4,7 +4,13 @@ import type { CliArgs, BundleConfig } from './types'
 
 import path from 'path'
 import arg from 'arg'
-import { logger, exit, formatDuration, getPackageMeta, hasPackageJson } from './utils'
+import {
+  logger,
+  exit,
+  formatDuration,
+  getPackageMeta,
+  hasPackageJson,
+} from './utils'
 import { version } from '../package.json'
 
 const helpMessage = `
@@ -80,7 +86,7 @@ function parseCliArgs(argv: string[]) {
     {
       permissive: true,
       argv,
-    }
+    },
   )
   const source: string = args._[0]
   const parsedArgs: CliArgs = {
@@ -103,7 +109,17 @@ function parseCliArgs(argv: string[]) {
 }
 
 async function run(args: CliArgs) {
-  const { source, format, watch, minify, sourcemap, target, runtime, dts, env } = args
+  const {
+    source,
+    format,
+    watch,
+    minify,
+    sourcemap,
+    target,
+    runtime,
+    dts,
+    env,
+  } = args
   const cwd = args.cwd || process.cwd()
   const file = args.file ? path.resolve(cwd, args.file) : undefined
   const bundleConfig: BundleConfig = {

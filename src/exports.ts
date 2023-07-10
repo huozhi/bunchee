@@ -1,4 +1,10 @@
-import type { PackageMetadata, ExportCondition, FullExportCondition, PackageType, ParsedExportCondition } from './types'
+import type {
+  PackageMetadata,
+  ExportCondition,
+  FullExportCondition,
+  PackageType,
+  ParsedExportCondition,
+} from './types'
 import { join, resolve, dirname, extname } from 'path'
 import { filenameWithoutExtension } from './utils'
 
@@ -16,13 +22,13 @@ function isExportLike(field: any): field is string | FullExportCondition {
   return Object.entries(field).every(
     // Every value is string and key is not start with '.'
     // TODO: check key is ExportType
-    ([key, value]) => typeof value === 'string' && !key.startsWith('.')
+    ([key, value]) => typeof value === 'string' && !key.startsWith('.'),
   )
 }
 
 function constructFullExportCondition(
   value: string | Record<string, string | undefined>,
-  packageType: PackageType
+  packageType: PackageType,
 ): FullExportCondition {
   const isCommonjs = packageType === 'commonjs'
   let result: FullExportCondition
@@ -36,7 +42,7 @@ function constructFullExportCondition(
     result = {}
     keys.forEach((key) => {
       // Filter out nullable value
-      if ((key in value) && value[key]) {
+      if (key in value && value[key]) {
         result[key] = value[key] as string
       }
     })
@@ -58,7 +64,7 @@ function findExport(
   name: string,
   value: ExportCondition,
   paths: Record<string, FullExportCondition>,
-  packageType: 'commonjs' | 'module'
+  packageType: 'commonjs' | 'module',
 ): void {
   // TODO: handle export condition based on package.type
   if (isExportLike(value)) {
@@ -91,16 +97,19 @@ function findExport(
  * }
  *
  * Output:
-  * {
-  *   "./sub": {
-  *     "import": "./sub.js",
-  *     "require": "./sub.cjs",
-  *     "types": "./sub.d.ts,
-  *   }
-  * }
-  *
+ * {
+ *   "./sub": {
+ *     "import": "./sub.js",
+ *     "require": "./sub.cjs",
+ *     "types": "./sub.d.ts,
+ *   }
+ * }
+ *
  */
-function parseExport(exportsCondition: ExportCondition, packageType: PackageType) {
+function parseExport(
+  exportsCondition: ExportCondition,
+  packageType: PackageType,
+) {
   const paths: Record<string, FullExportCondition> = {}
 
   if (typeof exportsCondition === 'string') {
@@ -117,7 +126,6 @@ function parseExport(exportsCondition: ExportCondition, packageType: PackageType
   }
   return paths
 }
-
 
 /**
  * Get package exports paths
@@ -177,7 +185,7 @@ export function getExportPaths(pkg: PackageMetadata) {
       module: pkg.module,
       types: getTypings(pkg),
     },
-    packageType
+    packageType,
   )
 
   // Merge the main export into '.' paths
@@ -192,7 +200,7 @@ export function getExportPaths(pkg: PackageMetadata) {
 
 export const getExportTypeDist = (
   parsedExportCondition: ParsedExportCondition,
-  cwd: string
+  cwd: string,
 ) => {
   const existed = new Set<string>()
   const exportTypes = Object.keys(parsedExportCondition.export)
@@ -211,11 +219,14 @@ export const getExportTypeDist = (
     }
     const ext = extname(filePath).slice(1)
     const dtsExtentions: Record<string, string> = {
-      'js': '.d.ts',
-      'cjs': '.d.cts',
-      'mjs': '.d.mts',
+      js: '.d.ts',
+      cjs: '.d.cts',
+      mjs: '.d.mts',
     }
-    const typeFile = getDistPath(`${filenameWithoutExtension(filePath) || ''}${dtsExtentions[ext]}`, cwd)
+    const typeFile = getDistPath(
+      `${filenameWithoutExtension(filePath) || ''}${dtsExtentions[ext]}`,
+      cwd,
+    )
     if (existed.has(typeFile)) {
       continue
     }
@@ -230,18 +241,16 @@ export function getPackageType(pkg: PackageMetadata): PackageType {
 
 export function constructDefaultExportCondition(
   value: string | Record<string, string | undefined>,
-  packageType: PackageType
+  packageType: PackageType,
 ) {
   const objValue =
     typeof value === 'string'
-    ? {
-      [packageType === 'commonjs' ? 'require' : 'import']: value,
-      types: getTypings(value as PackageMetadata),
-    } : value
-  return constructFullExportCondition(
-    objValue,
-    packageType
-  )
+      ? {
+          [packageType === 'commonjs' ? 'require' : 'import']: value,
+          types: getTypings(value as PackageMetadata),
+        }
+      : value
+  return constructFullExportCondition(objValue, packageType)
 }
 
 export function isEsmExportName(name: string, ext: string) {
@@ -255,7 +264,7 @@ export function isCjsExportName(name: string, ext: string) {
 export function getExportConditionDist(
   pkg: PackageMetadata,
   parsedExportCondition: ParsedExportCondition,
-  cwd: string
+  cwd: string,
 ) {
   const dist: { format: 'cjs' | 'esm'; file: string }[] = []
   const existed = new Set<string>()
@@ -288,7 +297,9 @@ export function getExportConditionDist(
 
   if (dist.length === 0) {
     // TODO: Deprecate this warning and behavior in v3
-    console.error(`Doesn't fin any exports in ${pkg.name}, using default dist path dist/index.js`)
+    console.error(
+      `Doesn't fin any exports in ${pkg.name}, using default dist path dist/index.js`,
+    )
     dist.push({ format: 'esm', file: getDistPath('dist/index.js', cwd) })
   }
   return dist
@@ -297,7 +308,7 @@ export function getExportConditionDist(
 export function getTypeFilePath(
   entryFilePath: string,
   exportCondition: ParsedExportCondition | undefined,
-  cwd: string
+  cwd: string,
 ): string {
   const name = filenameWithoutExtension(entryFilePath)
   const firstDistPath = exportCondition
@@ -310,7 +321,6 @@ export function getTypeFilePath(
     ? name + '.d.ts'
     : resolve(
         firstDistPath ? dirname(firstDistPath) : join(cwd, 'dist'),
-        (exportName === '.' ? 'index' : exportName) +
-          '.d.ts'
+        (exportName === '.' ? 'index' : exportName) + '.d.ts',
       )
 }

@@ -87,7 +87,7 @@
     "typescript": "4.9.5"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx,md}": "prettier --write"
+    "*.{ts,tsx,js,jsx,md,json,yml}": "prettier --write"
   },
   "jest": {
     "moduleDirectories": [

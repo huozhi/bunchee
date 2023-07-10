@@ -31,7 +31,7 @@ const testCases: {
   dist?: (() => Promise<string>) | string
   expected(
     f: string,
-    { stderr, stdout }: { stderr: string; stdout: string }
+    { stderr, stdout }: { stderr: string; stdout: string },
   ): [boolean | string, boolean | string][]
 }[] = [
   {
@@ -134,10 +134,7 @@ const testCases: {
     name: 'no-externals',
     dist: createTempDir,
     distFile: 'dist/with-externals.bundle.js',
-    args: [
-      resolveFromTest('fixtures/with-externals.js'),
-      '--no-external',
-    ],
+    args: [resolveFromTest('fixtures/with-externals.js'), '--no-external'],
     expected(distFile) {
       const content = fs.readFileSync(distFile, { encoding: 'utf-8' })
       return [
@@ -150,11 +147,7 @@ const testCases: {
     name: 'es2020-target',
     dist: createTempDir,
     distFile: 'dist/es2020.js',
-    args: [
-      resolveFromTest('fixtures/es2020.ts'),
-      '--target',
-      'es2020',
-    ],
+    args: [resolveFromTest('fixtures/es2020.ts'), '--target', 'es2020'],
     expected(distFile) {
       const content = fs.readFileSync(distFile, { encoding: 'utf-8' })
       return [
@@ -211,7 +204,7 @@ const testCases: {
         // if there's no tsconfig.json and entry file is js
         [
           stripANSIColor(stdout).includes(
-            'pkg.types is ./dist/index.d.ts but the file does not exist.'
+            'pkg.types is ./dist/index.d.ts but the file does not exist.',
           ),
           true,
         ],
@@ -269,7 +262,7 @@ describe('cli', () => {
         {
           stdio: 'pipe',
           env,
-        }
+        },
       )
       let stderr = ''
       let stdout = ''

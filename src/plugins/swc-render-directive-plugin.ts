@@ -6,13 +6,11 @@ import { availableESExtensionsRegex } from '../constants'
 
 const directiveRegex = /^use (\w+)$/
 
-export default function swcRenderDirectivePlugin(
-  {
-    swcParserConfig,
-  }: {
-    swcParserConfig: ParserConfig
-  }
-): Plugin {
+export default function swcRenderDirectivePlugin({
+  swcParserConfig,
+}: {
+  swcParserConfig: ParserConfig
+}): Plugin {
   const meta: {
     shebang: string | null
     directives: Set<string>
@@ -21,7 +19,11 @@ export default function swcRenderDirectivePlugin(
     directives: new Set(),
   }
 
-  const parseOptions = { ...swcParserConfig, script: false, target: 'es2018' } as const
+  const parseOptions = {
+    ...swcParserConfig,
+    script: false,
+    target: 'es2018',
+  } as const
 
   return {
     name: 'swc-render-directive',
@@ -32,12 +34,18 @@ export default function swcRenderDirectivePlugin(
       const { body, interpreter } = await parse(code, parseOptions)
       if (interpreter) {
         meta.shebang = `#!${interpreter}`
-        code = code.replace(new RegExp('^[\\s\\n]*' + meta.shebang.replace(/\//g, '\/') + '\\n*'), '') // Remove shebang from code
+        code = code.replace(
+          new RegExp('^[\\s\\n]*' + meta.shebang.replace(/\//g, '/') + '\\n*'),
+          '',
+        ) // Remove shebang from code
       }
 
       for (const node of body) {
         if (node.type === 'ExpressionStatement') {
-          if (node.expression.type === 'StringLiteral' && directiveRegex.test(node.expression.value)) {
+          if (
+            node.expression.type === 'StringLiteral' &&
+            directiveRegex.test(node.expression.value)
+          ) {
             meta.directives.add(node.expression.value)
           }
         } else {
@@ -55,7 +63,11 @@ export default function swcRenderDirectivePlugin(
 
       const s = new MagicString(code)
       if (directives.size) {
-        s.prepend(`${[...directives].map(directive => `'${directive}';`).join('\n')}\n`)
+        s.prepend(
+          `${[...directives]
+            .map((directive) => `'${directive}';`)
+            .join('\n')}\n`,
+        )
       }
       if (shebang) {
         s.prepend(`${shebang}\n`)
@@ -63,9 +75,8 @@ export default function swcRenderDirectivePlugin(
 
       return {
         code: s.toString(),
-        map: sourcemap ? s.generateMap({ hires: true }) : null
+        map: sourcemap ? s.generateMap({ hires: true }) : null,
       }
-    }
-
+    },
   }
 }

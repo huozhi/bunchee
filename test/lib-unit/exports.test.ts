@@ -31,7 +31,7 @@ describe('lib exports', () => {
               types: './dist/index.d.ts',
             },
           },
-        })
+        }),
       ).toEqual({
         '.': {
           import: './dist/index.mjs',
@@ -47,7 +47,7 @@ describe('lib exports', () => {
               import: './dist/index.mjs',
             },
           },
-        })
+        }),
       ).toEqual({
         '.': {
           import: './dist/index.mjs',
@@ -83,7 +83,7 @@ describe('lib exports', () => {
               default: './dist/index.esm.js',
             },
           },
-        })
+        }),
       ).toEqual({
         '.': {
           require: './dist/index.cjs',
@@ -100,7 +100,7 @@ describe('lib exports', () => {
               require: './dist/index.cjs',
             },
           },
-        })
+        }),
       ).toEqual({
         '.': {
           import: './dist/index.mjs',
@@ -120,7 +120,7 @@ describe('lib exports', () => {
               },
             },
           },
-        })
+        }),
       ).toEqual({
         '.': {
           require: './dist/index.cjs',
@@ -141,7 +141,7 @@ describe('lib exports', () => {
             module: './dist/index.esm.js',
             require: './dist/index.js',
           },
-        })
+        }),
       ).toEqual({
         '.': {
           types: './dist/index.d.ts',
@@ -156,7 +156,7 @@ describe('lib exports', () => {
   describe('getExportConditionDist', () => {
     function getExportConditionDistHelper(
       pkg: PackageMetadata,
-      exportName: string = '.'
+      exportName: string = '.',
     ) {
       const parsedExportCondition = getExportPaths(pkg)
       const parsedExport = {
@@ -178,7 +178,7 @@ describe('lib exports', () => {
           type: 'module',
           main: './dist/index.mjs',
           module: './dist/index.mjs',
-        })
+        }),
       ).toEqual([{ file: 'index.mjs', format: 'esm' }])
 
       // Do not dedupe import and module are they're different paths
@@ -188,7 +188,7 @@ describe('lib exports', () => {
           exports: {
             import: './dist/index.mjs',
           },
-        })
+        }),
       ).toEqual([
         { file: 'index.mjs', format: 'esm' },
         { file: 'index.esm.js', format: 'esm' },
@@ -216,7 +216,7 @@ describe('lib exports', () => {
   describe('getExportTypeDist', () => {
     function getExportTypeByName(
       pkg: PackageMetadata,
-      exportName: string = '.'
+      exportName: string = '.',
     ) {
       const parsedExportCondition = getExportPaths(pkg)
       const parsedExport = {
@@ -226,7 +226,7 @@ describe('lib exports', () => {
       }
       // Get only basename to skip path.resolve result for `file` property
       return getExportTypeDist(parsedExport, '').map((filename) =>
-        path.basename(filename)
+        path.basename(filename),
       )
     }
 

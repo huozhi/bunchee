@@ -19,9 +19,11 @@ type FullExportCondition = {
   [key: string]: string
 }
 
-type ExportCondition = string | {
-  [key: string]: ExportCondition | string
-}
+type ExportCondition =
+  | string
+  | {
+      [key: string]: ExportCondition | string
+    }
 
 // configs which are normalized from cli args
 type BundleConfig = {
@@ -52,7 +54,6 @@ type PackageMetadata = {
   typings?: string
 }
 
-
 type BuncheeRollupConfig = Partial<Omit<RollupOptions, 'input' | 'output'>> & {
   exportName?: string
   input: InputOptions
@@ -63,7 +64,7 @@ type CliArgs = {
   format?: OutputOptions['format']
   minify?: boolean
   sourcemap?: boolean
-  source? : string
+  source?: string
   file?: string
   watch?: boolean
   cwd?: string

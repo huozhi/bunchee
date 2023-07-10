@@ -5,7 +5,7 @@ import prettyBytes from 'pretty-bytes'
 type SizeStats = [string, string, number][]
 
 function chunkSizeCollector(): {
-  plugin(cwd: string): Plugin,
+  plugin(cwd: string): Plugin
   getSizeStats(): SizeStats
 } {
   const sizes: Map<string, number> = new Map()
@@ -22,11 +22,14 @@ function chunkSizeCollector(): {
           // Do nothing, but use the hook to keep the plugin instance alive
         },
         renderChunk(code, chunk, options) {
-          const dir = options.dir || (options.file && path.dirname(options.file))
+          const dir =
+            options.dir || (options.file && path.dirname(options.file))
           let fileName = chunk.fileName
           if (dir) {
             const filePath = path.join(dir, fileName)
-            fileName = filePath.startsWith(cwd) ? path.relative(cwd, filePath) : filePath
+            fileName = filePath.startsWith(cwd)
+              ? path.relative(cwd, filePath)
+              : filePath
           }
           addSize(fileName, code.length)
           return null

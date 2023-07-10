@@ -74,7 +74,7 @@ function buildInputConfig(
   options: BundleOptions,
   cwd: string,
   { tsConfigPath, tsCompilerOptions }: TypescriptOptions,
-  dts: boolean
+  dts: boolean,
 ): InputOptions {
   const externals = options.noExternal
     ? []
@@ -84,9 +84,14 @@ function buildInputConfig(
         .reduce((a: string[], b: string[]) => a.concat(b), [])
         .concat((options.external ?? []).concat(pkg.name ? [pkg.name] : []))
 
-  const { useTypescript, runtime, target: jscTarget, minify: shouldMinify } = options
+  const {
+    useTypescript,
+    runtime,
+    target: jscTarget,
+    minify: shouldMinify,
+  } = options
   const hasSpecifiedTsTarget = Boolean(
-    tsCompilerOptions?.target && tsConfigPath
+    tsCompilerOptions?.target && tsConfigPath,
   )
 
   const swcParserConfig = {
@@ -109,7 +114,7 @@ function buildInputConfig(
         minify: {
           ...swcMinifyOptions,
           sourceMap: options.sourcemap,
-        }
+        },
       }),
     },
     sourceMaps: options.sourcemap,
@@ -117,10 +122,7 @@ function buildInputConfig(
   } as const
 
   const sizePlugin = sizeCollector.plugin(cwd)
-  const commonPlugins = [
-    swcPreserveDirectivePlugin(),
-    sizePlugin,
-  ]
+  const commonPlugins = [swcPreserveDirectivePlugin(), sizePlugin]
   const plugins: Plugin[] = (
     dts
       ? [
@@ -164,7 +166,6 @@ function buildInputConfig(
             exclude: 'node_modules',
             tsconfig: tsConfigPath,
             ...swcOptions,
-
           }),
         ]
   ).filter(isNotNull<Plugin>)
@@ -188,7 +189,7 @@ function buildInputConfig(
           'PREFER_NAMED_EXPORTS',
           'UNRESOLVED_IMPORT',
           'THIS_IS_UNDEFINED',
-          'MODULE_LEVEL_DIRECTIVE' // ignore warnings for directives like `use client`
+          'MODULE_LEVEL_DIRECTIVE', // ignore warnings for directives like `use client`
         ].includes(code)
       )
         return
@@ -206,14 +207,18 @@ function buildInputConfig(
 
 function hasEsmExport(
   exportPaths: ReturnType<typeof getExportPaths>,
-  tsCompilerOptions: TypescriptOptions['tsCompilerOptions']
+  tsCompilerOptions: TypescriptOptions['tsCompilerOptions'],
 ) {
   let hasEsm = false
   for (const key in exportPaths) {
     const exportInfo = exportPaths[key]
     const exportInfoEntries = Object.entries(exportInfo)
 
-    if (exportInfoEntries.some(([exportType, file]) => isEsmExportName(exportType, file))) {
+    if (
+      exportInfoEntries.some(([exportType, file]) =>
+        isEsmExportName(exportType, file),
+      )
+    ) {
       hasEsm = true
       break
     }
@@ -228,7 +233,7 @@ function buildOutputConfigs(
   exportCondition: ParsedExportCondition,
   cwd: string,
   { tsCompilerOptions }: TypescriptOptions,
-  dts: boolean
+  dts: boolean,
 ): OutputOptions {
   const { format } = options
 
@@ -237,9 +242,7 @@ function buildOutputConfigs(
   const typings: string | undefined = getTypings(pkg)
   const file = options.file && resolve(cwd, options.file)
 
-  const dtsDir = typings
-    ? dirname(resolve(cwd, typings))
-    : resolve(cwd, 'dist')
+  const dtsDir = typings ? dirname(resolve(cwd, typings)) : resolve(cwd, 'dist')
 
   const name = filenameWithoutExtension(file)
 
@@ -247,11 +250,11 @@ function buildOutputConfigs(
   const dtsFile = file
     ? file
     : exportCondition.export['types']
-      ? resolve(cwd, exportCondition.export['types'])
+    ? resolve(cwd, exportCondition.export['types'])
     : resolve(
         dtsDir,
         (exportCondition.name === '.' ? 'index' : exportCondition.name) +
-          '.d.ts'
+          '.d.ts',
       )
 
   // If there's dts file, use `output.file`
@@ -277,14 +280,14 @@ export async function buildEntryConfig(
   bundleConfig: BundleConfig,
   cwd: string,
   tsOptions: TypescriptOptions,
-  dts: boolean
+  dts: boolean,
 ): Promise<BuncheeRollupConfig[]> {
   const configs: Promise<BuncheeRollupConfig | undefined>[] = []
   Object.keys(exportPaths).forEach(async (entryExport) => {
     // TODO: improve the source detection
     const exportCond = exportPaths[entryExport]
     const buildConfigs = [
-      createBuildConfig('', exportCond) // default config
+      createBuildConfig('', exportCond), // default config
     ]
 
     // For dts job, only build the default config.
@@ -301,26 +304,25 @@ export async function buildEntryConfig(
       }
     }
 
-    async function createBuildConfig(exportType: string, exportCondRef: FullExportCondition) {
+    async function createBuildConfig(
+      exportType: string,
+      exportCondRef: FullExportCondition,
+    ) {
       let exportCondForType: FullExportCondition = { ...exportCondRef }
       // Special cases of export type, only pass down the exportPaths for the type
       if (availableExportConventions.includes(exportType)) {
         exportCondForType = {
-          [entryExport]: exportCondRef[exportType]
+          [entryExport]: exportCondRef[exportType],
         }
-      // Basic export type, pass down the exportPaths with erasing the special ones
+        // Basic export type, pass down the exportPaths with erasing the special ones
       } else {
         for (const exportType of availableExportConventions) {
           delete exportCondForType[exportType]
         }
-
       }
-      const source = entryPath ||
-        await getSourcePathFromExportPath(
-          cwd,
-          entryExport,
-          exportType,
-        )
+      const source =
+        entryPath ||
+        (await getSourcePathFromExportPath(cwd, entryExport, exportType))
 
       if (!source) return undefined
 
@@ -339,7 +341,7 @@ export async function buildEntryConfig(
         exportCondition,
         cwd,
         tsOptions,
-        dts
+        dts,
       )
       return rollupConfig
     }
@@ -358,12 +360,19 @@ function buildConfig(
   exportCondition: ParsedExportCondition,
   cwd: string,
   tsOptions: TypescriptOptions,
-  dts: boolean
+  dts: boolean,
 ): BuncheeRollupConfig {
   const { file } = bundleConfig
   const useTypescript = Boolean(tsOptions.tsConfigPath)
   const options = { ...bundleConfig, useTypescript }
-  const inputOptions = buildInputConfig(entry, pkg, options, cwd, tsOptions, dts)
+  const inputOptions = buildInputConfig(
+    entry,
+    pkg,
+    options,
+    cwd,
+    tsOptions,
+    dts,
+  )
   const outputExports = getExportConditionDist(pkg, exportCondition, cwd)
 
   let outputConfigs = []
@@ -371,7 +380,7 @@ function buildConfig(
   // Generate dts job - single config
   if (dts) {
     const typeOutputExports = getExportTypeDist(exportCondition, cwd)
-    outputConfigs = typeOutputExports.map(v =>
+    outputConfigs = typeOutputExports.map((v) =>
       buildOutputConfigs(
         pkg,
         exportPaths,
@@ -379,12 +388,12 @@ function buildConfig(
           ...bundleConfig,
           format: 'es',
           useTypescript,
-          file: v
+          file: v,
         },
         exportCondition,
         cwd,
         tsOptions,
-        dts
+        dts,
       ),
     )
   } else {
@@ -402,7 +411,7 @@ function buildConfig(
         exportCondition,
         cwd,
         tsOptions,
-        dts
+        dts,
       )
     })
     // CLI output option is always prioritized
@@ -421,7 +430,7 @@ function buildConfig(
           exportCondition,
           cwd,
           tsOptions,
-          dts
+          dts,
         ),
       ]
     }

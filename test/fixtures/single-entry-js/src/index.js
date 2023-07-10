@@ -1,3 +1,3 @@
-const single = 'entry';
+const single = 'entry'
 
-export { single };
+export { single }

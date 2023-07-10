@@ -1,3 +1,3 @@
-import a from './a';
+import a from './a'
 
-console.log('main', a.x);
+console.log('main', a.x)
