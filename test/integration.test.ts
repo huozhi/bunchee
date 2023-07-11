@@ -244,7 +244,7 @@ async function runBundle(
 ): Promise<{ code: number | null; stdout: string; stderr: string }> {
   const args = (args_ || []).concat(['--cwd', dir])
   const ps = fork(
-    `${__dirname + '/../node_modules/.bin/tsx'}`,
+    `${require.resolve('tsx/cli')}`,
     [__dirname + '/../src/cli.ts'].concat(args),
     { stdio: 'pipe' },
   )

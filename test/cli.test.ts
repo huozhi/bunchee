@@ -257,7 +257,7 @@ describe('cli', () => {
       debug.log(`Command: bunchee ${args.join(' ')}`)
 
       const ps = fork(
-        `${__dirname + '/../node_modules/.bin/tsx'}`,
+        `${require.resolve('tsx/cli')}`,
         [__dirname + '/../src/cli.ts'].concat(args),
         {
           stdio: 'pipe',
