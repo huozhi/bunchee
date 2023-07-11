@@ -19,7 +19,9 @@ export async function getPackageMeta(cwd: string): Promise<PackageMetadata> {
   const pkgFilePath = path.resolve(cwd, 'package.json')
   let targetPackageJson = {}
   try {
-    targetPackageJson = JSON.parse(await fs.readFile(pkgFilePath, { encoding: 'utf-8' }))
+    targetPackageJson = JSON.parse(
+      await fs.readFile(pkgFilePath, { encoding: 'utf-8' }),
+    )
   } catch (_) {}
 
   return targetPackageJson
@@ -33,7 +35,9 @@ export const logger = {
     console.log('\x1b[33m' + arg + '\x1b[0m')
   },
   error(arg: any) {
-    console.error('\x1b[31m' + (arg instanceof Error ? arg.stack : arg) + '\x1b[0m')
+    console.error(
+      '\x1b[31m' + (arg instanceof Error ? arg.stack : arg) + '\x1b[0m',
+    )
   },
 }
 
@@ -56,7 +60,11 @@ export async function fileExists(filePath: string) {
 
 // . -> pkg name
 // ./lite -> <pkg name>/lite
-export function getExportPath(pkg: PackageMetadata, cwd: string, exportName?: string) {
+export function getExportPath(
+  pkg: PackageMetadata,
+  cwd: string,
+  exportName?: string,
+) {
   const name = pkg.name || path.basename(cwd)
   if (exportName === '.' || !exportName) return name
   return path.join(name, exportName)
@@ -73,11 +81,11 @@ async function findSourceEntryFile(
   cwd: string,
   exportPath: string,
   exportTypeSuffix: string | null,
-  ext: string
+  ext: string,
 ): Promise<string | undefined> {
   const filename = resolveSourceFile(
     cwd,
-    `${exportPath}${exportTypeSuffix ? `.${exportTypeSuffix}` : ''}.${ext}`
+    `${exportPath}${exportTypeSuffix ? `.${exportTypeSuffix}` : ''}.${ext}`,
   )
 
   if (await fileExists(filename)) {
@@ -86,7 +94,9 @@ async function findSourceEntryFile(
 
   const subFolderIndexFilename = resolveSourceFile(
     cwd,
-    `${exportPath}/index${exportTypeSuffix ? `.${exportTypeSuffix}` : ''}.${ext}`
+    `${exportPath}/index${
+      exportTypeSuffix ? `.${exportTypeSuffix}` : ''
+    }.${ext}`,
   )
 
   if (await fileExists(subFolderIndexFilename)) {
@@ -95,14 +105,13 @@ async function findSourceEntryFile(
   return undefined
 }
 
-
 // Map '.' -> './index.[ext]'
 // Map './lite' -> './lite.[ext]'
 // Return undefined if no match or if it's package.json exports
 export async function getSourcePathFromExportPath(
   cwd: string,
   exportPath: string,
-  exportType: string
+  exportType: string,
 ): Promise<string | undefined> {
   for (const ext of availableExtensions) {
     // ignore package.json
@@ -111,7 +120,12 @@ export async function getSourcePathFromExportPath(
 
     // Find convention-based source file for specific export types
     if (availableExportConventions.includes(exportType)) {
-      const filename = await findSourceEntryFile(cwd, exportPath, exportType, ext)
+      const filename = await findSourceEntryFile(
+        cwd,
+        exportPath,
+        exportType,
+        ext,
+      )
       if (filename) return filename
     }
 

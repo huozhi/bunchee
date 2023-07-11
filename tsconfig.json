@@ -1,15 +1,11 @@
 {
-  "include": [
-    "./src",
-    "./*.ts",
-    "./*.d.ts"
-  ],
+  "include": ["./src", "./*.ts", "./*.d.ts"],
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "./dist",
     "target": "ES2019",
     "module": "CommonJS",
-    "lib": ["ES6"],
+    "lib": ["ES2019"],
     "moduleResolution": "node",
     "removeComments": true,
     "strict": true,

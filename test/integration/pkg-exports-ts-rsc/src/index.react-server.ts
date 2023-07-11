@@ -1,2 +1,1 @@
 export default 'react-server'
-

@@ -6,9 +6,7 @@
     "baseUrl": "..",
     "paths": {
       "bunchee": ["./src/index.ts"]
-    },
+    }
   },
-  "include": [
-    "./**/*.test.ts"
-  ]
+  "include": ["./**/*.test.ts"]
 }

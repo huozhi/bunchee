@@ -1,4 +1,5 @@
 # bunchee
+
 > zero config bundler for JavaScript/TypeScript/JSX library
 
 ![bunchee](https://repository-images.githubusercontent.com/154026156/5d132698-0ff5-4644-a4fd-d9570e6229bc)
@@ -30,6 +31,7 @@ cd ./my-lib && mkdir src
 touch ./src/index.js
 touch package.json
 ```
+
 Configure module exports
 
 [exports sugar in Node.js](https://nodejs.org/api/packages.html#exports-sugar)
@@ -63,8 +65,8 @@ Using pure ESM package?
 
 Then just run `npm run build`, or `pnpm build` / `yarn build` if you're using these package managers. The output format will based on the exports condition and also the file extension. Given an example:
 
-* It's CommonJS for `require` and ESM for `import` based on the exports condition.
-* It's CommonJS for `.js` and ESM for `.mjs` based on the extension regardless the exports condition. Then for export condition like "node" you could choose the format with your extension.
+- It's CommonJS for `require` and ESM for `import` based on the exports condition.
+- It's CommonJS for `.js` and ESM for `.mjs` based on the extension regardless the exports condition. Then for export condition like "node" you could choose the format with your extension.
 
 ## Configuration
 
@@ -108,14 +110,17 @@ bunchee --external=dependency1,dependency2,dependency3
 Replace `dependency1`, `dependency2`, and `dependency3` with the names of the dependencies you want to exclude from the bundle.
 
 #### Bundling everything without external dependencies
+
 To bundle your library without external dependencies, use the `--no-external` option:
 
 ```sh
 bunchee --no-external
 ```
+
 This will include all dependencies within your output bundle.
 
 ### Environment Variables
+
 To pass environment variables to your bundled code, use the --env option followed by a comma-separated list of environment variable names:
 
 ```bash
@@ -130,8 +135,8 @@ While `exports` field is becoming the standard of exporting in node.js, bunchee 
 
 What you need to do is just add an entry file with the name (`[name].[ext]`) that matches the exported name from exports field in package.json. For instance:
 
-* `<cwd>/src/index.ts` will match `"."` export name or the if there's only one main export.
-* `<cwd>/src/lite.ts` will match `"./lite"` export name.
+- `<cwd>/src/index.ts` will match `"."` export name or the if there's only one main export.
+- `<cwd>/src/lite.ts` will match `"./lite"` export name.
 
 The build script will be simplified to just `bunchee` in package.json without configure any input sources for each exports. Of course you can still specify other arguments as you need.
 
@@ -201,13 +206,12 @@ This will match the export name `"react-server"` and `"edge-light"` then use the
 By default bunchee includes Typescript v3.9.x inside as a dependency. If you want to use your own version, just install typescript as another dev dependency then bunchee will automatically pick it.
 
 ```sh
-yarn add -D bunchee typescript
+npm i -D bunchee typescript
 ```
 
 Create `tsconfig.json` to specify any compiler options for TypeScript.
 
 This library requires at least TypeScript 4.1.x.
-
 
 Adding `"types"` or `"typing"` field in your package.json, types will be generated with that path.
 
