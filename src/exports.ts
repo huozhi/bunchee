@@ -105,8 +105,8 @@ function getEntries(
   ].map((ext) => `.${ext}`)
 
   return entries.flatMap((entry) => {
-    if (entry.isDirectory()) {
-      if (entry.name === 'src' || outDirs.includes(entry.name)) {
+    if (entry.isDirectory() && !outDirs.includes(entry.name)) {
+      if (entry.name === 'src') {
         return getEntries(entryPath, true, outDirs)
       }
       return entry.name + '/index'
