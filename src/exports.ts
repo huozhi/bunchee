@@ -7,11 +7,8 @@ import type {
   PackageType,
   ParsedExportCondition,
 } from './types'
-import {
-  availableExtensions,
-  availableExportConventions,
-  filenameWithoutExtension,
-} from './utils'
+import { filenameWithoutExtension } from './utils'
+import { availableExtensions, availableExportConventions } from './constants'
 
 export function getTypings(pkg: PackageMetadata) {
   return pkg.types || pkg.typings

@@ -35,8 +35,8 @@ describe('lib exports', () => {
               },
             },
           },
-          cwd
-        )
+          cwd,
+        ),
       ).toEqual({
         '.': {
           import: './dist/index.mjs',
@@ -66,8 +66,8 @@ describe('lib exports', () => {
               },
             },
           },
-          path.join(__dirname, '../integration/wildcard-exports')
-        )
+          path.join(__dirname, '../integration/wildcard-exports'),
+        ),
       ).toEqual({
         '.': {
           types: './dist/index.d.ts',
@@ -105,7 +105,7 @@ describe('lib exports', () => {
           main: './dist/index.mjs',
           module: './dist/index.esm.js',
         }
-        const result = getExportPaths(pkg)
+        const result = getExportPaths(pkg, cwd)
         expect(result).toEqual({
           '.': {
             import: './dist/index.mjs',
@@ -127,8 +127,8 @@ describe('lib exports', () => {
               },
             },
           },
-          cwd
-        )
+          cwd,
+        ),
       ).toEqual({
         '.': {
           require: './dist/index.cjs',
@@ -147,8 +147,8 @@ describe('lib exports', () => {
               },
             },
           },
-          cwd
-        )
+          cwd,
+        ),
       ).toEqual({
         '.': {
           import: './dist/index.mjs',
@@ -170,8 +170,8 @@ describe('lib exports', () => {
               },
             },
           },
-          cwd
-        )
+          cwd,
+        ),
       ).toEqual({
         '.': {
           require: './dist/index.cjs',
@@ -194,8 +194,8 @@ describe('lib exports', () => {
               require: './dist/index.js',
             },
           },
-          cwd
-        )
+          cwd,
+        ),
       ).toEqual({
         '.': {
           types: './dist/index.d.ts',
@@ -272,7 +272,7 @@ describe('lib exports', () => {
       pkg: PackageMetadata,
       exportName: string = '.',
     ) {
-      const parsedExportCondition = getExportPaths(pkg)
+      const parsedExportCondition = getExportPaths(pkg, cwd)
       const parsedExport = {
         source: `./src/${exportName === '.' ? 'index' : exportName}.ts`,
         name: exportName,
