@@ -42,7 +42,7 @@ async function compareOrUpdateSnapshot(
 
   if (bundledAssetContent !== currentOutputSnapshot) {
     console.log(
-      `Snapshot ${unitName} is not matched, use TEST_UPDATE_SNAPSHOT=1 yarn test to update it`,
+      `Snapshot ${unitName} is not matched, use TEST_UPDATE_SNAPSHOT=1 pnpm test to update it`,
     )
 
     if (process.env.TEST_UPDATE_SNAPSHOT) {

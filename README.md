@@ -206,7 +206,7 @@ This will match the export name `"react-server"` and `"edge-light"` then use the
 By default bunchee includes Typescript v3.9.x inside as a dependency. If you want to use your own version, just install typescript as another dev dependency then bunchee will automatically pick it.
 
 ```sh
-yarn add -D bunchee typescript
+npm i -D bunchee typescript
 ```
 
 Create `tsconfig.json` to specify any compiler options for TypeScript.

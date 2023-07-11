@@ -22,21 +22,23 @@ jobs:
         with:
           fetch-depth: 0
 
+      - uses: pnpm/action-setup@v2.2.4
+
       - name: Use Node ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: yarn
+          cache: pnpm
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install Dependencies
-        run: yarn install --frozen-lockfile --prefer-offline
+        run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Lint
         run: |
-          yarn typecheck
-          yarn build
-          yarn test
+          pnpm typecheck
+          pnpm build
+          pnpm test
 
   release:
     runs-on: ubuntu-latest
@@ -48,15 +50,17 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - uses: pnpm/action-setup@v2.2.4
+
       - name: Use Node ${{ matrix.node-version }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-          cache: yarn
+          cache: pnpm
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install Dependencies
-        run: yarn install --frozen-lockfile --prefer-offline
+        run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Determine tag
         id: determine_tag
