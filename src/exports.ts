@@ -178,15 +178,26 @@ export function getExportPaths(pkg: PackageMetadata) {
     Object.assign(pathsMap, paths)
   }
 
+  const mainExportType = packageType === 'commonjs' ? 'require' : 'import'
+
   // main export '.' from main/module/typings
   const defaultMainExport = constructFullExportCondition(
     {
-      [packageType === 'commonjs' ? 'require' : 'import']: pkg.main,
+      [mainExportType]: pkg.main,
       module: pkg.module,
       types: getTypings(pkg),
     },
     packageType,
   )
+
+  if (mainExportType === 'require' && pathsMap['.']?.['require']) {
+    // pathsMap's exports.require are prioritized.
+    defaultMainExport['require'] = pathsMap['.']['require']
+
+    console.warn(
+      `(warning) "exports.${mainExportType}" has overwritten "main" since they are duplicated.`,
+    )
+  }
 
   // Merge the main export into '.' paths
   const mainExport = Object.assign({}, pathsMap['.'], defaultMainExport)
