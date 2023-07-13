@@ -195,7 +195,7 @@ export function getExportPaths(pkg: PackageMetadata) {
     defaultMainExport['require'] = pathsMap['.']['require']
 
     console.warn(
-      `(warning) "exports.${mainExportType}" has overwritten "main" since they are duplicated.`,
+      `(warning) "exports.require" has overwritten "main" since they are duplicated.`,
     )
   }
 
