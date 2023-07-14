@@ -190,7 +190,8 @@ export function getExportPaths(pkg: PackageMetadata) {
     packageType,
   )
 
-  if (mainExportType === 'require' && pathsMap['.']?.['require']) {
+  const isCjsPackage = packageType === 'commonjs'
+  if (isCjsPackage && pathsMap['.']?.['require']) {
     // pathsMap's exports.require are prioritized.
     defaultMainExport['require'] = pathsMap['.']['require']
 
