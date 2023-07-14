@@ -171,26 +171,25 @@ function parseExport(
 export function getExportPaths(pkg: PackageMetadata) {
   const pathsMap: Record<string, FullExportCondition> = {}
   const packageType = getPackageType(pkg)
-
+  const isCjsPackage = packageType === 'commonjs'
+  
   const { exports: exportsConditions } = pkg
+  
   if (exportsConditions) {
     const paths = parseExport(exportsConditions, packageType)
     Object.assign(pathsMap, paths)
   }
 
-  const mainExportType = packageType === 'commonjs' ? 'require' : 'import'
-
   // main export '.' from main/module/typings
   const defaultMainExport = constructFullExportCondition(
     {
-      [mainExportType]: pkg.main,
+      [isCjsPackage ? 'require' : 'import']: pkg.main,
       module: pkg.module,
       types: getTypings(pkg),
     },
     packageType,
   )
-
-  const isCjsPackage = packageType === 'commonjs'
+  
   if (isCjsPackage && pathsMap['.']?.['require']) {
     // pathsMap's exports.require are prioritized.
     defaultMainExport['require'] = pathsMap['.']['require']
