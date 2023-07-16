@@ -89,33 +89,37 @@ function getEntries(entryPath: string, excludes: string[]) {
     ...availableExportConventions,
   ].map((ext) => `.${ext}`)
 
-  const excludesArray = excludes.map((exclude) => exclude.replace('./', ''))
-
   const dirents = fs.readdirSync(entryPath, { withFileTypes: true })
 
   const entries: string[] = dirents.flatMap((dirent) => {
-    if (excludesArray.includes(dirent.name)) {
-      return ''
-    }
+    // Skip all excludes
+    if (excludes.includes(dirent.name)) return []
 
-    if (dirent.isDirectory() && dirent.name === 'src') {
-      return getEntries(`${entryPath}/src`, excludesArray)
-    }
-
-    if (allowedExtensions.includes(extname(dirent.name))) {
-      return filenameWithoutExtension(dirent.name)!
-    }
-
+    // Should include dirs as entires also
     if (dirent.isDirectory()) {
+      // If src dir exists, read inside src
+      if (dirent.name === 'src') {
+        return getEntries(`${entryPath}/src`, excludes)
+      }
+      // else add it as dir/index
       return `${dirent.name}/index`
     }
 
-    return ''
+    // Only include files with allowed extensions
+    if (dirent.isFile() && allowedExtensions.includes(extname(dirent.name))) {
+      // added ! at the end since it will never be undefined
+      return filenameWithoutExtension(dirent.name)!
+    }
+
+    return []
   })
 
+  // Remove all []
   return entries.filter(Boolean)
 }
 
+// Should exclude all outDirs since they are readable dirs on `getEntries`
+// Example: { 'import': './someOutDir/index.js' } => 'someOutDir'
 function getOutDirs(exportsConditions: ExportCondition) {
   return [
     ...new Set(
@@ -131,24 +135,30 @@ function getOutDirs(exportsConditions: ExportCondition) {
 }
 
 function resolveWildcardExports(exportsConditions: any, cwd: string) {
-  const exportConditionsKeys = Object.keys(exportsConditions)
+  const outDirs = getOutDirs(exportsConditions)
+  // './dir1/dir2' => ['dir1', 'dir2']
+  const exportConditionsKeyFilenames = [
+    ...new Set(Object.keys(exportsConditions).flatMap((key) => key.split('/'))),
+  ]
+
+  const excludes = [...outDirs, ...exportConditionsKeyFilenames]
+  const entries = getEntries(cwd, excludes)
+
   const wildcardEntry = Object.entries(exportsConditions).filter(([key]) =>
     key.includes('*'),
   )
-  const wildcardEntryKey = wildcardEntry.map(([key]) => key)[0]
-  const outDirs = getOutDirs(exportsConditions)
-  const excludes = [...outDirs, ...exportConditionsKeys]
-  const entries = getEntries(cwd, excludes)
-
-  const replaced = entries.map((entry) => {
-    return objectReplaceAll('*', entry!, Object.fromEntries(wildcardEntry))
+  const resolvedEntry = entries.map((entry) => {
+    return objectReplaceAll('*', entry, Object.fromEntries(wildcardEntry))
   })
 
+  // Remove './*' from exports
+  const wildcardEntryKey = wildcardEntry.map(([key]) => key)[0]
   delete exportsConditions[wildcardEntryKey]
 
-  const updatedExports = Object.assign({}, exportsConditions, ...replaced)
+  const resolvedExports = Object.assign({}, exportsConditions, ...resolvedEntry)
 
-  const result = Object.entries(updatedExports).map(([key, value]) => {
+  const result = Object.entries(resolvedExports).map(([key, value]) => {
+    // Remove '/index' on keys which got from `getEntries`
     if (key.includes('/index')) {
       return [key.replace('/index', ''), value]
     }
