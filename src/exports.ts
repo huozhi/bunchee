@@ -249,7 +249,8 @@ function parseExport(
 export function getExportPaths(pkg: PackageMetadata, cwd: string) {
   const pathsMap: Record<string, FullExportCondition> = {}
   const packageType = getPackageType(pkg)
-
+  const isCjsPackage = packageType === 'commonjs'
+  
   const { exports: exportsConditions } = pkg
 
   if (exportsConditions) {
@@ -266,12 +267,21 @@ export function getExportPaths(pkg: PackageMetadata, cwd: string) {
   // main export '.' from main/module/typings
   const defaultMainExport = constructFullExportCondition(
     {
-      [packageType === 'commonjs' ? 'require' : 'import']: pkg.main,
+      [isCjsPackage ? 'require' : 'import']: pkg.main,
       module: pkg.module,
       types: getTypings(pkg),
     },
     packageType,
   )
+  
+  if (isCjsPackage && pathsMap['.']?.['require']) {
+    // pathsMap's exports.require are prioritized.
+    defaultMainExport['require'] = pathsMap['.']['require']
+
+    console.warn(
+      `(warning) "exports.require" has overwritten "main" since they are duplicated.`,
+    )
+  }
 
   // Merge the main export into '.' paths
   const mainExport = Object.assign({}, pathsMap['.'], defaultMainExport)

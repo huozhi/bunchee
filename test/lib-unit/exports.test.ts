@@ -205,6 +205,29 @@ describe('lib exports', () => {
         },
       })
     })
+
+    it('should warn the duplicated export conditions', () => {
+      const logSpy = jest.spyOn(console, 'warn')
+
+      expect(
+        getExportPaths({
+          main: './dist/index.js',
+          exports: {
+            import: './dist/index.mjs',
+            require: './dist/index.cjs',
+          },
+        }),
+      ).toEqual({
+        '.': {
+          import: './dist/index.mjs',
+          require: './dist/index.cjs',
+        },
+      })
+
+      expect(logSpy).toHaveBeenCalledWith(
+        '(warning) "exports.require" has overwritten "main" since they are duplicated.',
+      )
+    })
   })
 
   describe('getExportConditionDist', () => {
