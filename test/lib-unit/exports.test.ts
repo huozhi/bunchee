@@ -210,13 +210,16 @@ describe('lib exports', () => {
       const logSpy = jest.spyOn(console, 'warn')
 
       expect(
-        getExportPaths({
-          main: './dist/index.js',
-          exports: {
-            import: './dist/index.mjs',
-            require: './dist/index.cjs',
+        getExportPaths(
+          {
+            main: './dist/index.js',
+            exports: {
+              import: './dist/index.mjs',
+              require: './dist/index.cjs',
+            },
           },
-        }),
+          cwd,
+        ),
       ).toEqual({
         '.': {
           import: './dist/index.mjs',
