@@ -1,5 +1,6 @@
 import fs from 'fs'
 import { join, resolve, dirname, extname } from 'path'
+import objectReplaceAll from 'objra'
 import type {
   PackageMetadata,
   ExportCondition,
@@ -82,162 +83,79 @@ function findExport(
   })
 }
 
-/**
- * Get the entries (files and directories) within a given path.
- *
- * @param {string} path - The base path to search for entries.
- * @param {boolean} hasSrc - Indicates whether the path has a 'src' directory.
- * @param {string[]} outDirs - The list of output directories to consider.
- * @returns {string[]} The array of entry names.
- */
-function getEntries(
-  path: string,
-  hasSrc: boolean,
-  outDirs: string[]
-): string[] {
-  const entryPath = hasSrc ? join(path, 'src') : path
-
-  const entries = fs.readdirSync(entryPath, { withFileTypes: true })
-
-  const availableExt = [
+function getEntries(entryPath: string, excludes: string[]) {
+  const allowedExtensions = [
     ...availableExtensions,
     ...availableExportConventions,
   ].map((ext) => `.${ext}`)
 
-  return entries.flatMap((entry) => {
-    if (entry.isDirectory() && !outDirs.includes(entry.name)) {
-      if (entry.name === 'src') {
-        return getEntries(entryPath, true, outDirs)
-      }
-      return entry.name + '/index'
+  const excludesArray = excludes.map((exclude) => exclude.replace('./', ''))
+
+  const dirents = fs.readdirSync(entryPath, { withFileTypes: true })
+
+  const entries: string[] = dirents.flatMap((dirent) => {
+    if (excludesArray.includes(dirent.name)) {
+      return ''
     }
 
-    if (
-      entry.isFile() &&
-      availableExt.includes(extname(entry.name)) &&
-      !entry.name.includes('index')
-    ) {
-      return filenameWithoutExtension(entry.name)!
+    if (dirent.isDirectory() && dirent.name === 'src') {
+      return getEntries(`${entryPath}/src`, excludesArray)
     }
-    return []
+
+    if (allowedExtensions.includes(extname(dirent.name))) {
+      return filenameWithoutExtension(dirent.name)!
+    }
+
+    if (dirent.isDirectory()) {
+      return `${dirent.name}/index`
+    }
+
+    return ''
   })
+
+  return entries.filter(Boolean)
 }
 
-/**
- * Replace wildcards in an ExportCondition object or string with the provided directory name.
- *
- * @param {ExportCondition | string} obj - The ExportCondition object or string to process.
- * @param {string} dirName - The directory name to replace wildcards with.
- * @returns {ExportCondition} The modified ExportCondition object or string.
- */
-function replaceWildcardsWithEntryName(
-  obj: ExportCondition,
-  dirName: string
-): ExportCondition {
-  if (typeof obj === 'string') {
-    return obj.replace('*', dirName)
-  } else if (typeof obj === 'object' && obj !== null) {
-    const newObj: { [key: string]: ExportCondition | string } = {}
-
-    for (let key in obj) {
-      newObj[key] = replaceWildcardsWithEntryName(obj[key], dirName)
-    }
-    return newObj
-  } else {
-    return obj
-  }
-}
-
-/**
- * Get the output directories from the given ExportCondition object.
- *
- * @param {ExportCondition} exportsConditions - The ExportCondition object to process.
- * @returns {string[]} The array of output directories.
- */
 function getOutDirs(exportsConditions: ExportCondition) {
   return [
     ...new Set(
       Object.values(exportsConditions).flatMap((value) =>
         (typeof value === 'string' ? [value] : Object.values(value)).flatMap(
-          (innerValue) => (typeof innerValue === 'string' ? [innerValue] : [])
-        )
-      )
+          (innerValue) => (typeof innerValue === 'string' ? [innerValue] : []),
+        ),
+      ),
     ),
   ]
     .map((value) => value.split('/')[1])
     .filter(Boolean)
 }
 
-/**
- * Resolve wildcard exports in the given ExportCondition object.
- *
- * @param {ExportCondition} exportsConditions - The ExportCondition object to process.
- * @param {string} cwd - The current working directory.
- * @returns {Object.<string, ExportCondition | string>} The resolved ExportCondition object with wildcard exports replaced to correct path.
- * @example
- * Input:
- * {
- *   ".": {
- *    "types": "./dist/index.d.ts",
- *    "import": "./dist/index.js"
- *  },
- *  "./*": {
- *    "types": "./dist/*.d.ts",
- *    "import": "./dist/*.js"
- *  }
- * }
- *
- * Output:
- * {
- *   ".": {
- *     "types": "./dist/index.d.ts",
- *     "import": "./dist/index.js"
- *   },
- *   "./button": {
- *     "types": "./dist/button.d.ts",
- *     "import": "./dist/button.js"
- *   },
- *   "./input": {
- *     "types": "./dist/input.d.ts",
- *     "import": "./dist/input.js"
- *   },
- *   // ...
- * }
- */
-function resolveWildcardExports(
-  exportsConditions: ExportCondition,
-  cwd: string
-): { [key: string]: ExportCondition | string } {
+function resolveWildcardExports(exportsConditions: any, cwd: string) {
+  const exportConditionsKeys = Object.keys(exportsConditions)
+  const wildcardEntry = Object.entries(exportsConditions).filter(([key]) =>
+    key.includes('*'),
+  )
+  const wildcardEntryKey = wildcardEntry.map(([key]) => key)[0]
   const outDirs = getOutDirs(exportsConditions)
+  const excludes = [...outDirs, ...exportConditionsKeys]
+  const entries = getEntries(cwd, excludes)
 
-  const entryNames = getEntries(cwd, false, outDirs)
+  const replaced = entries.map((entry) => {
+    return objectReplaceAll('*', entry!, Object.fromEntries(wildcardEntry))
+  })
 
-  const exportPaths = Object.keys(exportsConditions)
+  delete exportsConditions[wildcardEntryKey]
 
-  const newExportsConditions: { [key: string]: ExportCondition | string } = {}
+  const updatedExports = Object.assign({}, exportsConditions, ...replaced)
 
-  for (let [exportPath, exportValue] of Object.entries(exportsConditions)) {
-    if (exportPath.includes('*')) {
-      entryNames.forEach((entryName) => {
-        const newExportPath = exportPath
-          .replace('*', entryName)
-          .replace('/index', '')
-
-        if (exportPaths.some((path) => path.startsWith(newExportPath))) {
-          return
-        }
-        const newExportValue = replaceWildcardsWithEntryName(
-          exportValue,
-          entryName
-        )
-        newExportsConditions[newExportPath] = newExportValue
-      })
-    } else {
-      newExportsConditions[exportPath] = exportValue
+  const result = Object.entries(updatedExports).map(([key, value]) => {
+    if (key.includes('/index')) {
+      return [key.replace('/index', ''), value]
     }
-  }
+    return [key, value]
+  })
 
-  return newExportsConditions
+  return Object.fromEntries(result)
 }
 
 /**
@@ -333,20 +251,15 @@ export function getExportPaths(pkg: PackageMetadata, cwd: string) {
   const packageType = getPackageType(pkg)
 
   const { exports: exportsConditions } = pkg
+
   if (exportsConditions) {
-    let validatedExportsConditions = exportsConditions
+    let resolvedExportsConditions = exportsConditions
 
-    const hasWildCardExport = Object.keys(exportsConditions).some((key) =>
-      key.includes('*')
-    )
-
-    if (hasWildCardExport) {
-      validatedExportsConditions = resolveWildcardExports(
-        exportsConditions,
-        cwd
-      )
+    if (Object.keys(exportsConditions).some((key) => key.includes('*'))) {
+      resolvedExportsConditions = resolveWildcardExports(exportsConditions, cwd)
     }
-    const paths = parseExport(validatedExportsConditions, packageType)
+
+    const paths = parseExport(resolvedExportsConditions, packageType)
     Object.assign(pathsMap, paths)
   }
 

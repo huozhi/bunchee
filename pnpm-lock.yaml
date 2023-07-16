@@ -1,9 +1,5 @@
 lockfileVersion: '6.0'
 
-settings:
-  autoInstallPeers: false
-  excludeLinksFromLockfile: false
-
 dependencies:
   '@rollup/plugin-commonjs':
     specifier: ~24.0.1
@@ -29,6 +25,9 @@ dependencies:
   arg:
     specifier: ~5.0.2
     version: 5.0.2
+  objra:
+    specifier: ^0.0.0
+    version: 0.0.0
   pretty-bytes:
     specifier: ~5.6.0
     version: 5.6.0
@@ -2819,6 +2818,10 @@ packages:
     resolution: {integrity: sha512-geUvdk7c+eizMNUDkRpW1wJwgfOiOeHbxBR/hLXK1aT6zmVSO0jsQcs7fj6MGw89jC/cjGfLcNOrtMYtGqm81g==}
     dev: true
 
+  /objra@0.0.0:
+    resolution: {integrity: sha512-IzXbSJTkdzhGZPpQj3gfG2KXUkJyTsF9dViDi5dJOwU24MnJHksjeEx6ax9RPQ6jbIHDvaj451EIulqDr4dgLw==}
+    dev: false
+
   /once@1.4.0:
     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
     dependencies:
@@ -3440,3 +3443,7 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
     dev: true
+
+settings:
+  autoInstallPeers: false
+  excludeLinksFromLockfile: false
