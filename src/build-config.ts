@@ -189,7 +189,6 @@ function buildInputConfig(
           'PREFER_NAMED_EXPORTS',
           'UNRESOLVED_IMPORT',
           'THIS_IS_UNDEFINED',
-          'MODULE_LEVEL_DIRECTIVE', // ignore warnings for directives like `use client`
         ].includes(code)
       )
         return
