@@ -268,7 +268,7 @@ export function getExportPaths(pkg: PackageMetadata, cwd: string) {
   if (exportsConditions) {
     let resolvedExportsConditions = exportsConditions
 
-    if (Object.keys(exportsConditions).some((key) => key.includes('*'))) {
+    if (Object.keys(exportsConditions).some((key) => key.includes('./*'))) {
       resolvedExportsConditions = resolveWildcardExports(exportsConditions, cwd)
     }
 
