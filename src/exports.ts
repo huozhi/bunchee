@@ -1,6 +1,5 @@
 import fs from 'fs'
 import { join, resolve, dirname, extname } from 'path'
-import objectReplaceAll from 'objra'
 import type {
   PackageMetadata,
   ExportCondition,
@@ -8,7 +7,7 @@ import type {
   PackageType,
   ParsedExportCondition,
 } from './types'
-import { filenameWithoutExtension } from './utils'
+import { filenameWithoutExtension, objectReplaceAll } from './utils'
 import { availableExtensions, availableExportConventions } from './constants'
 
 export function getTypings(pkg: PackageMetadata) {
@@ -95,6 +94,9 @@ function getEntries(entryPath: string, excludes: string[]) {
     // Skip all excludes
     if (excludes.includes(dirent.name)) return []
 
+    // Skip all index files
+    if (dirent.name.includes('index')) return []
+
     // Should include dirs as entires also
     if (dirent.isDirectory()) {
       // If src dir exists, read inside src
@@ -107,8 +109,7 @@ function getEntries(entryPath: string, excludes: string[]) {
 
     // Only include files with allowed extensions
     if (dirent.isFile() && allowedExtensions.includes(extname(dirent.name))) {
-      // added ! at the end since it will never be undefined
-      return filenameWithoutExtension(dirent.name)!
+      return filenameWithoutExtension(dirent.name) ?? []
     }
 
     return []
@@ -134,7 +135,10 @@ function getOutDirs(exportsConditions: ExportCondition) {
     .filter(Boolean)
 }
 
-function resolveWildcardExports(exportsConditions: any, cwd: string) {
+function resolveWildcardExports(
+  exportsConditions: ExportCondition,
+  cwd: string,
+) {
   const outDirs = getOutDirs(exportsConditions)
   // './dir1/dir2' => ['dir1', 'dir2']
   const exportConditionsKeyFilenames = [
@@ -145,17 +149,15 @@ function resolveWildcardExports(exportsConditions: any, cwd: string) {
   const entries = getEntries(cwd, excludes)
 
   const wildcardEntry = Object.entries(exportsConditions).filter(([key]) =>
-    key.includes('*'),
+    key.includes('./*'),
   )
+
   const resolvedEntry = entries.map((entry) => {
     return objectReplaceAll('*', entry, Object.fromEntries(wildcardEntry))
   })
 
-  // Remove './*' from exports
-  const wildcardEntryKey = wildcardEntry.map(([key]) => key)[0]
-  delete exportsConditions[wildcardEntryKey]
-
   const resolvedExports = Object.assign({}, exportsConditions, ...resolvedEntry)
+  delete resolvedExports['./*']
 
   const result = Object.entries(resolvedExports).map(([key, value]) => {
     // Remove '/index' on keys which got from `getEntries`
