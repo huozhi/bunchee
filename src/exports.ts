@@ -7,7 +7,7 @@ import type {
   PackageType,
   ParsedExportCondition,
 } from './types'
-import { filenameWithoutExtension, objectReplaceAll } from './utils'
+import { filenameWithoutExtension } from './utils'
 import { availableExtensions, availableExportConventions } from './constants'
 
 export function getTypings(pkg: PackageMetadata) {
@@ -135,6 +135,17 @@ function getOutDirs(exportsConditions: ExportCondition) {
     .filter(Boolean)
 }
 
+function replaceWildcardToEntries(
+  wildcardEntry: [string, ExportCondition][],
+  entries: string[],
+) {
+  return entries.map((entry) =>
+    Object.fromEntries(
+      JSON.parse(JSON.stringify(wildcardEntry).replace(/\*/g, entry)),
+    ),
+  )
+}
+
 function resolveWildcardExports(
   exportsConditions: ExportCondition,
   cwd: string,
@@ -152,9 +163,7 @@ function resolveWildcardExports(
     key.includes('./*'),
   )
 
-  const resolvedEntry = entries.map((entry) => {
-    return objectReplaceAll('*', entry, Object.fromEntries(wildcardEntry))
-  })
+  const resolvedEntry = replaceWildcardToEntries(wildcardEntry, entries)
 
   const resolvedExports = Object.assign({}, exportsConditions, ...resolvedEntry)
   delete resolvedExports['./*']

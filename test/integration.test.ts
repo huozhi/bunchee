@@ -240,31 +240,11 @@ const testCases: {
     name: 'wildcard-exports',
     args: [],
     async expected(dir, { stdout }) {
-      const distFiles = [
-        './dist/index.js',
-        './dist/lite.js',
-        './dist/input.js',
-        './dist/index.js',
-        './dist/button.js',
-        './dist/lite.js',
-        './dist/layout/index.js',
-        './dist/server/react-server.mjs',
-        './dist/server/edge.mjs',
-        './dist/server/index.mjs',
-
-        // types
-        './dist/index.d.ts',
-        './dist/button.d.ts',
-        './dist/layout/index.d.ts',
-        './dist/server/index.d.ts',
-      ]
-
       const contentsRegex = {
         './dist/index.js': /'index'/,
         './dist/layout/index.js': /'layout'/,
         './dist/server/edge.mjs': /'server.edge-light'/,
         './dist/server/react-server.mjs': /'server.react-server'/,
-        
       }
 
       assertFilesContent(dir, contentsRegex)
