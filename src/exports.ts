@@ -82,43 +82,6 @@ function findExport(
   })
 }
 
-function getEntries(entryPath: string, excludes: string[]) {
-  const allowedExtensions = [
-    ...availableExtensions,
-    ...availableExportConventions,
-  ].map((ext) => `.${ext}`)
-
-  const dirents = fs.readdirSync(entryPath, { withFileTypes: true })
-
-  const entries: string[] = dirents.flatMap((dirent) => {
-    // Skip all excludes
-    if (excludes.includes(dirent.name)) return []
-
-    // Skip all index files
-    if (dirent.name.includes('index')) return []
-
-    // Should include dirs as entires also
-    if (dirent.isDirectory()) {
-      // If src dir exists, read inside src
-      if (dirent.name === 'src') {
-        return getEntries(`${entryPath}/src`, excludes)
-      }
-      // else add it as dir/index
-      return `${dirent.name}/index`
-    }
-
-    // Only include files with allowed extensions
-    if (dirent.isFile() && allowedExtensions.includes(extname(dirent.name))) {
-      return filenameWithoutExtension(dirent.name) ?? []
-    }
-
-    return []
-  })
-
-  // Remove all []
-  return entries.filter(Boolean)
-}
-
 // Should exclude all outDirs since they are readable dirs on `getEntries`
 // Example: { 'import': './someOutDir/index.js' } => 'someOutDir'
 function getOutDirs(exportsConditions: ExportCondition) {
@@ -135,19 +98,66 @@ function getOutDirs(exportsConditions: ExportCondition) {
     .filter(Boolean)
 }
 
-function replaceWildcardToEntries(
-  wildcardEntry: [string, ExportCondition][],
-  entries: string[],
-) {
-  return entries.map((entry) =>
-    Object.fromEntries(
-      JSON.parse(JSON.stringify(wildcardEntry).replace(/\*/g, entry)),
-    ),
-  )
+function resolveWildcardEntry(
+  wildcardEntry: {
+    [key: string]: ExportCondition
+  },
+  cwd: string,
+  excludes: string[],
+): {
+  [key: string]: ExportCondition
+}[] {
+  const allowedExtensions = [
+    ...availableExtensions,
+    ...availableExportConventions,
+  ].map((ext) => `.${ext}`)
+
+  const dirents = fs.readdirSync(cwd, { withFileTypes: true })
+
+  const resolvedExports = dirents.flatMap((dirent) => {
+    if (excludes.includes(dirent.name)) return
+
+    if (dirent.isDirectory()) {
+      if (dirent.name === 'src') {
+        return resolveWildcardEntry(wildcardEntry, `${cwd}/src`, excludes)
+      }
+
+      const dirName = dirent.name
+      const possibleIndexFile = fs.readdirSync(`${cwd}/${dirName}`)
+
+      if (possibleIndexFile[0].startsWith('index')) {
+        return {
+          [`./${dirName}`]: JSON.parse(
+            JSON.stringify(wildcardEntry).replace(/\*/g, `${dirName}/index`),
+          ),
+        }
+      }
+    }
+
+    if (dirent.isFile()) {
+      const fileName = filenameWithoutExtension(dirent.name)!
+      if (fileName === 'index') return
+      if (allowedExtensions.includes(extname(dirent.name))) {
+        return {
+          [`./${fileName}`]: JSON.parse(
+            JSON.stringify(wildcardEntry).replace(/\*/g, fileName),
+          ),
+        }
+      }
+    }
+
+    return
+  })
+
+  return resolvedExports.filter(Boolean) as {
+    [key: string]: ExportCondition
+  }[]
 }
 
 function resolveWildcardExports(
-  exportsConditions: ExportCondition,
+  exportsConditions: {
+    [key: string]: ExportCondition
+  },
   cwd: string,
 ) {
   const outDirs = getOutDirs(exportsConditions)
@@ -157,15 +167,22 @@ function resolveWildcardExports(
   ]
 
   const excludes = [...outDirs, ...exportConditionsKeyFilenames]
-  const entries = getEntries(cwd, excludes)
 
-  const wildcardEntry = Object.entries(exportsConditions).filter(([key]) =>
-    key.includes('./*'),
+  const wildcardEntry = exportsConditions['./*']
+
+  const resolvedWildcardEntry = resolveWildcardEntry(
+    wildcardEntry as {
+      [key: string]: ExportCondition
+    },
+    cwd,
+    excludes,
   )
 
-  const resolvedEntry = replaceWildcardToEntries(wildcardEntry, entries)
-
-  const resolvedExports = Object.assign({}, exportsConditions, ...resolvedEntry)
+  const resolvedExports = Object.assign(
+    {},
+    exportsConditions,
+    ...resolvedWildcardEntry,
+  )
   delete resolvedExports['./*']
 
   const result = Object.entries(resolvedExports).map(([key, value]) => {
@@ -271,13 +288,16 @@ export function getExportPaths(pkg: PackageMetadata, cwd: string) {
   const pathsMap: Record<string, FullExportCondition> = {}
   const packageType = getPackageType(pkg)
   const isCjsPackage = packageType === 'commonjs'
-  
+
   const { exports: exportsConditions } = pkg
 
   if (exportsConditions) {
     let resolvedExportsConditions = exportsConditions
 
-    if (Object.keys(exportsConditions).some((key) => key.includes('./*'))) {
+    if (
+      Object.keys(exportsConditions).some((key) => key === './*') &&
+      typeof exportsConditions !== 'string'
+    ) {
       resolvedExportsConditions = resolveWildcardExports(exportsConditions, cwd)
     }
 
@@ -294,7 +314,7 @@ export function getExportPaths(pkg: PackageMetadata, cwd: string) {
     },
     packageType,
   )
-  
+
   if (isCjsPackage && pathsMap['.']?.['require']) {
     // pathsMap's exports.require are prioritized.
     defaultMainExport['require'] = pathsMap['.']['require']
