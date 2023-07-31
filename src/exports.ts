@@ -82,16 +82,18 @@ function findExport(
   })
 }
 
-// Should exclude all outDirs since they are readable dirs on `getEntries`
-// Example: { 'import': './someOutDir/index.js' } => 'someOutDir'
+// Should exclude all outDirs since they are readable on `fs.readdirSync`
+// Example: 
+// { 'import': './someOutDir/index.js' } => ['someOutDir']
+// { 'import': './importDir/index.js', 'require': './requireDir/index.js' } => ['importDir', 'requireDir']
 function getOutDirs(exportsConditions: ExportCondition) {
   return [
     ...new Set(
-      Object.values(exportsConditions).flatMap((value) =>
-        (typeof value === 'string' ? [value] : Object.values(value)).flatMap(
-          (innerValue) => (typeof innerValue === 'string' ? [innerValue] : []),
+      Object.values(exportsConditions)
+        .flatMap((value) => Object.values(value))
+        .flatMap((innerValue) =>
+          typeof innerValue === 'string' ? [innerValue] : [],
         ),
-      ),
     ),
   ]
     .map((value) => value.split('/')[1])
