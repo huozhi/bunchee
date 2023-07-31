@@ -107,25 +107,29 @@ function resolveWildcardEntry(
 ): {
   [key: string]: ExportCondition
 }[] {
+  const dirents = fs.readdirSync(cwd, { withFileTypes: true })
+
   const allowedExtensions = [
     ...availableExtensions,
     ...availableExportConventions,
   ].map((ext) => `.${ext}`)
 
-  const dirents = fs.readdirSync(cwd, { withFileTypes: true })
-
   const resolvedExports = dirents.flatMap((dirent) => {
+    // Skip outDirs and existing ExportConditions keys
     if (excludes.includes(dirent.name)) return
 
     if (dirent.isDirectory()) {
+      // Read inside src directory
       if (dirent.name === 'src') {
         return resolveWildcardEntry(wildcardEntry, `${cwd}/src`, excludes)
       }
 
       const dirName = dirent.name
-      const possibleIndexFile = fs.readdirSync(`${cwd}/${dirName}`)
+      const hasIndexFile = fs
+        .readdirSync(`${cwd}/${dirName}`)
+        .some((file) => file.startsWith('index'))
 
-      if (possibleIndexFile[0].startsWith('index')) {
+      if (hasIndexFile) {
         return {
           [`./${dirName}`]: JSON.parse(
             JSON.stringify(wildcardEntry).replace(/\*/g, `${dirName}/index`),
@@ -136,6 +140,7 @@ function resolveWildcardEntry(
 
     if (dirent.isFile()) {
       const fileName = filenameWithoutExtension(dirent.name)!
+      // ['.'] is for index file, so skip index
       if (fileName === 'index') return
       if (allowedExtensions.includes(extname(dirent.name))) {
         return {
@@ -149,9 +154,7 @@ function resolveWildcardEntry(
     return
   })
 
-  return resolvedExports.filter(Boolean) as {
-    [key: string]: ExportCondition
-  }[]
+  return resolvedExports.filter(Boolean)
 }
 
 function resolveWildcardExports(
@@ -161,39 +164,21 @@ function resolveWildcardExports(
   cwd: string,
 ) {
   const outDirs = getOutDirs(exportsConditions)
-  // './dir1/dir2' => ['dir1', 'dir2']
-  const exportConditionsKeyFilenames = [
+  const existingKeys = [
     ...new Set(Object.keys(exportsConditions).flatMap((key) => key.split('/'))),
   ]
+  const excludes = [...outDirs, ...existingKeys]
 
-  const excludes = [...outDirs, ...exportConditionsKeyFilenames]
+  const wildcardEntry = exportsConditions['./*'] as {
+    [key: string]: ExportCondition
+  }
 
-  const wildcardEntry = exportsConditions['./*']
+  const resolvedEntry = resolveWildcardEntry(wildcardEntry, cwd, excludes)
 
-  const resolvedWildcardEntry = resolveWildcardEntry(
-    wildcardEntry as {
-      [key: string]: ExportCondition
-    },
-    cwd,
-    excludes,
-  )
-
-  const resolvedExports = Object.assign(
-    {},
-    exportsConditions,
-    ...resolvedWildcardEntry,
-  )
+  const resolvedExports = Object.assign({}, exportsConditions, ...resolvedEntry)
   delete resolvedExports['./*']
 
-  const result = Object.entries(resolvedExports).map(([key, value]) => {
-    // Remove '/index' on keys which got from `getEntries`
-    if (key.includes('/index')) {
-      return [key.replace('/index', ''), value]
-    }
-    return [key, value]
-  })
-
-  return Object.fromEntries(result)
+  return resolvedExports
 }
 
 /**
