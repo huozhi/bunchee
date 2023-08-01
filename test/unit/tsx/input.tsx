@@ -5,3 +5,4 @@ function Tsx() {
 }
 
 export default Tsx
+export { type FooString } from './foo'
