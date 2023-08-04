@@ -59,7 +59,7 @@ async function bundle(
 
   const pkg = await getPackageMeta(cwd)
   const packageType = getPackageType(pkg)
-  const exportPaths = getExportPaths(pkg)
+  const exportPaths = getExportPaths(pkg, cwd)
 
   const exportKeys = Object.keys(exportPaths).filter(
     (key) => key !== './package.json',

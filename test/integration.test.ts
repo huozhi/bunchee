@@ -236,6 +236,42 @@ const testCases: {
       )
     },
   },
+  {
+    name: 'wildcard-exports',
+    args: [],
+    async expected(dir, { stdout }) {
+      const contentsRegex = {
+        './dist/index.js': /'index'/,
+        './dist/layout/index.js': /'layout'/,
+        './dist/server/edge.mjs': /'server.edge-light'/,
+        './dist/server/react-server.mjs': /'server.react-server'/,
+      }
+
+      assertFilesContent(dir, contentsRegex)
+
+      const log = `\
+      ✓  Typed dist/lite.d.ts               - 70 B
+      ✓  Typed dist/input.d.ts              - 65 B
+      ✓  Typed dist/index.d.ts              - 65 B
+      ✓  Typed dist/server/index.d.ts       - 87 B
+      ✓  Typed dist/layout/index.d.ts       - 66 B
+      ✓  Typed dist/button.d.ts             - 66 B
+      ✓  Built dist/input.js                - 50 B
+      ✓  Built dist/index.js                - 50 B
+      ✓  Built dist/button.js               - 53 B
+      ✓  Built dist/lite.js                 - 72 B
+      ✓  Built dist/layout/index.js         - 51 B
+      ✓  Built dist/server/react-server.mjs - 53 B
+      ✓  Built dist/server/edge.mjs         - 51 B
+      ✓  Built dist/server/index.mjs        - 71 B
+      `
+
+      const rawStdout = stripANSIColor(stdout)
+      log.split('\n').forEach((line: string) => {
+        expect(rawStdout).toContain(line.trim())
+      })
+    },
+  },
 ]
 
 async function runBundle(

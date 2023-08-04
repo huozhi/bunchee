@@ -1,3 +1,5 @@
+import fs from 'fs'
+import { join, resolve, dirname, extname } from 'path'
 import type {
   PackageMetadata,
   ExportCondition,
@@ -5,8 +7,8 @@ import type {
   PackageType,
   ParsedExportCondition,
 } from './types'
-import { join, resolve, dirname, extname } from 'path'
 import { filenameWithoutExtension } from './utils'
+import { availableExtensions, availableExportConventions } from './constants'
 
 export function getTypings(pkg: PackageMetadata) {
   return pkg.types || pkg.typings
@@ -78,6 +80,107 @@ function findExport(
     const nestedValue = value[subpath]
     findExport(nextName, nestedValue, paths, packageType)
   })
+}
+
+// Should exclude all outDirs since they are readable on `fs.readdirSync`
+// Example: 
+// { 'import': './someOutDir/index.js' } => ['someOutDir']
+// { 'import': './importDir/index.js', 'require': './requireDir/index.js' } => ['importDir', 'requireDir']
+function getOutDirs(exportsConditions: ExportCondition) {
+  return [
+    ...new Set(
+      Object.values(exportsConditions)
+        .flatMap((value) => Object.values(value))
+        .flatMap((innerValue) =>
+          typeof innerValue === 'string' ? [innerValue] : [],
+        ),
+    ),
+  ]
+    .map((value) => value.split('/')[1])
+    .filter(Boolean)
+}
+
+function resolveWildcardEntry(
+  wildcardEntry: {
+    [key: string]: ExportCondition
+  },
+  cwd: string,
+  excludes: string[],
+): {
+  [key: string]: ExportCondition
+}[] {
+  const dirents = fs.readdirSync(cwd, { withFileTypes: true })
+
+  const allowedExtensions = [
+    ...availableExtensions,
+    ...availableExportConventions,
+  ].map((ext) => `.${ext}`)
+
+  const resolvedExports = dirents.flatMap((dirent) => {
+    // Skip outDirs and existing ExportConditions keys
+    if (excludes.includes(dirent.name)) return
+
+    if (dirent.isDirectory()) {
+      // Read inside src directory
+      if (dirent.name === 'src') {
+        return resolveWildcardEntry(wildcardEntry, `${cwd}/src`, excludes)
+      }
+
+      const dirName = dirent.name
+      const hasIndexFile = fs
+        .readdirSync(`${cwd}/${dirName}`)
+        .some((file) => file.startsWith('index'))
+
+      if (hasIndexFile) {
+        return {
+          [`./${dirName}`]: JSON.parse(
+            JSON.stringify(wildcardEntry).replace(/\*/g, `${dirName}/index`),
+          ),
+        }
+      }
+    }
+
+    if (dirent.isFile()) {
+      const fileName = filenameWithoutExtension(dirent.name)!
+      // ['.'] is for index file, so skip index
+      if (fileName === 'index') return
+      if (allowedExtensions.includes(extname(dirent.name))) {
+        return {
+          [`./${fileName}`]: JSON.parse(
+            JSON.stringify(wildcardEntry).replace(/\*/g, fileName),
+          ),
+        }
+      }
+    }
+
+    return
+  })
+
+  return resolvedExports.filter(Boolean)
+}
+
+function resolveWildcardExports(
+  exportsConditions: {
+    [key: string]: ExportCondition
+  },
+  cwd: string,
+) {
+  const outDirs = getOutDirs(exportsConditions)
+  const existingKeys = [
+    ...new Set(Object.keys(exportsConditions).flatMap((key) => key.split('/'))),
+  ]
+  const excludes = [...outDirs, ...existingKeys]
+
+  const wildcardEntry = exportsConditions['./*'] as {
+    [key: string]: ExportCondition
+  }
+
+  const resolvedEntry = resolveWildcardEntry(wildcardEntry, cwd, excludes)
+
+  const resolvedExports = Object.assign({}, exportsConditions, ...resolvedEntry)
+  delete resolvedExports['./*']
+
+  return resolvedExports
 }
 
 /**
@@ -168,7 +271,7 @@ function parseExport(
  * pkg.main and pkg.module will be added to ['.'] if exists
  */
 
-export function getExportPaths(pkg: PackageMetadata) {
+export function getExportPaths(pkg: PackageMetadata, cwd: string) {
   const pathsMap: Record<string, FullExportCondition> = {}
   const packageType = getPackageType(pkg)
   const isCjsPackage = packageType === 'commonjs'
@@ -176,7 +279,16 @@ export function getExportPaths(pkg: PackageMetadata) {
   const { exports: exportsConditions } = pkg
 
   if (exportsConditions) {
-    const paths = parseExport(exportsConditions, packageType)
+    let resolvedExportsConditions = exportsConditions
+
+    if (
+      Object.keys(exportsConditions).some((key) => key === './*') &&
+      typeof exportsConditions !== 'string'
+    ) {
+      resolvedExportsConditions = resolveWildcardExports(exportsConditions, cwd)
+    }
+
+    const paths = parseExport(resolvedExportsConditions, packageType)
     Object.assign(pathsMap, paths)
   }
 
