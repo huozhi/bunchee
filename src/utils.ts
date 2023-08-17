@@ -1,6 +1,7 @@
 import fs from 'fs/promises'
+import type { Dirent } from 'fs'
 import path from 'path'
-import type { PackageMetadata } from './types'
+import type { ExportCondition, PackageMetadata } from './types'
 import { availableExportConventions, availableExtensions } from './constants'
 
 export function exit(err: string | Error) {
@@ -143,3 +144,99 @@ export function filenameWithoutExtension(file: string | undefined) {
 }
 
 export const nonNullable = <T>(n?: T): n is T => Boolean(n)
+
+const isExportableExtension = (filename: string): boolean => {
+  const ext = path.extname(filename).slice(1)
+  return [...availableExtensions, ...availableExportConventions].includes(ext)
+}
+
+const hasSrc = (dirents: Dirent[]) => {
+  return dirents.some((dirent) => dirent.name === SRC && dirent.isDirectory())
+}
+
+export async function getExportables(cwd: string): Promise<string[]> {
+  let currentDirPath = cwd
+  let dirents = await fs.readdir(cwd, { withFileTypes: true })
+  if (hasSrc(dirents)) {
+    currentDirPath = path.join(cwd, SRC)
+    dirents = await fs.readdir(path.join(cwd, SRC), { withFileTypes: true })
+  }
+
+  const exportables: (string | undefined)[] = await Promise.all(
+    dirents.map(async (dirent) => {
+      if (dirent.isDirectory()) {
+        let innerDirents = await fs.readdir(
+          path.join(currentDirPath, dirent.name),
+          {
+            withFileTypes: true,
+          },
+        )
+        if (hasSrc(innerDirents)) {
+          currentDirPath = path.join(currentDirPath, dirent.name, SRC)
+          innerDirents = await fs.readdir(currentDirPath, {
+            withFileTypes: true,
+          })
+        }
+        const hasExportableFile = innerDirents.some(
+          ({ name }) => name.startsWith('index') && isExportableExtension(name),
+        )
+        return hasExportableFile ? dirent.name : undefined
+      }
+
+      if (
+        dirent.isFile() &&
+        !dirent.name.startsWith('index') &&
+        isExportableExtension(dirent.name)
+      ) {
+        return dirent.name
+      }
+      return undefined
+    }),
+  )
+  return exportables.filter(nonNullable)
+}
+
+export function getExportConditionByKey(
+  key: string,
+  exports: any,
+): { [key: string]: ExportCondition } | undefined {
+  if (!key.includes('./*') || !exports[key]) return undefined
+  return { [key]: exports[key] }
+}
+
+export async function validateExports(
+  exports: ExportCondition,
+  cwd: string,
+): Promise<ExportCondition> {
+  const wildcardEntry = getExportConditionByKey('./*', exports)
+  console.log(!!wildcardEntry, wildcardEntry, exports, 'eejjeejj2')
+  if (!wildcardEntry) return exports
+
+  const exportables = await getExportables(cwd)
+  const wildcardExports = exportables.map((exportable) => {
+    const filename = exportable.includes('.')
+      ? filenameWithoutExtension(exportable)
+      : undefined
+
+    if (!filename) {
+      return {
+        [`./${exportable}`]: JSON.parse(
+          JSON.stringify(wildcardEntry['./*']).replace(
+            /\*/g,
+            `${exportable}/index`,
+          ),
+        ),
+      }
+    }
+    return JSON.parse(JSON.stringify(wildcardEntry).replace(/\*/g, filename))
+  })
+
+  const resolvedExports = Object.assign(
+    {},
+    exports,
+    ...wildcardExports,
+    exports,
+  )
+  delete resolvedExports['./*']
+  return resolvedExports
+}

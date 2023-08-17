@@ -17,6 +17,7 @@ import {
   fileExists,
   getSourcePathFromExportPath,
   getExportPath,
+  validateExports,
 } from './utils'
 import {
   constructDefaultExportCondition,
@@ -58,9 +59,10 @@ async function bundle(
   assignDefault(options, 'target', 'es2015')
 
   const pkg = await getPackageMeta(cwd)
+  pkg.exports &&= await validateExports(pkg.exports, cwd)
   const packageType = getPackageType(pkg)
-  const exportPaths = getExportPaths(pkg, cwd)
 
+  const exportPaths = getExportPaths(pkg)
   const exportKeys = Object.keys(exportPaths).filter(
     (key) => key !== './package.json',
   )
