@@ -17,7 +17,6 @@ import {
   fileExists,
   getSourcePathFromExportPath,
   getExportPath,
-  validateExports,
 } from './utils'
 import {
   constructDefaultExportCondition,
@@ -28,6 +27,7 @@ import {
 import type { BuildMetadata } from './types'
 import { TypescriptOptions, resolveTsConfig } from './typescript'
 import { logSizeStats } from './logging'
+import { validateExports } from './experimental/wildcard'
 
 function assignDefault(
   options: BundleConfig,

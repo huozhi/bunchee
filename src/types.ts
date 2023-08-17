@@ -49,7 +49,7 @@ type PackageMetadata = {
   dependencies?: Record<string, string>
   peerDependencies?: Record<string, string>
   peerDependenciesMeta?: Record<string, Record<string, string>>
-  exports?: ExportCondition
+  exports?: string | Record<string, ExportCondition>
   types?: string
   typings?: string
 }

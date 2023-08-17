@@ -15,3 +15,5 @@ export const availableExportConventions = [
 ]
 export const availableESExtensionsRegex = /\.(m|c)?[jt]sx?$/
 export const dtsExtensionRegex = /\.d\.(m|c)?ts$/
+
+export const SRC = 'src'
