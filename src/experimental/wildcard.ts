@@ -10,10 +10,10 @@ import {
 } from '../utils'
 
 const getWildcardEntry = (
-  key: string,
+  key: string | undefined,
   exports: Record<string, ExportCondition>,
 ): Record<string, ExportCondition> | undefined => {
-  if (!key.includes('./*') || !exports[key]) return undefined
+  if (!key || !key.includes('./*') || !exports[key]) return undefined
   return { [key]: exports[key] }
 }
 
@@ -77,8 +77,16 @@ export async function validateExports(
   exports: ExportCondition | Record<string, ExportCondition>,
   cwd: string,
 ): Promise<ExportCondition> {
-  if (typeof exports === 'string') return exports
-  const wildcardEntry = getWildcardEntry('./*', exports)
+  const wildcardKey = Object.keys(exports).find((key) => key.includes('./*'))
+  if (typeof exports === 'string' || !wildcardKey) return exports
+
+  console.warn(
+    `The wildcard export "./*" is experimental and may change or be removed at any time.\n` +
+      'To open an issue, please visit https://github.com/huozhi/bunchee/issues' +
+      '.\n',
+  )
+
+  const wildcardEntry = getWildcardEntry(wildcardKey, exports)
   if (!wildcardEntry) return exports
 
   const exportables = await getExportables(cwd)
