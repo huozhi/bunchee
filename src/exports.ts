@@ -168,15 +168,22 @@ function parseExport(
  * pkg.main and pkg.module will be added to ['.'] if exists
  */
 
-export function getExportPaths(pkg: PackageMetadata) {
+export function getExportPaths(
+  pkg: PackageMetadata,
+  pkgType?: PackageType,
+  resolvedWildcardExports?: ExportCondition,
+) {
   const pathsMap: Record<string, FullExportCondition> = {}
-  const packageType = getPackageType(pkg)
+  const packageType = pkgType ?? getPackageType(pkg)
   const isCjsPackage = packageType === 'commonjs'
 
   const { exports: exportsConditions } = pkg
 
   if (exportsConditions) {
-    const paths = parseExport(exportsConditions, packageType)
+    const paths = parseExport(
+      resolvedWildcardExports ? resolvedWildcardExports : exportsConditions,
+      packageType,
+    )
     Object.assign(pathsMap, paths)
   }
 

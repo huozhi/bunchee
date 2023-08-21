@@ -27,7 +27,7 @@ import {
 import type { BuildMetadata } from './types'
 import { TypescriptOptions, resolveTsConfig } from './typescript'
 import { logSizeStats } from './logging'
-import { validateExports } from './experimental/wildcard'
+import { resolveWildcardExports } from './experimental/wildcard'
 
 function assignDefault(
   options: BundleConfig,
@@ -59,10 +59,14 @@ async function bundle(
   assignDefault(options, 'target', 'es2015')
 
   const pkg = await getPackageMeta(cwd)
-  pkg.exports &&= await validateExports(pkg.exports, cwd)
+  const resolvedWildcardExports = await resolveWildcardExports(pkg.exports, cwd)
   const packageType = getPackageType(pkg)
 
-  const exportPaths = getExportPaths(pkg)
+  const exportPaths = getExportPaths(
+    pkg,
+    packageType,
+    resolvedWildcardExports ? resolvedWildcardExports : undefined,
+  )
   const exportKeys = Object.keys(exportPaths).filter(
     (key) => key !== './package.json',
   )

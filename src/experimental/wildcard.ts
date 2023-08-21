@@ -9,12 +9,11 @@ import {
   nonNullable,
 } from '../utils'
 
-const getWildcardEntry = (
-  key: string | undefined,
+// TODO: support nested wildcard exports (e.g. './foo/*')
+const getWildcardExports = (
   exports: Record<string, ExportCondition>,
-): Record<string, ExportCondition> | undefined => {
-  if (!key || !key.includes('./*') || !exports[key]) return undefined
-  return { [key]: exports[key] }
+): Record<string, ExportCondition> => {
+  return { './*': exports['./*'] }
 }
 
 const isExportable = async (
@@ -48,56 +47,58 @@ async function getExportables(cwd: string): Promise<string[]> {
 }
 
 function mapWildcard(
-  wildcardEntry: string | Record<string, ExportCondition>,
+  wildcardExports: Record<string, ExportCondition>,
   exportables: string[],
-): (string | ExportCondition)[] {
+): ExportCondition[] {
   return exportables.map((exportable) => {
     const filename = exportable.includes('.')
       ? filenameWithoutExtension(exportable)
       : undefined
 
     if (!filename) {
-      if (typeof wildcardEntry === 'string') {
-        return wildcardEntry.replace(/\*/g, exportable)
-      }
       return {
         [`./${exportable}`]: JSON.parse(
-          JSON.stringify(wildcardEntry['./*']).replace(
+          JSON.stringify(wildcardExports['./*']).replace(
             /\*/g,
             `${exportable}/index`,
           ),
         ),
       }
     }
-    return JSON.parse(JSON.stringify(wildcardEntry).replace(/\*/g, filename))
+    return JSON.parse(JSON.stringify(wildcardExports).replace(/\*/g, filename))
   })
 }
 
-export async function validateExports(
-  exports: ExportCondition | Record<string, ExportCondition>,
+export async function resolveWildcardExports(
+  exports: string | Record<string, ExportCondition> | undefined,
   cwd: string,
-): Promise<ExportCondition> {
-  const wildcardKey = Object.keys(exports).find((key) => key.includes('./*'))
-  if (typeof exports === 'string' || !wildcardKey) return exports
+): Promise<ExportCondition | undefined> {
+  if (!exports || typeof exports === 'string') return undefined
+  const hasWildcard = !!exports['./*']
 
-  console.warn(
-    `The wildcard export "./*" is experimental and may change or be removed at any time.\n` +
-      'To open an issue, please visit https://github.com/huozhi/bunchee/issues' +
-      '.\n',
-  )
-
-  const wildcardEntry = getWildcardEntry(wildcardKey, exports)
-  if (!wildcardEntry) return exports
+  if (hasWildcard) {
+    console.warn(
+      `The wildcard export "./*" is experimental and may change or be removed at any time.\n` +
+        'To open an issue, please visit https://github.com/huozhi/bunchee/issues' +
+        '.\n',
+    )
+  } else {
+    return undefined
+  }
 
   const exportables = await getExportables(cwd)
-  const resolvedWildcardExports = mapWildcard(wildcardEntry, exportables)
+  if (exportables.length > 0) {
+    const wildcardExports = getWildcardExports(exports)
+    const resolvedWildcardExports = mapWildcard(wildcardExports, exportables)
 
-  const resolvedExports = Object.assign(
-    {},
-    exports,
-    ...resolvedWildcardExports,
-    exports,
-  )
-  delete resolvedExports['./*']
-  return resolvedExports
+    const resolvedExports = Object.assign(
+      {},
+      exports,
+      ...resolvedWildcardExports,
+      exports,
+    )
+    delete resolvedExports['./*']
+    return resolvedExports
+  }
+  return undefined
 }
