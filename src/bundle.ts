@@ -62,11 +62,7 @@ async function bundle(
   const resolvedWildcardExports = await resolveWildcardExports(pkg.exports, cwd)
   const packageType = getPackageType(pkg)
 
-  const exportPaths = getExportPaths(
-    pkg,
-    packageType,
-    resolvedWildcardExports ? resolvedWildcardExports : undefined,
-  )
+  const exportPaths = getExportPaths(pkg, packageType, resolvedWildcardExports)
   const exportKeys = Object.keys(exportPaths).filter(
     (key) => key !== './package.json',
   )

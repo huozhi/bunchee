@@ -177,13 +177,10 @@ export function getExportPaths(
   const packageType = pkgType ?? getPackageType(pkg)
   const isCjsPackage = packageType === 'commonjs'
 
-  const { exports: exportsConditions } = pkg
+  const exportsConditions = resolvedWildcardExports ?? pkg.exports
 
   if (exportsConditions) {
-    const paths = parseExport(
-      resolvedWildcardExports ? resolvedWildcardExports : exportsConditions,
-      packageType,
-    )
+    const paths = parseExport(exportsConditions, packageType)
     Object.assign(pathsMap, paths)
   }
 
