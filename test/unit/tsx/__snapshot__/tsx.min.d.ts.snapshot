@@ -1,0 +1,5 @@
+type FooString = string;
+
+declare function Tsx(): any;
+
+export { FooString, Tsx as default };
