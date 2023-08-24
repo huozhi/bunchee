@@ -1,0 +1,6 @@
+declare const a: {
+    x: number;
+};
+declare const b = "hello";
+
+export { b, a as default };

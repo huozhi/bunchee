@@ -1,0 +1,7 @@
+declare function asyncFunc(): Promise<void>;
+declare const spread: {
+    x: number;
+    y: number;
+};
+
+export { asyncFunc, spread };

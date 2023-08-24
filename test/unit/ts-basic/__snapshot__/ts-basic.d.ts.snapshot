@@ -1,0 +1,8 @@
+declare const sum: number;
+declare const clone: {
+    a: number;
+    b: number;
+};
+declare function asyncFunc(): Promise<void>;
+
+export { asyncFunc, clone, sum as default };

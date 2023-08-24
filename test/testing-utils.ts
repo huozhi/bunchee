@@ -43,3 +43,7 @@ export async function assertFilesContent(
     }
   }
 }
+
+// bundle.min.js => .min.js
+export const fullExtension = (filename: string) =>
+  filename.slice(filename.indexOf('.'))
