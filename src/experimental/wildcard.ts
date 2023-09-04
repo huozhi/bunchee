@@ -101,6 +101,7 @@ export async function resolveWildcardExports(
       const wildcardExports = getWildcardExports(exportsCondition)
       const resolvedWildcardExports = mapWildcard(wildcardExports, exportables)
       const resolvedExports = Object.assign(
+        {},
         exportsCondition,
         ...resolvedWildcardExports,
       )
