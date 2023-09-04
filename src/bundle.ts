@@ -27,7 +27,7 @@ import {
 import type { BuildMetadata } from './types'
 import { TypescriptOptions, resolveTsConfig } from './typescript'
 import { logSizeStats } from './logging'
-import { resolveWildcardExports } from './experimental/wildcard'
+import { resolveWildcardExports } from './lib/wildcard'
 
 function assignDefault(
   options: BundleConfig,
