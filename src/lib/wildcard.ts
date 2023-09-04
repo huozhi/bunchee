@@ -91,9 +91,10 @@ export async function resolveWildcardExports(
     )
 
     // './foo' -> ['foo']; './foo/bar' -> ['bar']
-    const excludeKeys = Object.keys(exportsCondition)
-      .filter((key) => !['.', './*'].includes(key))
-      .flatMap((key) => key.split('/').pop() ?? '')
+    // will contain '*' also but it's not a problem
+    const excludeKeys = Object.keys(exportsCondition).map(
+      (key) => key.split('/').pop() as string,
+    )
     const exportables = await getExportables(cwd, excludeKeys)
 
     if (exportables.length > 0) {
