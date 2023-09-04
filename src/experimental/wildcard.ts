@@ -9,11 +9,11 @@ import {
   nonNullable,
 } from '../utils'
 
-// TODO: support nested wildcard exports (e.g. './foo/*')
+// TODO: support nested wildcard exportsCondition (e.g. './foo/*')
 const getWildcardExports = (
-  exports: Record<string, ExportCondition>,
+  exportsCondition: Record<string, ExportCondition>,
 ): Record<string, ExportCondition> => {
-  return { './*': exports['./*'] }
+  return { './*': exportsCondition['./*'] }
 }
 
 const isExportable = async (
@@ -35,12 +35,18 @@ const isExportable = async (
   )
 }
 
-async function getExportables(cwd: string): Promise<string[]> {
+async function getExportables(
+  cwd: string,
+  excludeKeys: string[],
+): Promise<string[]> {
   const pathname = path.resolve(cwd, SRC)
   const dirents = await fs.readdir(pathname, { withFileTypes: true })
   const exportables: (string | undefined)[] = await Promise.all(
     dirents.map(async (dirent) =>
-      (await isExportable(dirent, pathname)) ? dirent.name : undefined,
+      (await isExportable(dirent, pathname)) &&
+      !excludeKeys.includes(dirent.name)
+        ? dirent.name
+        : undefined,
     ),
   )
   return exportables.filter(nonNullable)
@@ -70,11 +76,13 @@ function mapWildcard(
 }
 
 export async function resolveWildcardExports(
-  exportsCondition: string | Record<string, ExportCondition> | undefined,
+  exportsCondition: ExportCondition,
   cwd: string,
 ): Promise<ExportCondition | undefined> {
-  if (!exports || typeof exports === 'string') return undefined
-  const hasWildcard = !!exports['./*']
+  if (!exportsCondition || typeof exportsCondition === 'string')
+    return undefined
+
+  const hasWildcard = !!exportsCondition['./*']
 
   if (hasWildcard) {
     console.warn(
@@ -82,23 +90,25 @@ export async function resolveWildcardExports(
         'To open an issue, please visit https://github.com/huozhi/bunchee/issues' +
         '.\n',
     )
-  } else {
-    return undefined
+
+    // './foo' -> ['foo']; './foo/bar' -> ['bar']
+    const excludeKeys = Object.keys(exportsCondition)
+      .filter((key) => !['.', './*'].includes(key))
+      .flatMap((key) => key.split('/').pop() ?? '')
+    const exportables = await getExportables(cwd, excludeKeys)
+
+    if (exportables.length > 0) {
+      const wildcardExports = getWildcardExports(exportsCondition)
+      const resolvedWildcardExports = mapWildcard(wildcardExports, exportables)
+      const resolvedExports = Object.assign(
+        exportsCondition,
+        ...resolvedWildcardExports,
+      )
+
+      delete resolvedExports['./*']
+      return resolvedExports
+    }
   }
 
-  const exportables = await getExportables(cwd)
-  if (exportables.length > 0) {
-    const wildcardExports = getWildcardExports(exports)
-    const resolvedWildcardExports = mapWildcard(wildcardExports, exportables)
-
-    const resolvedExports = Object.assign(
-      {},
-      exports,
-      ...resolvedWildcardExports,
-      exports,
-    )
-    delete resolvedExports['./*']
-    return resolvedExports
-  }
   return undefined
 }
