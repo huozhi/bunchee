@@ -70,7 +70,7 @@ function mapWildcard(
 }
 
 export async function resolveWildcardExports(
-  exports: string | Record<string, ExportCondition> | undefined,
+  exportsCondition: string | Record<string, ExportCondition> | undefined,
   cwd: string,
 ): Promise<ExportCondition | undefined> {
   if (!exports || typeof exports === 'string') return undefined
