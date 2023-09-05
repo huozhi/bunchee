@@ -260,7 +260,7 @@ export function constructDefaultExportCondition(
     const types = getTypings(value as PackageMetadata)
     exportCondition = {
       [packageType === 'commonjs' ? 'require' : 'import']: value,
-      ...(types && {types}),
+      ...(types && { types }),
     }
   } else {
     exportCondition = value
