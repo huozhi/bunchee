@@ -27,23 +27,24 @@ function isExportLike(field: any): field is string | FullExportCondition {
 }
 
 function constructFullExportCondition(
-  value: string | Record<string, string | undefined>,
+  exportCondition: string | Record<string, string | undefined>,
   packageType: PackageType,
 ): FullExportCondition {
   const isCommonjs = packageType === 'commonjs'
   let result: FullExportCondition
-  if (typeof value === 'string') {
+  if (typeof exportCondition === 'string') {
     result = {
-      [isCommonjs ? 'require' : 'import']: value,
+      [isCommonjs ? 'require' : 'import']: exportCondition,
     }
   } else {
     // TODO: valid export condition, warn if it's not valid
-    const keys: string[] = Object.keys(value)
+    const keys: string[] = Object.keys(exportCondition)
     result = {}
     keys.forEach((key) => {
+      const condition = exportCondition[key]
       // Filter out nullable value
-      if (key in value && value[key]) {
-        result[key] = value[key] as string
+      if (key in exportCondition && condition) {
+        result[key] = condition
       }
     })
   }
@@ -62,21 +63,21 @@ function joinRelativePath(...segments: string[]) {
 
 function findExport(
   name: string,
-  value: ExportCondition,
+  exportCondition: ExportCondition,
   paths: Record<string, FullExportCondition>,
   packageType: 'commonjs' | 'module',
 ): void {
   // TODO: handle export condition based on package.type
-  if (isExportLike(value)) {
-    paths[name] = constructFullExportCondition(value, packageType)
+  if (isExportLike(exportCondition)) {
+    paths[name] = constructFullExportCondition(exportCondition, packageType)
     return
   }
 
-  Object.keys(value).forEach((subpath) => {
+  Object.keys(exportCondition).forEach((subpath) => {
     const nextName = joinRelativePath(name, subpath)
 
-    const nestedValue = value[subpath]
-    findExport(nextName, nestedValue, paths, packageType)
+    const nestedExportCondition = exportCondition[subpath]
+    findExport(nextName, nestedExportCondition, paths, packageType)
   })
 }
 
@@ -119,8 +120,8 @@ function parseExport(
       paths['.'] = constructFullExportCondition(exportsCondition, packageType)
     } else {
       Object.keys(exportsCondition).forEach((key: string) => {
-        const value = exportsCondition[key]
-        findExport(key, value, paths, packageType)
+        const exportCondition = exportsCondition[key]
+        findExport(key, exportCondition, paths, packageType)
       })
     }
   }
@@ -251,17 +252,20 @@ export function getPackageType(pkg: PackageMetadata): PackageType {
 }
 
 export function constructDefaultExportCondition(
-  value: string | Record<string, string | undefined>,
+  value: string | FullExportCondition,
   packageType: PackageType,
 ) {
-  const objValue =
-    typeof value === 'string'
-      ? {
-          [packageType === 'commonjs' ? 'require' : 'import']: value,
-          types: getTypings(value as PackageMetadata),
-        }
-      : value
-  return constructFullExportCondition(objValue, packageType)
+  let exportCondition
+  if (typeof value === 'string') {
+    const types = getTypings(value as PackageMetadata)
+    exportCondition = {
+      [packageType === 'commonjs' ? 'require' : 'import']: value,
+      ...(types && {types}),
+    }
+  } else {
+    exportCondition = value
+  }
+  return constructFullExportCondition(exportCondition, packageType)
 }
 
 export function isEsmExportName(name: string, ext: string) {
