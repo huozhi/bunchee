@@ -57,16 +57,16 @@ function mapWildcard(
   exportables: string[],
 ): ExportCondition[] {
   return exportables.map((exportable) => {
-    const filename =
-      exportable.includes('.') && filenameWithoutExtension(exportable)
+    const isFile = exportable.includes('.')
+    const filename = isFile ? filenameWithoutExtension(exportable)! : exportable
 
     return {
-      [`./${filename ? filename : exportable}`]: Object.fromEntries(
+      [`./${filename}`]: Object.fromEntries(
         Object.entries(wildcardExports['./*']).map(([key, value]) => [
           key,
           (value as string).replace(
             /\*/g,
-            filename ? filename : exportable + '/index',
+            isFile ? filename : `${filename}/index`,
           ),
         ]),
       ),
