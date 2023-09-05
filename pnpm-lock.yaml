@@ -41,8 +41,8 @@ dependencies:
     specifier: ^0.10.1
     version: 0.10.1(@swc/core@1.3.82)(rollup@3.28.1)
   rollup-swc-preserve-directives:
-    specifier: ^0.4.0
-    version: 0.4.0(rollup@3.28.1)
+    specifier: ^0.5.0
+    version: 0.5.0(@swc/core@1.3.82)(rollup@3.28.1)
   tslib:
     specifier: ^2.5.0
     version: 2.5.0
@@ -3088,12 +3088,14 @@ packages:
       rollup: 3.28.1
     dev: false
 
-  /rollup-swc-preserve-directives@0.4.0(rollup@3.28.1):
-    resolution: {integrity: sha512-AqRz++4ISa1zB+C39+56gRiP5dZgVv6mE8xEZRQYWFLSeWiWwTMOU9q15pKtjQQF5QlpqZh2lSp6eyHYMzdVpA==}
+  /rollup-swc-preserve-directives@0.5.0(@swc/core@1.3.82)(rollup@3.28.1):
+    resolution: {integrity: sha512-6lnPZn2laSsdYcdCSE28z4Dwg2mCN5loF+/wBjybh25GJmONjHTf3orWa5j1zjEWY3RcGRjJ8K/52ePqtfy6dw==}
     peerDependencies:
+      '@swc/core': '>=1.3.79'
       rollup: ^2.0.0 || ^3.0.0
     dependencies:
       '@napi-rs/magic-string': 0.3.4
+      '@swc/core': 1.3.82(@swc/helpers@0.5.0)
       rollup: 3.28.1
     dev: false
 
