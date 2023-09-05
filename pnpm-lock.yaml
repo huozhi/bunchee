@@ -2,19 +2,19 @@ lockfileVersion: '6.0'
 
 dependencies:
   '@rollup/plugin-commonjs':
-    specifier: ~25.0.4
+    specifier: ^25.0.4
     version: 25.0.4(rollup@3.28.1)
   '@rollup/plugin-json':
-    specifier: ~6.0.0
+    specifier: ^6.0.0
     version: 6.0.0(rollup@3.28.1)
   '@rollup/plugin-node-resolve':
-    specifier: ~15.2.1
+    specifier: ^15.2.1
     version: 15.2.1(rollup@3.28.1)
   '@rollup/plugin-replace':
-    specifier: ~5.0.2
+    specifier: ^5.0.2
     version: 5.0.2(rollup@3.28.1)
   '@rollup/plugin-wasm':
-    specifier: ~6.1.3
+    specifier: ^6.1.3
     version: 6.1.3(rollup@3.28.1)
   '@swc/core':
     specifier: ^1.3.82
@@ -23,28 +23,28 @@ dependencies:
     specifier: ^0.5.0
     version: 0.5.0
   arg:
-    specifier: ~5.0.2
+    specifier: ^5.0.2
     version: 5.0.2
   pretty-bytes:
-    specifier: ~5.6.0
+    specifier: ^5.6.0
     version: 5.6.0
   publint:
-    specifier: ~0.1.11
+    specifier: ^0.1.11
     version: 0.1.11
   rollup:
-    specifier: ~3.28.1
+    specifier: ^3.28.1
     version: 3.28.1
   rollup-plugin-dts:
-    specifier: ~6.0.1
+    specifier: ^6.0.1
     version: 6.0.1(rollup@3.28.1)(typescript@4.9.5)
   rollup-plugin-swc3:
-    specifier: ~0.10.1
+    specifier: ^0.10.1
     version: 0.10.1(@swc/core@1.3.82)(rollup@3.28.1)
   rollup-swc-preserve-directives:
-    specifier: ~0.4.0
+    specifier: ^0.4.0
     version: 0.4.0(rollup@3.28.1)
   tslib:
-    specifier: ~2.5.0
+    specifier: ^2.5.0
     version: 2.5.0
 
 devDependencies:
@@ -106,8 +106,6 @@ packages:
     dependencies:
       '@babel/highlight': 7.22.13
       chalk: 2.4.2
-    dev: false
-    optional: true
 
   /@babel/compat-data@7.18.13:
     resolution: {integrity: sha512-5yUzC5LqyTFp2HLmDoxGQelcdYgSpP9xsnMWBphAscOdFrHSAVbLNzWiy32sVNDqJRDiJK6klfDnAgu6PAGSHw==}
@@ -119,7 +117,7 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       '@ampproject/remapping': 2.2.0
-      '@babel/code-frame': 7.18.6
+      '@babel/code-frame': 7.22.13
       '@babel/generator': 7.18.13
       '@babel/helper-compilation-targets': 7.18.9(@babel/core@7.18.13)
       '@babel/helper-module-transforms': 7.18.9
@@ -234,8 +232,6 @@ packages:
   /@babel/helper-validator-identifier@7.22.15:
     resolution: {integrity: sha512-4E/F9IIEi8WR94324mbDUMo074YTheJmd7eZF5vITTeYchqAi6sYXRLHUVsmkdmY4QjfKTcB2jB7dVP3NaBElQ==}
     engines: {node: '>=6.9.0'}
-    dev: false
-    optional: true
 
   /@babel/helper-validator-option@7.18.6:
     resolution: {integrity: sha512-XO7gESt5ouv/LRJdrVjkShckw6STTaB7l9BrpBaAHDeF5YZT+01PCwmR0SJHnkW6i8OwW/EVWRShfi4j2x+KQw==}
@@ -269,8 +265,6 @@ packages:
       '@babel/helper-validator-identifier': 7.22.15
       chalk: 2.4.2
       js-tokens: 4.0.0
-    dev: false
-    optional: true
 
   /@babel/parser@7.18.13:
     resolution: {integrity: sha512-dgXcIfMuQ0kgzLB2b9tRZs7TTFFaGM2AbtA4fJgUUYukzGH4jwsS7hzQHEGs67jdehpm22vkgKwvbU+aEflgwg==}
@@ -413,7 +407,7 @@ packages:
     resolution: {integrity: sha512-TI+rCtooWHr3QJ27kJxfjutghu44DLnasDMwpDqCXVTal9RLp3RSYNh4NdBrRP2cQAoG9A8juOQl6P6oZG4JxA==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      '@babel/code-frame': 7.18.6
+      '@babel/code-frame': 7.22.13
       '@babel/parser': 7.18.13
       '@babel/types': 7.18.13
     dev: true
@@ -422,7 +416,7 @@ packages:
     resolution: {integrity: sha512-N6kt9X1jRMLPxxxPYWi7tgvJRH/rtoU+dbKAPDM44RFHiMH8igdsaSBgFeskhSl/kLWLDUvIh1RXCrTmg0/zvA==}
     engines: {node: '>=6.9.0'}
     dependencies:
-      '@babel/code-frame': 7.18.6
+      '@babel/code-frame': 7.22.13
       '@babel/generator': 7.18.13
       '@babel/helper-environment-visitor': 7.18.9
       '@babel/helper-function-name': 7.18.9
@@ -929,7 +923,7 @@ packages:
     engines: {node: '>=6.0.0'}
     dependencies:
       '@jridgewell/set-array': 1.1.2
-      '@jridgewell/sourcemap-codec': 1.4.14
+      '@jridgewell/sourcemap-codec': 1.4.15
     dev: true
 
   /@jridgewell/gen-mapping@0.3.2:
@@ -937,7 +931,7 @@ packages:
     engines: {node: '>=6.0.0'}
     dependencies:
       '@jridgewell/set-array': 1.1.2
-      '@jridgewell/sourcemap-codec': 1.4.14
+      '@jridgewell/sourcemap-codec': 1.4.15
       '@jridgewell/trace-mapping': 0.3.15
     dev: true
 
@@ -951,18 +945,14 @@ packages:
     engines: {node: '>=6.0.0'}
     dev: true
 
-  /@jridgewell/sourcemap-codec@1.4.14:
-    resolution: {integrity: sha512-XPSJHWmi394fuUuzDnGz1wiKqWfo1yXecHQMRf2l6hztTO+nPru658AyDngaBe7isIxEkRsPR3FZh+s7iVa4Uw==}
-
   /@jridgewell/sourcemap-codec@1.4.15:
     resolution: {integrity: sha512-eF2rxCRulEKXHTRiDrDy6erMYWqNw4LPdQ8UQA4huuxaQsVeRPFl2oM8oDGxMFhJUWZf9McpLtJasDDZb/Bpeg==}
-    dev: false
 
   /@jridgewell/trace-mapping@0.3.15:
     resolution: {integrity: sha512-oWZNOULl+UbhsgB51uuZzglikfIKSUBO/M9W2OfEjn7cmqoAiCgmv9lyACTUacZwBz0ITnJ2NqjU8Tx0DHL88g==}
     dependencies:
       '@jridgewell/resolve-uri': 3.1.0
-      '@jridgewell/sourcemap-codec': 1.4.14
+      '@jridgewell/sourcemap-codec': 1.4.15
     dev: true
 
   /@napi-rs/magic-string-android-arm-eabi@0.3.4:
@@ -2729,7 +2719,7 @@ packages:
     resolution: {integrity: sha512-8UnnX2PeRAPZuN12svgR9j7M1uWMovg/CEnIwIG0LFkXSJJe4PdfUGiTGl8V9bsBHFUtfVINcSyYxd7q+kx9fA==}
     engines: {node: '>=12'}
     dependencies:
-      '@jridgewell/sourcemap-codec': 1.4.14
+      '@jridgewell/sourcemap-codec': 1.4.15
     dev: false
 
   /magic-string@0.30.3:
@@ -2910,7 +2900,7 @@ packages:
     resolution: {integrity: sha512-ayCKvm/phCGxOkYRSCM82iDwct8/EonSEgCSxWxD7ve6jHggsFl4fZVQBPRNgQoKiuV/odhFrGzQXZwbifC8Rg==}
     engines: {node: '>=8'}
     dependencies:
-      '@babel/code-frame': 7.18.6
+      '@babel/code-frame': 7.22.13
       error-ex: 1.3.2
       json-parse-even-better-errors: 2.3.1
       lines-and-columns: 1.2.4
