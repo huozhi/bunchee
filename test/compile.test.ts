@@ -1,7 +1,7 @@
 import fs, { promises as fsp } from 'fs'
-import { resolve, dirname } from 'path'
+import { resolve, dirname, extname } from 'path'
 import { bundle } from 'bunchee'
-import { existsFile } from './testing-utils'
+import { existsFile, fullExtension } from './testing-utils'
 
 jest.setTimeout(10 * 60 * 1000)
 
@@ -28,7 +28,7 @@ async function compareOrUpdateSnapshot(
   const outputFilePath = resolve(
     dirPath,
     '__snapshot__',
-    `${unitName}${filename.endsWith('.min.js') ? '.min' : ''}.js.snapshot`,
+    `${unitName}${fullExtension(filename)}.snapshot`,
   )
 
   await ensureDir(dirname(outputFilePath))
@@ -65,6 +65,9 @@ for (const unitName of unitTestDirs) {
 
     const distFile = resolve(dir, 'dist/bundle.js')
     const minifiedDistFile = distFile.replace('.js', '.min.js')
+    const distTypesFile = resolve(dir, 'dist/bundle.d.ts')
+    const minifiedDistTypesFile = distTypesFile.replace('.d.ts', '.min.d.ts')
+
     const pkgJson = (await existsFile(resolve(dir, 'package.json')))
       ? JSON.parse(
           await fsp.readFile(resolve(dir, `package.json`), {
@@ -95,5 +98,14 @@ for (const unitName of unitTestDirs) {
 
     await compareOrUpdateSnapshot(distFile, unitName, compareSnapshot)
     await compareOrUpdateSnapshot(minifiedDistFile, unitName, compareSnapshot)
+
+    if (['.ts', '.tsx'].includes(extname(inputFileName))) {
+      await compareOrUpdateSnapshot(distTypesFile, unitName, compareSnapshot)
+      await compareOrUpdateSnapshot(
+        minifiedDistTypesFile,
+        unitName,
+        compareSnapshot,
+      )
+    }
   })
 }

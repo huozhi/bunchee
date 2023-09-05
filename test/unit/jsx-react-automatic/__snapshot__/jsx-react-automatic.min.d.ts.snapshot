@@ -1,0 +1,3 @@
+declare function Jsx(): any;
+
+export { Jsx as default };
