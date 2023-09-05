@@ -222,10 +222,8 @@ You can use wildcard `"./*"` to match all [exportable entries](https://github.co
 
 #### Exportable Entries
 
-- Files with available extensions: `js`, `cjs`, `mjs`, `jsx`, `ts`, `tsx`, `cts`, `mts`.
-- Directories with `index.<available-ext>` file.
-
-> Note: The index file will be ignored, use `"."` instead.
+- Files under the `src` directory, except the index file.
+- Directories with the index file.
 
 ### TypeScript
 
