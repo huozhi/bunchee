@@ -201,6 +201,31 @@ This will match the export name `"react-server"` and `"edge-light"` then use the
 
 `bunchee` has support for checking the package bundles are matched with package exports configuration.
 
+### Wildcard (Experimental)
+
+You can use wildcard `"./*"` to match all [exportable entries](https://github.com/huozhi/bunchee?tab=readme-ov-file#exportable-entries).
+
+```json
+{
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./*": {
+      "import": "./dist/*.mjs",
+      "require": "./dist/*.cjs",
+    }
+  }
+}
+```
+
+#### Exportable Entries
+  
+- Files with available extensions: `js`, `cjs`, `mjs`, `jsx`, `ts`, `tsx`, `cts`, `mts`.
+- Directories with `index.<available-ext>` file.
+
+> Note: The index file will be ignored, use `"."` instead.
 ### TypeScript
 
 By default bunchee includes Typescript v3.9.x inside as a dependency. If you want to use your own version, just install typescript as another dev dependency then bunchee will automatically pick it.
