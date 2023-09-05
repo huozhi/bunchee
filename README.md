@@ -214,18 +214,19 @@ You can use wildcard `"./*"` to match all [exportable entries](https://github.co
     },
     "./*": {
       "import": "./dist/*.mjs",
-      "require": "./dist/*.cjs",
+      "require": "./dist/*.cjs"
     }
   }
 }
 ```
 
 #### Exportable Entries
-  
+
 - Files with available extensions: `js`, `cjs`, `mjs`, `jsx`, `ts`, `tsx`, `cts`, `mts`.
 - Directories with `index.<available-ext>` file.
 
 > Note: The index file will be ignored, use `"."` instead.
+
 ### TypeScript
 
 By default bunchee includes Typescript v3.9.x inside as a dependency. If you want to use your own version, just install typescript as another dev dependency then bunchee will automatically pick it.
