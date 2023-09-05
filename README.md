@@ -201,7 +201,7 @@ This will match the export name `"react-server"` and `"edge-light"` then use the
 
 `bunchee` has support for checking the package bundles are matched with package exports configuration.
 
-### Wildcard (Experimental)
+### Wildcard Exports (Experimental)
 
 You can use wildcard `"./*"` to match all [exportable entries](https://github.com/huozhi/bunchee?tab=readme-ov-file#exportable-entries).
 
