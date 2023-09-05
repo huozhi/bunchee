@@ -83,7 +83,7 @@ function findExport(
 }
 
 // Should exclude all outDirs since they are readable on `fs.readdirSync`
-// Example: 
+// Example:
 // { 'import': './someOutDir/index.js' } => ['someOutDir']
 // { 'import': './importDir/index.js', 'require': './requireDir/index.js' } => ['importDir', 'requireDir']
 function getOutDirs(exportsConditions: ExportCondition) {
