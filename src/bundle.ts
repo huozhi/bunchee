@@ -106,7 +106,7 @@ async function bundle(
       exportPaths['.'] = constructDefaultExportCondition(
         {
           main: mainEntryPath,
-          ...(typesEntryPath && { types: typesEntryPath }),
+          types: typesEntryPath,
         },
         packageType,
       )

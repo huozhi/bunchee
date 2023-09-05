@@ -252,7 +252,7 @@ export function getPackageType(pkg: PackageMetadata): PackageType {
 }
 
 export function constructDefaultExportCondition(
-  value: string | FullExportCondition,
+  value: string | Record<string, string | undefined>,
   packageType: PackageType,
 ) {
   let exportCondition
