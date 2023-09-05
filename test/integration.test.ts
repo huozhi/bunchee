@@ -239,7 +239,7 @@ const testCases: {
   {
     name: 'wildcard-exports',
     args: [],
-    async expected(dir, { stdout }) {
+    async expected(dir, { stdout, stderr }) {
       const contentsRegex = {
         './dist/index.js': /'index'/,
         './dist/layout/index.js': /'layout'/,
@@ -270,6 +270,7 @@ const testCases: {
       log.split('\n').forEach((line: string) => {
         expect(rawStdout).toContain(line.trim())
       })
+      expect(stderr).toContain('is experimental')
     },
   },
 ]

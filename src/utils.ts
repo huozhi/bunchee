@@ -1,7 +1,11 @@
 import fs from 'fs/promises'
 import path from 'path'
-import type { PackageMetadata } from './types'
-import { availableExportConventions, availableExtensions } from './constants'
+import { PackageMetadata } from './types'
+import {
+  availableExportConventions,
+  availableExtensions,
+  SRC,
+} from './constants'
 
 export function exit(err: string | Error) {
   logger.error(err)
@@ -72,7 +76,6 @@ export function getExportPath(
 
 export const isNotNull = <T>(n: T | false): n is T => Boolean(n)
 
-const SRC = 'src' // resolve from src/ directory
 export function resolveSourceFile(cwd: string, filename: string) {
   return path.resolve(cwd, SRC, filename)
 }
@@ -143,3 +146,9 @@ export function filenameWithoutExtension(file: string | undefined) {
 }
 
 export const nonNullable = <T>(n?: T): n is T => Boolean(n)
+
+export const fileExtension = (file: string | undefined) =>
+  file ? path.extname(file).slice(1) : undefined
+
+export const hasAvailableExtension = (filename: string): boolean =>
+  availableExtensions.includes(path.extname(filename).slice(1))
