@@ -203,14 +203,16 @@ This will match the export name `"react-server"` and `"edge-light"` then use the
 
 ### Wildcard Exports (Experimental)
 
-You can use wildcard `"./*"` to match all [exportable entries](https://github.com/huozhi/bunchee?tab=readme-ov-file#exportable-entries).
+Bunchee implements the Node.js feature of using the asterisk `*` as a wildcard to match the exportable entry files.
+
+For example:
 
 ```json
 {
   "exports": {
     ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     },
     "./*": {
       "import": "./dist/*.mjs",
@@ -220,10 +222,40 @@ You can use wildcard `"./*"` to match all [exportable entries](https://github.co
 }
 ```
 
-#### Exportable Entries
+The asterisk `*`  will be replaced with your entry files. Such as:
 
-- Files under the `src` directory, except the index file.
-- Directories with the index file.
+```
+- my-lib/
+  |- src/
+    |- foo/
+      |- index.ts
+    |- bar.ts
+    |- index.ts
+  |- package.json
+```
+
+This will match the export names `"foo"` and `"bar"` and will be treated as the new entries.
+
+```json
+{
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./foo": {
+      "import": "./dist/foo/index.mjs",
+      "require": "./dist/foo/index.cjs"
+    },
+    "./bar": {
+      "import": "./dist/bar.mjs",
+      "require": "./dist/bar.cjs"
+    }
+  }
+}
+```
+
+> Note:  Wildcard Exports currently supports the exports key `"./*"` only.
 
 ### TypeScript
 
