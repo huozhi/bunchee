@@ -234,7 +234,7 @@ The asterisk `*`  will be replaced with your entry files. Such as:
   |- package.json
 ```
 
-This will match the export names `"foo"` and `"bar"` and will be treated as the new entries.
+This will match the export names `"foo"` and `"bar"` and will be treated as the new entries as they matched the `./*` wildcard in `my-lib` folder.
 
 ```json
 {
@@ -255,7 +255,7 @@ This will match the export names `"foo"` and `"bar"` and will be treated as the 
 }
 ```
 
-> Note:  Wildcard Exports currently supports the exports key `"./*"` only.
+> Note:  Wildcard Exports currently only supports the exports key `"./*"`, which will match all the available entries .
 
 ### TypeScript
 
