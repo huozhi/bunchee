@@ -222,7 +222,7 @@ For example:
 }
 ```
 
-The asterisk `*`  will be replaced with your entry files. Such as:
+The asterisk `*`  will be replaced with your entry files, such as:
 
 ```
 - my-lib/
