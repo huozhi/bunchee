@@ -255,7 +255,7 @@ This will match the export names `"foo"` and `"bar"` and will be treated as the 
 }
 ```
 
-> Note:  Wildcard Exports currently only supports the exports key `"./*"`, which will match all the available entries .
+> Note:  Wildcard Exports currently only supports the exports key `"./*"`, which will match all the available entries.
 
 ### TypeScript
 
