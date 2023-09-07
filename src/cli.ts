@@ -147,9 +147,8 @@ async function run(args: CliArgs) {
 
   let timeStart = Date.now()
   let timeEnd
-  let result
   try {
-    result = await bundle(entry, bundleConfig)
+    await bundle(entry, bundleConfig)
     timeEnd = Date.now()
   } catch (err: any) {
     if (err.name === 'NOT_EXISTED') {
@@ -170,14 +169,6 @@ async function run(args: CliArgs) {
   logger.log(`✨  Finished in ${formatDuration(duration)}`)
 
   await lintPackage(cwd)
-
-  if (result.length === 0) {
-    console.warn(
-      'Warning: The "src" directory does not contain any entry files. ' +
-        'For proper usage, please refer to the following link: ' +
-        'https://github.com/huozhi/bunchee?tab=readme-ov-file#usage',
-    )
-  }
 }
 
 async function main() {
