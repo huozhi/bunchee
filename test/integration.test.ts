@@ -273,6 +273,17 @@ const testCases: {
       expect(stderr).toContain('is experimental')
     },
   },
+  {
+    name: 'no-entry',
+    args: [],
+    async expected(_dir, { stderr }) {
+      const log =
+        'Warning: The "src" directory does not contain any entry files. ' +
+        'For proper usage, please refer to the following link: ' +
+        'https://github.com/huozhi/bunchee?tab=readme-ov-file#usage'
+      expect(stderr).toContain(log)
+    },
+  },
 ]
 
 async function runBundle(
