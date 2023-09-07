@@ -1,4 +1,4 @@
 {
   "name": "no-entry",
-  "main": "index.js"
+  "main": "./dist/index.js"
 }
