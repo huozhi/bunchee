@@ -227,6 +227,21 @@ const testCases: {
       return [[content.includes('my-test-value'), true]]
     },
   },
+  {
+    name: 'no-entry',
+    dist: path.join(fixturesDir, './no-entry/dist'),
+    args: ['--cwd', path.join(fixturesDir, './no-entry')],
+    expected(distFile, { stderr }) {
+      return [
+        [
+          stderr.includes(
+            'The "src" directory does not contain any entry files.',
+          ),
+          true,
+        ],
+      ]
+    },
+  },
 ]
 
 describe('cli', () => {
