@@ -1,3 +1,5 @@
+'use client'
+
 export async function asyncFunc() {
   await new Promise((r) => r(2))
 }
