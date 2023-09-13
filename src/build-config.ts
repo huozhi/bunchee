@@ -122,7 +122,7 @@ function buildInputConfig(
   } as const
 
   const sizePlugin = sizeCollector.plugin(cwd)
-  const commonPlugins = [swcPreserveDirectivePlugin(), sizePlugin]
+  const commonPlugins = [sizePlugin]
   const plugins: Plugin[] = (
     dts
       ? [
@@ -148,6 +148,7 @@ function buildInputConfig(
         ]
       : [
           ...commonPlugins,
+          swcPreserveDirectivePlugin(),
           replace({
             values: getBuildEnv(options.env || []),
             preventAssignment: true,
