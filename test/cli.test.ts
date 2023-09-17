@@ -242,6 +242,24 @@ const testCases: {
       ]
     },
   },
+  {
+    name: 'cjs-relative-imports',
+    dist: createTempDir,
+    args: [
+      '--cwd',
+      path.join(fixturesDir, './cjs-relative-imports'),
+      '-o',
+      './dist/index.js',
+      './index.js',
+    ],
+    expected(distFile) {
+      const content = fs.readFileSync(distFile, { encoding: 'utf-8' })
+      return [
+        [content.includes('dot-js-dep'), true],
+        [content.includes('dot-cjs-dep'), true],
+      ]
+    }
+  }
 ]
 
 describe('cli', () => {

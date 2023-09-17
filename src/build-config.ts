@@ -76,7 +76,8 @@ function buildInputConfig(
   { tsConfigPath, tsCompilerOptions }: TypescriptOptions,
   dts: boolean,
 ): InputOptions {
-  const externals = options.noExternal
+  const hasNoExternal = options.external === null
+  const externals = hasNoExternal
     ? []
     : [pkg.peerDependencies, pkg.dependencies, pkg.peerDependenciesMeta]
         .filter(<T>(n?: T): n is T => Boolean(n))
@@ -158,7 +159,7 @@ function buildInputConfig(
             extensions: ['.mjs', '.cjs', '.js', '.json', '.node', '.jsx'],
           }),
           commonjs({
-            include: /node_modules\//,
+            exclude: options.external || null,
           }),
           json(),
           wasm(),
