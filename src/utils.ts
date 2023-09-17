@@ -6,6 +6,7 @@ import {
   availableExtensions,
   SRC,
 } from './constants'
+import { logger } from './logger'
 
 export function exit(err: string | Error) {
   logger.error(err)
@@ -29,20 +30,6 @@ export async function getPackageMeta(cwd: string): Promise<PackageMetadata> {
   } catch (_) {}
 
   return targetPackageJson
-}
-
-export const logger = {
-  log(arg?: any) {
-    console.log(arg)
-  },
-  warn(arg: any[]) {
-    console.log('\x1b[33m' + arg + '\x1b[0m')
-  },
-  error(arg: any) {
-    console.error(
-      '\x1b[31m' + (arg instanceof Error ? arg.stack : arg) + '\x1b[0m',
-    )
-  },
 }
 
 export function isTypescriptFile(filename: string): boolean {

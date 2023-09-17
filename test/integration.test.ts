@@ -108,23 +108,23 @@ const testCases: {
       assertFilesContent(dir, contentsRegex)
 
       const log = `\
-      ✓  Typed dist/server/index.d.ts       - 87 B
-      ✓  Typed dist/server/index.d.mts      - 87 B
-      ✓  Typed dist/lite.d.ts               - 70 B
-      ✓  Typed dist/shared/index.d.mts      - 66 B
-      ✓  Typed dist/client/index.d.cts      - 74 B
-      ✓  Typed dist/client/index.d.mts      - 74 B
-      ✓  Typed dist/client/index.d.ts       - 74 B
-      ✓  Typed dist/index.d.ts              - 65 B
-      ✓  Built dist/index.js                - 110 B
-      ✓  Built dist/shared/edge-light.mjs   - 84 B
-      ✓  Built dist/client/index.cjs        - 138 B
-      ✓  Built dist/client/index.mjs        - 78 B
-      ✓  Built dist/lite.js                 - 132 B
-      ✓  Built dist/server/index.mjs        - 71 B
-      ✓  Built dist/shared/index.mjs        - 53 B
-      ✓  Built dist/server/react-server.mjs - 53 B
-      ✓  Built dist/server/edge.mjs         - 51 B
+      ✓ Typed dist/server/index.d.ts       - 87 B
+      ✓ Typed dist/server/index.d.mts      - 87 B
+      ✓ Typed dist/lite.d.ts               - 70 B
+      ✓ Typed dist/shared/index.d.mts      - 66 B
+      ✓ Typed dist/client/index.d.cts      - 74 B
+      ✓ Typed dist/client/index.d.mts      - 74 B
+      ✓ Typed dist/client/index.d.ts       - 74 B
+      ✓ Typed dist/index.d.ts              - 65 B
+      ✓ Built dist/index.js                - 110 B
+      ✓ Built dist/shared/edge-light.mjs   - 84 B
+      ✓ Built dist/client/index.cjs        - 138 B
+      ✓ Built dist/client/index.mjs        - 78 B
+      ✓ Built dist/lite.js                 - 132 B
+      ✓ Built dist/server/index.mjs        - 71 B
+      ✓ Built dist/shared/index.mjs        - 53 B
+      ✓ Built dist/server/react-server.mjs - 53 B
+      ✓ Built dist/server/edge.mjs         - 51 B
       `
 
       const rawStdout = stripANSIColor(stdout)
@@ -198,8 +198,8 @@ const testCases: {
       )
 
       const log = `\
-      ✓  Typed dist/index.d.ts -
-      ✓  Built dist/index.js   -`
+      ✓ Typed dist/index.d.ts -
+      ✓ Built dist/index.js   -`
 
       const rawStdout = stripANSIColor(stdout)
       log.split('\n').forEach((line: string) => {
@@ -250,20 +250,20 @@ const testCases: {
       assertFilesContent(dir, contentsRegex)
 
       const log = `\
-      ✓  Typed dist/lite.d.ts               - 70 B
-      ✓  Typed dist/input.d.ts              - 65 B
-      ✓  Typed dist/index.d.ts              - 65 B
-      ✓  Typed dist/server/index.d.ts       - 87 B
-      ✓  Typed dist/layout/index.d.ts       - 66 B
-      ✓  Typed dist/button.d.ts             - 66 B
-      ✓  Built dist/input.js                - 50 B
-      ✓  Built dist/index.js                - 50 B
-      ✓  Built dist/button.js               - 53 B
-      ✓  Built dist/lite.js                 - 72 B
-      ✓  Built dist/layout/index.js         - 51 B
-      ✓  Built dist/server/react-server.mjs - 53 B
-      ✓  Built dist/server/edge.mjs         - 51 B
-      ✓  Built dist/server/index.mjs        - 71 B
+      ✓ Typed dist/lite.d.ts               - 70 B
+      ✓ Typed dist/input.d.ts              - 65 B
+      ✓ Typed dist/index.d.ts              - 65 B
+      ✓ Typed dist/server/index.d.ts       - 87 B
+      ✓ Typed dist/layout/index.d.ts       - 66 B
+      ✓ Typed dist/button.d.ts             - 66 B
+      ✓ Built dist/input.js                - 50 B
+      ✓ Built dist/index.js                - 50 B
+      ✓ Built dist/button.js               - 53 B
+      ✓ Built dist/lite.js                 - 72 B
+      ✓ Built dist/layout/index.js         - 51 B
+      ✓ Built dist/server/react-server.mjs - 53 B
+      ✓ Built dist/server/edge.mjs         - 51 B
+      ✓ Built dist/server/index.mjs        - 71 B
       `
 
       const rawStdout = stripANSIColor(stdout)
@@ -278,7 +278,7 @@ const testCases: {
     args: [],
     async expected(_dir, { stderr }) {
       const log =
-        'Warning: The "src" directory does not contain any entry files. ' +
+        'The "src" directory does not contain any entry files. ' +
         'For proper usage, please refer to the following link: ' +
         'https://github.com/huozhi/bunchee?tab=readme-ov-file#usage'
       expect(stderr).toContain(log)

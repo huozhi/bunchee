@@ -1,10 +1,12 @@
 import type { Plugin } from 'rollup'
 import path from 'path'
 import prettyBytes from 'pretty-bytes'
+import { dtsExtensionRegex } from '../constants'
+import { logger } from '../logger'
 
 type SizeStats = [string, string, number][]
 
-function chunkSizeCollector(): {
+function createChunkSizeCollector(): {
   plugin(cwd: string): Plugin
   getSizeStats(): SizeStats
 } {
@@ -46,4 +48,21 @@ function chunkSizeCollector(): {
   }
 }
 
-export default chunkSizeCollector
+// This can also be passed down as stats from top level
+const sizeCollector = createChunkSizeCollector()
+
+function logSizeStats() {
+  const stats = sizeCollector.getSizeStats()
+  const maxLength = Math.max(...stats.map(([filename]) => filename.length))
+  stats.forEach(([filename, prettiedSize]) => {
+    const padding = ' '.repeat(maxLength - filename.length)
+    const action = dtsExtensionRegex.test(filename) ? 'Typed' : 'Built'
+    logger.info(`${action} ${filename}${padding} - ${prettiedSize}`)
+  })
+}
+
+export {
+  logSizeStats,
+  sizeCollector,
+  createChunkSizeCollector
+}
