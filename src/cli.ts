@@ -129,7 +129,7 @@ async function run(args: CliArgs) {
     cwd,
     target,
     runtime,
-    external: args.external?.split(',') || [],
+    external: args.external === null ? null : (args.external?.split(',') || []),
     watch: !!watch,
     minify: !!minify,
     sourcemap: sourcemap === false ? false : true,

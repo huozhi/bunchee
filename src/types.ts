@@ -34,8 +34,7 @@ type BundleConfig = {
   format?: OutputOptions['format']
   minify?: boolean
   sourcemap?: boolean
-  external?: string[]
-  noExternal?: boolean
+  external?: string[] | null
   env?: string[]
   dts?: boolean
   runtime?: string
@@ -75,7 +74,6 @@ type CliArgs = {
   external?: string
   dts?: boolean
   runtime?: string
-  noExternal?: boolean
 }
 
 type BundleOptions = BundleConfig & {
