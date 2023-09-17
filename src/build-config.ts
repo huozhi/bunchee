@@ -50,10 +50,6 @@ const swcMinifyOptions = {
   },
 } as const
 
-
-// export const sizeCollector = createChunkSizeCollector()
-
-
 function getBuildEnv(envs: string[]) {
   if (!envs.includes('NODE_ENV')) {
     envs.push('NODE_ENV')
