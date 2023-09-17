@@ -5,12 +5,12 @@ import type { CliArgs, BundleConfig } from './types'
 import path from 'path'
 import arg from 'arg'
 import {
-  logger,
   exit,
   formatDuration,
   getPackageMeta,
   hasPackageJson,
 } from './utils'
+import { logger } from './logger'
 import { version } from '../package.json'
 
 const helpMessage = `

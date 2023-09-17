@@ -17,7 +17,7 @@ import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import replace from '@rollup/plugin-replace'
-import createChunkSizeCollector from './plugins/size-plugin'
+import { sizeCollector } from './plugins/size-plugin'
 import swcPreserveDirectivePlugin from 'rollup-swc-preserve-directives'
 import {
   getTypings,
@@ -49,9 +49,6 @@ const swcMinifyOptions = {
     toplevel: true,
   },
 } as const
-
-// This can also be passed down as stats from top level
-export const sizeCollector = createChunkSizeCollector()
 
 function getBuildEnv(envs: string[]) {
   if (!envs.includes('NODE_ENV')) {

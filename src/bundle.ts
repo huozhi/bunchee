@@ -11,9 +11,10 @@ import fs from 'fs/promises'
 import { resolve, relative } from 'path'
 import { watch as rollupWatch, rollup } from 'rollup'
 import { buildEntryConfig } from './build-config'
+import { logSizeStats } from './plugins/size-plugin'
+import { logger } from './logger'
 import {
   getPackageMeta,
-  logger,
   fileExists,
   getSourcePathFromExportPath,
   getExportPath,
@@ -26,7 +27,6 @@ import {
 } from './exports'
 import type { BuildMetadata } from './types'
 import { TypescriptOptions, resolveTsConfig } from './typescript'
-import { logSizeStats } from './logging'
 import { resolveWildcardExports } from './lib/wildcard'
 
 function assignDefault(
@@ -172,8 +172,8 @@ async function bundle(
   result = await Promise.all(assetsJobs.concat(typesJobs))
 
   if (result.length === 0) {
-    console.warn(
-      'Warning: The "src" directory does not contain any entry files. ' +
+    logger.warn(
+      'The "src" directory does not contain any entry files. ' +
         'For proper usage, please refer to the following link: ' +
         'https://github.com/huozhi/bunchee?tab=readme-ov-file#usage',
     )
