@@ -39,6 +39,7 @@ jobs:
           pnpm typecheck
           pnpm build
           pnpm test
+          pnpm test:post-build
 
   release:
     runs-on: ubuntu-latest
