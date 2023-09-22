@@ -1,6 +1,6 @@
 import fs, { promises as fsp } from 'fs'
 import { resolve, dirname, extname } from 'path'
-import { bundle } from 'bunchee'
+import { bundle } from '../../dist'
 import { existsFile, fullExtension, isPostBuild } from '../testing-utils'
 
 // only run this test if `dist` folder exists
@@ -57,7 +57,7 @@ async function compareOrUpdateSnapshot(
 }
 
 for (const unitName of unitTestDirs) {
-  it(`should compile ${unitName} case correctly`, async () => {
+  it(`should compile ${unitName} case correctly using bundled assets`, async () => {
     const dir = resolve(baseUnitTestDir, unitName)
     const inputFile = resolve(dir, 'input')
     const inputFileName =

@@ -301,7 +301,7 @@ async function runBundle(
   const args = (args_ || []).concat(['--cwd', dir])
   const ps = fork(
     `${require.resolve('tsx/cli')}`,
-    [__dirname + '../../../src/cli.ts'].concat(args),
+    [__dirname + '../../../dist/cli.js'].concat(args),
     { stdio: 'pipe' },
   )
   let stderr = '',
@@ -323,7 +323,7 @@ function runTests() {
   for (const testCase of testCases) {
     const { name, args = [], expected } = testCase
     const dir = getPath(name)
-    test(`integration ${name}`, async () => {
+    test(`integration ${name} using bundled assets`, async () => {
       debug.log(`Command: bunchee ${args.join(' ')}`)
       execSync(`rm -rf ${join(dir, 'dist')}`)
       const { stdout, stderr } = await runBundle(dir, args)
