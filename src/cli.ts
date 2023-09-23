@@ -44,16 +44,16 @@ async function lintPackage(cwd: string) {
   }
 
   const { publint } = await import('publint')
-  const { printMessage } = await import('publint/utils')
+  const { formatMessage } = await import('publint/utils')
 
-  const messages = await publint({
+  const { messages } = await publint({
     pkgDir: cwd,
     level: 'error',
   })
 
   const pkg = await getPackageMeta(cwd)
   for (const message of messages) {
-    console.log(printMessage(message, pkg))
+    console.log(formatMessage(message, pkg))
   }
 }
 
@@ -161,12 +161,12 @@ async function run(args: CliArgs) {
   const duration = timeEnd - timeStart
   // watching mode
   if (watch) {
-    logger.log(`🔍  Watching assets in ${cwd}...`)
+    logger.log(`Watching assets in ${cwd}...`)
     return
   }
 
   // build mode
-  logger.log(`✨  Finished in ${formatDuration(duration)}`)
+  logger.info(`Finished in ${formatDuration(duration)}`)
 
   await lintPackage(cwd)
 }
