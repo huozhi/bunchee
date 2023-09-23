@@ -1,0 +1,9 @@
+__insertCSS(".foo{color:orange;}");
+
+function Foo() {
+    return /*#__PURE__*/ React.createElement("p", {
+        className: "foo"
+    }, "foo");
+}
+
+export { Foo as default };

@@ -19,6 +19,7 @@ import json from '@rollup/plugin-json'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import replace from '@rollup/plugin-replace'
 import { sizeCollector } from './plugins/size-plugin'
+import { inlineCss } from './plugins/inline-css'
 import swcPreserveDirectivePlugin from 'rollup-swc-preserve-directives'
 import {
   getTypings,
@@ -148,6 +149,7 @@ function buildInputConfig(
     dts
       ? [
           ...commonPlugins,
+          inlineCss({ skip: true }),
           useTypescript &&
             require('rollup-plugin-dts').default({
               tsconfig: tsConfigPath,
@@ -159,6 +161,7 @@ function buildInputConfig(
         ]
       : [
           ...commonPlugins,
+          inlineCss({ exclude: /node_modules/ }),
           swcPreserveDirectivePlugin(),
           replace({
             values: getBuildEnv(options.env || []),
