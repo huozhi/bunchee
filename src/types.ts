@@ -1,4 +1,4 @@
-import type { JscTarget } from '@swc/core'
+import type { JscTarget } from '@swc/types'
 import type { InputOptions, OutputOptions, RollupOptions } from 'rollup'
 
 type PackageType = 'commonjs' | 'module'
