@@ -51,3 +51,8 @@ export async function resolveTsConfig(
     tsConfigPath,
   }
 }
+
+export async function convertCompilerOptions(cwd: string, json: any) {
+  const ts = resolveTypescript(cwd)
+  return ts.convertCompilerOptionsFromJson(json, './')
+}
