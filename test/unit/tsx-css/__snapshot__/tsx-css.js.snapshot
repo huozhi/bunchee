@@ -1,0 +1,17 @@
+function __insertCSS(code) {
+  if (!code || typeof document == 'undefined') return
+  let head = document.head || document.getElementsByTagName('head')[0];
+  style = document.createElement('style');
+  style.type = 'text/css';
+  head.appendChild(style)
+  ;style.styleSheet ? (style.styleSheet.cssText = code) : style.appendChild(document.createTextNode(code));
+}
+__insertCSS(".foo{color:orange;}");
+
+function Foo() {
+    return /*#__PURE__*/ React.createElement("p", {
+        className: "foo"
+    }, "foo");
+}
+
+export { Foo as default };

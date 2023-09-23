@@ -18,6 +18,7 @@ import json from '@rollup/plugin-json'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import replace from '@rollup/plugin-replace'
 import { sizeCollector } from './plugins/size-plugin'
+import { inlineCss } from './plugins/inline-css'
 import swcPreserveDirectivePlugin from 'rollup-swc-preserve-directives'
 import {
   getTypings,
@@ -120,11 +121,15 @@ function buildInputConfig(
   } as const
 
   const sizePlugin = sizeCollector.plugin(cwd)
-  const commonPlugins = [sizePlugin]
+  // common plugins for both dts and ts assets that need to be processed
+  const commonPlugins = [
+    sizePlugin,
+  ]
   const plugins: Plugin[] = (
     dts
       ? [
           ...commonPlugins,
+          inlineCss({ skip: true }),
           useTypescript &&
             require('rollup-plugin-dts').default({
               compilerOptions: {
@@ -146,6 +151,7 @@ function buildInputConfig(
         ]
       : [
           ...commonPlugins,
+          inlineCss({ exclude: /node_modules/ }),
           swcPreserveDirectivePlugin(),
           replace({
             values: getBuildEnv(options.env || []),

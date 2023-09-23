@@ -57,12 +57,13 @@ for (const unitName of unitTestDirs) {
   it(`should compile ${unitName} case correctly`, async () => {
     const dir = resolve(baseUnitTestDir, unitName)
     const inputFile = resolve(dir, 'input')
-    const inputFileName =
-      inputFile +
-      ['.js', '.jsx', '.ts', '.tsx'].find((ext) =>
-        fs.existsSync(`${inputFile}${ext}`),
-      )
-
+    const ext = ['.js', '.jsx', '.ts', '.tsx'].find((ext) =>
+      fs.existsSync(`${inputFile}${ext}`)
+    )
+    if (!ext) {
+      throw new Error(`input.<ext> file found in ${dir}`)
+    }
+    const inputFileName = inputFile + ext
     const distFile = resolve(dir, 'dist/bundle.js')
     const minifiedDistFile = distFile.replace('.js', '.min.js')
     const distTypesFile = resolve(dir, 'dist/bundle.d.ts')
