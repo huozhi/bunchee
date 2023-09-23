@@ -41,7 +41,6 @@ You can use the `exports` field to support different conditions and leverage the
 ```json
 {
   "exports": {
-    "module": "dist/index.esm.js",
     "import": "dist/index.mjs",
     "require": "dist/index.cjs"
   },
@@ -56,7 +55,7 @@ Using pure ESM package?
 ```json
 {
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "./dist/index.mjs",
   "scripts": {
     "build": "bunchee"
   }
