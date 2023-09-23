@@ -1,5 +1,4 @@
-import fs from 'fs'
-import fsp from 'fs/promises'
+import fs from 'fs/promises'
 import path from 'path'
 
 export function stripANSIColor(str: string) {
@@ -11,7 +10,7 @@ export function stripANSIColor(str: string) {
 
 export async function existsFile(filePath: string) {
   try {
-    await fsp.access(filePath)
+    await fs.access(filePath)
     return true
   } catch (err: any) {
     if (err.code === 'ENOENT') {
@@ -34,7 +33,7 @@ export async function assertFilesContent(
   }
 
   for (const [file, regex] of Object.entries(contentsRegex)) {
-    const content = await fsp.readFile(path.join(dir, file), {
+    const content = await fs.readFile(path.join(dir, file), {
       encoding: 'utf-8',
     })
     if (regex instanceof RegExp) {
@@ -48,5 +47,3 @@ export async function assertFilesContent(
 // bundle.min.js => .min.js
 export const fullExtension = (filename: string) =>
   filename.slice(filename.indexOf('.'))
-
-export const isPostBuild = fs.existsSync(path.resolve(process.cwd(), 'dist'))
