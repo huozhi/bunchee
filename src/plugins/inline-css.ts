@@ -13,8 +13,10 @@ function minifyCSS(content: string) {
   )
 }
 
-// have to assign r.type = 'text/css' to make it work in Safari
-const insertCodeJs = `\
+const helpers = {
+  cssImport: {
+    // have to assign r.type = 'text/css' to make it work in Safari
+    global: `\
 function __insertCSS(code) {
   if (!code || typeof document == 'undefined') return
   let head = document.head || document.getElementsByTagName('head')[0]
@@ -23,34 +25,55 @@ function __insertCSS(code) {
   head.appendChild(style)
   ;style.styleSheet ? (style.styleSheet.cssText = code) : style.appendChild(document.createTextNode(code))
 }
-`
+`,
+    create(code: string) {
+      return `__insertCSS(${JSON.stringify(code)});`
+    }
+  },
+  cssAssertionImport: {
+    global: '',
+    create(code: string) {
+      return `\
+const sheet = new CSSStyleSheet()
+sheet.replaceSync(${JSON.stringify(code)})
+export default sheet`
+    }
+  }
+} as const
 
 export function inlineCss(options: { skip?: boolean, exclude?: FilterPattern }): Plugin {
   const filter = createFilter(['**/*.css'], options.exclude ?? [])
+  const cssTypeSet = new Set<
+    | 'cssImport'
+    // wait for rollup 4 for better support of assertion support https://github.com/rollup/rollup/issues/4818
+    // | 'cssAssertionImport'
+  >()
 
   return {
     name: 'inline-css',
     transform(code, id) {
       if (!filter(id)) return
-
       if (options.skip) return ''
-
       const cssCode = minifyCSS(code)
 
-      const moduleInfo = this.getModuleInfo(id)
-      if (moduleInfo?.assertions?.type === 'css') {
-        return {
-          code: `const sheet = new CSSStyleSheet()sheet.replaceSync(${JSON.stringify(
-            cssCode,
-          )})\nexport default sheet`,
-          map: { mappings: '' },
-        }
-      }
-
       return {
-        code: `${insertCodeJs}__insertCSS(${JSON.stringify(cssCode)})`,
+        code: helpers.cssImport.create(cssCode),
         map: { mappings: '' },
       }
     },
+    renderChunk(code) {
+      if (cssTypeSet.size === 0) return null
+
+      let prefix = ''
+      for (const cssType of cssTypeSet) {
+        const cssHelper = helpers[cssType]
+        prefix = `${cssHelper.global};\n${prefix}`
+      }
+
+      return {
+        code: `${prefix}${code}`,
+        map: { mappings: '' },
+      }
+    }
   }
 }

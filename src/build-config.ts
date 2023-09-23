@@ -10,6 +10,7 @@ import type {
 import type { InputOptions, OutputOptions, Plugin } from 'rollup'
 import type { TypescriptOptions } from './typescript'
 
+import { convertCompilerOptions } from './typescript'
 import { resolve, dirname } from 'path'
 import { wasm } from '@rollup/plugin-wasm'
 import { swc } from 'rollup-plugin-swc3'
@@ -125,6 +126,25 @@ function buildInputConfig(
   const commonPlugins = [
     sizePlugin,
   ]
+
+  let baseResolvedTsOptions
+  if (dts && useTypescript) {
+    baseResolvedTsOptions = convertCompilerOptions(cwd, {
+      declaration: true,
+      noEmit: false,
+      noEmitOnError: true,
+      emitDeclarationOnly: true,
+      checkJs: false,
+      declarationMap: false,
+      skipLibCheck: true,
+      preserveSymlinks: false,
+      target: 'esnext',
+      module: 'esnext',
+      incremental: false,
+      jsx: tsCompilerOptions.jsx || 'react',
+    })
+  }
+
   const plugins: Plugin[] = (
     dts
       ? [
@@ -132,20 +152,10 @@ function buildInputConfig(
           inlineCss({ skip: true }),
           useTypescript &&
             require('rollup-plugin-dts').default({
+              tsconfig: tsConfigPath,
               compilerOptions: {
                 ...tsCompilerOptions,
-                declaration: true,
-                noEmit: false,
-                noEmitOnError: true,
-                emitDeclarationOnly: true,
-                checkJs: false,
-                declarationMap: false,
-                skipLibCheck: true,
-                preserveSymlinks: false,
-                target: 'esnext',
-                module: 'esnext',
-                incremental: false,
-                jsx: tsCompilerOptions.jsx || 'react',
+                ...baseResolvedTsOptions
               },
             }),
         ]
