@@ -32,7 +32,7 @@ dependencies:
     specifier: ^5.6.0
     version: 5.6.0
   publint:
-    specifier: ^0.2.2
+    specifier: ~0.2.2
     version: 0.2.2
   rollup:
     specifier: ^3.28.1
