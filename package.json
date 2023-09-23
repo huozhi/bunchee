@@ -10,7 +10,6 @@
   "scripts": {
     "test": "jest --env node",
     "test:update": "TEST_UPDATE_SNAPSHOT=1 pnpm test",
-    "test:post-build": "pnpm run test --testPathPattern=test/post-build --testPathIgnorePatterns",
     "clean": "rm -rf ./dist",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "pnpm clean && pnpm build && chmod +x ./dist/cli.js && pnpm test",
@@ -102,10 +101,7 @@
       "^.+\\.(t|j)sx?$": [
         "@swc/jest"
       ]
-    },
-    "testPathIgnorePatterns": [
-      "/post-build/"
-    ]
+    }
   },
   "packageManager": "pnpm@7.24.3"
 }

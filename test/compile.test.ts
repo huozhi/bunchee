@@ -1,7 +1,9 @@
 import fs, { promises as fsp } from 'fs'
 import { resolve, dirname, extname } from 'path'
-import { bundle } from 'bunchee'
 import { existsFile, fullExtension } from './testing-utils'
+
+const bundleSrc = process.env.POST_BUILD ? 'dist' : 'src'
+const bundle = require(`../${bundleSrc}/bundle`).default
 
 jest.setTimeout(10 * 60 * 1000)
 

@@ -290,10 +290,14 @@ async function runBundle(
   dir: string,
   args_: string[],
 ): Promise<{ code: number | null; stdout: string; stderr: string }> {
+  const cliSrcPath = process.env.POST_BUILD
+    ? '/../dist/cli.js'
+    : '/../src/cli.ts'
+
   const args = (args_ || []).concat(['--cwd', dir])
   const ps = fork(
     `${require.resolve('tsx/cli')}`,
-    [__dirname + '/../src/cli.ts'].concat(args),
+    [__dirname + cliSrcPath].concat(args),
     { stdio: 'pipe' },
   )
   let stderr = '',
