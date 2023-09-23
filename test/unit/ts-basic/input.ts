@@ -1,4 +1,5 @@
 import { add } from './math'
+import { FooInterface } from './types'
 
 const sum: number = add(1, 2)
 
@@ -11,3 +12,4 @@ export async function asyncFunc() {
 
 export { clone }
 export default sum
+export { FooInterface }
