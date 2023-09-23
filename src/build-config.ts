@@ -156,7 +156,7 @@ function buildInputConfig(
               compilerOptions: {
                 ...tsCompilerOptions,
                 ...baseResolvedTsOptions
-              },
+              }
             }),
         ]
       : [
