@@ -284,6 +284,70 @@ const testCases: {
       expect(stderr).toContain(log)
     },
   },
+  {
+    name: 'external-entry',
+    args: ['--external', 'external-entry'],
+    async expected(dir) {
+      const distFiles = [
+        join(dir, './dist/index.cjs'),
+        join(dir, './dist/index.mjs'),
+        join(dir, './dist/server.cjs'),
+        join(dir, './dist/server.mjs'),
+      ]
+
+      expect(await fs.readFile(distFiles[0], 'utf-8')).toContain(
+        `Large piece of code`,
+      )
+      expect(await fs.readFile(distFiles[1], 'utf-8')).toContain(
+        `Large piece of code`,
+      )
+      expect(await fs.readFile(distFiles[2], 'utf-8')).not.toContain(
+        `Large piece of code`,
+      )
+      expect(await fs.readFile(distFiles[3], 'utf-8')).not.toContain(
+        `Large piece of code`,
+      )
+
+      expect(execSync('node ' + distFiles[2]).toString()).toBe(
+        `Large piece of code\n`,
+      )
+      expect(execSync('node ' + distFiles[3]).toString()).toBe(
+        `Large piece of code\n`,
+      )
+    },
+  },
+  {
+    name: 'external-index',
+    args: ['--external', './index'],
+    async expected(dir) {
+      const distFiles = [
+        join(dir, './dist/index.cjs'),
+        join(dir, './dist/index.mjs'),
+        join(dir, './dist/server.cjs'),
+        join(dir, './dist/server.mjs'),
+      ]
+
+      expect(await fs.readFile(distFiles[0], 'utf-8')).toContain(
+        `Large piece of code`,
+      )
+      expect(await fs.readFile(distFiles[1], 'utf-8')).toContain(
+        `Large piece of code`,
+      )
+      expect(await fs.readFile(distFiles[2], 'utf-8')).not.toContain(
+        `Large piece of code`,
+      )
+      expect(await fs.readFile(distFiles[3], 'utf-8')).not.toContain(
+        `Large piece of code`,
+      )
+
+      expect(execSync('node ' + distFiles[2]).toString()).toBe(
+        `Large piece of code\n`,
+      )
+      expect(execSync('node ' + distFiles[3]).toString()).toBe(
+        `Large piece of code\n`,
+      )
+    },
+  },
 ]
 
 async function runBundle(
