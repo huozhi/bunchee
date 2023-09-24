@@ -28,7 +28,7 @@ Create your library
 
 ```sh
 cd ./my-lib && mkdir src
-touch ./src/index.js
+touch ./src/index.ts
 touch package.json
 ```
 
