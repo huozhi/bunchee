@@ -256,6 +256,22 @@ This will match the export names `"foo"` and `"bar"` and will be treated as the 
 
 > Note:  Wildcard Exports currently only supports the exports key `"./*"`, which will match all the available entries.
 
+### CSS
+
+`bunchee`` has basic CSS support for pure CSS file imports. It will be bundled into js bundle and insert the style tag into the document head when the bundle is loaded by browser.
+
+```css
+/* src/style.css */
+.foo { color: orange; }
+```
+
+```tsx
+// src/index.tsx
+import './style.css'
+
+export const Foo = () => <div className="foo">foo</div>
+```
+
 ### TypeScript
 
 By default bunchee includes Typescript v3.9.x inside as a dependency. If you want to use your own version, just install typescript as another dev dependency then bunchee will automatically pick it.
