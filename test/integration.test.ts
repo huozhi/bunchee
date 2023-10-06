@@ -284,6 +284,15 @@ const testCases: {
       expect(stderr).toContain(log)
     },
   },
+  {
+    name: 'esm-pkg-cjs-main-field',
+    args: [],
+    async expected(_, { stderr }) {
+      expect(stderr).toContain(
+        'Cannot export main field with .cjs extension in ESM package, only .mjs and .js extensions are allowed',
+      )
+    }
+  }
 ]
 
 async function runBundle(
