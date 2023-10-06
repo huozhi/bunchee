@@ -8,6 +8,7 @@ import {
   hasAvailableExtension,
   nonNullable,
 } from '../utils'
+import { logger } from '../logger'
 
 // TODO: support nested wildcard exportsCondition (e.g. './foo/*')
 const getWildcardExports = (
@@ -84,7 +85,7 @@ export async function resolveWildcardExports(
   const hasWildcard = !!exportsCondition['./*']
 
   if (hasWildcard) {
-    console.warn(
+    logger.warn(
       `The wildcard export "./*" is experimental and may change or be removed at any time.\n` +
         'To open an issue, please visit https://github.com/huozhi/bunchee/issues' +
         '.\n',
