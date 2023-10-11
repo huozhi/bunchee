@@ -37,10 +37,11 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Build and Test
-        run: |
-          pnpm build
-          pnpm test
+      - name: Build
+        run: pnpm build
+
+      - name: Test
+        run: pnpm test
 
   release:
     runs-on: ubuntu-latest
