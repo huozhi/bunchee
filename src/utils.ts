@@ -139,3 +139,6 @@ export const fileExtension = (file: string | undefined) =>
 
 export const hasAvailableExtension = (filename: string): boolean =>
   availableExtensions.includes(path.extname(filename).slice(1))
+
+export const hasCjsExtension = (filename: string): boolean =>
+  path.extname(filename) === '.cjs'

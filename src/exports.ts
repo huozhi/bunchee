@@ -6,7 +6,7 @@ import type {
   PackageType,
   ParsedExportCondition,
 } from './types'
-import { filenameWithoutExtension } from './utils'
+import { exit, filenameWithoutExtension, hasCjsExtension } from './utils'
 
 export function getTypings(pkg: PackageMetadata) {
   return pkg.types || pkg.typings
@@ -183,6 +183,10 @@ export function getExportPaths(
   if (exportsConditions) {
     const paths = parseExport(exportsConditions, packageType)
     Object.assign(pathsMap, paths)
+  }
+
+  if (!isCjsPackage && pkg.main && hasCjsExtension(pkg.main)) {
+    exit('Cannot export main field with .cjs extension in ESM package, only .mjs and .js extensions are allowed')
   }
 
   // main export '.' from main/module/typings
