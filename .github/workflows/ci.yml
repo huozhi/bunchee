@@ -22,7 +22,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v2.2.4
+      - uses: pnpm/action-setup@v2
 
       - name: Use Node ${{ matrix.node-version }}
         uses: actions/setup-node@v3
@@ -34,9 +34,14 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
 
+      - name: Typecheck
+        run: pnpm typecheck
+
       - name: Lint
+        run: pnpm prettier --check .
+
+      - name: Build and Test
         run: |
-          pnpm typecheck
           pnpm build
           pnpm test
 
