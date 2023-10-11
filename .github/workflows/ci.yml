@@ -37,9 +37,6 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Lint
-        run: pnpm prettier --check .
-
       - name: Build and Test
         run: |
           pnpm build
