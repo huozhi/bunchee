@@ -221,7 +221,7 @@ For example:
 }
 ```
 
-The asterisk `*`  will be replaced with your entry files, such as:
+The asterisk `*` will be replaced with your entry files, such as:
 
 ```
 - my-lib/
@@ -254,7 +254,7 @@ This will match the export names `"foo"` and `"bar"` and will be treated as the 
 }
 ```
 
-> Note:  Wildcard Exports currently only supports the exports key `"./*"`, which will match all the available entries.
+> Note: Wildcard Exports currently only supports the exports key `"./*"`, which will match all the available entries.
 
 ### CSS
 
@@ -262,7 +262,9 @@ This will match the export names `"foo"` and `"bar"` and will be treated as the 
 
 ```css
 /* src/style.css */
-.foo { color: orange; }
+.foo {
+  color: orange;
+}
 ```
 
 ```tsx

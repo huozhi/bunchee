@@ -28,7 +28,7 @@ function __insertCSS(code) {
 `,
     create(code: string) {
       return `__insertCSS(${JSON.stringify(code)});`
-    }
+    },
   },
   cssAssertionImport: {
     global: '',
@@ -37,17 +37,18 @@ function __insertCSS(code) {
 const sheet = new CSSStyleSheet()
 sheet.replaceSync(${JSON.stringify(code)})
 export default sheet`
-    }
-  }
+    },
+  },
 } as const
 
-export function inlineCss(options: { skip?: boolean, exclude?: FilterPattern }): Plugin {
+export function inlineCss(options: {
+  skip?: boolean
+  exclude?: FilterPattern
+}): Plugin {
   const filter = createFilter(['**/*.css'], options.exclude ?? [])
-  const cssTypeSet = new Set<
-    | 'cssImport'
-    // wait for rollup 4 for better support of assertion support https://github.com/rollup/rollup/issues/4818
-    // | 'cssAssertionImport'
-  >()
+  const cssTypeSet = new Set<'cssImport'>()
+  // wait for rollup 4 for better support of assertion support https://github.com/rollup/rollup/issues/4818
+  // | 'cssAssertionImport'
 
   return {
     name: 'inline-css',
@@ -74,6 +75,6 @@ export function inlineCss(options: { skip?: boolean, exclude?: FilterPattern }):
         code: `${prefix}${code}`,
         map: { mappings: '' },
       }
-    }
+    },
   }
 }

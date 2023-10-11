@@ -10,5 +10,5 @@ export const logger = {
   },
   info(...arg: any) {
     console.log(' ✓', ...arg)
-  }
+  },
 }

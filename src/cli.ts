@@ -4,12 +4,7 @@ import type { CliArgs, BundleConfig } from './types'
 
 import path from 'path'
 import arg from 'arg'
-import {
-  exit,
-  formatDuration,
-  getPackageMeta,
-  hasPackageJson,
-} from './utils'
+import { exit, formatDuration, getPackageMeta, hasPackageJson } from './utils'
 import { logger } from './logger'
 import { version } from '../package.json'
 
@@ -129,7 +124,7 @@ async function run(args: CliArgs) {
     cwd,
     target,
     runtime,
-    external: args.external === null ? null : (args.external?.split(',') || []),
+    external: args.external === null ? null : args.external?.split(',') || [],
     watch: !!watch,
     minify: !!minify,
     sourcemap: sourcemap === false ? false : true,

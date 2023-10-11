@@ -123,9 +123,7 @@ function buildInputConfig(
 
   const sizePlugin = sizeCollector.plugin(cwd)
   // common plugins for both dts and ts assets that need to be processed
-  const commonPlugins = [
-    sizePlugin,
-  ]
+  const commonPlugins = [sizePlugin]
 
   let baseResolvedTsOptions
   if (dts && useTypescript) {
@@ -155,8 +153,8 @@ function buildInputConfig(
               tsconfig: tsConfigPath,
               compilerOptions: {
                 ...tsCompilerOptions,
-                ...baseResolvedTsOptions
-              }
+                ...baseResolvedTsOptions,
+              },
             }),
         ]
       : [

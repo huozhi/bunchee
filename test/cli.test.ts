@@ -258,8 +258,8 @@ const testCases: {
         [content.includes('dot-js-dep'), true],
         [content.includes('dot-cjs-dep'), true],
       ]
-    }
-  }
+    },
+  },
 ]
 
 describe('cli', () => {
