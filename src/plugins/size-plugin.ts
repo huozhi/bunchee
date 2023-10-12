@@ -61,8 +61,4 @@ function logSizeStats() {
   })
 }
 
-export {
-  logSizeStats,
-  sizeCollector,
-  createChunkSizeCollector
-}
+export { logSizeStats, sizeCollector, createChunkSizeCollector }

@@ -186,7 +186,9 @@ export function getExportPaths(
   }
 
   if (!isCjsPackage && pkg.main && hasCjsExtension(pkg.main)) {
-    exit('Cannot export main field with .cjs extension in ESM package, only .mjs and .js extensions are allowed')
+    exit(
+      'Cannot export main field with .cjs extension in ESM package, only .mjs and .js extensions are allowed',
+    )
   }
 
   // main export '.' from main/module/typings
@@ -264,7 +266,7 @@ export function constructDefaultExportCondition(
     const types = getTypings(value as PackageMetadata)
     exportCondition = {
       [packageType === 'commonjs' ? 'require' : 'import']: value,
-      ...(types && {types}),
+      ...(types && { types }),
     }
   } else {
     exportCondition = value

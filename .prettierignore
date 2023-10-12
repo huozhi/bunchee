@@ -1,0 +1,6 @@
+dist/
+test/fixtures/
+test/integration/
+test/unit/
+
+pnpm-lock.yaml

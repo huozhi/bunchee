@@ -60,7 +60,7 @@ for (const unitName of unitTestDirs) {
     const dir = resolve(baseUnitTestDir, unitName)
     const inputFile = resolve(dir, 'input')
     const ext = ['.js', '.jsx', '.ts', '.tsx'].find((ext) =>
-      fs.existsSync(`${inputFile}${ext}`)
+      fs.existsSync(`${inputFile}${ext}`),
     )
     if (!ext) {
       throw new Error(`input.<ext> file found in ${dir}`)
