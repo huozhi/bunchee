@@ -44,8 +44,8 @@ const swcMinifyOptions = {
   compress: true,
   format: {
     comments: 'some',
-    wrapFuncArgs: false,
-    preserveAnnotations: true,
+    // wrapFuncArgs: false,
+    // preserveAnnotations: true,
   },
   mangle: {
     toplevel: true,
@@ -102,7 +102,7 @@ function buildInputConfig(
     exportDefaultFrom: true,
   } as const
 
-  const swcOptions = {
+  const swcOptions: import('@swc/types').Options = {
     jsc: {
       ...(!hasSpecifiedTsTarget && {
         target: jscTarget,
@@ -119,6 +119,7 @@ function buildInputConfig(
     },
     sourceMaps: options.sourcemap,
     inlineSourcesContent: false,
+    isModule: true,
   } as const
 
   const sizePlugin = sizeCollector.plugin(cwd)
