@@ -97,9 +97,7 @@ function buildInputConfig(
   const swcParserConfig = {
     syntax: useTypescript ? 'typescript' : 'ecmascript',
     [useTypescript ? 'tsx' : 'jsx']: true,
-    // privateMethod: true,
-    // classPrivateProperty: true,
-    // exportDefaultFrom: true,
+    exportDefaultFrom: true,
   } as const
 
   const swcOptions: import('@swc/types').Options = {
