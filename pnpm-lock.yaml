@@ -45,8 +45,8 @@ dependencies:
     specifier: ^6.0.1
     version: 6.0.1(rollup@3.28.1)(typescript@4.9.5)
   rollup-plugin-swc3:
-    specifier: ^0.10.2
-    version: 0.10.2(@swc/core@1.3.93)(rollup@3.28.1)
+    specifier: ^0.10.3
+    version: 0.10.3(@swc/core@1.3.93)(rollup@3.28.1)
   rollup-swc-preserve-directives:
     specifier: ^0.5.0
     version: 0.5.0(@swc/core@1.3.93)(rollup@3.28.1)
@@ -1157,14 +1157,6 @@ packages:
       rollup: 3.28.1
     dev: false
 
-  /@rollup/pluginutils@4.2.1:
-    resolution: {integrity: sha512-iKnFXr7NkdZAIHiIWE+BX5ULi/ucVFYWD6TbAV+rZctiRTY2PL6tsIKhoIOaoskiWAkgu+VsbXgUVDNLHf+InQ==}
-    engines: {node: '>= 8.0.0'}
-    dependencies:
-      estree-walker: 2.0.2
-      picomatch: 2.3.1
-    dev: false
-
   /@rollup/pluginutils@5.0.4(rollup@3.28.1):
     resolution: {integrity: sha512-0KJnIoRI8A+a1dqOYLxH8vBf8bphDmty5QvIm2hqm7oFCFYKCAZWWd2hXgMibaPsNDhI0AtpYfQZJG47pt/k4g==}
     engines: {node: '>=14.0.0'}
@@ -1175,6 +1167,21 @@ packages:
         optional: true
     dependencies:
       '@types/estree': 1.0.0
+      estree-walker: 2.0.2
+      picomatch: 2.3.1
+      rollup: 3.28.1
+    dev: false
+
+  /@rollup/pluginutils@5.0.5(rollup@3.28.1):
+    resolution: {integrity: sha512-6aEYR910NyP73oHiJglti74iRyOwgFU4x3meH/H8OJx6Ry0j6cOVZ5X/wTvub7G7Ao6qaHBEaNsV3GLJkSsF+Q==}
+    engines: {node: '>=14.0.0'}
+    peerDependencies:
+      rollup: ^1.20.0||^2.0.0||^3.0.0||^4.0.0
+    peerDependenciesMeta:
+      rollup:
+        optional: true
+    dependencies:
+      '@types/estree': 1.0.3
       estree-walker: 2.0.2
       picomatch: 2.3.1
       rollup: 3.28.1
@@ -1354,6 +1361,10 @@ packages:
 
   /@types/estree@1.0.0:
     resolution: {integrity: sha512-WulqXMDUTYAXCjZnk6JtIHPigp55cVtDgDrO2gHRwhyJto21+1zbVCtOYB2L1F9w4qCQ0rOGWBnBe0FNTiEJIQ==}
+    dev: false
+
+  /@types/estree@1.0.3:
+    resolution: {integrity: sha512-CS2rOaoQ/eAgAfcTfq6amKG7bsN+EMcgGY4FAFQdvSj2y1ixvOZTUA9mOtCai7E1SYu283XNw7urKK30nP3wkQ==}
     dev: false
 
   /@types/graceful-fs@4.1.5:
@@ -3068,30 +3079,19 @@ packages:
       '@babel/code-frame': 7.22.13
     dev: false
 
-  /rollup-plugin-swc3@0.10.2(@swc/core@1.3.93)(rollup@3.28.1):
-    resolution: {integrity: sha512-Dn6CrDiKYNr53B3Yi74Swe/5gFx2UuD8ur4fP7RP2zdc2ZO0tkeHHiX0HA3I6+fBoR13aVLN1Pr6Sw2kASfs0Q==}
+  /rollup-plugin-swc3@0.10.3(@swc/core@1.3.93)(rollup@3.28.1):
+    resolution: {integrity: sha512-GWoMkm3ATumN8EPHBKLrpCufcRNn7SfLyvMKWUfCVLidPuPjlQZfNBeQXP6OEiHBguZzriCssX43EnV3+Y54bA==}
     engines: {node: '>=12'}
     peerDependencies:
       '@swc/core': '>=1.2.165'
       rollup: ^2.0.0 || ^3.0.0 || ^4.0.0
     dependencies:
       '@fastify/deepmerge': 1.3.0
-      '@rollup/pluginutils': 4.2.1
+      '@rollup/pluginutils': 5.0.5(rollup@3.28.1)
       '@swc/core': 1.3.93(@swc/helpers@0.5.0)
       get-tsconfig: 4.7.2
       rollup: 3.28.1
-      rollup-swc-preserve-directives: 0.3.2(@swc/core@1.3.93)(rollup@3.28.1)
-    dev: false
-
-  /rollup-swc-preserve-directives@0.3.2(@swc/core@1.3.93)(rollup@3.28.1):
-    resolution: {integrity: sha512-W0zljPCOMFErWUweRvnN9LCNrII2KzjAw9iZUNM1kZdf3rwQGQQiaCPnH4ugu3UIj1b+zEJKee20S8Ozgwh8Wg==}
-    peerDependencies:
-      '@swc/core': '>=1.2.165'
-      rollup: ^2.0.0 || ^3.0.0
-    dependencies:
-      '@napi-rs/magic-string': 0.3.4
-      '@swc/core': 1.3.93(@swc/helpers@0.5.0)
-      rollup: 3.28.1
+      rollup-swc-preserve-directives: 0.5.0(@swc/core@1.3.93)(rollup@3.28.1)
     dev: false
 
   /rollup-swc-preserve-directives@0.5.0(@swc/core@1.3.93)(rollup@3.28.1):
