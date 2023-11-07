@@ -67,14 +67,14 @@ function getBuildEnv(envs: string[]) {
   return envVars
 }
 
-function buildInputConfig(
+async function buildInputConfig(
   entry: string,
   pkg: PackageMetadata,
   options: BundleOptions,
   cwd: string,
   { tsConfigPath, tsCompilerOptions }: TypescriptOptions,
   dts: boolean,
-): InputOptions {
+): Promise<InputOptions> {
   const hasNoExternal = options.external === null
   const externals = hasNoExternal
     ? []
@@ -124,9 +124,9 @@ function buildInputConfig(
   // common plugins for both dts and ts assets that need to be processed
   const commonPlugins = [sizePlugin]
 
-  let baseResolvedTsOptions
+  let baseResolvedTsOptions: TypescriptOptions['tsCompilerOptions'] | undefined
   if (dts && useTypescript) {
-    baseResolvedTsOptions = convertCompilerOptions(cwd, {
+    baseResolvedTsOptions = (await convertCompilerOptions(cwd, {
       declaration: true,
       noEmit: false,
       noEmitOnError: true,
@@ -139,7 +139,7 @@ function buildInputConfig(
       module: 'esnext',
       incremental: false,
       jsx: tsCompilerOptions.jsx || 'react',
-    })
+    })).options
   }
 
   const plugins: Plugin[] = (
@@ -363,7 +363,7 @@ export async function buildEntryConfig(
   return (await Promise.all(configs)).filter(nonNullable)
 }
 
-function buildConfig(
+async function buildConfig(
   entry: string,
   pkg: PackageMetadata,
   exportPaths: ExportPaths,
@@ -372,11 +372,11 @@ function buildConfig(
   cwd: string,
   tsOptions: TypescriptOptions,
   dts: boolean,
-): BuncheeRollupConfig {
+): Promise<BuncheeRollupConfig> {
   const { file } = bundleConfig
   const useTypescript = Boolean(tsOptions.tsConfigPath)
   const options = { ...bundleConfig, useTypescript }
-  const inputOptions = buildInputConfig(
+  const inputOptions = await buildInputConfig(
     entry,
     pkg,
     options,
