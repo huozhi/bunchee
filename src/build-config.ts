@@ -8,9 +8,8 @@ import type {
   FullExportCondition,
 } from './types'
 import type { InputOptions, OutputOptions, Plugin } from 'rollup'
-import type { TypescriptOptions } from './typescript'
-
-import { convertCompilerOptions } from './typescript'
+import { convertCompilerOptions, type TypescriptOptions } from './typescript'
+import type { CompilerOptions } from 'typescript'
 import { resolve, dirname } from 'path'
 import { wasm } from '@rollup/plugin-wasm'
 import { swc } from 'rollup-plugin-swc3'
@@ -91,7 +90,7 @@ async function buildInputConfig(
     minify: shouldMinify,
   } = options
   const hasSpecifiedTsTarget = Boolean(
-    tsCompilerOptions?.target && tsConfigPath,
+    tsCompilerOptions.target && tsConfigPath,
   )
 
   const swcParserConfig = {
@@ -124,38 +123,44 @@ async function buildInputConfig(
   // common plugins for both dts and ts assets that need to be processed
   const commonPlugins = [sizePlugin]
 
-  let baseResolvedTsOptions: TypescriptOptions['tsCompilerOptions'] | undefined
-  if (dts && useTypescript) {
-    baseResolvedTsOptions = (await convertCompilerOptions(cwd, {
-      declaration: true,
-      noEmit: false,
-      noEmitOnError: true,
-      emitDeclarationOnly: true,
-      checkJs: false,
-      declarationMap: false,
-      skipLibCheck: true,
-      preserveSymlinks: false,
+  const baseResolvedTsOptions: CompilerOptions = {
+    declaration: true,
+    noEmit: false,
+    noEmitOnError: true,
+    emitDeclarationOnly: true,
+    checkJs: false,
+    declarationMap: false,
+    skipLibCheck: true,
+    preserveSymlinks: false,
+    incremental: false,
+  }
+
+  const typesPlugins = [
+    ...commonPlugins,
+    inlineCss({ skip: true }),
+  ]
+
+  if (useTypescript) {
+    const { options: resolvedTsOptions } = await convertCompilerOptions(cwd, {
+      ...baseResolvedTsOptions,
       target: 'esnext',
       module: 'esnext',
-      incremental: false,
       jsx: tsCompilerOptions.jsx || 'react',
-    })).options
+    })
+    const dtsPlugin = (require('rollup-plugin-dts') as typeof import('rollup-plugin-dts')).default({
+      tsconfig: tsConfigPath,
+      compilerOptions: {
+        ...tsCompilerOptions,
+        ...resolvedTsOptions,
+      },
+    })
+    typesPlugins.push(dtsPlugin)
   }
+
 
   const plugins: Plugin[] = (
     dts
-      ? [
-          ...commonPlugins,
-          inlineCss({ skip: true }),
-          useTypescript &&
-            require('rollup-plugin-dts').default({
-              tsconfig: tsConfigPath,
-              compilerOptions: {
-                ...tsCompilerOptions,
-                ...baseResolvedTsOptions,
-              },
-            }),
-        ]
+      ? typesPlugins
       : [
           ...commonPlugins,
           inlineCss({ exclude: /node_modules/ }),
