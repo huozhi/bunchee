@@ -8,8 +8,8 @@ import type {
   FullExportCondition,
 } from './types'
 import type { InputOptions, OutputOptions, Plugin } from 'rollup'
-import { convertCompilerOptions, type TypescriptOptions } from './typescript'
-import type { CompilerOptions } from 'typescript'
+import { type TypescriptOptions } from './typescript'
+
 import { resolve, dirname } from 'path'
 import { wasm } from '@rollup/plugin-wasm'
 import { swc } from 'rollup-plugin-swc3'
@@ -123,7 +123,7 @@ async function buildInputConfig(
   // common plugins for both dts and ts assets that need to be processed
   const commonPlugins = [sizePlugin]
 
-  const baseResolvedTsOptions: CompilerOptions = {
+  const baseResolvedTsOptions: any = {
     declaration: true,
     noEmit: false,
     noEmitOnError: true,
@@ -133,6 +133,9 @@ async function buildInputConfig(
     skipLibCheck: true,
     preserveSymlinks: false,
     incremental: false,
+    target: 'esnext',
+    module: 'esnext',
+    jsx: tsCompilerOptions.jsx || 'react',
   }
 
   const typesPlugins = [
@@ -141,17 +144,11 @@ async function buildInputConfig(
   ]
 
   if (useTypescript) {
-    const { options: resolvedTsOptions } = await convertCompilerOptions(cwd, {
-      ...baseResolvedTsOptions,
-      target: 'esnext',
-      module: 'esnext',
-      jsx: tsCompilerOptions.jsx || 'react',
-    })
     const dtsPlugin = (require('rollup-plugin-dts') as typeof import('rollup-plugin-dts')).default({
       tsconfig: tsConfigPath,
       compilerOptions: {
+        ...baseResolvedTsOptions,
         ...tsCompilerOptions,
-        ...resolvedTsOptions,
       },
     })
     typesPlugins.push(dtsPlugin)
