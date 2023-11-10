@@ -1,4 +1,5 @@
 import fs from 'fs/promises'
+import fsSync from 'fs'
 import { execSync, fork } from 'child_process'
 import { resolve, join } from 'path'
 import { stripANSIColor, existsFile, assertFilesContent } from './testing-utils'
@@ -221,6 +222,24 @@ const testCases: {
       expect(await fs.readFile(distFiles[1], 'utf-8')).toContain(
         'declare function _default(): string;',
       )
+    },
+  },
+  {
+    name: 'ts-incremental',
+    args: [],
+    async expected(dir) {
+      const distFiles = [
+        './dist/index.js',
+        './dist/index.d.ts',
+      ]
+
+      for (const f of distFiles) {
+        expect(await existsFile(join(dir, f))).toBe(true)
+      }
+      expect(await fs.readFile(join(dir, distFiles[1]), 'utf-8')).toContain(
+        'declare const _default: () => string;',
+      )
+      expect(await existsFile(join(dir, './dist/.tsbuildinfo'))).toBe(false)
     },
   },
   {

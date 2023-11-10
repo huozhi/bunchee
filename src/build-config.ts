@@ -8,9 +8,8 @@ import type {
   FullExportCondition,
 } from './types'
 import type { InputOptions, OutputOptions, Plugin } from 'rollup'
-import type { TypescriptOptions } from './typescript'
+import { type TypescriptOptions } from './typescript'
 
-import { convertCompilerOptions } from './typescript'
 import { resolve, dirname } from 'path'
 import { wasm } from '@rollup/plugin-wasm'
 import { swc } from 'rollup-plugin-swc3'
@@ -67,14 +66,14 @@ function getBuildEnv(envs: string[]) {
   return envVars
 }
 
-function buildInputConfig(
+async function buildInputConfig(
   entry: string,
   pkg: PackageMetadata,
   options: BundleOptions,
   cwd: string,
   { tsConfigPath, tsCompilerOptions }: TypescriptOptions,
   dts: boolean,
-): InputOptions {
+): Promise<InputOptions> {
   const hasNoExternal = options.external === null
   const externals = hasNoExternal
     ? []
@@ -91,7 +90,7 @@ function buildInputConfig(
     minify: shouldMinify,
   } = options
   const hasSpecifiedTsTarget = Boolean(
-    tsCompilerOptions?.target && tsConfigPath,
+    tsCompilerOptions.target && tsConfigPath,
   )
 
   const swcParserConfig = {
@@ -124,38 +123,52 @@ function buildInputConfig(
   // common plugins for both dts and ts assets that need to be processed
   const commonPlugins = [sizePlugin]
 
-  let baseResolvedTsOptions
-  if (dts && useTypescript) {
-    baseResolvedTsOptions = convertCompilerOptions(cwd, {
-      declaration: true,
-      noEmit: false,
-      noEmitOnError: true,
-      emitDeclarationOnly: true,
-      checkJs: false,
-      declarationMap: false,
-      skipLibCheck: true,
-      preserveSymlinks: false,
-      target: 'esnext',
-      module: 'esnext',
-      incremental: false,
-      jsx: tsCompilerOptions.jsx || 'react',
+  const baseResolvedTsOptions: any = {
+    declaration: true,
+    noEmit: false,
+    noEmitOnError: true,
+    emitDeclarationOnly: true,
+    checkJs: false,
+    declarationMap: false,
+    skipLibCheck: true,
+    preserveSymlinks: false,
+    // disable incremental build
+    incremental: false,
+    // use default tsBuildInfoFile value
+    tsBuildInfoFile: '.tsbuildinfo',
+    target: 'esnext',
+    module: 'esnext',
+    jsx: tsCompilerOptions.jsx || 'react',
+  }
+
+  const typesPlugins = [
+    ...commonPlugins,
+    inlineCss({ skip: true }),
+  ]
+
+  if (useTypescript) {
+    const mergedOptions = {
+      ...baseResolvedTsOptions,
+      ...tsCompilerOptions,
+    }
+
+    // error TS5074: Option '--incremental' can only be specified using tsconfig, emitting to single
+    // file or when option '--tsBuildInfoFile' is specified.
+    if (!mergedOptions.incremental) {
+      delete mergedOptions.incremental
+      delete mergedOptions.tsBuildInfoFile
+    }
+
+    const dtsPlugin = (require('rollup-plugin-dts') as typeof import('rollup-plugin-dts')).default({
+      tsconfig: undefined,
+      compilerOptions: mergedOptions,
     })
+    typesPlugins.push(dtsPlugin)
   }
 
   const plugins: Plugin[] = (
     dts
-      ? [
-          ...commonPlugins,
-          inlineCss({ skip: true }),
-          useTypescript &&
-            require('rollup-plugin-dts').default({
-              tsconfig: tsConfigPath,
-              compilerOptions: {
-                ...tsCompilerOptions,
-                ...baseResolvedTsOptions,
-              },
-            }),
-        ]
+      ? typesPlugins
       : [
           ...commonPlugins,
           inlineCss({ exclude: /node_modules/ }),
@@ -363,7 +376,7 @@ export async function buildEntryConfig(
   return (await Promise.all(configs)).filter(nonNullable)
 }
 
-function buildConfig(
+async function buildConfig(
   entry: string,
   pkg: PackageMetadata,
   exportPaths: ExportPaths,
@@ -372,11 +385,11 @@ function buildConfig(
   cwd: string,
   tsOptions: TypescriptOptions,
   dts: boolean,
-): BuncheeRollupConfig {
+): Promise<BuncheeRollupConfig> {
   const { file } = bundleConfig
   const useTypescript = Boolean(tsOptions.tsConfigPath)
   const options = { ...bundleConfig, useTypescript }
-  const inputOptions = buildInputConfig(
+  const inputOptions = await buildInputConfig(
     entry,
     pkg,
     options,
