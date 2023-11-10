@@ -8,7 +8,7 @@ import type {
   FullExportCondition,
 } from './types'
 import type { InputOptions, OutputOptions, Plugin } from 'rollup'
-import { convertCompilerOptions, type TypescriptOptions } from './typescript'
+import { type TypescriptOptions } from './typescript'
 
 import { resolve, dirname } from 'path'
 import { wasm } from '@rollup/plugin-wasm'
@@ -154,7 +154,10 @@ async function buildInputConfig(
 
     // error TS5074: Option '--incremental' can only be specified using tsconfig, emitting to single
     // file or when option '--tsBuildInfoFile' is specified.
-    delete mergedOptions.incremental
+    if (!mergedOptions.incremental) {
+      delete mergedOptions.incremental
+      delete mergedOptions.tsBuildInfoFile
+    }
 
     const dtsPlugin = (require('rollup-plugin-dts') as typeof import('rollup-plugin-dts')).default({
       tsconfig: undefined,
