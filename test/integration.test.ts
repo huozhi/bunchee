@@ -293,6 +293,22 @@ const testCases: {
       )
     },
   },
+  {
+    name: 'bin',
+    args: [],
+    async expected(dir) {
+      const distFiles = [
+        join(dir, './dist/bin/index.js'),
+        join(dir, './dist/bin/index.d.ts'),
+      ]
+      for (const f of distFiles) {
+        expect(await existsFile(f)).toBe(true)
+      }
+      expect(await fs.readFile(distFiles[1], 'utf-8')).toContain(
+        '#!/usr/bin/env node',
+      )
+    },
+  },
 ]
 
 async function runBundle(

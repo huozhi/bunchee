@@ -360,6 +360,32 @@ export async function buildEntryConfig(
     configs.push(...buildConfigs)
   })
 
+  if (pkg.bin) {
+    const binEntries = Object.values(pkg.bin)
+    const binEntryConfigs = binEntries.map(async (binEntry) => {
+      const source = await getSourcePathFromExportPath(cwd, binEntry, '')
+      if (!source) return undefined
+      const binEntryPath = await resolveSourceFile(cwd, source)
+      const binEntryConfig = buildConfig(
+        binEntryPath,
+        pkg,
+        exportPaths,
+        bundleConfig,
+        {
+          source: binEntryPath,
+          name: binEntry,
+          export: {},
+        },
+        cwd,
+        tsOptions,
+        dts,
+      )
+      return binEntryConfig
+    })
+
+    configs.push(...binEntryConfigs)
+  }
+
   return (await Promise.all(configs)).filter(nonNullable)
 }
 

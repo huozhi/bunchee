@@ -43,6 +43,7 @@ type BundleConfig = {
 type PackageMetadata = {
   name?: string
   main?: string
+  bin?: string | Record<string, string>
   module?: string
   type?: 'commonjs' | 'module'
   dependencies?: Record<string, string>
