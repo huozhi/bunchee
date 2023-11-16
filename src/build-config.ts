@@ -367,6 +367,7 @@ export async function buildEntryConfig(
         tsOptions,
         dts,
       )
+      console.log(await rollupConfig, 'abscs')
       return rollupConfig
     }
 
@@ -374,10 +375,13 @@ export async function buildEntryConfig(
   })
 
   if (pkg.bin) {
-    const binEntries = Object.values(pkg.bin)
-    const binEntryConfigs = binEntries.map(async (binEntry) => {
-      const source = await getSourcePathFromExportPath(cwd, binEntry, '')
-      if (!source) return undefined
+    const isSingleBin = typeof pkg.bin === 'string'
+    if (isSingleBin) {
+      const binEntry = pkg.bin as string
+      const sourceFilename = binEntry.split('/').pop()?.replace('.js', '')
+      const entry = `./${sourceFilename}`
+      const source = await getSourcePathFromExportPath(cwd, entry, '')
+      if (!source) return []
       const binEntryPath = await resolveSourceFile(cwd, source)
       const binEntryConfig = buildConfig(
         binEntryPath,
@@ -393,10 +397,9 @@ export async function buildEntryConfig(
         tsOptions,
         dts,
       )
-      return binEntryConfig
-    })
-
-    configs.push(...binEntryConfigs)
+      configs.push(binEntryConfig)
+      console.log(await binEntryConfig, 'abscs')
+    }
   }
 
   return (await Promise.all(configs)).filter(nonNullable)
@@ -426,6 +429,11 @@ async function buildConfig(
   const outputExports = getExportConditionDist(pkg, exportCondition, cwd)
 
   let outputConfigs = []
+
+  if (pkg.bin) {
+    outputConfigs =
+      typeof pkg.bin === 'string' ? [pkg.bin] : Object.values(pkg.bin)
+  }
 
   // Generate dts job - single config
   if (dts) {

@@ -68,6 +68,7 @@ async function bundle(
   )
   // const exportPathsLength = Object.keys(exportPaths).length
   const isMultiEntries = hasMultiEntryExport(exportPaths) // exportPathsLength > 1
+  const hasBin = Boolean(pkg.bin)
 
   const tsConfig = await resolveTsConfig(cwd)
   const hasTsConfig = Boolean(tsConfig?.tsConfigPath)
@@ -135,7 +136,7 @@ async function bundle(
     ? (await fileExists(entryPath)) && (await fs.stat(entryPath)).isFile()
     : false
 
-  if (!hasSpecifiedEntryFile && !isMultiEntries) {
+  if (!hasSpecifiedEntryFile && !isMultiEntries && !hasBin) {
     const err = new Error(`Entry file \`${entryPath}\` is not existed`)
     err.name = 'NOT_EXISTED'
     return Promise.reject(err)

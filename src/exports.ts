@@ -316,7 +316,7 @@ export function getExportConditionDist(
     dist.push({ format, file: distFile })
   }
 
-  if (dist.length === 0) {
+  if (dist.length === 0 && !pkg.bin) {
     // TODO: Deprecate this warning and behavior in v3
     console.error(
       `Doesn't fin any exports in ${pkg.name}, using default dist path dist/index.js`,
