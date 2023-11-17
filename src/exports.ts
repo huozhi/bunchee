@@ -301,9 +301,7 @@ export function getExportConditionDist(
     const distFile = getDistPath(relativePath, cwd)
 
     let format: 'cjs' | 'esm' = 'esm'
-    if (isEsmExportName(key, ext)) {
-      format = 'esm'
-    } else if (isCjsExportName(key, ext)) {
+    if (isCjsExportName(key, ext)) {
       format = 'cjs'
     }
 
