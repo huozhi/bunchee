@@ -268,13 +268,16 @@ export const getExportTypeDist = (
         existed.add(typeFile)
       }
     } else {
-      for (const key of Object.values(pkg.bin)) {
-        const filePath = pkg.bin[key]
-        const ext = extname(filePath).slice(1)
-        const typeFile = getDistPath(
-          `${filenameWithoutExtension(filePath) || ''}.d.${ext}`,
-          cwd,
-        )
+      for (const distPath of Object.values(pkg.bin)) {
+        const ext = extname(distPath).slice(1)
+        const dtsExtentions: Record<string, string> = {
+          js: '.d.ts',
+          cjs: '.d.cts',
+          mjs: '.d.mts',
+        }
+        const typeFile = `${filenameWithoutExtension(distPath) || ''}${
+          dtsExtentions[ext]
+        }`
         if (existed.has(typeFile)) {
           continue
         }
