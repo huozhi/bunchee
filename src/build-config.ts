@@ -367,7 +367,6 @@ export async function buildEntryConfig(
         tsOptions,
         dts,
       )
-      console.log(await rollupConfig, 'abscs')
       return rollupConfig
     }
 
@@ -398,7 +397,6 @@ export async function buildEntryConfig(
         dts,
       )
       configs.push(binEntryConfig)
-      console.log(await binEntryConfig, 'abscs')
     }
   }
 
@@ -430,14 +428,9 @@ async function buildConfig(
 
   let outputConfigs = []
 
-  if (pkg.bin) {
-    outputConfigs =
-      typeof pkg.bin === 'string' ? [pkg.bin] : Object.values(pkg.bin)
-  }
-
   // Generate dts job - single config
   if (dts) {
-    const typeOutputExports = getExportTypeDist(exportCondition, cwd)
+    const typeOutputExports = getExportTypeDist(pkg, exportCondition, cwd)
     outputConfigs = typeOutputExports.map((v) =>
       buildOutputConfigs(
         pkg,

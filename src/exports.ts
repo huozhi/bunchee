@@ -217,6 +217,7 @@ export function getExportPaths(
 }
 
 export const getExportTypeDist = (
+  pkg: PackageMetadata,
   parsedExportCondition: ParsedExportCondition,
   cwd: string,
 ) => {
@@ -250,6 +251,38 @@ export const getExportTypeDist = (
     }
     existed.add(typeFile)
   }
+
+  if (pkg.bin) {
+    if (typeof pkg.bin === 'string') {
+      const ext = extname(pkg.bin).slice(1)
+      const dtsExtentions: Record<string, string> = {
+        js: '.d.ts',
+        cjs: '.d.cts',
+        mjs: '.d.mts',
+      }
+      const typeFile = `${filenameWithoutExtension(pkg.bin) || ''}${
+        dtsExtentions[ext]
+      }`
+      const hasTypeFile = existed.has(typeFile)
+      if (!hasTypeFile) {
+        existed.add(typeFile)
+      }
+    } else {
+      for (const key of Object.values(pkg.bin)) {
+        const filePath = pkg.bin[key]
+        const ext = extname(filePath).slice(1)
+        const typeFile = getDistPath(
+          `${filenameWithoutExtension(filePath) || ''}.d.${ext}`,
+          cwd,
+        )
+        if (existed.has(typeFile)) {
+          continue
+        }
+        existed.add(typeFile)
+      }
+    }
+  }
+
   return Array.from(existed)
 }
 
@@ -290,6 +323,39 @@ export function getExportConditionDist(
   const dist: { format: 'cjs' | 'esm'; file: string }[] = []
   const existed = new Set<string>()
   const exportTypes = Object.keys(parsedExportCondition.export)
+
+  if (pkg.bin) {
+    if (typeof pkg.bin === 'string') {
+      const ext = extname(pkg.bin).slice(1)
+      if (isEsmExportName('import', ext)) {
+        dist.push({
+          format: 'esm',
+          file: getDistPath(pkg.bin, cwd),
+        })
+      } else {
+        dist.push({
+          format: 'cjs',
+          file: getDistPath(pkg.bin, cwd),
+        })
+      }
+    } else {
+      for (const key of Object.keys(pkg.bin)) {
+        const filePath = pkg.bin[key]
+        const ext = extname(filePath).slice(1)
+        if (isEsmExportName('import', ext)) {
+          dist.push({
+            format: 'esm',
+            file: getDistPath(filePath, cwd),
+          })
+        } else {
+          dist.push({
+            format: 'cjs',
+            file: getDistPath(filePath, cwd),
+          })
+        }
+      }
+    }
+  }
 
   for (const key of exportTypes) {
     if (key === 'types') {
