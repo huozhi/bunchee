@@ -313,17 +313,17 @@ const testCases: {
     },
   },
   {
-    name: 'bin',
+    name: 'bin/single-path',
     args: [],
     async expected(dir) {
       const distFiles = [
-        join(dir, './dist/bin/index.js'),
-        join(dir, './dist/bin/index.d.ts'),
+        join(dir, './dist/bin.js'),
+        join(dir, './dist/bin.d.ts'),
       ]
       for (const f of distFiles) {
         expect(await existsFile(f)).toBe(true)
       }
-      expect(await fs.readFile(distFiles[1], 'utf-8')).toContain(
+      expect(await fs.readFile(distFiles[0], 'utf-8')).toContain(
         '#!/usr/bin/env node',
       )
     },
