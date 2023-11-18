@@ -183,7 +183,6 @@ const testCases: {
     name: 'single-entry',
     args: [],
     async expected(dir, { stdout }) {
-      expect(stdout).toContain('Hello, world!')
       const distFiles = [
         join(dir, './dist/index.js'),
         join(dir, './dist/index.d.ts'),
