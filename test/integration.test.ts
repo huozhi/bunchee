@@ -348,6 +348,19 @@ const testCases: {
       }
     },
   },
+  {
+    name: 'bin/multi-outdir',
+    args: [],
+    async expected(dir) {
+      const distFiles = [join(dir, './out/a.js'), join(dir, './dist/b.js')]
+
+      for (const distFile of distFiles) {
+        expect(await fs.readFile(distFile, 'utf-8')).toContain(
+          '#!/usr/bin/env node',
+        )
+      }
+    },
+  },
 ]
 
 async function runBundle(
