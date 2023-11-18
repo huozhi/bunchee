@@ -524,7 +524,11 @@ async function buildConfig(
     })
     // CLI output option is always prioritized
     if (file) {
-      const fallbackFormat = (outputExports[0] as any)?.format
+      const firstOutput = outputExports[0] as {
+        format: 'cjs' | 'esm'
+        file: string
+      }
+      const fallbackFormat = firstOutput?.format
       outputConfigs = [
         buildOutputConfigs(
           pkg,
