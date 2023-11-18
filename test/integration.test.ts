@@ -361,6 +361,40 @@ const testCases: {
       }
     },
   },
+  {
+    name: 'bin/nested-path',
+    args: [],
+    async expected(dir) {
+      const distFiles = [
+        join(dir, './dist/a/b/c.js'),
+        join(dir, './dist/a/b/c/d.js'),
+      ]
+
+      for (const distFile of distFiles) {
+        expect(await fs.readFile(distFile, 'utf-8')).toContain(
+          '#!/usr/bin/env node',
+        )
+      }
+    },
+  },
+  {
+    name: 'bin/cts',
+    args: [],
+    async expected(dir) {
+      const distFiles = [
+        join(dir, './dist/bin.cjs'),
+        join(dir, './dist/bin.d.cts'),
+      ]
+
+      for (const distFile of distFiles) {
+        expect(await existsFile(distFile)).toBe(true)
+      }
+
+      expect(await fs.readFile(distFiles[0], 'utf-8')).toContain(
+        '#!/usr/bin/env node',
+      )
+    },
+  },
 ]
 
 async function runBundle(
