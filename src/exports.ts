@@ -257,14 +257,19 @@ export const getExportTypeDist = (
     const binDistPaths = isSinglePathBin
       ? [pkg.bin as string]
       : Object.values(pkg.bin)
+
     for (const binDistPath of binDistPaths) {
       const ext = extname(binDistPath).slice(1)
-      const binTypeFile = `${filenameWithoutExtension(binDistPath) || ''}${
-        dtsExtentions[ext]
-      }`
+      const dtsExt = dtsExtentions[ext]
+
+      const filename = filenameWithoutExtension(binDistPath) ?? ''
+
+      const binTypeFile = `${filename}${dtsExt}`
+
       if (existed.has(binTypeFile)) {
         continue
       }
+
       existed.add(binTypeFile)
     }
   }
@@ -311,35 +316,21 @@ export function getExportConditionDist(
   const exportTypes = Object.keys(parsedExportCondition.export)
 
   if (pkg.bin) {
-    if (typeof pkg.bin === 'string') {
-      const ext = extname(pkg.bin).slice(1)
-      if (isEsmExportName('import', ext)) {
-        dist.push({
-          format: 'esm',
-          file: getDistPath(pkg.bin, cwd),
-        })
-      } else {
-        dist.push({
-          format: 'cjs',
-          file: getDistPath(pkg.bin, cwd),
-        })
-      }
-    } else {
-      for (const key of Object.keys(pkg.bin)) {
-        const filePath = pkg.bin[key]
-        const ext = extname(filePath).slice(1)
-        if (isEsmExportName('import', ext)) {
-          dist.push({
-            format: 'esm',
-            file: getDistPath(filePath, cwd),
-          })
-        } else {
-          dist.push({
-            format: 'cjs',
-            file: getDistPath(filePath, cwd),
-          })
-        }
-      }
+    const isSinglePathBin = typeof pkg.bin === 'string'
+    const binDistPaths = isSinglePathBin
+      ? [pkg.bin as string]
+      : Object.values(pkg.bin)
+
+    for (const binDistPath of binDistPaths) {
+      const ext = extname(binDistPath).slice(1)
+
+      // ESM by default, CJS if the file extension is .cjs
+      const isCJS = isCjsExportName('', ext)
+
+      dist.push({
+        format: isCJS ? 'cjs' : 'esm',
+        file: binDistPath,
+      })
     }
   }
 
