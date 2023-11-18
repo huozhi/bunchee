@@ -447,10 +447,10 @@ async function buildConfig(
     tsOptions,
     dts,
   )
-  const outputExports = getExportConditionDist(pkg, exportCondition, cwd)
-  const typeOutputExports = getExportTypeDist(pkg, exportCondition, cwd)
-
-  let outputConfigs = []
+  const outputExports: Array<string | { format: 'cjs' | 'esm'; file: string }> =
+    dts
+      ? getExportTypeDist(exportCondition, cwd)
+      : getExportConditionDist(pkg, exportCondition, cwd)
 
   if (pkg.bin) {
     const isSinglePathBin = typeof pkg.bin === 'string'
@@ -460,26 +460,30 @@ async function buildConfig(
 
     for (const binDistPath of binDistPaths) {
       const ext = extname(binDistPath).slice(1) as 'js' | 'cjs' | 'mjs'
-      const dtsExt = dtsExtentions[ext]
 
-      const filename = filenameWithoutExtension(binDistPath) ?? ''
-      const binTypeFile = `${filename}${dtsExt}`
+      if (dts) {
+        const dtsExt = dtsExtentions[ext]
+        const filename = filenameWithoutExtension(binDistPath) ?? ''
+        const binTypeFile = `${filename}${dtsExt}`
 
-      // ESM by default, CJS if the file extension is .cjs
-      const isCJS = ext === 'cjs'
+        outputExports.push(binTypeFile)
+      } else {
+        // ESM by default, CJS if the file extension is .cjs
+        const isCJS = ext === 'cjs'
 
-      outputExports.push({
-        format: isCJS ? 'cjs' : 'esm',
-        file: binDistPath,
-      })
-
-      typeOutputExports.push(binTypeFile)
+        outputExports.push({
+          format: isCJS ? 'cjs' : 'esm',
+          file: binDistPath,
+        })
+      }
     }
   }
 
+  let outputConfigs = []
+
   // Generate dts job - single config
   if (dts) {
-    outputConfigs = typeOutputExports.map((v) =>
+    outputConfigs = outputExports.map((v) =>
       buildOutputConfigs(
         pkg,
         exportPaths,
@@ -487,7 +491,7 @@ async function buildConfig(
           ...bundleConfig,
           format: 'es',
           useTypescript,
-          file: v,
+          file: v as string,
         },
         exportCondition,
         cwd,
@@ -498,13 +502,18 @@ async function buildConfig(
   } else {
     // multi outputs with specified format
     outputConfigs = outputExports.map((exportDist) => {
+      const { file, format } = exportDist as {
+        format: 'cjs' | 'esm'
+        file: string
+      }
+
       return buildOutputConfigs(
         pkg,
         exportPaths,
         {
           ...bundleConfig,
-          file: exportDist.file,
-          format: exportDist.format,
+          file,
+          format,
           useTypescript,
         },
         exportCondition,
@@ -515,7 +524,7 @@ async function buildConfig(
     })
     // CLI output option is always prioritized
     if (file) {
-      const fallbackFormat = outputExports[0]?.format
+      const fallbackFormat = (outputExports[0] as any)?.format
       outputConfigs = [
         buildOutputConfigs(
           pkg,
