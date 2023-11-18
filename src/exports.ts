@@ -7,6 +7,7 @@ import type {
   ParsedExportCondition,
 } from './types'
 import { exit, filenameWithoutExtension, hasCjsExtension } from './utils'
+import { dtsExtentions } from './constants'
 
 export function getTypings(pkg: PackageMetadata) {
   return pkg.types || pkg.typings
@@ -223,11 +224,6 @@ export const getExportTypeDist = (
 ) => {
   const existed = new Set<string>()
   const exportTypes = Object.keys(parsedExportCondition.export)
-  const dtsExtentions: Record<string, string> = {
-    js: '.d.ts',
-    cjs: '.d.cts',
-    mjs: '.d.mts',
-  }
   for (const key of exportTypes) {
     if (key === 'module') {
       continue
@@ -241,7 +237,7 @@ export const getExportTypeDist = (
       existed.add(typeFile)
       continue
     }
-    const ext = extname(filePath).slice(1)
+    const ext = extname(filePath).slice(1) as 'js' | 'cjs' | 'mjs'
     const typeFile = getDistPath(
       `${filenameWithoutExtension(filePath) || ''}${dtsExtentions[ext]}`,
       cwd,
@@ -250,28 +246,6 @@ export const getExportTypeDist = (
       continue
     }
     existed.add(typeFile)
-  }
-
-  if (pkg.bin) {
-    const isSinglePathBin = typeof pkg.bin === 'string'
-    const binDistPaths = isSinglePathBin
-      ? [pkg.bin as string]
-      : Object.values(pkg.bin)
-
-    for (const binDistPath of binDistPaths) {
-      const ext = extname(binDistPath).slice(1)
-      const dtsExt = dtsExtentions[ext]
-
-      const filename = filenameWithoutExtension(binDistPath) ?? ''
-
-      const binTypeFile = `${filename}${dtsExt}`
-
-      if (existed.has(binTypeFile)) {
-        continue
-      }
-
-      existed.add(binTypeFile)
-    }
   }
 
   return Array.from(existed)
@@ -314,25 +288,6 @@ export function getExportConditionDist(
   const dist: { format: 'cjs' | 'esm'; file: string }[] = []
   const existed = new Set<string>()
   const exportTypes = Object.keys(parsedExportCondition.export)
-
-  if (pkg.bin) {
-    const isSinglePathBin = typeof pkg.bin === 'string'
-    const binDistPaths = isSinglePathBin
-      ? [pkg.bin as string]
-      : Object.values(pkg.bin)
-
-    for (const binDistPath of binDistPaths) {
-      const ext = extname(binDistPath).slice(1)
-
-      // ESM by default, CJS if the file extension is .cjs
-      const isCJS = isCjsExportName('', ext)
-
-      dist.push({
-        format: isCJS ? 'cjs' : 'esm',
-        file: binDistPath,
-      })
-    }
-  }
 
   for (const key of exportTypes) {
     if (key === 'types') {

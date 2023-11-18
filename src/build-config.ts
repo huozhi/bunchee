@@ -37,6 +37,7 @@ import {
 import {
   availableExportConventions,
   availableESExtensionsRegex,
+  dtsExtentions,
 } from './constants'
 
 const swcMinifyOptions = {
@@ -447,12 +448,37 @@ async function buildConfig(
     dts,
   )
   const outputExports = getExportConditionDist(pkg, exportCondition, cwd)
+  const typeOutputExports = getExportTypeDist(pkg, exportCondition, cwd)
 
   let outputConfigs = []
 
+  if (pkg.bin) {
+    const isSinglePathBin = typeof pkg.bin === 'string'
+    const binDistPaths = isSinglePathBin
+      ? [pkg.bin as string]
+      : Object.values(pkg.bin)
+
+    for (const binDistPath of binDistPaths) {
+      const ext = extname(binDistPath).slice(1) as 'js' | 'cjs' | 'mjs'
+      const dtsExt = dtsExtentions[ext]
+
+      const filename = filenameWithoutExtension(binDistPath) ?? ''
+      const binTypeFile = `${filename}${dtsExt}`
+
+      // ESM by default, CJS if the file extension is .cjs
+      const isCJS = ext === 'cjs'
+
+      outputExports.push({
+        format: isCJS ? 'cjs' : 'esm',
+        file: binDistPath,
+      })
+
+      typeOutputExports.push(binTypeFile)
+    }
+  }
+
   // Generate dts job - single config
   if (dts) {
-    const typeOutputExports = getExportTypeDist(pkg, exportCondition, cwd)
     outputConfigs = typeOutputExports.map((v) =>
       buildOutputConfigs(
         pkg,
