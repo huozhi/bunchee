@@ -463,9 +463,10 @@ async function buildConfig(
 
       if (dts) {
         const dtsExt = dtsExtentions[ext]
-        const filename = filenameWithoutExtension(binDistPath) ?? ''
-        const binTypeFile = `${filename}${dtsExt}`
+        const filename = filenameWithoutExtension(binDistPath)
+        if (!filename) continue
 
+        const binTypeFile = `${filename}${dtsExt}`
         outputExports.push(binTypeFile)
       } else {
         // ESM by default, CJS if the file extension is .cjs
