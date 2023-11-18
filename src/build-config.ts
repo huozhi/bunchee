@@ -10,7 +10,7 @@ import type {
 import type { InputOptions, OutputOptions, Plugin } from 'rollup'
 import { type TypescriptOptions } from './typescript'
 
-import { resolve, dirname } from 'path'
+import { resolve, dirname, extname } from 'path'
 import { wasm } from '@rollup/plugin-wasm'
 import { swc } from 'rollup-plugin-swc3'
 import commonjs from '@rollup/plugin-commonjs'
@@ -89,9 +89,7 @@ async function buildInputConfig(
     target: jscTarget,
     minify: shouldMinify,
   } = options
-  const hasSpecifiedTsTarget = Boolean(
-    tsCompilerOptions.target && tsConfigPath,
-  )
+  const hasSpecifiedTsTarget = Boolean(tsCompilerOptions.target && tsConfigPath)
 
   const swcParserConfig = {
     syntax: useTypescript ? 'typescript' : 'ecmascript',
@@ -141,10 +139,7 @@ async function buildInputConfig(
     jsx: tsCompilerOptions.jsx || 'react',
   }
 
-  const typesPlugins = [
-    ...commonPlugins,
-    inlineCss({ skip: true }),
-  ]
+  const typesPlugins = [...commonPlugins, inlineCss({ skip: true })]
 
   if (useTypescript) {
     const mergedOptions = {
@@ -159,7 +154,9 @@ async function buildInputConfig(
       delete mergedOptions.tsBuildInfoFile
     }
 
-    const dtsPlugin = (require('rollup-plugin-dts') as typeof import('rollup-plugin-dts')).default({
+    const dtsPlugin = (
+      require('rollup-plugin-dts') as typeof import('rollup-plugin-dts')
+    ).default({
       tsconfig: undefined,
       compilerOptions: mergedOptions,
     })
@@ -374,13 +371,38 @@ export async function buildEntryConfig(
   })
 
   if (pkg.bin) {
-    const isSingleBin = typeof pkg.bin === 'string'
-    if (isSingleBin) {
-      const binEntry = pkg.bin as string
-      const sourceFilename = binEntry.split('/').pop()?.replace('.js', '')
-      const entry = `./${sourceFilename}`
-      const source = await getSourcePathFromExportPath(cwd, entry, '')
-      if (!source) return []
+    const isSinglePathBin = typeof pkg.bin === 'string'
+    const binDistPaths = isSinglePathBin
+      ? [pkg.bin as string]
+      : Object.values(pkg.bin)
+
+    for (const binDistPath of binDistPaths) {
+      // assuming in `./a/b/c.js` the `a` as the dist folder name
+      // convert `./a/b/c.js` to `./b/c.js` as if the entry of the exports
+      const startsWithDotSlash = binDistPath.startsWith('./')
+
+      const binPathWithoutDist = binDistPath
+        .split('/')
+        // [ '.', 'a', 'b', 'c.js'] => [ 'b', 'c.js']
+        // [ 'a', 'b', 'c.js'] => [ 'b', 'c.js']
+        .slice(startsWithDotSlash ? 2 : 1)
+        // [ 'b', 'c.js'] => 'b/c.js'
+        .join('/')
+
+      // 'b/c.js' => './b/c' as if the key of the exports
+      const assumedSourcePathFromDistPath = `./${binPathWithoutDist.replace(
+        extname(binPathWithoutDist),
+        '',
+      )}`
+
+      const source = await getSourcePathFromExportPath(
+        cwd,
+        assumedSourcePathFromDistPath,
+        '',
+      )
+
+      if (!source) continue
+
       const binEntryPath = await resolveSourceFile(cwd, source)
       const binEntryConfig = buildConfig(
         binEntryPath,
@@ -389,7 +411,7 @@ export async function buildEntryConfig(
         bundleConfig,
         {
           source: binEntryPath,
-          name: binEntry,
+          name: binDistPath,
           export: {},
         },
         cwd,
@@ -397,28 +419,6 @@ export async function buildEntryConfig(
         dts,
       )
       configs.push(binEntryConfig)
-    } else {
-      const binEntries = Object.keys(pkg.bin)
-      for (const binEntry of binEntries) {
-        const source = await getSourcePathFromExportPath(cwd, binEntry, '')
-        if (!source) continue
-        const binEntryPath = await resolveSourceFile(cwd, source)
-        const binEntryConfig = buildConfig(
-          binEntryPath,
-          pkg,
-          exportPaths,
-          bundleConfig,
-          {
-            source: binEntryPath,
-            name: binEntry,
-            export: {},
-          },
-          cwd,
-          tsOptions,
-          dts,
-        )
-        configs.push(binEntryConfig)
-      }
     }
   }
 
