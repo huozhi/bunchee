@@ -218,7 +218,6 @@ export function getExportPaths(
 }
 
 export const getExportTypeDist = (
-  pkg: PackageMetadata,
   parsedExportCondition: ParsedExportCondition,
   cwd: string,
 ) => {

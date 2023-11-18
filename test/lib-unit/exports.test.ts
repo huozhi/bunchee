@@ -226,7 +226,7 @@ describe('lib exports', () => {
         export: parsedExportCondition[exportName],
       }
       // Get only basename to skip path.resolve result for `file` property
-      return getExportTypeDist(pkg, parsedExport, '').map((filename) =>
+      return getExportTypeDist(parsedExport, '').map((filename) =>
         path.basename(filename),
       )
     }
