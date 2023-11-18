@@ -223,6 +223,11 @@ export const getExportTypeDist = (
 ) => {
   const existed = new Set<string>()
   const exportTypes = Object.keys(parsedExportCondition.export)
+  const dtsExtentions: Record<string, string> = {
+    js: '.d.ts',
+    cjs: '.d.cts',
+    mjs: '.d.mts',
+  }
   for (const key of exportTypes) {
     if (key === 'module') {
       continue
@@ -237,11 +242,6 @@ export const getExportTypeDist = (
       continue
     }
     const ext = extname(filePath).slice(1)
-    const dtsExtentions: Record<string, string> = {
-      js: '.d.ts',
-      cjs: '.d.cts',
-      mjs: '.d.mts',
-    }
     const typeFile = getDistPath(
       `${filenameWithoutExtension(filePath) || ''}${dtsExtentions[ext]}`,
       cwd,
@@ -253,36 +253,19 @@ export const getExportTypeDist = (
   }
 
   if (pkg.bin) {
-    if (typeof pkg.bin === 'string') {
-      const ext = extname(pkg.bin).slice(1)
-      const dtsExtentions: Record<string, string> = {
-        js: '.d.ts',
-        cjs: '.d.cts',
-        mjs: '.d.mts',
-      }
-      const typeFile = `${filenameWithoutExtension(pkg.bin) || ''}${
+    const isSinglePathBin = typeof pkg.bin === 'string'
+    const binDistPaths = isSinglePathBin
+      ? [pkg.bin as string]
+      : Object.values(pkg.bin)
+    for (const binDistPath of binDistPaths) {
+      const ext = extname(binDistPath).slice(1)
+      const binTypeFile = `${filenameWithoutExtension(binDistPath) || ''}${
         dtsExtentions[ext]
       }`
-      const hasTypeFile = existed.has(typeFile)
-      if (!hasTypeFile) {
-        existed.add(typeFile)
+      if (existed.has(binTypeFile)) {
+        continue
       }
-    } else {
-      for (const distPath of Object.values(pkg.bin)) {
-        const ext = extname(distPath).slice(1)
-        const dtsExtentions: Record<string, string> = {
-          js: '.d.ts',
-          cjs: '.d.cts',
-          mjs: '.d.mts',
-        }
-        const typeFile = `${filenameWithoutExtension(distPath) || ''}${
-          dtsExtentions[ext]
-        }`
-        if (existed.has(typeFile)) {
-          continue
-        }
-        existed.add(typeFile)
-      }
+      existed.add(binTypeFile)
     }
   }
 
