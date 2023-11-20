@@ -378,8 +378,8 @@ export async function buildEntryConfig(
       : Object.values(pkg.bin)
 
     for (const binDistPath of binDistPaths) {
-      // assuming in `./a/b/c.js` the `a` as the dist folder name
-      // convert `./a/b/c.js` to `./b/c.js` as if the entry of the exports
+      // assuming in './a/b/c.js' the 'a' as the dist folder name
+      // convert './a/b/c.js' to './b/c' as if the entry of the exports
       const startsWithDotSlash = binDistPath.startsWith('./')
 
       const binPathWithoutDist = binDistPath
@@ -469,7 +469,7 @@ async function buildConfig(
         const binTypeFile = `${filename}${dtsExt}`
         outputExports.push(binTypeFile)
       } else {
-        // ESM by default, CJS if the file extension is .cjs
+        // ESM by default, CJS if the dist file extension is .cjs
         const isCJS = ext === 'cjs'
 
         outputExports.push({

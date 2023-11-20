@@ -125,11 +125,6 @@ export async function getSourcePathFromExportPath(
   return
 }
 
-export async function getSourcePathFromOutputPath(
-  cwd: string,
-  outputPath: string,
-) {}
-
 // Unlike path.basename, forcedly removing extension
 export function filenameWithoutExtension(file: string | undefined) {
   return file
