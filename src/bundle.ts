@@ -136,7 +136,8 @@ async function bundle(
     ? (await fileExists(entryPath)) && (await fs.stat(entryPath)).isFile()
     : false
 
-  if (!hasSpecifiedEntryFile && !isMultiEntries && !hasBin) {
+  const hasNoEntry = !hasSpecifiedEntryFile && !isMultiEntries && !hasBin
+  if (hasNoEntry) {
     const err = new Error(`Entry file \`${entryPath}\` is not existed`)
     err.name = 'NOT_EXISTED'
     return Promise.reject(err)
