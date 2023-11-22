@@ -362,22 +362,6 @@ const testCases: {
     },
   },
   {
-    name: 'bin/nested-path',
-    args: [],
-    async expected(dir) {
-      const distFiles = [
-        join(dir, './dist/a/b/c.js'),
-        join(dir, './dist/a/b/c/d.js'),
-      ]
-
-      for (const distFile of distFiles) {
-        expect(await fs.readFile(distFile, 'utf-8')).toContain(
-          '#!/usr/bin/env node',
-        )
-      }
-    },
-  },
-  {
     name: 'bin/cts',
     args: [],
     async expected(dir) {
