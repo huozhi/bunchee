@@ -19,7 +19,7 @@ import { nodeResolve } from '@rollup/plugin-node-resolve'
 import replace from '@rollup/plugin-replace'
 import { sizeCollector } from './plugins/size-plugin'
 import { inlineCss } from './plugins/inline-css'
-import swcPreserveDirectivePlugin from 'rollup-swc-preserve-directives'
+import preserveDirectives from 'rollup-preserve-directives'
 import {
   getTypings,
   getExportPaths,
@@ -172,7 +172,7 @@ async function buildInputConfig(
       : [
           ...commonPlugins,
           inlineCss({ exclude: /node_modules/ }),
-          swcPreserveDirectivePlugin(),
+          preserveDirectives(),
           replace({
             values: getBuildEnv(options.env || []),
             preventAssignment: true,
