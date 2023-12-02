@@ -10,7 +10,7 @@ describe('types', () => {
       sourcemap: false,
       external: [],
       format: 'esm',
-      target: 'es2016',
+      target: 'es2015',
       runtime: 'nodejs',
     }
 

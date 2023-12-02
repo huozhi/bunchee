@@ -76,7 +76,7 @@ Then just run `npm run build`, or `pnpm build` / `yarn build` if you're using th
 - Output (`-o <file>`): Specify output filename.
 - Format (`-f <format>`): Set output format (default: `'esm'`).
 - External (`--external <dep,>`): Specifying extra external dependencies, by default it is the list of `dependencies` and `peerDependencies` from `package.json`. Values are separate by comma.
-- Target (`--target <target>`): Set ECMAScript target (default: `'es2016'`).
+- Target (`--target <target>`): Set ECMAScript target (default: `'es2015'`).
 - Runtime (`--runtime <runtime>`): Set build runtime (default: `'browser'`).
 - Environment (`--env <env,>`): Define environment variables. (default: `NODE_ENV`, separate by comma)
 - Working Directory (`--cwd <cwd>`): Set current working directory where containing `package.json`.
@@ -308,7 +308,7 @@ await bundle(path.resolve('./src/index.ts'), {
   sourcemap: false, // Boolean
   external: [], // string[]
   format: 'esm', // 'esm' | 'cjs'
-  target: 'es2016', // ES syntax target
+  target: 'es2015', // ES syntax target
   runtime: 'nodejs', // 'browser' | 'nodejs'
   cwd: process.cwd(), // string
 })
