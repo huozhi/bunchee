@@ -228,10 +228,7 @@ const testCases: {
     name: 'ts-incremental',
     args: [],
     async expected(dir) {
-      const distFiles = [
-        './dist/index.js',
-        './dist/index.d.ts',
-      ]
+      const distFiles = ['./dist/index.js', './dist/index.d.ts']
 
       for (const f of distFiles) {
         expect(await existsFile(join(dir, f))).toBe(true)
@@ -310,6 +307,16 @@ const testCases: {
       expect(stderr).toContain(
         'Cannot export main field with .cjs extension in ESM package, only .mjs and .js extensions are allowed',
       )
+    },
+  },
+  {
+    name: 'esm-shims',
+    args: [],
+    async expected(dir) {
+      expect(await fs.readFile(join(dir, './dist/index.mjs'), 'utf-8'))
+        .toContain(`const __filename = cjsUrl.fileURLToPath(import.meta.url);
+const __dirname = cjsPath.dirname(__filename);
+const require = cjsModule.createRequire(import.meta.url);`)
     },
   },
 ]

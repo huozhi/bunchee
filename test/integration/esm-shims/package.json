@@ -1,0 +1,7 @@
+{
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs"
+    }
+  }
+}

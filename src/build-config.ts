@@ -17,6 +17,7 @@ import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import replace from '@rollup/plugin-replace'
+import esmShim from '@rollup/plugin-esm-shim'
 import { sizeCollector } from './plugins/size-plugin'
 import { inlineCss } from './plugins/inline-css'
 import swcPreserveDirectivePlugin from 'rollup-swc-preserve-directives'
@@ -192,6 +193,7 @@ async function buildInputConfig(
             tsconfig: tsConfigPath,
             ...swcOptions,
           }),
+          esmShim()
         ]
   ).filter(isNotNull<Plugin>)
 

@@ -48,6 +48,7 @@
   "license": "MIT",
   "dependencies": {
     "@rollup/plugin-commonjs": "^25.0.4",
+    "@rollup/plugin-esm-shim": "^0.1.5",
     "@rollup/plugin-json": "^6.0.0",
     "@rollup/plugin-node-resolve": "^15.2.1",
     "@rollup/plugin-replace": "^5.0.2",
