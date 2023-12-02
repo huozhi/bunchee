@@ -228,7 +228,10 @@ const testCases: {
     name: 'ts-incremental',
     args: [],
     async expected(dir) {
-      const distFiles = ['./dist/index.js', './dist/index.d.ts']
+      const distFiles = [
+        './dist/index.js',
+        './dist/index.d.ts',
+      ]
 
       for (const f of distFiles) {
         expect(await existsFile(join(dir, f))).toBe(true)
