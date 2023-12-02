@@ -56,7 +56,7 @@ async function bundle(
   const cwd = resolve(process.cwd(), _cwd || '')
   assignDefault(options, 'format', 'es')
   assignDefault(options, 'minify', false)
-  assignDefault(options, 'target', 'es2015')
+  assignDefault(options, 'target', 'es2016')
 
   const pkg = await getPackageMeta(cwd)
   const resolvedWildcardExports = await resolveWildcardExports(pkg.exports, cwd)
