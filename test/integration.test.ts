@@ -316,10 +316,23 @@ const testCases: {
     name: 'esm-shims',
     args: [],
     async expected(dir) {
-      expect(await fs.readFile(join(dir, './dist/index.mjs'), 'utf-8'))
-        .toContain(`const __filename = cjsUrl.fileURLToPath(import.meta.url);
-const __dirname = cjsPath.dirname(__filename);
-const require = cjsModule.createRequire(import.meta.url);`)
+      const shimsCode = [
+        'const __filename = cjsUrl.fileURLToPath(import.meta.url)',
+        'const __dirname = cjsPath.dirname(__filename)',
+        'const require = cjsModule.createRequire(import.meta.url)',
+      ]
+      const esmOutput = await fs.readFile(join(dir, './dist/index.mjs'), 'utf-8')
+      const cjsOutput = await fs.readFile(join(dir, './dist/index.cjs'), 'utf-8')
+      expect(
+        shimsCode.every((code) => esmOutput.includes(code)),
+      ).toBe(true)
+      expect(
+        shimsCode.map((code) => cjsOutput.includes(code)),
+      ).toEqual([false, false, false])
+      // for import.meta.url, should use pathToFileURL + URL polyfill
+      expect(cjsOutput).toContain('pathToFileURL')
+      expect(cjsOutput).toContain('new URL')
+      expect(cjsOutput).not.toContain('import.meta.url')
     },
   },
 ]
