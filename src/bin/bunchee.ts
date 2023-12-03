@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
-import type { CliArgs, BundleConfig } from './types'
+import type { CliArgs, BundleConfig } from '../types'
 
 import path from 'path'
 import arg from 'arg'
-import { exit, formatDuration, getPackageMeta, hasPackageJson } from './utils'
-import { logger } from './logger'
-import { version } from '../package.json'
+import { exit, formatDuration, getPackageMeta, hasPackageJson } from '../utils'
+import { logger } from '../logger'
+import { version } from '../../package.json'
 
 const helpMessage = `
 Usage: bunchee [options]
@@ -138,7 +138,7 @@ async function run(args: CliArgs) {
   }
 
   const entry = source ? path.resolve(cwd, source) : ''
-  const bundle: typeof import('./index').bundle = require('./index').bundle
+  const bundle: typeof import('../index').bundle = require('../index').bundle
 
   let timeStart = Date.now()
   let timeEnd
