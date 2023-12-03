@@ -2,9 +2,7 @@
   "name": "bunchee",
   "version": "3.9.2",
   "description": "zero config bundler for js/ts/jsx libraries",
-  "bin": {
-    "bunchee": "./dist/cli.js"
-  },
+  "bin": "./dist/bin/cli.js",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
@@ -12,10 +10,8 @@
     "test:update": "TEST_UPDATE_SNAPSHOT=1 pnpm test",
     "clean": "rm -rf ./dist",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "pnpm clean && pnpm build && chmod +x ./dist/cli.js && pnpm test",
-    "build:cli": "tsx ./src/cli.ts ./src/cli.ts --runtime node -f cjs -o ./dist/cli.js",
-    "build:main": "tsx ./src/cli.ts ./src/index.ts --runtime node -f cjs",
-    "build": "pnpm build:main && pnpm build:cli",
+    "prepublishOnly": "pnpm clean && pnpm build && chmod +x ./dist/bin/cli.js && pnpm test",
+    "build": "tsx ./src/bin/index.ts --runtime node",
     "format": "prettier --write .",
     "prepare": "husky install"
   },
