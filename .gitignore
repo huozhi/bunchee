@@ -1,14 +1,8 @@
-# NPM
-node_modules/
 package-lock.json
-
-# Output
-dist/
-out/
-
-# Misc
-.DS_Store
+node_modules
+dist
 *.log
 .yalc
 yalc.lock
 test/**/*.js.map
+.DS_Store

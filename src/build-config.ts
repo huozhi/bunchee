@@ -10,7 +10,7 @@ import type {
 import type { InputOptions, OutputOptions, Plugin } from 'rollup'
 import { type TypescriptOptions } from './typescript'
 
-import { resolve, dirname, extname } from 'path'
+import { resolve, dirname, extname, join } from 'path'
 import { wasm } from '@rollup/plugin-wasm'
 import { swc } from 'rollup-plugin-swc3'
 import commonjs from '@rollup/plugin-commonjs'
@@ -38,8 +38,9 @@ import {
 import {
   availableExportConventions,
   availableESExtensionsRegex,
-  dtsExtentions,
+  dtsExtensions,
 } from './constants'
+import { logger } from './logger'
 
 const swcMinifyOptions = {
   compress: true,
@@ -91,7 +92,9 @@ async function buildInputConfig(
     target: jscTarget,
     minify: shouldMinify,
   } = options
-  const hasSpecifiedTsTarget = Boolean(tsCompilerOptions.target && tsConfigPath)
+  const hasSpecifiedTsTarget = Boolean(
+    tsCompilerOptions.target && tsConfigPath,
+  )
 
   const swcParserConfig = {
     syntax: useTypescript ? 'typescript' : 'ecmascript',
@@ -141,7 +144,10 @@ async function buildInputConfig(
     jsx: tsCompilerOptions.jsx || 'react',
   }
 
-  const typesPlugins = [...commonPlugins, inlineCss({ skip: true })]
+  const typesPlugins = [
+    ...commonPlugins,
+    inlineCss({ skip: true }),
+  ]
 
   if (useTypescript) {
     const mergedOptions = {
@@ -156,9 +162,7 @@ async function buildInputConfig(
       delete mergedOptions.tsBuildInfoFile
     }
 
-    const dtsPlugin = (
-      require('rollup-plugin-dts') as typeof import('rollup-plugin-dts')
-    ).default({
+    const dtsPlugin = (require('rollup-plugin-dts') as typeof import('rollup-plugin-dts')).default({
       tsconfig: undefined,
       compilerOptions: mergedOptions,
     })
@@ -373,49 +377,56 @@ export async function buildEntryConfig(
     configs.push(...buildConfigs)
   })
 
-  if (pkg.bin) {
-    const isSinglePathBin = typeof pkg.bin === 'string'
-    const binDistPaths = isSinglePathBin
-      ? [pkg.bin as string]
-      : Object.values(pkg.bin)
+  const binaryExports = pkg.bin
+  if (binaryExports) {
+    // binDistPaths: [ [ 'bin1', './dist/bin1.js'], [ 'bin2', './dist/bin2.js'] ]
+    const binPairs = typeof binaryExports === 'string'
+      ? [['bin', binaryExports]]
+      : Object.keys(binaryExports)
+        .map((key) => [join('bin', key), (binaryExports)[key]])
 
-    for (const binDistPath of binDistPaths) {
-      // assuming in './a/b/c.js' the 'a' as the dist folder name
-      // convert './a/b/c.js' to './b/c' as if the entry of the exports
-      const startsWithDotSlash = binDistPath.startsWith('./')
+    const isESModule = pkg.type === 'module'
+    const binExportPaths = binPairs.reduce((acc, [binName, binDistPath]) => {
+      const ext = extname(binDistPath).slice(1) as keyof typeof dtsExtensions
+      const isCjsExt = ext === 'cjs'
+      const isEsmExt = ext === 'mjs'
 
-      const binPathWithoutDist = binDistPath
-        .split('/')
-        // [ '.', 'a', 'b', 'c.js'] => [ 'b', 'c.js']
-        // [ 'a', 'b', 'c.js'] => [ 'b', 'c.js']
-        .slice(startsWithDotSlash ? 2 : 1)
-        // [ 'b', 'c.js'] => 'b/c.js'
-        .join('/')
+      const exportType = isEsmExt
+        ? 'import'
+        : isCjsExt
+        ? 'require'
+        : isESModule
+        ? 'import'
+        : 'require'
 
-      // 'b/c.js' => './b/c' as if the key of the exports
-      const assumedSourcePathFromDistPath = `./${binPathWithoutDist.replace(
-        extname(binPathWithoutDist),
-        '',
-      )}`
+      acc[binName] = {
+        [exportType]: binDistPath,
+      }
+      return acc
+    }, {} as ExportPaths)
 
+    for (const [binName] of binPairs) {
       const source = await getSourcePathFromExportPath(
         cwd,
-        assumedSourcePathFromDistPath,
-        '',
+        binName,
+        '$binary'
       )
 
-      if (!source) continue
+      if (!source) {
+        logger.warn(`Cannot find source file for ${binName}`)
+        continue
+      }
 
       const binEntryPath = await resolveSourceFile(cwd, source)
       const binEntryConfig = buildConfig(
         binEntryPath,
         pkg,
-        exportPaths,
+        binExportPaths,
         bundleConfig,
         {
           source: binEntryPath,
-          name: binDistPath,
-          export: {},
+          name: binName,
+          export: binExportPaths[binName],
         },
         cwd,
         tsOptions,
@@ -450,37 +461,6 @@ async function buildConfig(
     dts,
   )
   let outputExports = getExportConditionDist(pkg, exportCondition, cwd)
-
-  if (pkg.bin) {
-    const isSinglePathBin = typeof pkg.bin === 'string'
-    const binDistPaths = isSinglePathBin
-      ? [pkg.bin as string]
-      : Object.values(pkg.bin)
-
-    for (const binDistPath of binDistPaths) {
-      const ext = extname(binDistPath).slice(1) as 'js' | 'cjs' | 'mjs'
-
-      if (dts) {
-        const dtsExt = dtsExtentions[ext]
-        const filename = filenameWithoutExtension(binDistPath)
-        if (!filename) continue
-
-        const binTypeFile = `${filename}${dtsExt}`
-        outputExports.push({
-          format: pkg.type === 'module' ? 'esm' : 'cjs',
-          file: binTypeFile,
-        })
-      } else {
-        // ESM by default, CJS if the dist file extension is .cjs
-        const isCJS = ext === 'cjs'
-
-        outputExports.push({
-          format: isCJS ? 'cjs' : 'esm',
-          file: binDistPath,
-        })
-      }
-    }
-  }
 
   let outputConfigs = []
 

@@ -67,7 +67,7 @@ export function resolveSourceFile(cwd: string, filename: string) {
   return path.resolve(cwd, SRC, filename)
 }
 
-async function findSourceEntryFile(
+export async function findSourceEntryFile(
   cwd: string,
   exportPath: string,
   exportTypeSuffix: string | null,
@@ -109,7 +109,8 @@ export async function getSourcePathFromExportPath(
     if (exportPath === '.') exportPath = './index'
 
     // Find convention-based source file for specific export types
-    if (availableExportConventions.includes(exportType)) {
+    // $binary represents `pkg.bin`
+    if (availableExportConventions.includes(exportType) && exportType !== '$binary') {
       const filename = await findSourceEntryFile(
         cwd,
         exportPath,

@@ -328,34 +328,21 @@ const testCases: {
     name: 'bin/multi-path',
     args: [],
     async expected(dir) {
-      const distScriptFiles = [
-        join(dir, './dist/a.js'),
-        join(dir, './dist/b.js'),
+      const distBinFiles = [
+        join(dir, './dist/bin/a.js'),
+        join(dir, './dist/bin/b.js'),
       ]
       const distTypeFiles = [
-        join(dir, './dist/a.d.ts'),
-        join(dir, './dist/b.d.ts'),
+        join(dir, './dist/bin/a.d.ts'),
+        join(dir, './dist/bin/b.d.ts'),
       ]
-      const distFiles = distScriptFiles.concat(distTypeFiles)
+      const distFiles = distBinFiles.concat(distTypeFiles)
 
       for (const distFile of distFiles) {
         expect(await existsFile(distFile)).toBe(true)
       }
-      for (const distScriptFile of distScriptFiles) {
+      for (const distScriptFile of distBinFiles) {
         expect(await fs.readFile(distScriptFile, 'utf-8')).toContain(
-          '#!/usr/bin/env node',
-        )
-      }
-    },
-  },
-  {
-    name: 'bin/multi-outdir',
-    args: [],
-    async expected(dir) {
-      const distFiles = [join(dir, './out/a.js'), join(dir, './dist/b.js')]
-
-      for (const distFile of distFiles) {
-        expect(await fs.readFile(distFile, 'utf-8')).toContain(
           '#!/usr/bin/env node',
         )
       }
@@ -366,8 +353,8 @@ const testCases: {
     args: [],
     async expected(dir) {
       const distFiles = [
-        join(dir, './dist/bin.cjs'),
-        join(dir, './dist/bin.d.cts'),
+        join(dir, './dist/bin/index.cjs'),
+        join(dir, './dist/bin/index.d.cts'),
       ]
 
       for (const distFile of distFiles) {

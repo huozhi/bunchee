@@ -7,7 +7,7 @@ import type {
   ParsedExportCondition,
 } from './types'
 import { exit, filenameWithoutExtension, hasCjsExtension } from './utils'
-import { dtsExtentions } from './constants'
+import { dtsExtensions } from './constants'
 
 export function getTypings(pkg: PackageMetadata) {
   return pkg.types || pkg.typings
@@ -236,9 +236,9 @@ export const getExportTypeDist = (
       existed.add(typeFile)
       continue
     }
-    const ext = extname(filePath).slice(1) as 'js' | 'cjs' | 'mjs'
+    const ext = extname(filePath).slice(1) as keyof typeof dtsExtensions
     const typeFile = getDistPath(
-      `${filenameWithoutExtension(filePath) || ''}${dtsExtentions[ext]}`,
+      `${filenameWithoutExtension(filePath) || ''}${dtsExtensions[ext]}`,
       cwd,
     )
     if (existed.has(typeFile)) {

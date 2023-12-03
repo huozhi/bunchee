@@ -18,7 +18,7 @@ export const dtsExtensionRegex = /\.d\.(m|c)?ts$/
 
 export const SRC = 'src'
 
-export const dtsExtentions = {
+export const dtsExtensions = {
   js: '.d.ts',
   cjs: '.d.cts',
   mjs: '.d.mts',
