@@ -291,7 +291,7 @@ describe('cli', () => {
 
       const ps = fork(
         `${require.resolve('tsx/cli')}`,
-        [__dirname + '/../src/bin/bunchee.ts'].concat(args),
+        [__dirname + '/../src/bin/index.ts'].concat(args),
         {
           stdio: 'pipe',
           env,

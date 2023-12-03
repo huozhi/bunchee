@@ -138,7 +138,7 @@ async function run(args: CliArgs) {
   }
 
   const entry = source ? path.resolve(cwd, source) : ''
-  const bundle: typeof import('../index').bundle = require('bunchee').bundle
+  const bundle: typeof import('../index').bundle = require('../index').bundle
 
   let timeStart = Date.now()
   let timeEnd

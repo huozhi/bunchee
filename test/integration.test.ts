@@ -396,8 +396,8 @@ async function runBundle(
   args_: string[],
 ): Promise<{ code: number | null; stdout: string; stderr: string }> {
   const assetPath = process.env.POST_BUILD
-    ? '/../dist/cli.js'
-    : '/../src/bin/bunchee.ts'
+    ? '/../dist/bin/cli.js'
+    : '/../src/bin/index.ts'
 
   const args = (args_ || []).concat(['--cwd', dir])
   const ps = fork(
