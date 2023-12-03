@@ -1,5 +1,4 @@
 import fs from 'fs/promises'
-import fsSync from 'fs'
 import { execSync, fork } from 'child_process'
 import { resolve, join } from 'path'
 import { stripANSIColor, existsFile, assertFilesContent } from './testing-utils'
@@ -228,10 +227,7 @@ const testCases: {
     name: 'ts-incremental',
     args: [],
     async expected(dir) {
-      const distFiles = [
-        './dist/index.js',
-        './dist/index.d.ts',
-      ]
+      const distFiles = ['./dist/index.js', './dist/index.d.ts']
 
       for (const f of distFiles) {
         expect(await existsFile(join(dir, f))).toBe(true)
@@ -311,6 +307,64 @@ const testCases: {
         'Cannot export main field with .cjs extension in ESM package, only .mjs and .js extensions are allowed',
       )
     },
+  },
+  {
+    name: 'bin/single-path',
+    args: [],
+    async expected(dir) {
+      const distFiles = [
+        join(dir, './dist/bin.js'),
+        join(dir, './dist/bin.d.ts'),
+      ]
+      for (const f of distFiles) {
+        expect(await existsFile(f)).toBe(true)
+      }
+      expect(await fs.readFile(distFiles[0], 'utf-8')).toContain(
+        '#!/usr/bin/env node',
+      )
+    },
+  },
+  {
+    name: 'bin/multi-path',
+    args: [],
+    async expected(dir) {
+      const distBinFiles = [
+        join(dir, './dist/bin/a.js'),
+        join(dir, './dist/bin/b.js'),
+      ]
+      const distTypeFiles = [
+        join(dir, './dist/bin/a.d.ts'),
+        join(dir, './dist/bin/b.d.ts'),
+      ]
+      const distFiles = distBinFiles.concat(distTypeFiles)
+
+      for (const distFile of distFiles) {
+        expect(await existsFile(distFile)).toBe(true)
+      }
+      for (const distScriptFile of distBinFiles) {
+        expect(await fs.readFile(distScriptFile, 'utf-8')).toContain(
+          '#!/usr/bin/env node',
+        )
+      }
+    },
+  },
+  {
+    name: 'bin/cts',
+    args: [],
+    async expected(dir) {
+      const distFiles = [
+        join(dir, './dist/bin/index.cjs'),
+        join(dir, './dist/bin/index.d.cts'),
+      ]
+
+      for (const distFile of distFiles) {
+        expect(await existsFile(distFile)).toBe(true)
+      }
+
+      expect(await fs.readFile(distFiles[0], 'utf-8')).toContain(
+        '#!/usr/bin/env node',
+      )
+    }
   },
   {
     name: 'esm-shims',

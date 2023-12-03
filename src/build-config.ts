@@ -10,7 +10,7 @@ import type {
 import type { InputOptions, OutputOptions, Plugin } from 'rollup'
 import { type TypescriptOptions } from './typescript'
 
-import { resolve, dirname } from 'path'
+import { resolve, dirname, extname, join } from 'path'
 import { wasm } from '@rollup/plugin-wasm'
 import { swc } from 'rollup-plugin-swc3'
 import commonjs from '@rollup/plugin-commonjs'
@@ -38,7 +38,9 @@ import {
 import {
   availableExportConventions,
   availableESExtensionsRegex,
+  dtsExtensions,
 } from './constants'
+import { logger } from './logger'
 
 const swcMinifyOptions = {
   compress: true,
@@ -374,6 +376,65 @@ export async function buildEntryConfig(
 
     configs.push(...buildConfigs)
   })
+
+  const binaryExports = pkg.bin
+  if (binaryExports) {
+    // binDistPaths: [ [ 'bin1', './dist/bin1.js'], [ 'bin2', './dist/bin2.js'] ]
+    const binPairs = typeof binaryExports === 'string'
+      ? [['bin', binaryExports]]
+      : Object.keys(binaryExports)
+        .map((key) => [join('bin', key), (binaryExports)[key]])
+
+    const isESModule = pkg.type === 'module'
+    const binExportPaths = binPairs.reduce((acc, [binName, binDistPath]) => {
+      const ext = extname(binDistPath).slice(1) as keyof typeof dtsExtensions
+      const isCjsExt = ext === 'cjs'
+      const isEsmExt = ext === 'mjs'
+
+      const exportType = isEsmExt
+        ? 'import'
+        : isCjsExt
+        ? 'require'
+        : isESModule
+        ? 'import'
+        : 'require'
+
+      acc[binName] = {
+        [exportType]: binDistPath,
+      }
+      return acc
+    }, {} as ExportPaths)
+
+    for (const [binName] of binPairs) {
+      const source = await getSourcePathFromExportPath(
+        cwd,
+        binName,
+        '$binary'
+      )
+
+      if (!source) {
+        logger.warn(`Cannot find source file for ${binName}`)
+        continue
+      }
+
+      const binEntryPath = await resolveSourceFile(cwd, source)
+      const binEntryConfig = buildConfig(
+        binEntryPath,
+        pkg,
+        binExportPaths,
+        bundleConfig,
+        {
+          source: binEntryPath,
+          name: binName,
+          export: binExportPaths[binName],
+        },
+        cwd,
+        tsOptions,
+        dts,
+      )
+      configs.push(binEntryConfig)
+    }
+  }
 
   return (await Promise.all(configs)).filter(nonNullable)
 }

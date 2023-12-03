@@ -7,6 +7,7 @@ import type {
   ParsedExportCondition,
 } from './types'
 import { exit, filenameWithoutExtension, hasCjsExtension } from './utils'
+import { dtsExtensions } from './constants'
 
 export function getTypings(pkg: PackageMetadata) {
   return pkg.types || pkg.typings
@@ -235,14 +236,9 @@ export const getExportTypeDist = (
       existed.add(typeFile)
       continue
     }
-    const ext = extname(filePath).slice(1)
-    const dtsExtentions: Record<string, string> = {
-      js: '.d.ts',
-      cjs: '.d.cts',
-      mjs: '.d.mts',
-    }
+    const ext = extname(filePath).slice(1) as keyof typeof dtsExtensions
     const typeFile = getDistPath(
-      `${filenameWithoutExtension(filePath) || ''}${dtsExtentions[ext]}`,
+      `${filenameWithoutExtension(filePath) || ''}${dtsExtensions[ext]}`,
       cwd,
     )
     if (existed.has(typeFile)) {
@@ -314,7 +310,7 @@ export function getExportConditionDist(
     dist.push({ format, file: distFile })
   }
 
-  if (dist.length === 0) {
+  if (dist.length === 0 && !pkg.bin) {
     // TODO: Deprecate this warning and behavior in v3
     console.error(
       `Doesn't fin any exports in ${pkg.name}, using default dist path dist/index.js`,
