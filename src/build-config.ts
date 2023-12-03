@@ -449,10 +449,7 @@ async function buildConfig(
     tsOptions,
     dts,
   )
-  const outputExports: Array<string | { format: 'cjs' | 'esm'; file: string }> =
-    dts
-      ? getExportTypeDist(exportCondition, cwd)
-      : getExportConditionDist(pkg, exportCondition, cwd)
+  let outputExports = getExportConditionDist(pkg, exportCondition, cwd)
 
   if (pkg.bin) {
     const isSinglePathBin = typeof pkg.bin === 'string'
@@ -469,7 +466,10 @@ async function buildConfig(
         if (!filename) continue
 
         const binTypeFile = `${filename}${dtsExt}`
-        outputExports.push(binTypeFile)
+        outputExports.push({
+          format: pkg.type === 'module' ? 'esm' : 'cjs',
+          file: binTypeFile,
+        })
       } else {
         // ESM by default, CJS if the dist file extension is .cjs
         const isCJS = ext === 'cjs'
@@ -486,7 +486,8 @@ async function buildConfig(
 
   // Generate dts job - single config
   if (dts) {
-    outputConfigs = outputExports.map((v) =>
+    const typeOutputExports = getExportTypeDist(exportCondition, cwd)
+    outputConfigs = typeOutputExports.map((v) =>
       buildOutputConfigs(
         pkg,
         exportPaths,
@@ -494,7 +495,7 @@ async function buildConfig(
           ...bundleConfig,
           format: 'es',
           useTypescript,
-          file: v as string,
+          file: v,
         },
         exportCondition,
         cwd,
@@ -505,18 +506,13 @@ async function buildConfig(
   } else {
     // multi outputs with specified format
     outputConfigs = outputExports.map((exportDist) => {
-      const { file, format } = exportDist as {
-        format: 'cjs' | 'esm'
-        file: string
-      }
-
       return buildOutputConfigs(
         pkg,
         exportPaths,
         {
           ...bundleConfig,
-          file,
-          format,
+          file: exportDist.file,
+          format: exportDist.format,
           useTypescript,
         },
         exportCondition,
@@ -527,11 +523,7 @@ async function buildConfig(
     })
     // CLI output option is always prioritized
     if (file) {
-      const firstOutput = outputExports[0] as {
-        format: 'cjs' | 'esm'
-        file: string
-      }
-      const fallbackFormat = firstOutput?.format
+      const fallbackFormat = outputExports[0]?.format
       outputConfigs = [
         buildOutputConfigs(
           pkg,
