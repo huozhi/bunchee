@@ -460,7 +460,7 @@ async function buildConfig(
     tsOptions,
     dts,
   )
-  let outputExports = getExportConditionDist(pkg, exportCondition, cwd)
+  const outputExports = getExportConditionDist(pkg, exportCondition, cwd)
 
   let outputConfigs = []
 

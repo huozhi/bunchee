@@ -246,7 +246,6 @@ export const getExportTypeDist = (
     }
     existed.add(typeFile)
   }
-
   return Array.from(existed)
 }
 
