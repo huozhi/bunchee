@@ -256,9 +256,49 @@ This will match the export names `"foo"` and `"bar"` and will be treated as the 
 
 > Note: Wildcard Exports currently only supports the exports key `"./*"`, which will match all the available entries.
 
+### `bin` Field Convention
+
+To build executable files with the `bin` field in package.json, `bunchee` requires you to create the `bin` directory inside your `src` directory.
+
+```bash
+|- src/
+  |- bin/
+    |- index.ts
+```
+
+This will match the `bin` field in package.json as:
+
+```json
+{
+  "bin": "./dist/bin.js"
+}
+```
+
+For multiple executable files, you can create multiple files under the `bin` directory.
+
+```bash
+|- src/
+  |- bin/
+    |- foo.ts
+    |- bar.ts
+```
+
+This will match the `bin` field in package.json as:
+
+```json
+{
+  "bin": {
+    "foo": "./dist/bin/a.js",
+    "bar": "./dist/bin/b.js"
+  }
+}
+```
+
+> Note: For multiple `bin` files, the filename should match the key name in the `bin` field.
+
 ### CSS
 
-`bunchee`` has basic CSS support for pure CSS file imports. It will be bundled into js bundle and insert the style tag into the document head when the bundle is loaded by browser.
+`bunchee` has basic CSS support for pure CSS file imports. It will be bundled into js bundle and insert the style tag into the document head when the bundle is loaded by browser.
 
 ```css
 /* src/style.css */
