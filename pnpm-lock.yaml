@@ -48,8 +48,8 @@ dependencies:
     specifier: ^6.1.0
     version: 6.1.0(rollup@4.6.1)(typescript@5.3.2)
   rollup-plugin-swc3:
-    specifier: ^0.10.4
-    version: 0.10.4(@swc/core@1.3.99)(rollup@4.6.1)
+    specifier: ^0.11.0
+    version: 0.11.0(@swc/core@1.3.99)(rollup@4.6.1)
   rollup-preserve-directives:
     specifier: ^1.0.0
     version: 1.0.0(rollup@4.6.1)
@@ -3208,8 +3208,8 @@ packages:
       '@babel/code-frame': 7.22.13
     dev: false
 
-  /rollup-plugin-swc3@0.10.4(@swc/core@1.3.99)(rollup@4.6.1):
-    resolution: {integrity: sha512-ggLdYqAe3fZmhuyavDnuixMcNyK1/7CIlmJatW2UcKveN1GpQeFlaRjtXnK6/UCIt71SVr3Qy6p2iCLIkXq3iQ==}
+  /rollup-plugin-swc3@0.11.0(@swc/core@1.3.99)(rollup@4.6.1):
+    resolution: {integrity: sha512-luB9Ngb1YieWPpJttKvkmjN3lG5l28SmASLbf2CoScUB2+EImU0bE8wX4EYKEqv5clVulhWRQHQvE+H33X/03g==}
     engines: {node: '>=12'}
     peerDependencies:
       '@swc/core': '>=1.2.165'
@@ -3220,7 +3220,7 @@ packages:
       '@swc/core': 1.3.99(@swc/helpers@0.5.0)
       get-tsconfig: 4.7.2
       rollup: 4.6.1
-      rollup-swc-preserve-directives: 0.6.0(@swc/core@1.3.99)(rollup@4.6.1)
+      rollup-preserve-directives: 1.0.0(rollup@4.6.1)
     dev: false
 
   /rollup-preserve-directives@1.0.0(rollup@4.6.1):
@@ -3229,17 +3229,6 @@ packages:
       rollup: ^2.0.0 || ^3.0.0 || ^4.0.0
     dependencies:
       '@napi-rs/magic-string': 0.3.4
-      rollup: 4.6.1
-    dev: false
-
-  /rollup-swc-preserve-directives@0.6.0(@swc/core@1.3.99)(rollup@4.6.1):
-    resolution: {integrity: sha512-MkKETpYF2ml5p15IxqbvLdFxWV6b99ALT6qL/okXYhaaiK8Mqu95nyk90+m58Ye+jMOpnhQsdK3JGMIPUV7i5g==}
-    peerDependencies:
-      '@swc/core': '>=1.3.79'
-      rollup: ^2.0.0 || ^3.0.0 || ^4.0.0
-    dependencies:
-      '@napi-rs/magic-string': 0.3.4
-      '@swc/core': 1.3.99(@swc/helpers@0.5.0)
       rollup: 4.6.1
     dev: false
 
