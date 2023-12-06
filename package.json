@@ -43,6 +43,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@arethetypeswrong/core": "^0.13.2",
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-esm-shim": "^0.1.5",
     "@rollup/plugin-json": "^6.0.1",
