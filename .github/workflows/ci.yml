@@ -8,7 +8,7 @@ on:
       - 'v*'
   pull_request:
     paths-ignore:
-      - '**/*.md'
+      - '*.md'
 
 jobs:
   install_and_test:
