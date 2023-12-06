@@ -7,8 +7,6 @@ on:
     tags:
       - 'v*'
   pull_request:
-    paths-ignore:
-      - 'README.md'
 
 jobs:
   install_and_test:
