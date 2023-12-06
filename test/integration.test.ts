@@ -389,6 +389,17 @@ const testCases: {
       expect(cjsOutput).not.toContain('import.meta.url')
     },
   },
+  {
+    name: 'raw-data',
+    args: [],
+    async expected(dir) {
+      const distFile = join(dir, './dist/index.js')
+      expect(await existsFile(distFile)).toBe(true)
+      expect(await fs.readFile(distFile, 'utf-8')).toContain(
+        `"thisismydata"`,
+      )
+    },
+  }
 ]
 
 async function runBundle(

@@ -20,6 +20,7 @@ import replace from '@rollup/plugin-replace'
 import esmShim from '@rollup/plugin-esm-shim'
 import { sizeCollector } from './plugins/size-plugin'
 import { inlineCss } from './plugins/inline-css'
+import { rawContent } from './plugins/raw-plugin'
 import preserveDirectives from 'rollup-preserve-directives'
 import {
   getTypings,
@@ -175,6 +176,7 @@ async function buildInputConfig(
       : [
           ...commonPlugins,
           inlineCss({ exclude: /node_modules/ }),
+          rawContent({ exclude: /node_modules/ }),
           preserveDirectives(),
           replace({
             values: getBuildEnv(options.env || []),
