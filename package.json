@@ -58,7 +58,7 @@
     "rollup": "^4.6.1",
     "rollup-plugin-dts": "^6.1.0",
     "rollup-plugin-swc3": "^0.11.0",
-    "rollup-preserve-directives": "^1.0.0",
+    "rollup-preserve-directives": "^1.0.1",
     "tslib": "^2.6.2"
   },
   "peerDependencies": {
