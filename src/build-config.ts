@@ -28,6 +28,7 @@ import {
   getExportConditionDist,
   isEsmExportName,
   getExportTypeDist,
+  isESModulePackage,
 } from './exports'
 import {
   isNotNull,
@@ -387,7 +388,7 @@ export async function buildEntryConfig(
       : Object.keys(binaryExports)
         .map((key) => [join('bin', key), (binaryExports)[key]])
 
-    const isESModule = pkg.type === 'module'
+    const isESModule = isESModulePackage(pkg.type)
     const binExportPaths = binPairs.reduce((acc, [binName, binDistPath]) => {
       const ext = extname(binDistPath).slice(1) as keyof typeof dtsExtensions
       const isCjsExt = ext === 'cjs'

@@ -18,7 +18,6 @@ const testCases: {
     { stderr, stdout }: { stderr: string; stdout: string },
   ): void
 }[] = [
-  // TODO: test externals/sub-path-export
   {
     name: 'externals',
     args: ['index.js', '-o', './dist/index.js'],
