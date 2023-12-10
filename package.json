@@ -34,7 +34,7 @@
     "singleQuote": true
   },
   "engines": {
-    "node": ">= 16"
+    "node": ">= 18.0.0"
   },
   "author": "huozhi (github.com/huozhi)",
   "repository": {
