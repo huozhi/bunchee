@@ -22,7 +22,6 @@ function isExportLike(field: any): field is string | FullExportCondition {
   if (typeof field === 'string') return true
   return Object.entries(field).every(
     // Every value is string and key is not start with '.'
-    // TODO: check key is ExportType
     ([key, value]) => typeof value === 'string' && !key.startsWith('.'),
   )
 }
@@ -31,26 +30,25 @@ function constructFullExportCondition(
   exportCondition: string | Record<string, string | undefined>,
   packageType: PackageType,
 ): FullExportCondition {
-  const isCommonjs = packageType === 'commonjs'
-  let result: FullExportCondition
+  const isEsmPkg = isESModulePackage(packageType)
+  let fullExportCond: FullExportCondition
   if (typeof exportCondition === 'string') {
-    result = {
-      [isCommonjs ? 'require' : 'import']: exportCondition,
+    fullExportCond = {
+      [isEsmPkg ? 'import' : 'require']: exportCondition,
     }
   } else {
-    // TODO: valid export condition, warn if it's not valid
     const keys: string[] = Object.keys(exportCondition)
-    result = {}
+    fullExportCond = {}
     keys.forEach((key) => {
       const condition = exportCondition[key]
       // Filter out nullable value
       if (key in exportCondition && condition) {
-        result[key] = condition
+        fullExportCond[key] = condition
       }
     })
   }
 
-  return result
+  return fullExportCond
 }
 
 function joinRelativePath(...segments: string[]) {
@@ -177,7 +175,7 @@ export function getExportPaths(
 ) {
   const pathsMap: Record<string, FullExportCondition> = {}
   const packageType = pkgType ?? getPackageType(pkg)
-  const isCjsPackage = packageType === 'commonjs'
+  const isEsmPackage = isESModulePackage(packageType)
 
   const exportsConditions = resolvedWildcardExports ?? pkg.exports
 
@@ -186,7 +184,7 @@ export function getExportPaths(
     Object.assign(pathsMap, paths)
   }
 
-  if (!isCjsPackage && pkg.main && hasCjsExtension(pkg.main)) {
+  if (isEsmPackage && pkg.main && hasCjsExtension(pkg.main)) {
     exit(
       'Cannot export main field with .cjs extension in ESM package, only .mjs and .js extensions are allowed',
     )
@@ -195,14 +193,14 @@ export function getExportPaths(
   // main export '.' from main/module/typings
   const defaultMainExport = constructFullExportCondition(
     {
-      [isCjsPackage ? 'require' : 'import']: pkg.main,
+      [isEsmPackage ? 'import' : 'require']: pkg.main,
       module: pkg.module,
       types: getTypings(pkg),
     },
     packageType,
   )
 
-  if (isCjsPackage && pathsMap['.']?.['require']) {
+  if (!isEsmPackage && pathsMap['.']?.['require']) {
     // pathsMap's exports.require are prioritized.
     defaultMainExport['require'] = pathsMap['.']['require']
   }
@@ -253,15 +251,20 @@ export function getPackageType(pkg: PackageMetadata): PackageType {
   return pkg.type || 'commonjs'
 }
 
+export function isESModulePackage(packageType: string | undefined) {
+  return packageType === 'module'
+}
+
 export function constructDefaultExportCondition(
   value: string | Record<string, string | undefined>,
   packageType: PackageType,
 ) {
+  const isEsmPackage = isESModulePackage(packageType)
   let exportCondition
   if (typeof value === 'string') {
     const types = getTypings(value as PackageMetadata)
     exportCondition = {
-      [packageType === 'commonjs' ? 'require' : 'import']: value,
+      [isEsmPackage ? 'import' : 'require']: value,
       ...(types && { types }),
     }
   } else {
@@ -311,11 +314,11 @@ export function getExportConditionDist(
   }
 
   if (dist.length === 0 && !pkg.bin) {
-    // TODO: Deprecate this warning and behavior in v3
     console.error(
       `Doesn't fin any exports in ${pkg.name}, using default dist path dist/index.js`,
     )
-    dist.push({ format: 'esm', file: getDistPath('dist/index.js', cwd) })
+    const defaultFormat = isESModulePackage(pkg.type) ? 'esm' : 'cjs'
+    dist.push({ format: defaultFormat, file: getDistPath('dist/index.js', cwd) })
   }
   return dist
 }

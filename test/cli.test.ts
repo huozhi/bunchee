@@ -284,7 +284,6 @@ describe('cli', () => {
         distFile = args[args.length - 1]
       }
 
-      // TODO: specify working directory for each test
       execSync(`rm -rf ${distDir}`)
       debug.log(`Command: rm -rf ${distDir}`)
       debug.log(`Command: bunchee ${args.join(' ')}`)
