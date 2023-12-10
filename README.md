@@ -169,7 +169,7 @@ Then you need to add two entry files `index.ts` and `lite.ts` in project root di
 
 It will also look up for `index.<ext>` file under the directory having the name of the export path. For example, if you have `"./lite": "./dist/lite.js"` in exports field, then it will look up for `./lite/index.js` as the entry file as well.
 
-### Special Exports Conventions
+### Use Exports Conventions
 
 For exports condition like `react-native`, `react-server` and `edge-light` as they're special platforms, they could have different exports or different code conditions. In this case bunchee provides an override input source file convention if you want to build them as different code bundle.
 
@@ -201,9 +201,12 @@ This will match the export name `"react-server"` and `"edge-light"` then use the
 `bunchee` has support for checking the package bundles are matched with package exports configuration.
 
 
-### `bin` Field Convention
+### Executables
 
-To build executable files with the `bin` field in package.json, `bunchee` requires you to create the `bin` directory inside your `src` directory.
+
+To build executable files with the `bin` field in package.json, `bunchee` requires you to create the `bin` directory under `src` directory. The source file matching will be same as the entry files convention.
+
+For example:
 
 ```bash
 |- src/
@@ -241,7 +244,7 @@ This will match the `bin` field in package.json as:
 
 > Note: For multiple `bin` files, the filename should match the key name in the `bin` field.
 
-### Wildcard Exports (Experimental)
+### Wildcard Exports
 
 Bunchee implements the Node.js feature of using the asterisk `*` as a wildcard to match the exportable entry files.
 
@@ -313,6 +316,29 @@ This will match the export names `"foo"` and `"bar"` and will be treated as the 
 import './style.css'
 
 export const Foo = () => <div className="foo">foo</div>
+```
+
+### Text Files
+
+If you just want to import a file as string content, you can name the extension as `.txt` or `.data` and it will be bundled as string content.
+
+For example:
+
+src/index.ts
+```js
+import data from './data.txt'
+
+export default data
+```
+
+src/data.txt
+```txt
+hello world
+```
+
+output
+```
+export default "hello world"
 ```
 
 ### TypeScript
