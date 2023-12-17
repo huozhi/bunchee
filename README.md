@@ -22,8 +22,6 @@ Bunchee makes bundling your library into one file effortless, with zero configur
 npm install --save-dev bunchee
 ```
 
-## Usage
-
 Create your library
 
 ```sh
@@ -67,11 +65,121 @@ Then just run `npm run build`, or `pnpm build` / `yarn build` if you're using th
 - It's CommonJS for `require` and ESM for `import` based on the exports condition.
 - It's CommonJS for `.js` and ESM for `.mjs` based on the extension regardless the exports condition. Then for export condition like "node" you could choose the format with your extension.
 
-## Configuration
+## Usage
+
+### File Conventions
+
+While `exports` field is becoming the standard of exporting in node.js, bunchee also supports to build multiple exports all in one command.
+
+What you need to do is just add an entry file with the name (`[name].[ext]`) that matches the exported name from exports field in package.json. For instance:
+
+- `<cwd>/src/index.ts` will match `"."` export name or the if there's only one main export.
+- `<cwd>/src/lite.ts` will match `"./lite"` export name.
+
+The build script will be simplified to just `bunchee` in package.json without configure any input sources for each exports. Of course you can still specify other arguments as you need.
+
+Assuming you have default export package as `"."` and subpath export `"./lite"` with different exports condition listed in package.json
+
+```json
+{
+  "name": "example",
+  "scripts": {
+     "build": "bunchee"
+  },
+  "exports": {
+    "./lite": "./dist/lite.js"
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+   }
+  }
+}
+```
+
+Then you need to add two entry files `index.ts` and `lite.ts` in project root directory to match the export name `"."` and `"./lite"`, bunchee will associate these entry files with export names then use them as input source and output paths information.
+
+```
+- my-lib/
+  |- src/
+    |- lite.ts
+    |- index.ts
+  |- package.json
+```
+
+It will also look up for `index.<ext>` file under the directory having the name of the export path. For example, if you have `"./lite": "./dist/lite.js"` in exports field, then it will look up for `./lite/index.js` as the entry file as well.
+
+### Multiple Runtime
+
+For exports condition like `react-native`, `react-server` and `edge-light` as they're special platforms, they could have different exports or different code conditions. In this case bunchee provides an override input source file convention if you want to build them as different code bundle.
+
+For instance:
+
+```json
+{
+  "exports": {
+    "react-server": "./dist/react-server.mjs",
+    "edge-light": "./dist/edge-light.mjs",
+    "import": "./dist/index.mjs"
+  }
+}
+```
+
+### Executables
+
+To build executable files with the `bin` field in package.json, `bunchee` requires you to create the `bin` directory under `src` directory. The source file matching will be same as the entry files convention.
+
+For example:
+
+```bash
+|- src/
+  |- bin/
+    |- index.ts
+```
+
+This will match the `bin` field in package.json as:
+
+```json
+{
+  "bin": "./dist/bin.js"
+}
+```
+
+For multiple executable files, you can create multiple files under the `bin` directory.
+
+```bash
+|- src/
+  |- bin/
+    |- foo.ts
+    |- bar.ts
+```
+
+This will match the `bin` field in package.json as:
+
+```json
+{
+  "bin": {
+    "foo": "./dist/bin/a.js",
+    "bar": "./dist/bin/b.js"
+  }
+}
+```
+
+> Note: For multiple `bin` files, the filename should match the key name in the `bin` field.
+
+
+### Server Components
+
+`bunchee` supports to build server components and server actions with library directives like `"use client"` or `"use server"`. It will generate the corresponding chunks for client and server that scope the client and server boundaries properly.
+Then when the library is integrated to an app such as Next.js, app bundler can transform the client components and server actions correctly and maximum the benefits.
+
+If you're using `"use client"` or `"use server"` in entry file, then it will be preserved on top and the dist file of that entry will become a client component.
+If you're using `"use client"` or `"use server"` in a file that used as a dependency for an entry, then that file containing directives be split into a separate chunk and hoist the directives to the top of the chunk.
+
+### CLI
+
+#### CLI Options
 
 `bunchee` CLI provides few options to create different bundles or generating types.
-
-### CLI Options
 
 - Output (`-o <file>`): Specify output filename.
 - Format (`-f <format>`): Set output format (default: `'esm'`).
@@ -83,8 +191,6 @@ Then just run `npm run build`, or `pnpm build` / `yarn build` if you're using th
 - Types (`--dts`): Generate TypeScript declaration files along with assets.
 - Minify (`-m`): Compress output.
 - Watch (`-w`): Watch for source file changes.
-
-### Basic Example
 
 ```sh
 cd <project-root-dir>
@@ -128,62 +234,6 @@ bunchee --env=ENV1,ENV2,ENV3
 
 Replace `ENV1`, `ENV2`, and `ENV3` with the names of the environment variables you want to include in your bundled code. These environment variables will be inlined during the bundling process.
 
-### Entry Files Convention
-
-While `exports` field is becoming the standard of exporting in node.js, bunchee also supports to build multiple exports all in one command.
-
-What you need to do is just add an entry file with the name (`[name].[ext]`) that matches the exported name from exports field in package.json. For instance:
-
-- `<cwd>/src/index.ts` will match `"."` export name or the if there's only one main export.
-- `<cwd>/src/lite.ts` will match `"./lite"` export name.
-
-The build script will be simplified to just `bunchee` in package.json without configure any input sources for each exports. Of course you can still specify other arguments as you need.
-
-Assuming you have default export package as `"."` and subpath export `"./lite"` with different exports condition listed in package.json
-
-```json
-{
-  "name": "example",
-  "scripts": {
-     "build": "bunchee"
-  },
-  "exports": {
-    "./lite": "./dist/lite.js"
-    ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
-   }
-  }
-}
-```
-
-Then you need to add two entry files `index.ts` and `lite.ts` in project root directory to match the export name `"."` and `"./lite"`, bunchee will associate these entry files with export names then use them as input source and output paths information.
-
-```
-- my-lib/
-  |- src/
-    |- lite.ts
-    |- index.ts
-  |- package.json
-```
-
-It will also look up for `index.<ext>` file under the directory having the name of the export path. For example, if you have `"./lite": "./dist/lite.js"` in exports field, then it will look up for `./lite/index.js` as the entry file as well.
-
-### Use Exports Conventions
-
-For exports condition like `react-native`, `react-server` and `edge-light` as they're special platforms, they could have different exports or different code conditions. In this case bunchee provides an override input source file convention if you want to build them as different code bundle.
-
-For instance:
-
-```json
-{
-  "exports": {
-    "react-server": "./dist/react-server.mjs",
-    "edge-light": "./dist/edge-light.mjs",
-    "import": "./dist/index.mjs"
-  }
-}
-```
 
 You can use `index.<export-type>.<ext>` to override the input source file for specific export name. Or using `<export-path>/index.<export-type>.<ext>` also works. Such as:
 
@@ -196,53 +246,6 @@ You can use `index.<export-type>.<ext>` to override the input source file for sp
 
 This will match the export name `"react-server"` and `"edge-light"` then use the corresponding input source file to build the bundle.
 
-#### Package lint
-
-`bunchee` has support for checking the package bundles are matched with package exports configuration.
-
-
-### Executables
-
-
-To build executable files with the `bin` field in package.json, `bunchee` requires you to create the `bin` directory under `src` directory. The source file matching will be same as the entry files convention.
-
-For example:
-
-```bash
-|- src/
-  |- bin/
-    |- index.ts
-```
-
-This will match the `bin` field in package.json as:
-
-```json
-{
-  "bin": "./dist/bin.js"
-}
-```
-
-For multiple executable files, you can create multiple files under the `bin` directory.
-
-```bash
-|- src/
-  |- bin/
-    |- foo.ts
-    |- bar.ts
-```
-
-This will match the `bin` field in package.json as:
-
-```json
-{
-  "bin": {
-    "foo": "./dist/bin/a.js",
-    "bar": "./dist/bin/b.js"
-  }
-}
-```
-
-> Note: For multiple `bin` files, the filename should match the key name in the `bin` field.
 
 ### Wildcard Exports
 
@@ -388,6 +391,11 @@ Bunchee offers a convenient watch mode for rebuilding your library whenever chan
 #### `target`
 
 If you specify `target` option in `tsconfig.json`, then you don't have to pass it again through CLI.
+
+#### Package lint
+
+`bunchee` has support for checking the package bundles are matched with package exports configuration.
+
 
 ### License
 
