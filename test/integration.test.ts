@@ -398,6 +398,20 @@ const testCases: {
         `"thisismydata"`,
       )
     },
+  },
+  {
+    name: 'server-components',
+    args: [],
+    async expected(dir) {
+      const distFiles = [
+        join(dir, 'dist/index.js'),
+        join(dir, 'dist/actions-server.js'),
+        join(dir, 'dist/ui-client.js'),
+      ]
+      for (const f of distFiles) {
+        expect(await existsFile(f)).toBe(true)
+      }
+    },
   }
 ]
 

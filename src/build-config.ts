@@ -258,22 +258,20 @@ function hasEsmExport(
   return Boolean(hasEsm || tsCompilerOptions?.esModuleInterop)
 }
 
-const chunkSplitting: GetManualChunk = (id, meta) => {
-  const moduleInfo = meta.getModuleInfo(id)
-  const ast = moduleInfo?.ast as Node | undefined
-  if (!moduleInfo || !ast || ast.type !== 'Program') {
-    console.log('returned', !!ast, ast && !!ast.type)
+const chunkSplitting: GetManualChunk = (id, ctx) => {
+  const moduleInfo = ctx.getModuleInfo(id)
+  const moduleMeta = moduleInfo?.meta
+  if (!moduleInfo || !moduleMeta) {
     return
   }
 
-
-  const directives = (moduleInfo.meta['preserve-directives'] || { directives: [] }).directives
+  const directives = (moduleMeta.preserveDirectives || { directives: [] }).directives
     .map((d: string) => d.replace(/^use /, ''))
     .filter((d: string) => d !== 'strict')
 
-    if (directives.length) {
+  const moduleLayer = directives[0]
+  if (moduleLayer && !moduleMeta.isEntry) {
     const chunkName = path.basename(id, path.extname(id))
-    const moduleLayer = directives[0]
     return `${chunkName}-${moduleLayer}`
   }
   return
@@ -311,9 +309,13 @@ function buildOutputConfigs(
       )
 
   // If there's dts file, use `output.file`
-  const dtsPathConfig = dtsFile ? { file: dtsFile } : { dir: dtsDir }
+  const dtsPathConfig = dtsFile ? { dir: dirname(dtsFile) } : { dir: dtsDir }
+  const outputFile = dtsFile || file
+  const baseName = outputFile
+    ? path.basename(outputFile, path.extname(outputFile))
+    : pkg.name || name
   return {
-    name: pkg.name || name,
+    name: baseName,
     ...(dts ? dtsPathConfig : { dir: dirname(file!) }),
     format,
     exports: 'named',

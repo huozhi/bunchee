@@ -1,2 +1,2 @@
-export { Client } from './client'
+export { Button } from './ui'
 export { action } from './actions'

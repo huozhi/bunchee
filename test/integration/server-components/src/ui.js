@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 
-export function Client() {
+export function Button() {
   const [count] = useState(0)
-  return React.createElement('div', `count: ${count}`)
+  return React.createElement('button', `count: ${count}`)
 }
