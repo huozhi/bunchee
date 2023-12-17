@@ -8,6 +8,7 @@
   "scripts": {
     "test": "jest --env node",
     "test:update": "TEST_UPDATE_SNAPSHOT=1 pnpm test",
+    "test:post": "POST_BUILD=1 pnpm test test/compile.test.ts test/integration.test.ts",
     "clean": "rm -rf ./dist",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "pnpm clean && pnpm build && chmod +x ./dist/bin/cli.js && pnpm test",

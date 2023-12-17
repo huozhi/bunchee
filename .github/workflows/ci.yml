@@ -41,7 +41,9 @@ jobs:
         run: pnpm build
 
       - name: Test
-        run: pnpm test
+        run: |
+          pnpm test
+          pnpm test:post
 
   release:
     runs-on: ubuntu-latest
