@@ -49,8 +49,6 @@ const swcMinifyOptions = {
   compress: true,
   format: {
     comments: 'some',
-    // wrapFuncArgs: false,
-    // preserveAnnotations: true,
   },
   mangle: {
     toplevel: true,
@@ -309,13 +307,12 @@ function buildOutputConfigs(
           '.d.ts',
       )
 
-  // If there's dts file, use `output.file`
-  const dtsPathConfig = dtsFile ? { dir: dirname(dtsFile) } : { dir: dtsDir }
+  const dtsPathConfig = { dir: dtsFile ? dirname(dtsFile) : dtsDir }
   const outputFile: string = (dtsFile || file)!
 
   return {
     name: pkg.name || name,
-    ...(dts ? dtsPathConfig : { dir: dirname(outputFile!) }),
+    ...(dts ? dtsPathConfig : { dir: dirname(outputFile) }),
     format,
     exports: 'named',
     esModule: useEsModuleMark || 'if-default-prop',
@@ -325,7 +322,7 @@ function buildOutputConfigs(
     sourcemap: options.sourcemap,
     manualChunks: splitChunks,
     chunkFileNames: '[name].js',
-    entryFileNames: basename(outputFile!),
+    entryFileNames: basename(outputFile),
   }
 }
 
