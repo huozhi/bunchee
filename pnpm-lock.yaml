@@ -67,9 +67,6 @@ devDependencies:
   '@swc/types':
     specifier: ^0.1.5
     version: 0.1.5
-  '@types/estree':
-    specifier: ^1.0.5
-    version: 1.0.5
   '@types/jest':
     specifier: 29.0.0
     version: 29.0.0
@@ -1361,6 +1358,7 @@ packages:
 
   /@types/estree@1.0.5:
     resolution: {integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw==}
+    dev: false
 
   /@types/graceful-fs@4.1.5:
     resolution: {integrity: sha512-anKkLmZZ+xm4p8JWBf4hElkM4XR+EZeA2M9BAkkTldmcyDY4mbdIJnRghDJH3Ov5ooY7/UAoENtmdMSkaAd7Cw==}

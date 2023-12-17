@@ -411,6 +411,8 @@ const testCases: {
       for (const f of distFiles) {
         expect(await existsFile(f)).toBe(true)
       }
+      expect(await fs.readFile(distFiles[1], 'utf-8')).toContain('use server')
+      expect(await fs.readFile(distFiles[2], 'utf-8')).toContain('use client')
     },
   }
 ]

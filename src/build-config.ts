@@ -1,4 +1,3 @@
-import type { Node } from 'estree'
 import type {
   PackageMetadata,
   BuncheeRollupConfig,
@@ -11,7 +10,7 @@ import type {
 import type { GetManualChunk, InputOptions, OutputOptions, Plugin } from 'rollup'
 import { type TypescriptOptions } from './typescript'
 
-import path, { resolve, dirname, extname, join } from 'path'
+import path, { resolve, dirname, extname, join, basename } from 'path'
 import { wasm } from '@rollup/plugin-wasm'
 import { swc } from 'rollup-plugin-swc3'
 import commonjs from '@rollup/plugin-commonjs'
@@ -23,6 +22,7 @@ import { sizeCollector } from './plugins/size-plugin'
 import { inlineCss } from './plugins/inline-css'
 import { rawContent } from './plugins/raw-plugin'
 import preserveDirectives from 'rollup-preserve-directives'
+import { prependDirectives } from './plugins/prepend-directives'
 import {
   getTypings,
   getExportPaths,
@@ -180,6 +180,7 @@ async function buildInputConfig(
           inlineCss({ exclude: /node_modules/ }),
           rawContent({ exclude: /node_modules/ }),
           preserveDirectives(),
+          prependDirectives(),
           replace({
             values: getBuildEnv(options.env || []),
             preventAssignment: true,
@@ -310,13 +311,11 @@ function buildOutputConfigs(
 
   // If there's dts file, use `output.file`
   const dtsPathConfig = dtsFile ? { dir: dirname(dtsFile) } : { dir: dtsDir }
-  const outputFile = dtsFile || file
-  const baseName = outputFile
-    ? path.basename(outputFile, path.extname(outputFile))
-    : pkg.name || name
+  const outputFile: string = (dtsFile || file)!
+
   return {
-    name: baseName,
-    ...(dts ? dtsPathConfig : { dir: dirname(file!) }),
+    name: pkg.name || name,
+    ...(dts ? dtsPathConfig : { dir: dirname(outputFile!) }),
     format,
     exports: 'named',
     esModule: useEsModuleMark || 'if-default-prop',
@@ -326,6 +325,7 @@ function buildOutputConfigs(
     sourcemap: options.sourcemap,
     manualChunks: chunkSplitting,
     chunkFileNames: '[name].js',
+    entryFileNames: basename(outputFile!),
   }
 }
 
