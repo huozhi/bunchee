@@ -403,20 +403,41 @@ const testCases: {
     name: 'server-components',
     args: [],
     async expected(dir) {
-      const distFiles = [
+      const distFiles = await fs.readdir(join(dir, 'dist'))
+
+      const requiredFiles = [
         join(dir, 'dist/index.js'),
-        join(dir, 'dist/actions-server.js'),
-        join(dir, 'dist/ui-client.js'),
+        join(dir, 'dist/index.cjs'),
         join(dir, 'dist/ui.js'),
+        join(dir, 'dist/ui.cjs'),
       ]
-      for (const f of distFiles) {
+      for (const f of requiredFiles) {
         expect(await existsFile(f)).toBe(true)
       }
+
+      const clientChunkFiles = distFiles.filter(f => f.includes('-client-'))
+      const serverChunkFiles = distFiles.filter(f => f.includes('-server-'))
+
       // split chunks
-      expect(await fs.readFile(distFiles[1], 'utf-8')).toContain('use server')
-      expect(await fs.readFile(distFiles[2], 'utf-8')).toContain('use client')
-      // client component as an entry will remain the directive
-      expect(await fs.readFile(distFiles[3], 'utf-8')).toContain('use client')
+      const indexContent = await fs.readFile(join(dir, 'dist/index.js'), 'utf-8')
+      expect(indexContent).not.toContain('use server')
+      expect(indexContent).not.toContain('use client')
+
+      // client component chunks will remain the directive
+      clientChunkFiles.forEach(async f => {
+        const content = await fs.readFile(join(dir, 'dist', f), 'utf-8')
+        expect(content).toContain('use client')
+        expect(content).not.toContain('use server')
+      })
+      expect(clientChunkFiles.length).toBe(2) // cjs and esm
+
+      // server component chunks will remain the directive
+      serverChunkFiles.forEach(async f => {
+        const content = await fs.readFile(join(dir, 'dist', f), 'utf-8')
+        expect(content).toContain('use server')
+        expect(content).not.toContain('use client')
+      })
+      expect(serverChunkFiles.length).toBe(2) // cjs and esm
     },
   }
 ]
