@@ -177,7 +177,7 @@ async function bundle(
     logger.warn(
       'The "src" directory does not contain any entry files. ' +
         'For proper usage, please refer to the following link: ' +
-        'https://github.com/huozhi/bunchee?tab=readme-ov-file#usage',
+        'https://github.com/huozhi/bunchee#usage',
     )
   }
 

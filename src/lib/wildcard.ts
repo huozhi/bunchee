@@ -1,5 +1,5 @@
-import fs from 'fs/promises'
 import type { Dirent } from 'fs'
+import fs from 'fs/promises'
 import path from 'path'
 import { SRC } from '../constants'
 import { ExportCondition } from '../types'
