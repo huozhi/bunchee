@@ -9,7 +9,7 @@ jest.setTimeout(10 * 60 * 1000)
 
 const resolveFromTest = (filepath: string) =>
   path.resolve(__dirname, '../test', filepath)
-const fixturesDir = resolveFromTest('fixtures')
+const fixturesDir = resolveFromTest('fixtures/cli')
 
 async function removeDirectory(tempDirPath: string) {
   await fsp.rm(tempDirPath, { recursive: true, force: true })

@@ -7,7 +7,7 @@ const bundle = require(assetPath).bundle
 
 jest.setTimeout(10 * 60 * 1000)
 
-const baseUnitTestDir = resolve(__dirname, 'compile-fixtures')
+const baseUnitTestDir = resolve(__dirname, 'fixtures/compile')
 const unitTestDirs = fs.readdirSync(baseUnitTestDir)
 
 type CompareFn = (a: string, b: string | undefined) => void
