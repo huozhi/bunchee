@@ -9,7 +9,6 @@ export function prependDirectives(): Plugin {
         const moduleInfo = this.getModuleInfo(id)
         if (moduleInfo?.meta?.preserveDirectives) {
           const firstDirective = moduleInfo.meta.preserveDirectives.directives[0]
-          console.log('prepend', id, firstDirective)
           if (firstDirective) {
             const directive = firstDirective.value
             const directiveCode = `'${directive}';`
