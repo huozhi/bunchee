@@ -259,7 +259,7 @@ function hasEsmExport(
   return Boolean(hasEsm || tsCompilerOptions?.esModuleInterop)
 }
 
-const chunkSplitting: GetManualChunk = (id, ctx) => {
+const splitChunks: GetManualChunk = (id, ctx) => {
   const moduleInfo = ctx.getModuleInfo(id)
   const moduleMeta = moduleInfo?.meta
   if (!moduleInfo || !moduleMeta) {
@@ -323,7 +323,7 @@ function buildOutputConfigs(
     freeze: false,
     strict: false,
     sourcemap: options.sourcemap,
-    manualChunks: chunkSplitting,
+    manualChunks: splitChunks,
     chunkFileNames: '[name].js',
     entryFileNames: basename(outputFile!),
   }

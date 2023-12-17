@@ -407,12 +407,16 @@ const testCases: {
         join(dir, 'dist/index.js'),
         join(dir, 'dist/actions-server.js'),
         join(dir, 'dist/ui-client.js'),
+        join(dir, 'dist/ui.js'),
       ]
       for (const f of distFiles) {
         expect(await existsFile(f)).toBe(true)
       }
+      // split chunks
       expect(await fs.readFile(distFiles[1], 'utf-8')).toContain('use server')
       expect(await fs.readFile(distFiles[2], 'utf-8')).toContain('use client')
+      // client component as an entry will remain the directive
+      expect(await fs.readFile(distFiles[3], 'utf-8')).toContain('use client')
     },
   }
 ]
