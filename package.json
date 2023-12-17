@@ -23,7 +23,8 @@
     "typescript",
     "jsx",
     "zero-config",
-    "library"
+    "library",
+    "server components"
   ],
   "files": [
     "dist",

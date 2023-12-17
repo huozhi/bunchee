@@ -315,7 +315,6 @@ export async function buildEntryConfig(
 ): Promise<BuncheeRollupConfig[]> {
   const configs: Promise<BuncheeRollupConfig | undefined>[] = []
   Object.keys(exportPaths).forEach(async (entryExport) => {
-    // TODO: improve the source detection
     const exportCond = exportPaths[entryExport]
     const buildConfigs = [
       createBuildConfig('', exportCond), // default config
@@ -324,14 +323,10 @@ export async function buildEntryConfig(
     // For dts job, only build the default config.
     // For assets job, build all configs.
     if (!dts) {
-      if (exportCond['edge-light']) {
-        buildConfigs.push(createBuildConfig('edge-light', exportCond))
-      }
-      if (exportCond['react-server']) {
-        buildConfigs.push(createBuildConfig('react-server', exportCond))
-      }
-      if (exportCond['react-native']) {
-        buildConfigs.push(createBuildConfig('react-native', exportCond))
+      for (const exportType of availableExportConventions) {
+        if (exportCond[exportType]) {
+          buildConfigs.push(createBuildConfig(exportType, exportCond))
+        }
       }
     }
 
@@ -351,11 +346,15 @@ export async function buildEntryConfig(
           delete exportCondForType[exportType]
         }
       }
-      const source =
-        entryPath ||
-        (await getSourcePathFromExportPath(cwd, entryExport, exportType))
 
-      if (!source) return undefined
+      let source: string | undefined = entryPath
+      if (!source) {
+        source = await getSourcePathFromExportPath(cwd, entryExport, exportType)
+      }
+
+      if (!source) {
+        return undefined
+      }
 
       const exportCondition: ParsedExportCondition = {
         source,
