@@ -1,3 +1,4 @@
+import type { Node } from 'estree'
 import type {
   PackageMetadata,
   BuncheeRollupConfig,
@@ -7,10 +8,10 @@ import type {
   ExportPaths,
   FullExportCondition,
 } from './types'
-import type { InputOptions, OutputOptions, Plugin } from 'rollup'
+import type { GetManualChunk, InputOptions, OutputOptions, Plugin } from 'rollup'
 import { type TypescriptOptions } from './typescript'
 
-import { resolve, dirname, extname, join } from 'path'
+import path, { resolve, dirname, extname, join } from 'path'
 import { wasm } from '@rollup/plugin-wasm'
 import { swc } from 'rollup-plugin-swc3'
 import commonjs from '@rollup/plugin-commonjs'
@@ -257,6 +258,27 @@ function hasEsmExport(
   return Boolean(hasEsm || tsCompilerOptions?.esModuleInterop)
 }
 
+const chunkSplitting: GetManualChunk = (id, meta) => {
+  const moduleInfo = meta.getModuleInfo(id)
+  const ast = moduleInfo?.ast as Node | undefined
+  if (!moduleInfo || !ast || ast.type !== 'Program') {
+    console.log('returned', !!ast, ast && !!ast.type)
+    return
+  }
+
+
+  const directives = (moduleInfo.meta['preserve-directives'] || { directives: [] }).directives
+    .map((d: string) => d.replace(/^use /, ''))
+    .filter((d: string) => d !== 'strict')
+
+    if (directives.length) {
+    const chunkName = path.basename(id, path.extname(id))
+    const moduleLayer = directives[0]
+    return `${chunkName}-${moduleLayer}`
+  }
+  return
+}
+
 function buildOutputConfigs(
   pkg: PackageMetadata,
   exportPaths: ExportPaths,
@@ -292,7 +314,7 @@ function buildOutputConfigs(
   const dtsPathConfig = dtsFile ? { file: dtsFile } : { dir: dtsDir }
   return {
     name: pkg.name || name,
-    ...(dts ? dtsPathConfig : { file: file }),
+    ...(dts ? dtsPathConfig : { dir: dirname(file!) }),
     format,
     exports: 'named',
     esModule: useEsModuleMark || 'if-default-prop',
@@ -300,6 +322,8 @@ function buildOutputConfigs(
     freeze: false,
     strict: false,
     sourcemap: options.sourcemap,
+    manualChunks: chunkSplitting,
+    chunkFileNames: '[name].js',
   }
 }
 
