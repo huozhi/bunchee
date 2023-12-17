@@ -7,10 +7,10 @@ import type {
   ExportPaths,
   FullExportCondition,
 } from './types'
-import type { InputOptions, OutputOptions, Plugin } from 'rollup'
+import type { GetManualChunk, InputOptions, OutputOptions, Plugin } from 'rollup'
 import { type TypescriptOptions } from './typescript'
 
-import { resolve, dirname, extname, join } from 'path'
+import path, { resolve, dirname, extname, join, basename } from 'path'
 import { wasm } from '@rollup/plugin-wasm'
 import { swc } from 'rollup-plugin-swc3'
 import commonjs from '@rollup/plugin-commonjs'
@@ -22,6 +22,7 @@ import { sizeCollector } from './plugins/size-plugin'
 import { inlineCss } from './plugins/inline-css'
 import { rawContent } from './plugins/raw-plugin'
 import preserveDirectives from 'rollup-preserve-directives'
+import { prependDirectives } from './plugins/prepend-directives'
 import {
   getTypings,
   getExportPaths,
@@ -179,6 +180,7 @@ async function buildInputConfig(
           inlineCss({ exclude: /node_modules/ }),
           rawContent({ exclude: /node_modules/ }),
           preserveDirectives(),
+          prependDirectives(),
           replace({
             values: getBuildEnv(options.env || []),
             preventAssignment: true,
@@ -257,6 +259,25 @@ function hasEsmExport(
   return Boolean(hasEsm || tsCompilerOptions?.esModuleInterop)
 }
 
+const splitChunks: GetManualChunk = (id, ctx) => {
+  const moduleInfo = ctx.getModuleInfo(id)
+  const moduleMeta = moduleInfo?.meta
+  if (!moduleInfo || !moduleMeta) {
+    return
+  }
+
+  const directives = (moduleMeta.preserveDirectives || { directives: [] }).directives
+    .map((d: string) => d.replace(/^use /, ''))
+    .filter((d: string) => d !== 'strict')
+
+  const moduleLayer = directives[0]
+  if (moduleLayer && !moduleMeta.isEntry) {
+    const chunkName = path.basename(id, path.extname(id))
+    return `${chunkName}-${moduleLayer}`
+  }
+  return
+}
+
 function buildOutputConfigs(
   pkg: PackageMetadata,
   exportPaths: ExportPaths,
@@ -289,10 +310,12 @@ function buildOutputConfigs(
       )
 
   // If there's dts file, use `output.file`
-  const dtsPathConfig = dtsFile ? { file: dtsFile } : { dir: dtsDir }
+  const dtsPathConfig = dtsFile ? { dir: dirname(dtsFile) } : { dir: dtsDir }
+  const outputFile: string = (dtsFile || file)!
+
   return {
     name: pkg.name || name,
-    ...(dts ? dtsPathConfig : { file: file }),
+    ...(dts ? dtsPathConfig : { dir: dirname(outputFile!) }),
     format,
     exports: 'named',
     esModule: useEsModuleMark || 'if-default-prop',
@@ -300,6 +323,9 @@ function buildOutputConfigs(
     freeze: false,
     strict: false,
     sourcemap: options.sourcemap,
+    manualChunks: splitChunks,
+    chunkFileNames: '[name].js',
+    entryFileNames: basename(outputFile!),
   }
 }
 

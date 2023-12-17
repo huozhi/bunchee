@@ -1,0 +1,10 @@
+{
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./ui": "./dist/ui.js"
+  },
+  "peerDependencies": {
+    "react": "*"
+  }
+}
