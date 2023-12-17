@@ -37,7 +37,7 @@ const testCases: {
   {
     name: 'basic',
     dist: createTempDir,
-    args: [resolveFromTest('fixtures/hello.js')],
+    args: [resolveFromTest('hello.js')],
     distFile: 'dist/hello.bundle.js',
     expected(distFile) {
       return [[fs.existsSync(distFile), true]]
@@ -46,7 +46,7 @@ const testCases: {
   {
     name: 'format',
     dist: createTempDir,
-    args: [resolveFromTest('fixtures/hello.js'), '-f', 'cjs'],
+    args: [resolveFromTest('hello.js'), '-f', 'cjs'],
     distFile: 'dist/hello.cjs',
     expected(distFile) {
       return [
@@ -62,7 +62,7 @@ const testCases: {
     name: 'compress',
     dist: createTempDir,
     distFile: 'dist/hello.bundle.min.js',
-    args: [resolveFromTest('fixtures/hello.js'), '-m'],
+    args: [resolveFromTest('hello.js'), '-m'],
     expected(distFile) {
       return [
         [fs.existsSync(distFile), true],
@@ -77,7 +77,7 @@ const testCases: {
   {
     name: 'with sourcemap',
     dist: createTempDir,
-    args: [resolveFromTest('fixtures/hello.js'), '--sourcemap'],
+    args: [resolveFromTest('hello.js'), '--sourcemap'],
     distFile: 'dist/hello.js',
     expected(distFile) {
       return [
@@ -97,7 +97,7 @@ const testCases: {
     name: 'minified with sourcemap',
     dist: createTempDir,
     distFile: 'dist/hello.min.js',
-    args: [resolveFromTest('fixtures/hello.js'), '-m', '--sourcemap'],
+    args: [resolveFromTest('hello.js'), '-m', '--sourcemap'],
     expected(distFile) {
       return [
         [fs.existsSync(distFile), true],
@@ -117,7 +117,7 @@ const testCases: {
     dist: createTempDir,
     distFile: 'dist/with-externals.bundle.js',
     args: [
-      resolveFromTest('fixtures/with-externals.js'),
+      resolveFromTest('with-externals.js'),
       '--external',
       '@huozhi/testing-package',
     ],
@@ -134,7 +134,7 @@ const testCases: {
     name: 'no-externals',
     dist: createTempDir,
     distFile: 'dist/with-externals.bundle.js',
-    args: [resolveFromTest('fixtures/with-externals.js'), '--no-external'],
+    args: [resolveFromTest('with-externals.js'), '--no-external'],
     expected(distFile) {
       const content = fs.readFileSync(distFile, { encoding: 'utf-8' })
       return [
@@ -147,7 +147,7 @@ const testCases: {
     name: 'es2020-target',
     dist: createTempDir,
     distFile: 'dist/es2020.js',
-    args: [resolveFromTest('fixtures/es2020.ts'), '--target', 'es2020'],
+    args: [resolveFromTest('es2020.ts'), '--target', 'es2020'],
     expected(distFile) {
       const content = fs.readFileSync(distFile, { encoding: 'utf-8' })
       return [
