@@ -16,26 +16,24 @@
 
 Bunchee makes bundling your library into one file effortless, with zero configuration required. It is built on top of Rollup and SWC ⚡️, allowing you to focus on writing code and generating multiple module types (CommonJS, ESModules) simultaneously.
 
-## Installation
+## Quick Start
+
+### Installation
 
 ```sh
 npm install --save-dev bunchee
 ```
 
-Create your library
+### Configuration
 
+Create your library entry file and package.json.
 ```sh
 cd ./my-lib && mkdir src
 touch ./src/index.ts
 touch package.json
 ```
 
-Configure module exports
-
-[exports sugar in Node.js](https://nodejs.org/api/packages.html#exports-sugar)
-
-You can use the `exports` field to support different conditions and leverage the same functionality as other bundlers, such as webpack. The exports field allows you to define multiple conditions.
-
+Then use use the [exports field in package.json](https://nodejs.org/api/packages.html#exports-sugar) to configure different conditions and leverage the same functionality as other bundlers, such as webpack. The exports field allows you to define multiple conditions.
 ```json
 {
   "exports": {
@@ -48,19 +46,22 @@ You can use the `exports` field to support different conditions and leverage the
 }
 ```
 
-Using pure ESM package?
-
+If you want to use ESM package, change the `type` field in package.json to `module`, `bunchee` will change the output format to ESM.
 ```json
 {
   "type": "module",
-  "main": "./dist/index.mjs",
+  "exports": {
+    "import": "dist/index.mjs",
+    "require": "dist/index.cjs"
+  },
   "scripts": {
     "build": "bunchee"
   }
 }
 ```
 
-Then just run `npm run build`, or `pnpm build` / `yarn build` if you're using these package managers. The output format will based on the exports condition and also the file extension. Given an example:
+Now just run `npm run build` (or `pnpm build` / `yarn build`) if you're using these package managers, `bunchee` will find the entry files and build them.
+The output format will based on the exports condition and also the file extension. Given an example:
 
 - It's CommonJS for `require` and ESM for `import` based on the exports condition.
 - It's CommonJS for `.js` and ESM for `.mjs` based on the extension regardless the exports condition. Then for export condition like "node" you could choose the format with your extension.
