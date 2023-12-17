@@ -1,8 +1,14 @@
 {
   "type": "module",
   "exports": {
-    ".": "./dist/index.js",
-    "./ui": "./dist/ui.js"
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./ui": {
+      "import": "./dist/ui.js",
+      "require": "./dist/ui.cjs"
+    }
   },
   "peerDependencies": {
     "react": "*"

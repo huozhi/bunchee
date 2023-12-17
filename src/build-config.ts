@@ -321,7 +321,7 @@ function buildOutputConfigs(
     strict: false,
     sourcemap: options.sourcemap,
     manualChunks: splitChunks,
-    chunkFileNames: '[name].js',
+    chunkFileNames: '[name]-[hash].js',
     entryFileNames: basename(outputFile),
   }
 }
