@@ -210,7 +210,6 @@ async function buildInputConfig(
     plugins,
     treeshake: {
       propertyReadSideEffects: false,
-      moduleSideEffects: 'no-external',
     },
     onwarn(warning, warn) {
       const code = warning.code || ''
@@ -323,6 +322,9 @@ function buildOutputConfigs(
     sourcemap: options.sourcemap,
     manualChunks: splitChunks,
     chunkFileNames: '[name]-[hash].js',
+    // By default in rollup, when creating multiple chunks, transitive imports of entry chunks
+    // will be added as empty imports to the entry chunks. Disable to avoid imports hoist outside of boundaries
+    hoistTransitiveImports: false,
     entryFileNames: basename(outputFile),
   }
 }
