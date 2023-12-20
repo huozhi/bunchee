@@ -210,7 +210,7 @@ async function buildInputConfig(
     plugins,
     treeshake: {
       propertyReadSideEffects: false,
-      moduleSideEffects: false,
+      moduleSideEffects: 'no-external',
     },
     onwarn(warning, warn) {
       const code = warning.code || ''
