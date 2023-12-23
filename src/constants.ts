@@ -8,6 +8,7 @@ export const availableExtensions = [
   'cts',
   'mts',
 ]
+export const nodeResolveExtensions = ['.mjs', '.cjs', '.js', '.json', '.node', '.jsx']
 export const availableExportConventions = [
   'react-server',
   'react-native',

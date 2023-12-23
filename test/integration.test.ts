@@ -439,6 +439,42 @@ const testCases: {
       })
       expect(serverChunkFiles.length).toBe(2) // cjs and esm
     },
+  },
+  {
+    name: 'shared-entry',
+    args: [],
+    async expected(dir) {
+      const distFiles = [
+        join(dir, './dist/index.js'),
+        join(dir, './dist/index.mjs'),
+        join(dir, './dist/shared.js'),
+        join(dir, './dist/shared.mjs'),
+      ]
+      for (const f of distFiles) {
+        expect(await existsFile(f)).toBe(true)
+      }
+
+      // ESM bundle imports from <pkg/export>
+      const indexEsm = await fs.readFile(join(dir, './dist/index.mjs'), 'utf-8')
+      expect(indexEsm).toContain('shared-entry/shared')
+      expect(indexEsm).toContain('index-export')
+      expect(indexEsm).not.toMatch(/['"]\.\/shared['"]/)
+      expect(indexEsm).not.toContain('shared-export')
+
+      // CJS bundle imports from <pkg/export>
+      const indexCjs = await fs.readFile(join(dir, './dist/index.js'), 'utf-8')
+      expect(indexCjs).toContain('shared-entry/shared')
+      expect(indexCjs).toContain('index-export')
+      expect(indexCjs).not.toMatch(/['"]\.\/shared['"]/)
+
+      // shared entry contains its own content
+      const sharedEsm = await fs.readFile(join(dir, './dist/shared.mjs'), 'utf-8')
+      expect(sharedEsm).toContain('shared-export')
+
+      // shared entry contains its own content
+      const sharedCjs = await fs.readFile(join(dir, './dist/shared.js'), 'utf-8')
+      expect(sharedCjs).toContain('shared-export')
+    },
   }
 ]
 

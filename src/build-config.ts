@@ -1,4 +1,5 @@
 import type {
+  Entries,
   PackageMetadata,
   BuncheeRollupConfig,
   BundleOptions,
@@ -18,10 +19,11 @@ import json from '@rollup/plugin-json'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import replace from '@rollup/plugin-replace'
 import esmShim from '@rollup/plugin-esm-shim'
+import preserveDirectives from 'rollup-preserve-directives'
 import { sizeCollector } from './plugins/size-plugin'
 import { inlineCss } from './plugins/inline-css'
 import { rawContent } from './plugins/raw-plugin'
-import preserveDirectives from 'rollup-preserve-directives'
+import { aliasEntries } from './plugins/alias-plugin'
 import { prependDirectives } from './plugins/prepend-directives'
 import {
   getTypings,
@@ -41,6 +43,7 @@ import {
   availableExportConventions,
   availableESExtensionsRegex,
   dtsExtensions,
+  nodeResolveExtensions,
 } from './constants'
 import { logger } from './logger'
 
@@ -53,6 +56,7 @@ const swcMinifyOptions = {
     toplevel: true,
   },
 } as const
+
 
 function getBuildEnv(envs: string[]) {
   if (!envs.includes('NODE_ENV')) {
@@ -69,14 +73,27 @@ function getBuildEnv(envs: string[]) {
   return envVars
 }
 
+/**
+ * return { '<pkg>/<export>': '<absolute source path> }
+ */
+function getEntriesAlias(entries: Entries) {
+  const alias: Record<string, string> = {}
+  for (const [entryImportPath, exportCondition] of Object.entries(entries)) {
+    alias[entryImportPath] = exportCondition.source
+  }
+  return alias
+}
+
 async function buildInputConfig(
   entry: string,
+  entries: Entries,
   pkg: PackageMetadata,
   options: BundleOptions,
   cwd: string,
   { tsConfigPath, tsCompilerOptions }: TypescriptOptions,
   dts: boolean,
 ): Promise<InputOptions> {
+  const entriesAlias = getEntriesAlias(entries)
   const hasNoExternal = options.external === null
   const externals = hasNoExternal
     ? []
@@ -84,7 +101,14 @@ async function buildInputConfig(
         .filter(<T>(n?: T): n is T => Boolean(n))
         .map((o: { [key: string]: any }): string[] => Object.keys(o))
         .reduce((a: string[], b: string[]) => a.concat(b), [])
-        .concat((options.external ?? []).concat(pkg.name ? [pkg.name] : []))
+        .concat((options.external ?? []))
+
+  for (const [exportImportPath, entryFilePath] of Object.entries(entriesAlias)) {
+    if (entryFilePath !== entry) {
+      externals.push(exportImportPath)
+      externals.push(entryFilePath)
+    }
+  }
 
   const {
     useTypescript,
@@ -123,8 +147,20 @@ async function buildInputConfig(
   } as const
 
   const sizePlugin = sizeCollector.plugin(cwd)
+  const reversedAlias: Record<string, string> = {}
+  for (const [key, value] of Object.entries(entriesAlias)) {
+    if (value !== entry) {
+      reversedAlias[value] = key
+    }
+  }
+
   // common plugins for both dts and ts assets that need to be processed
-  const commonPlugins = [sizePlugin]
+  const commonPlugins = [
+    sizePlugin,
+    aliasEntries({
+      entries: reversedAlias,
+    })
+  ]
 
   const baseResolvedTsOptions: any = {
     declaration: true,
@@ -184,7 +220,7 @@ async function buildInputConfig(
           }),
           nodeResolve({
             preferBuiltins: runtime === 'node',
-            extensions: ['.mjs', '.cjs', '.js', '.json', '.node', '.jsx'],
+            extensions: nodeResolveExtensions,
           }),
           commonjs({
             exclude: options.external || null,
@@ -204,7 +240,7 @@ async function buildInputConfig(
   return {
     input: entry,
     external(id: string) {
-      return externals.some((name) => id === name || id.startsWith(name + '/'))
+      return externals.some((name) => id === name)
     },
     plugins,
     treeshake: {
@@ -258,8 +294,13 @@ function hasEsmExport(
 
 const splitChunks: GetManualChunk = (id, ctx) => {
   const moduleInfo = ctx.getModuleInfo(id)
-  const moduleMeta = moduleInfo?.meta
-  if (!moduleInfo || !moduleMeta) {
+
+  if (!moduleInfo) {
+    return
+  }
+
+  const moduleMeta = moduleInfo.meta
+  if (!moduleMeta) {
     return
   }
 
@@ -276,6 +317,7 @@ const splitChunks: GetManualChunk = (id, ctx) => {
 }
 
 function buildOutputConfigs(
+  entries: Entries,
   pkg: PackageMetadata,
   exportPaths: ExportPaths,
   options: BundleOptions,
@@ -329,19 +371,19 @@ function buildOutputConfigs(
 }
 
 export async function buildEntryConfig(
+  entries: Entries,
   pkg: PackageMetadata,
-  entryPath: string,
   exportPaths: ExportPaths,
   bundleConfig: BundleConfig,
   cwd: string,
   tsOptions: TypescriptOptions,
   dts: boolean,
 ): Promise<BuncheeRollupConfig[]> {
-  const entries = await collectEntries(pkg, entryPath, exportPaths, cwd, dts)
   const configs: Promise<BuncheeRollupConfig>[] = []
-  for (const [entry, { exportCondition }] of Object.entries(entries)) {
+
+  for (const exportCondition of Object.values(entries)) {
     const rollupConfig = buildConfig(
-      entry,
+      entries,
       pkg,
       exportPaths,
       bundleConfig,
@@ -362,14 +404,8 @@ export async function collectEntries(
   exportPaths: ExportPaths,
   cwd: string,
   dts: boolean,
-): Promise<
-    Record<string, {
-      exportCondition: ParsedExportCondition,
-    }>
-  > {
-  const entries: Record<string, {
-    exportCondition: ParsedExportCondition,
-  }> = {}
+): Promise<Entries> {
+  const entries: Entries = {}
 
   async function collectEntry(
     exportType: string,
@@ -390,7 +426,9 @@ export async function collectEntries(
     }
 
     let source: string | undefined = entryPath
-    if (!source) {
+    if (source) {
+      source = resolveSourceFile(cwd!, source)
+    } else {
       source = await getSourcePathFromExportPath(cwd, entryExport, exportType)
     }
 
@@ -404,11 +442,8 @@ export async function collectEntries(
       export: exportCondForType,
     }
 
-    const entry = resolveSourceFile(cwd!, source)
-
-    entries[entry] = {
-      exportCondition,
-    }
+    const entryImportPath = path.join(pkg.name || '', exportCondition.name)
+    entries[entryImportPath] = exportCondition
   }
 
   const binaryExports = pkg.bin
@@ -454,11 +489,9 @@ export async function collectEntries(
 
       const binEntryPath = await resolveSourceFile(cwd, source)
       entries[binEntryPath] = {
-        exportCondition: {
-          source: binEntryPath,
-          name: binName,
-          export: binExportPaths[binName],
-        },
+        source: binEntryPath,
+        name: binName,
+        export: binExportPaths[binName],
       }
     }
   }
@@ -483,7 +516,7 @@ export async function collectEntries(
 }
 
 async function buildConfig(
-  entry: string,
+  entries: Entries,
   pkg: PackageMetadata,
   exportPaths: ExportPaths,
   bundleConfig: BundleConfig,
@@ -496,7 +529,8 @@ async function buildConfig(
   const useTypescript = Boolean(tsOptions.tsConfigPath)
   const options = { ...bundleConfig, useTypescript }
   const inputOptions = await buildInputConfig(
-    entry,
+    exportCondition.source,
+    entries,
     pkg,
     options,
     cwd,
@@ -512,6 +546,7 @@ async function buildConfig(
     const typeOutputExports = getExportTypeDist(exportCondition, cwd)
     outputConfigs = typeOutputExports.map((v) =>
       buildOutputConfigs(
+        entries,
         pkg,
         exportPaths,
         {
@@ -530,6 +565,7 @@ async function buildConfig(
     // multi outputs with specified format
     outputConfigs = outputExports.map((exportDist) => {
       return buildOutputConfigs(
+        entries,
         pkg,
         exportPaths,
         {
@@ -549,6 +585,7 @@ async function buildConfig(
       const fallbackFormat = outputExports[0]?.format
       outputConfigs = [
         buildOutputConfigs(
+          entries,
           pkg,
           exportPaths,
           {
