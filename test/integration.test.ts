@@ -494,7 +494,7 @@ async function runBundle(
   )
   let stderr = '',
     stdout = ''
-  ps.stdout?.on('data', (chunk: any) => (stdout += chunk.toString()))
+  ps.stdout?.on('data', (chunk) => (stdout += chunk.toString()))
   ps.stderr?.on('data', (chunk) => (stderr += chunk.toString()))
   return new Promise((resolve) => {
     ps.on('close', (code) => {

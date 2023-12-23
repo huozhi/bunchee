@@ -239,7 +239,7 @@ async function buildInputConfig(
   return {
     input: entry,
     external(id: string) {
-      return externals.some((name) => id === name)
+      return externals.some((name) => id === name || id.startsWith(name + '/'))
     },
     plugins,
     treeshake: {
@@ -293,7 +293,6 @@ function hasEsmExport(
 
 const splitChunks: GetManualChunk = (id, ctx) => {
   const moduleInfo = ctx.getModuleInfo(id)
-
   if (!moduleInfo) {
     return
   }
@@ -316,7 +315,6 @@ const splitChunks: GetManualChunk = (id, ctx) => {
 }
 
 function buildOutputConfigs(
-  entries: Entries,
   pkg: PackageMetadata,
   exportPaths: ExportPaths,
   options: BundleOptions,
@@ -333,7 +331,6 @@ function buildOutputConfigs(
   const file = options.file && resolve(cwd, options.file)
 
   const dtsDir = typings ? dirname(resolve(cwd, typings)) : resolve(cwd, 'dist')
-
   const name = filenameWithoutExtension(file)
 
   // TODO: simplify dts file name detection
@@ -550,7 +547,6 @@ async function buildConfig(
     const typeOutputExports = getExportTypeDist(exportCondition, cwd)
     outputConfigs = typeOutputExports.map((v) =>
       buildOutputConfigs(
-        entries,
         pkg,
         exportPaths,
         {
@@ -569,7 +565,6 @@ async function buildConfig(
     // multi outputs with specified format
     outputConfigs = outputExports.map((exportDist) => {
       return buildOutputConfigs(
-        entries,
         pkg,
         exportPaths,
         {
@@ -589,7 +584,6 @@ async function buildConfig(
       const fallbackFormat = outputExports[0]?.format
       outputConfigs = [
         buildOutputConfigs(
-          entries,
           pkg,
           exportPaths,
           {

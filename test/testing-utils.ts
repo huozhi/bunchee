@@ -1,9 +1,11 @@
 import fs from 'fs/promises'
 import path from 'path'
-import stripAnsi from 'strip-ansi'
 
 export function stripANSIColor(str: string) {
-  return stripAnsi(str)
+  return str.replace(
+    /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
+    '',
+  )
 }
 
 export async function existsFile(filePath: string) {
