@@ -396,7 +396,11 @@ export async function buildEntryConfig(
   return (await Promise.all(configs))
 }
 
-// build configs for each entry from package exports
+/*
+ * build configs for each entry from package exports
+ *
+ * return { <pkg>/<export>: { input: InputOptions, output: OutputOptions[] }
+ */
 export async function collectEntries(
   pkg: PackageMetadata,
   entryPath: string,
@@ -407,8 +411,10 @@ export async function collectEntries(
   const entries: Entries = {}
 
   async function collectEntry(
+    // export type, e.g. react-server, edge-light those special cases required suffix
     exportType: string,
     exportCondRef: FullExportCondition,
+    // export name, e.g. ./<export-path> in exports field of package.json
     entryExport: string,
   ) {
     let exportCondForType: FullExportCondition = { ...exportCondRef }
@@ -430,7 +436,6 @@ export async function collectEntries(
     } else {
       source = await getSourcePathFromExportPath(cwd, entryExport, exportType)
     }
-
     if (!source) {
       return undefined
     }
@@ -441,7 +446,8 @@ export async function collectEntries(
       export: exportCondForType,
     }
 
-    entries[source] = exportCondition
+    const entryImportPath = path.join(pkg.name || '', exportCondition.name) + (exportType ? `.${exportType}` : '')
+    entries[entryImportPath] = exportCondition
   }
 
   const binaryExports = pkg.bin
@@ -486,7 +492,7 @@ export async function collectEntries(
       }
 
       const binEntryPath = await resolveSourceFile(cwd, source)
-      entries[binEntryPath] = {
+      entries[binName] = {
         source: binEntryPath,
         name: binName,
         export: binExportPaths[binName],
