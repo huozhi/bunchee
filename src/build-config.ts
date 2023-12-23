@@ -36,7 +36,6 @@ import {
   getSourcePathFromExportPath,
   resolveSourceFile,
   filenameWithoutExtension,
-  nonNullable,
 } from './utils'
 import {
   availableExportConventions,
@@ -329,7 +328,6 @@ function buildOutputConfigs(
   }
 }
 
-// build configs for each entry from package exports
 export async function buildEntryConfig(
   pkg: PackageMetadata,
   entryPath: string,
@@ -339,73 +337,82 @@ export async function buildEntryConfig(
   tsOptions: TypescriptOptions,
   dts: boolean,
 ): Promise<BuncheeRollupConfig[]> {
-  const configs: Promise<BuncheeRollupConfig | undefined>[] = []
-  Object.keys(exportPaths).forEach(async (entryExport) => {
-    const exportCond = exportPaths[entryExport]
-    const buildConfigs = [
-      createBuildConfig('', exportCond), // default config
-    ]
+  const entries = await collectEntries(pkg, entryPath, exportPaths, cwd, dts)
+  const configs: Promise<BuncheeRollupConfig>[] = []
+  for (const [entry, { exportCondition }] of Object.entries(entries)) {
+    const rollupConfig = buildConfig(
+      entry,
+      pkg,
+      exportPaths,
+      bundleConfig,
+      exportCondition,
+      cwd,
+      tsOptions,
+      dts,
+    )
+    configs.push(rollupConfig)
+  }
+  return (await Promise.all(configs))
+}
 
-    // For dts job, only build the default config.
-    // For assets job, build all configs.
-    if (!dts) {
+// build configs for each entry from package exports
+export async function collectEntries(
+  pkg: PackageMetadata,
+  entryPath: string,
+  exportPaths: ExportPaths,
+  cwd: string,
+  dts: boolean,
+): Promise<
+    Record<string, {
+      exportCondition: ParsedExportCondition,
+    }>
+  > {
+  const entries: Record<string, {
+    exportCondition: ParsedExportCondition,
+  }> = {}
+
+  async function collectEntry(
+    exportType: string,
+    exportCondRef: FullExportCondition,
+    entryExport: string,
+  ) {
+    let exportCondForType: FullExportCondition = { ...exportCondRef }
+    // Special cases of export type, only pass down the exportPaths for the type
+    if (availableExportConventions.includes(exportType)) {
+      exportCondForType = {
+        [entryExport]: exportCondRef[exportType],
+      }
+      // Basic export type, pass down the exportPaths with erasing the special ones
+    } else {
       for (const exportType of availableExportConventions) {
-        if (exportCond[exportType]) {
-          buildConfigs.push(createBuildConfig(exportType, exportCond))
-        }
+        delete exportCondForType[exportType]
       }
     }
 
-    async function createBuildConfig(
-      exportType: string,
-      exportCondRef: FullExportCondition,
-    ) {
-      let exportCondForType: FullExportCondition = { ...exportCondRef }
-      // Special cases of export type, only pass down the exportPaths for the type
-      if (availableExportConventions.includes(exportType)) {
-        exportCondForType = {
-          [entryExport]: exportCondRef[exportType],
-        }
-        // Basic export type, pass down the exportPaths with erasing the special ones
-      } else {
-        for (const exportType of availableExportConventions) {
-          delete exportCondForType[exportType]
-        }
-      }
-
-      let source: string | undefined = entryPath
-      if (!source) {
-        source = await getSourcePathFromExportPath(cwd, entryExport, exportType)
-      }
-
-      if (!source) {
-        return undefined
-      }
-
-      const exportCondition: ParsedExportCondition = {
-        source,
-        name: entryExport,
-        export: exportCondForType,
-      }
-
-      const entry = resolveSourceFile(cwd!, source)
-      const rollupConfig = buildConfig(
-        entry,
-        pkg,
-        exportPaths,
-        bundleConfig,
-        exportCondition,
-        cwd,
-        tsOptions,
-        dts,
-      )
-      return rollupConfig
+    let source: string | undefined = entryPath
+    if (!source) {
+      source = await getSourcePathFromExportPath(cwd, entryExport, exportType)
     }
 
-    configs.push(...buildConfigs)
-  })
+    if (!source) {
+      return undefined
+    }
+
+    const exportCondition: ParsedExportCondition = {
+      source,
+      name: entryExport,
+      export: exportCondForType,
+    }
+
+    const entry = resolveSourceFile(cwd!, source)
+
+    entries[entry] = {
+      exportCondition,
+    }
+  }
 
   const binaryExports = pkg.bin
+
   if (binaryExports) {
     // binDistPaths: [ [ 'bin1', './dist/bin1.js'], [ 'bin2', './dist/bin2.js'] ]
     const binPairs = typeof binaryExports === 'string'
@@ -446,25 +453,33 @@ export async function buildEntryConfig(
       }
 
       const binEntryPath = await resolveSourceFile(cwd, source)
-      const binEntryConfig = buildConfig(
-        binEntryPath,
-        pkg,
-        binExportPaths,
-        bundleConfig,
-        {
+      entries[binEntryPath] = {
+        exportCondition: {
           source: binEntryPath,
           name: binName,
           export: binExportPaths[binName],
         },
-        cwd,
-        tsOptions,
-        dts,
-      )
-      configs.push(binEntryConfig)
+      }
     }
   }
 
-  return (await Promise.all(configs)).filter(nonNullable)
+  const collectEntriesPromises = Object.keys(exportPaths).map(async (entryExport) => {
+    const exportCond = exportPaths[entryExport]
+    await collectEntry('', exportCond, entryExport)
+
+    // For dts job, only build the default config.
+    // For assets job, build all configs.
+    if (!dts) {
+      for (const exportType of availableExportConventions) {
+        if (exportCond[exportType]) {
+          await collectEntry(exportType, exportCond, entryExport)
+        }
+      }
+    }
+  })
+
+  await Promise.all(collectEntriesPromises)
+  return entries
 }
 
 async function buildConfig(
@@ -557,5 +572,3 @@ async function buildConfig(
     exportName: exportCondition.name || '.',
   }
 }
-
-export default buildConfig
