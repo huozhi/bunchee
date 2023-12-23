@@ -1,0 +1,13 @@
+{
+  "name": "shared-entry",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./shared": {
+      "import": "./dist/shared.mjs",
+      "require": "./dist/shared.js"
+    }
+  }
+}

@@ -93,6 +93,8 @@ type ParsedExportCondition = {
 
 type ExportPaths = Record<string, FullExportCondition>
 
+type Entries = Record<string, ParsedExportCondition>
+
 export type {
   ExportPaths,
   ExportType,
@@ -106,4 +108,5 @@ export type {
   BuncheeRollupConfig,
   PackageType,
   ParsedExportCondition,
+  Entries,
 }

@@ -10,7 +10,7 @@ import type { BuncheeRollupConfig, BundleConfig, ExportPaths } from './types'
 import fs from 'fs/promises'
 import { resolve, relative } from 'path'
 import { watch as rollupWatch, rollup } from 'rollup'
-import { buildEntryConfig } from './build-config'
+import { buildEntryConfig, collectEntries } from './build-config'
 import { logSizeStats } from './plugins/size-plugin'
 import { logger } from './logger'
 import {
@@ -144,9 +144,10 @@ async function bundle(
   }
 
   let result
+  const entries = await collectEntries(pkg, entryPath, exportPaths, cwd, false)
   const buildConfigs = await buildEntryConfig(
+    entries,
     pkg,
-    entryPath,
     exportPaths,
     options,
     cwd,
@@ -160,8 +161,8 @@ async function bundle(
   const typesJobs = hasTsConfig
     ? (
         await buildEntryConfig(
+          await collectEntries(pkg, entryPath, exportPaths, cwd, true),
           pkg,
-          entryPath,
           exportPaths,
           options,
           cwd,

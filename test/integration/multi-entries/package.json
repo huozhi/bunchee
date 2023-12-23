@@ -6,9 +6,9 @@
     ".": "./dist/index.js",
     "./lite": "./dist/lite.js",
     "./client": {
+      "types": "./dist/client/index.d.ts",
       "require": "./dist/client/index.cjs",
-      "import": "./dist/client/index.mjs",
-      "types": "./dist/client/index.d.ts"
+      "import": "./dist/client/index.mjs"
     },
     "./shared": {
       "import": "./dist/shared/index.mjs",
