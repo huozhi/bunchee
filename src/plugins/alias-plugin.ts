@@ -1,4 +1,4 @@
-import { Plugin } from "rollup"
+import { Plugin } from 'rollup'
 
 // Alias entries to import path
 // e.g.
@@ -8,16 +8,14 @@ export function aliasEntries({ entries }: { entries: Record<string, string>}): P
   return {
     name: 'alias',
     resolveId: {
-      order: 'pre',
-      async handler(source, importer) {
-        const resolvedId = await this.resolve(source, importer)
-        if (resolvedId == null) {
-          return null
-        }
-        const aliasedId = entries[resolvedId.id]
+      async handler(source, importer, options) {
+        const resolvedId = await this.resolve(source, importer, options)
+        if (resolvedId != null) {
+          const aliasedId = entries[resolvedId.id]
 
-        if (aliasedId != null) {
-          return { id: aliasedId, external: true }
+          if (aliasedId != null) {
+            return { id: aliasedId, external: true }
+          }
         }
         return null
       },
