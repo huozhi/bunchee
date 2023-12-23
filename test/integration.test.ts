@@ -241,7 +241,7 @@ const testCases: {
     name: 'publint',
     args: [],
     expected(dir, { stdout }) {
-      const text = stripANSIColor(stdout)
+      const text = process.stdout.isTTY ? stripANSIColor(stdout) : stdout
       expect(text).toContain(
         'pkg.types is ./dist/missing.d.ts but the file does not exist.',
       )
