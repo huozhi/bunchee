@@ -57,7 +57,6 @@ const swcMinifyOptions = {
   },
 } as const
 
-
 function getBuildEnv(envs: string[]) {
   if (!envs.includes('NODE_ENV')) {
     envs.push('NODE_ENV')
@@ -442,8 +441,7 @@ export async function collectEntries(
       export: exportCondForType,
     }
 
-    const entryImportPath = path.join(pkg.name || '', exportCondition.name)
-    entries[entryImportPath] = exportCondition
+    entries[source] = exportCondition
   }
 
   const binaryExports = pkg.bin
