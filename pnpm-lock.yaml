@@ -89,8 +89,8 @@ devDependencies:
     specifier: ^18.2.0
     version: 18.2.0
   strip-ansi:
-    specifier: ^7.1.0
-    version: 7.1.0
+    specifier: ^6.0.1
+    version: 6.0.1
   tsx:
     specifier: ^4.6.2
     version: 4.6.2
