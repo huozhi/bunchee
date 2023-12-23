@@ -403,7 +403,6 @@ export async function collectEntries(
   entryPath: string,
   exportPaths: ExportPaths,
   cwd: string,
-  dts: boolean,
 ): Promise<Entries> {
   const entries: Entries = {}
 
@@ -501,13 +500,9 @@ export async function collectEntries(
     const exportCond = exportPaths[entryExport]
     await collectEntry('', exportCond, entryExport)
 
-    // For dts job, only build the default config.
-    // For assets job, build all configs.
-    if (!dts) {
-      for (const exportType of availableExportConventions) {
-        if (exportCond[exportType]) {
-          await collectEntry(exportType, exportCond, entryExport)
-        }
+    for (const exportType of availableExportConventions) {
+      if (exportCond[exportType]) {
+        await collectEntry(exportType, exportCond, entryExport)
       }
     }
   })

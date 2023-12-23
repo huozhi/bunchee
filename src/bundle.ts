@@ -144,7 +144,7 @@ async function bundle(
   }
 
   let result
-  const entries = await collectEntries(pkg, entryPath, exportPaths, cwd, false)
+  const entries = await collectEntries(pkg, entryPath, exportPaths, cwd)
   const buildConfigs = await buildEntryConfig(
     entries,
     pkg,
@@ -161,7 +161,7 @@ async function bundle(
   const typesJobs = hasTsConfig
     ? (
         await buildEntryConfig(
-          await collectEntries(pkg, entryPath, exportPaths, cwd, true),
+          entries,
           pkg,
           exportPaths,
           options,
