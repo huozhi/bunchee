@@ -87,7 +87,7 @@ function logSizeStats(sizeCollector: ReturnType<typeof createChunkSizeCollector>
       const padding = ' '.repeat(maxLength - filename.length)
       const action = dtsExtensionRegex.test(filename) ? 'Typed' : 'Built'
       const prettiedSize = prettyBytes(size)
-      logger.log(`${action} ${filename}${padding} - ${prettiedSize}`)
+      logger.info(`${action} ${filename}${padding} - ${prettiedSize}`)
     })
   })
 }
