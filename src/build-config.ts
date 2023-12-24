@@ -256,6 +256,7 @@ async function buildInputConfig(
           'PREFER_NAMED_EXPORTS',
           'UNRESOLVED_IMPORT',
           'THIS_IS_UNDEFINED',
+          'INVALID_ANNOTATION',
         ].includes(code)
       )
         return
