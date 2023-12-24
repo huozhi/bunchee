@@ -73,6 +73,9 @@ devDependencies:
   '@types/node':
     specifier: ^20.4.1
     version: 20.4.1
+  bunchee:
+    specifier: link:./
+    version: 'link:'
   husky:
     specifier: ^8.0.3
     version: 8.0.3
