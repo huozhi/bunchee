@@ -1,13 +1,9 @@
 {
-  "name": "server-components",
+  "name": "server-components-split",
   "exports": {
     ".": {
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    },
-    "./ui": {
-      "import": "./dist/ui.js",
-      "require": "./dist/ui.cjs"
     }
   },
   "peerDependencies": {
