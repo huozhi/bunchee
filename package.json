@@ -86,7 +86,8 @@
     "prettier": "^3.0.0",
     "react": "^18.2.0",
     "tsx": "^4.6.2",
-    "typescript": "^5.3.2"
+    "typescript": "^5.3.2",
+    "bunchee": "link:./"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,md,json,yml}": "prettier --write"
