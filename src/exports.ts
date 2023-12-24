@@ -277,8 +277,9 @@ export function isEsmExportName(name: string, ext: string) {
   return ['import', 'module'].includes(name) || ext === 'mjs'
 }
 
-export function isCjsExportName(name: string, ext: string) {
-  return ['require', 'main', 'node', 'default'].includes(name) || ext === 'cjs'
+function isCjsExportName(pkg: PackageMetadata, name: string, ext: string) {
+  const isESModule = isESModulePackage(pkg.type)
+  return (!isESModule && ['require', 'main', 'node', 'default'].includes(name) && ext !== 'mjs') || ext === 'cjs'
 }
 
 export function getExportConditionDist(
@@ -290,17 +291,17 @@ export function getExportConditionDist(
   const existed = new Set<string>()
   const exportTypes = Object.keys(parsedExportCondition.export)
 
-  for (const key of exportTypes) {
-    if (key === 'types') {
+  for (const exportType of exportTypes) {
+    if (exportType === 'types') {
       continue
     }
-    const filePath = parsedExportCondition.export[key]
+    const filePath = parsedExportCondition.export[exportType]
     const ext = extname(filePath).slice(1)
-    const relativePath = parsedExportCondition.export[key]
+    const relativePath = parsedExportCondition.export[exportType]
     const distFile = getDistPath(relativePath, cwd)
 
     let format: 'cjs' | 'esm' = 'esm'
-    if (isCjsExportName(key, ext)) {
+    if (isCjsExportName(pkg, exportType, ext)) {
       format = 'cjs'
     }
 
