@@ -35,8 +35,8 @@ function createChunkSizeCollector({ entries }: { entries: Entries }): {
   }
 
   const reversedMapping = new Map<string, string>()
-  Object.entries(entries).forEach(([exportPath, entry]) => {
-    reversedMapping.set(entry.source, entry.name)
+  Object.entries(entries).forEach(([, entry]) => {
+    reversedMapping.set(entry.source, entry.name || '.')
   })
 
   return {
@@ -47,7 +47,7 @@ function createChunkSizeCollector({ entries }: { entries: Entries }): {
           // Do nothing, but use the hook to keep the plugin instance alive
         },
         renderChunk(code, chunk, options) {
-          const sourceId = chunk.facadeModuleId!
+          const sourceId = chunk.facadeModuleId || ''
 
           const dir =
             options.dir || (options.file && path.dirname(options.file))
@@ -62,7 +62,7 @@ function createChunkSizeCollector({ entries }: { entries: Entries }): {
             fileName,
             size: code.length,
             sourceFileName: sourceId,
-            exportPath: reversedMapping.get(sourceId)!,
+            exportPath: reversedMapping.get(sourceId) || '.',
           })
           return null
         },
@@ -77,13 +77,11 @@ function createChunkSizeCollector({ entries }: { entries: Entries }): {
 function logSizeStats(sizeCollector: ReturnType<typeof createChunkSizeCollector>) {
   const stats = sizeCollector.getSizeStats()
   const allFileNameLengths = Array.from(stats.values()).flat(1).map(([filename]) => filename.length)
-  const maxLength = Math.max(...allFileNameLengths) + 1
-
+  const maxLength = Math.max(...allFileNameLengths)
 
   ;[...stats.entries()]
   .sort(([a], [b]) => a.length - b.length)
-  .forEach(([exportPath, filesList]) => {
-    logger.prefixedLog('■', exportPath)
+  .forEach(([, filesList]) => {
     filesList.forEach((item: Pair) => {
       const [filename, , size] = item
       const padding = ' '.repeat(maxLength - filename.length)
