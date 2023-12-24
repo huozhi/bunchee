@@ -20,7 +20,7 @@ import { nodeResolve } from '@rollup/plugin-node-resolve'
 import replace from '@rollup/plugin-replace'
 import esmShim from '@rollup/plugin-esm-shim'
 import preserveDirectives from 'rollup-preserve-directives'
-import { sizeCollector } from './plugins/size-plugin'
+// import { sizeCollector } from './plugins/size-plugin'
 import { inlineCss } from './plugins/inline-css'
 import { rawContent } from './plugins/raw-plugin'
 import { aliasEntries } from './plugins/alias-plugin'
@@ -46,6 +46,7 @@ import {
   nodeResolveExtensions,
 } from './constants'
 import { logger } from './logger'
+import { PluginContext } from './plugins/size-plugin'
 
 const swcMinifyOptions = {
   compress: true,
@@ -90,6 +91,7 @@ async function buildInputConfig(
   options: BundleOptions,
   cwd: string,
   { tsConfigPath, tsCompilerOptions }: TypescriptOptions,
+  pluginContext: PluginContext,
   dts: boolean,
 ): Promise<InputOptions> {
   const entriesAlias = getEntriesAlias(entries)
@@ -145,7 +147,7 @@ async function buildInputConfig(
     isModule: true,
   } as const
 
-  const sizePlugin = sizeCollector.plugin(cwd)
+  const sizePlugin = pluginContext.sizeCollector.plugin(cwd)
   const reversedAlias: Record<string, string> = {}
   for (const [key, value] of Object.entries(entriesAlias)) {
     if (value !== entry) {
@@ -373,6 +375,7 @@ export async function buildEntryConfig(
   bundleConfig: BundleConfig,
   cwd: string,
   tsOptions: TypescriptOptions,
+  pluginContext: PluginContext,
   dts: boolean,
 ): Promise<BuncheeRollupConfig[]> {
   const configs: Promise<BuncheeRollupConfig>[] = []
@@ -386,6 +389,7 @@ export async function buildEntryConfig(
       exportCondition,
       cwd,
       tsOptions,
+      pluginContext,
       dts,
     )
     configs.push(rollupConfig)
@@ -519,6 +523,7 @@ async function buildConfig(
   exportCondition: ParsedExportCondition,
   cwd: string,
   tsOptions: TypescriptOptions,
+  pluginContext: PluginContext,
   dts: boolean,
 ): Promise<BuncheeRollupConfig> {
   const { file } = bundleConfig
@@ -531,6 +536,7 @@ async function buildConfig(
     options,
     cwd,
     tsOptions,
+    pluginContext,
     dts,
   )
   const outputExports = getExportConditionDist(pkg, exportCondition, cwd)

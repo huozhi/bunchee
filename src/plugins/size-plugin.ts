@@ -3,18 +3,41 @@ import path from 'path'
 import prettyBytes from 'pretty-bytes'
 import { dtsExtensionRegex } from '../constants'
 import { logger } from '../logger'
+import { Entries } from '../types'
 
-type SizeStats = [string, string, number][]
+type Pair = [string, string, number]
+type SizeStats = Map<string, Pair[]>
 
-function createChunkSizeCollector(): {
+function createChunkSizeCollector({ entries }: { entries: Entries }): {
   plugin(cwd: string): Plugin
   getSizeStats(): SizeStats
 } {
-  const sizes: Map<string, number> = new Map()
+  const sizeStats: SizeStats = new Map()
 
-  function addSize(name: string, size: number) {
-    sizes.set(name, size)
+  function addSize({
+    fileName,
+    size,
+    sourceFileName,
+    exportPath,
+  }: {
+    fileName: string
+    size: number
+    sourceFileName: string
+    exportPath: string
+  }) {
+    if (!sizeStats.has(exportPath)) {
+      sizeStats.set(exportPath, [])
+    }
+    const distFilesStats = sizeStats.get(exportPath)
+    if (distFilesStats) {
+      distFilesStats.push([fileName, sourceFileName, size])
+    }
   }
+
+  const reversedMapping = new Map<string, string>()
+  Object.entries(entries).forEach(([, entry]) => {
+    reversedMapping.set(entry.source, entry.name || '.')
+  })
 
   return {
     plugin: (cwd: string) => {
@@ -24,6 +47,8 @@ function createChunkSizeCollector(): {
           // Do nothing, but use the hook to keep the plugin instance alive
         },
         renderChunk(code, chunk, options) {
+          const sourceId = chunk.facadeModuleId || ''
+
           const dir =
             options.dir || (options.file && path.dirname(options.file))
           let fileName = chunk.fileName
@@ -33,32 +58,46 @@ function createChunkSizeCollector(): {
               ? path.relative(cwd, filePath)
               : filePath
           }
-          addSize(fileName, code.length)
+          addSize({
+            fileName,
+            size: code.length,
+            sourceFileName: sourceId,
+            exportPath: reversedMapping.get(sourceId) || '.',
+          })
           return null
         },
       }
     },
     getSizeStats() {
-      const sizeStats: SizeStats = []
-      sizes.forEach((size, name) => {
-        sizeStats.push([name, prettyBytes(size), size])
-      })
       return sizeStats
     },
   }
 }
 
-// This can also be passed down as stats from top level
-const sizeCollector = createChunkSizeCollector()
-
-function logSizeStats() {
+function logSizeStats(sizeCollector: ReturnType<typeof createChunkSizeCollector>) {
   const stats = sizeCollector.getSizeStats()
-  const maxLength = Math.max(...stats.map(([filename]) => filename.length))
-  stats.forEach(([filename, prettiedSize]) => {
-    const padding = ' '.repeat(maxLength - filename.length)
-    const action = dtsExtensionRegex.test(filename) ? 'Typed' : 'Built'
-    logger.info(`${action} ${filename}${padding} - ${prettiedSize}`)
+  const allFileNameLengths = Array.from(stats.values()).flat(1).map(([filename]) => filename.length)
+  const maxLength = Math.max(...allFileNameLengths)
+
+  ;[...stats.entries()]
+  .sort(([a], [b]) => a.length - b.length)
+  .forEach(([, filesList]) => {
+    filesList.forEach((item: Pair) => {
+      const [filename, , size] = item
+      const padding = ' '.repeat(maxLength - filename.length)
+      const action = dtsExtensionRegex.test(filename) ? 'Typed' : 'Built'
+      const prettiedSize = prettyBytes(size)
+      logger.info(`${action} ${filename}${padding} - ${prettiedSize}`)
+    })
   })
 }
 
-export { logSizeStats, sizeCollector, createChunkSizeCollector }
+type PluginContext = {
+  sizeCollector: ReturnType<typeof createChunkSizeCollector>
+}
+
+export {
+  logSizeStats,
+  createChunkSizeCollector,
+  type PluginContext,
+}

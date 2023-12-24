@@ -11,7 +11,7 @@ import fs from 'fs/promises'
 import { resolve, relative } from 'path'
 import { watch as rollupWatch, rollup } from 'rollup'
 import { buildEntryConfig, collectEntries } from './build-config'
-import { logSizeStats } from './plugins/size-plugin'
+import { createChunkSizeCollector, logSizeStats, type PluginContext } from './plugins/size-plugin'
 import { logger } from './logger'
 import {
   getPackageMeta,
@@ -143,8 +143,11 @@ async function bundle(
     return Promise.reject(err)
   }
 
-  let result
   const entries = await collectEntries(pkg, entryPath, exportPaths, cwd)
+  const sizeCollector = createChunkSizeCollector({ entries })
+  const pluginContext: PluginContext = {
+    sizeCollector,
+  }
   const buildConfigs = await buildEntryConfig(
     entries,
     pkg,
@@ -152,6 +155,7 @@ async function bundle(
     options,
     cwd,
     defaultTsOptions,
+    pluginContext,
     false,
   )
   const assetsJobs = buildConfigs.map((rollupConfig) =>
@@ -167,12 +171,13 @@ async function bundle(
           options,
           cwd,
           defaultTsOptions,
+          pluginContext,
           true,
         )
       ).map((rollupConfig) => bundleOrWatch(rollupConfig))
     : []
 
-  result = await Promise.all(assetsJobs.concat(typesJobs))
+  const result = await Promise.all(assetsJobs.concat(typesJobs))
 
   if (result.length === 0) {
     logger.warn(
@@ -182,7 +187,7 @@ async function bundle(
     )
   }
 
-  logSizeStats()
+  logSizeStats(sizeCollector)
   return result
 }
 
