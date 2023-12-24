@@ -1,0 +1,7 @@
+{
+  "exports": {
+    ".": {
+      "node": "./dist/index.node.mjs"
+    }
+  }
+}

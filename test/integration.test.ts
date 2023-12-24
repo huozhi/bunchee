@@ -481,6 +481,20 @@ const testCases: {
       const sharedCjs = await fs.readFile(join(dir, './dist/shared.js'), 'utf-8')
       expect(sharedCjs).toContain('shared-export')
     },
+  },
+  {
+    name: 'default-node-mjs',
+    args: [],
+    async expected(dir) {
+      const distFiles = [
+        join(dir, './dist/index.node.mjs'),
+      ]
+      for (const f of distFiles) {
+        expect(await existsFile(f)).toBe(true)
+      }
+      expect(await fs.readFile(distFiles[0], 'utf-8')).toContain('export {')
+      expect(await fs.readFile(distFiles[0], 'utf-8')).not.toContain('exports')
+    },
   }
 ]
 
