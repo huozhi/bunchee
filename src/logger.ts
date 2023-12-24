@@ -1,4 +1,7 @@
 export const logger = {
+  prefixedLog(prefix: string, ...arg: any[]) {
+    console.log(' ' + prefix, ...arg)
+  },
   log(...arg: any[]) {
     console.log('  ', ...arg)
   },
