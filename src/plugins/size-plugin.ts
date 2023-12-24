@@ -94,6 +94,7 @@ function logSizeStats(sizeCollector: ReturnType<typeof createChunkSizeCollector>
 
 type PluginContext = {
   sizeCollector: ReturnType<typeof createChunkSizeCollector>
+  moduleDirectiveLayerMap: Map<string, Set<string>>
 }
 
 export {

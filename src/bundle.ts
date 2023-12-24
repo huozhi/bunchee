@@ -147,6 +147,7 @@ async function bundle(
   const sizeCollector = createChunkSizeCollector({ entries })
   const pluginContext: PluginContext = {
     sizeCollector,
+    moduleDirectiveLayerMap: new Map(),
   }
   const buildConfigs = await buildEntryConfig(
     entries,

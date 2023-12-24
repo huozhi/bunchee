@@ -6,6 +6,3 @@ export function Button() {
   const [count] = useState(0)
   return React.createElement('button', `count: ${count}`)
 }
-
-export { Client } from './_client'
-export { asset } from './_asset'

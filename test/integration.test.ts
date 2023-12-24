@@ -421,30 +421,56 @@ const testCases: {
         expect(await existsFile(f)).toBe(true)
       }
 
-      const clientChunkFiles = distFiles.filter(f => f.includes('-client-'))
-      const serverChunkFiles = distFiles.filter(f => f.includes('-server-'))
-
       // split chunks
       const indexContent = await fs.readFile(join(dir, 'dist/index.js'), 'utf-8')
       expect(indexContent).not.toContain('use server')
       expect(indexContent).not.toContain('use client')
 
       // client component chunks will remain the directive
-      clientChunkFiles.forEach(async f => {
+      const clientClientChunkFiles = distFiles.filter(f => f.includes('client-client-'))
+      clientClientChunkFiles.forEach(async f => {
         const content = await fs.readFile(join(dir, 'dist', f), 'utf-8')
         expect(content).toContain('use client')
-        expect(content).not.toContain('use server')
       })
-      expect(clientChunkFiles.length).toBe(2) // cjs and esm
+      expect(clientClientChunkFiles.length).toBe(2) // cjs and esm
+
+      const assetClientChunkFiles = distFiles.filter(f => f.includes('asset-client-'))
+      expect(assetClientChunkFiles.length).toBe(2) // cjs and esm
 
       // server component chunks will remain the directive
+      const serverChunkFiles = distFiles.filter(f => f.includes('actions-server-'))
       serverChunkFiles.forEach(async f => {
         const content = await fs.readFile(join(dir, 'dist', f), 'utf-8')
         expect(content).toContain('use server')
         expect(content).not.toContain('use client')
       })
       expect(serverChunkFiles.length).toBe(2) // cjs and esm
+
+      // ui is split as client boundary, and directly import the splitted chunks
+      const uiEsm = await fs.readFile(join(dir, 'dist/ui.js'), 'utf-8')
+      expect(uiEsm).toContain('use client')
+      expect(uiEsm).toContain('./_client-client')
+      expect(uiEsm).toContain('./_asset-client')
     },
+  },
+  {
+    name: 'server-components-split',
+    args: [],
+    async expected(dir) {
+      const distFiles = await fs.readdir(join(dir, 'dist'))
+      // client component chunks will remain the directive
+      const clientChunkFiles = distFiles.filter(f => f.includes('client-client-'))
+      clientChunkFiles.forEach(async f => {
+        const content = await fs.readFile(join(dir, 'dist', f), 'utf-8')
+        expect(content).toContain('use client')
+      })
+      expect(clientChunkFiles.length).toBe(2)
+
+      // index doesn't have "use client" directive
+      const indexCjs = await fs.readFile(join(dir, 'dist/index.cjs'), 'utf-8')
+      const indexEsm = await fs.readFile(join(dir, 'dist/index.js'), 'utf-8')
+      expect(indexCjs + indexEsm).not.toContain('use client')
+    }
   },
   {
     name: 'shared-entry',

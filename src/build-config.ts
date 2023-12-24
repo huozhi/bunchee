@@ -8,7 +8,7 @@ import type {
   ExportPaths,
   FullExportCondition,
 } from './types'
-import type { GetManualChunk, InputOptions, OutputOptions, Plugin } from 'rollup'
+import type { CustomPluginOptions, GetManualChunk, InputOptions, OutputOptions, Plugin } from 'rollup'
 import { type TypescriptOptions } from './typescript'
 
 import path, { resolve, dirname, extname, join, basename } from 'path'
@@ -94,6 +94,12 @@ async function buildInputConfig(
   dts: boolean,
 ): Promise<InputOptions> {
   const entriesAlias = getEntriesAlias(entries)
+  const reversedAlias: Record<string, string> = {}
+  for (const [key, value] of Object.entries(entriesAlias)) {
+    if (value !== entry) {
+      reversedAlias[value] = key
+    }
+  }
   const hasNoExternal = options.external === null
   const externals = hasNoExternal
     ? []
@@ -147,12 +153,6 @@ async function buildInputConfig(
   } as const
 
   const sizePlugin = pluginContext.sizeCollector.plugin(cwd)
-  const reversedAlias: Record<string, string> = {}
-  for (const [key, value] of Object.entries(entriesAlias)) {
-    if (value !== entry) {
-      reversedAlias[value] = key
-    }
-  }
 
   // common plugins for both dts and ts assets that need to be processed
   const commonPlugins = [
@@ -292,27 +292,62 @@ function hasEsmExport(
   return Boolean(hasEsm || tsCompilerOptions?.esModuleInterop)
 }
 
-const splitChunks: GetManualChunk = (id, ctx) => {
-  const moduleInfo = ctx.getModuleInfo(id)
-  if (!moduleInfo) {
-    return
-  }
-
-  const moduleMeta = moduleInfo.meta
-  if (!moduleMeta) {
-    return
-  }
-
+function getModuleLater(moduleMeta: CustomPluginOptions) {
   const directives = (moduleMeta.preserveDirectives || { directives: [] }).directives
     .map((d: string) => d.replace(/^use /, ''))
     .filter((d: string) => d !== 'strict')
 
   const moduleLayer = directives[0]
-  if (moduleLayer && !moduleMeta.isEntry) {
-    const chunkName = path.basename(id, path.extname(id))
-    return `${chunkName}-${moduleLayer}`
+  return moduleLayer
+}
+
+// dependencyGraphMap: Map<subModuleId, Set<entryParentId>>
+function createSplitChunks(dependencyGraphMap: Map<string, Set<string>>): GetManualChunk {
+  return function splitChunks(id, ctx) {
+    const moduleInfo = ctx.getModuleInfo(id)
+    if (!moduleInfo) {
+      return
+    }
+
+    const { isEntry } = moduleInfo
+    const moduleMeta = moduleInfo.meta
+    const moduleLayer = getModuleLater(moduleMeta)
+
+    // Collect the sub modules of the entry, if they're having layer, and the same layer with the entry, push them to the dependencyGraphMap.
+    if (isEntry) {
+      const subModuleIds = ctx.getModuleIds()
+      for (const subId of subModuleIds) {
+        const subModuleInfo = ctx.getModuleInfo(subId)
+        if (!subModuleInfo) {
+          continue
+        }
+
+        const subModuleLayer = getModuleLater(moduleMeta)
+        if (subModuleLayer === moduleLayer) {
+          if (!dependencyGraphMap.has(subId)) {
+            dependencyGraphMap.set(subId, new Set())
+          }
+          dependencyGraphMap.get(subId)!.add(id)
+        }
+      }
+    }
+
+    // If current module has a layer, and it's not an entry
+    if (moduleLayer && !isEntry) {
+      // If the module is imported by the entry:
+      // when the module layer is same as entry layer, keep it as part of entry and don't split it;
+      // when the module layer is different from entry layer, split the module into a separate chunk as a separate boundary.
+      if (dependencyGraphMap.has(id)) {
+        const parentModuleLayers = Array.from(dependencyGraphMap.get(id)!)
+        if (parentModuleLayers.every(layer => layer === moduleLayer)) {
+          return
+        }
+        const chunkName = path.basename(id, path.extname(id))
+        return `${chunkName}-${moduleLayer}`
+      }
+    }
+    return
   }
-  return
 }
 
 function buildOutputConfigs(
@@ -322,10 +357,10 @@ function buildOutputConfigs(
   exportCondition: ParsedExportCondition,
   cwd: string,
   { tsCompilerOptions }: TypescriptOptions,
+  pluginContext: PluginContext,
   dts: boolean,
 ): OutputOptions {
   const { format } = options
-
   // Add esm mark and interop helper if esm export is detected
   const useEsModuleMark = hasEsmExport(exportPaths, tsCompilerOptions)
   const typings: string | undefined = getTypings(pkg)
@@ -358,7 +393,7 @@ function buildOutputConfigs(
     freeze: false,
     strict: false,
     sourcemap: options.sourcemap,
-    manualChunks: splitChunks,
+    manualChunks: createSplitChunks(pluginContext.moduleDirectiveLayerMap),
     chunkFileNames: '[name]-[hash].js',
     // By default in rollup, when creating multiple chunks, transitive imports of entry chunks
     // will be added as empty imports to the entry chunks. Disable to avoid imports hoist outside of boundaries
@@ -528,8 +563,9 @@ async function buildConfig(
   const { file } = bundleConfig
   const useTypescript = Boolean(tsOptions.tsConfigPath)
   const options = { ...bundleConfig, useTypescript }
+  const entry = exportCondition.source
   const inputOptions = await buildInputConfig(
-    exportCondition.source,
+    entry,
     entries,
     pkg,
     options,
@@ -545,7 +581,7 @@ async function buildConfig(
   // Generate dts job - single config
   if (dts) {
     const typeOutputExports = getExportTypeDist(exportCondition, cwd)
-    outputConfigs = typeOutputExports.map((v) =>
+    outputConfigs = typeOutputExports.map((typeFile) =>
       buildOutputConfigs(
         pkg,
         exportPaths,
@@ -553,11 +589,12 @@ async function buildConfig(
           ...bundleConfig,
           format: 'es',
           useTypescript,
-          file: v,
+          file: typeFile,
         },
         exportCondition,
         cwd,
         tsOptions,
+        pluginContext,
         dts,
       ),
     )
@@ -576,6 +613,7 @@ async function buildConfig(
         exportCondition,
         cwd,
         tsOptions,
+        pluginContext,
         dts,
       )
     })
@@ -595,6 +633,7 @@ async function buildConfig(
           exportCondition,
           cwd,
           tsOptions,
+          pluginContext,
           dts,
         ),
       ]
