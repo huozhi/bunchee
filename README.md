@@ -1,6 +1,6 @@
 # bunchee
 
-> zero config bundler for JavaScript/TypeScript/JSX library
+> Zero-config bundler for frontend libraries.
 
 ![bunchee](https://repository-images.githubusercontent.com/154026156/5d132698-0ff5-4644-a4fd-d9570e6229bc)
 
@@ -15,6 +15,7 @@
 </p>
 
 Bunchee makes bundling your library into one file effortless, with zero configuration required. It is built on top of Rollup and SWC ⚡️, allowing you to focus on writing code and generating multiple module types (CommonJS, ESModules) simultaneously.
+It uses the standard exports configuration in `package.json` as the only source of truth, and uses entry file conventions to match your exports and build them into bundles.
 
 ## Quick Start
 
