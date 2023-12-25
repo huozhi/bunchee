@@ -177,7 +177,7 @@ async function buildInputConfig(
     tsBuildInfoFile: '.tsbuildinfo',
     target: 'esnext',
     module: 'esnext',
-    jsx: tsCompilerOptions.jsx || 'react',
+    jsx: tsCompilerOptions.jsx || 'react-jsx',
   }
 
   const typesPlugins = [
