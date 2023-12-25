@@ -43,29 +43,26 @@ function createChunkSizeCollector({ entries }: { entries: Entries }): {
     plugin: (cwd: string) => {
       return {
         name: 'collect-sizes',
-        augmentChunkHash() {
-          // Do nothing, but use the hook to keep the plugin instance alive
-        },
-        renderChunk(code, chunk, options) {
-          const sourceId = chunk.facadeModuleId || ''
-
-          const dir =
-            options.dir || (options.file && path.dirname(options.file))
-          let fileName = chunk.fileName
-          if (dir) {
+        writeBundle(options, bundle) {
+          const dir = options.dir || path.dirname(options.file!)
+          Object.entries(bundle).forEach(([fileName, chunk]) => {
             const filePath = path.join(dir, fileName)
-            fileName = filePath.startsWith(cwd)
-              ? path.relative(cwd, filePath)
-              : filePath
-          }
-          addSize({
-            fileName,
-            size: code.length,
-            sourceFileName: sourceId,
-            exportPath: reversedMapping.get(sourceId) || '.',
+            if (chunk.type !== 'chunk') {
+              return
+            }
+            const size = chunk.code.length
+            const sourceFileName = chunk.facadeModuleId || ''
+            const exportPath = reversedMapping.get(sourceFileName) || '.'
+            addSize({
+              fileName: filePath.startsWith(cwd)
+                ? path.relative(cwd, filePath)
+                : filePath,
+              size,
+              sourceFileName,
+              exportPath,
+            })
           })
-          return null
-        },
+        }
       }
     },
     getSizeStats() {

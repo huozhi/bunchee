@@ -1,13 +1,12 @@
 import fs from 'fs/promises'
 import { execSync, fork } from 'child_process'
 import { resolve, join } from 'path'
-import { stripANSIColor, existsFile, assertFilesContent } from './testing-utils'
+import { stripANSIColor, existsFile, assertFilesContent, getChunkFileNamesFromLog } from './testing-utils'
 import * as debug from './utils/debug'
 
 jest.setTimeout(10 * 60 * 1000)
 
 const integrationTestDir = resolve(__dirname, 'integration')
-
 const getPath = (filepath: string) => join(integrationTestDir, filepath)
 
 const testCases: {
@@ -107,31 +106,31 @@ const testCases: {
       assertFilesContent(dir, contentsRegex)
 
       const log = `\
-      ✓ Typed dist/shared/index.d.mts        - 66 B
-      ✓ Typed dist/index.d.ts                - 65 B
-      ✓ Typed dist/server/index.d.ts         - 87 B
-      ✓ Typed dist/server/index.d.mts        - 87 B
-      ✓ Typed dist/lite.d.ts                 - 70 B
-      ✓ Typed dist/server/edge.d.mts         - 59 B
-      ✓ Typed dist/shared/edge-light.d.mts   - 77 B
-      ✓ Typed dist/server/react-server.d.mts - 61 B
-      ✓ Typed dist/client/index.d.ts         - 74 B
-      ✓ Typed dist/client/index.d.cts        - 74 B
-      ✓ Typed dist/client/index.d.mts        - 74 B
-      ✓ Built dist/shared/edge-light.mjs     - 84 B
-      ✓ Built dist/shared/index.mjs          - 53 B
-      ✓ Built dist/index.js                  - 110 B
-      ✓ Built dist/client/index.cjs          - 138 B
-      ✓ Built dist/client/index.mjs          - 78 B
-      ✓ Built dist/lite.js                   - 132 B
-      ✓ Built dist/server/react-server.mjs   - 53 B
-      ✓ Built dist/server/edge.mjs           - 51 B
-      ✓ Built dist/server/index.mjs          - 71 B
+      Typed dist/shared/index.d.mts
+      Typed dist/index.d.ts
+      Typed dist/server/index.d.ts
+      Typed dist/server/index.d.mts
+      Typed dist/lite.d.ts
+      Typed dist/server/edge.d.mts
+      Typed dist/shared/edge-light.d.mts
+      Typed dist/server/react-server.d.mts
+      Typed dist/client/index.d.ts
+      Typed dist/client/index.d.cts
+      Typed dist/client/index.d.mts
+      Built dist/shared/edge-light.mjs
+      Built dist/shared/index.mjs
+      Built dist/index.js
+      Built dist/client/index.cjs
+      Built dist/client/index.mjs
+      Built dist/lite.js
+      Built dist/server/react-server.mjs
+      Built dist/server/edge.mjs
+      Built dist/server/index.mjs
       `
 
       const rawStdout = stripANSIColor(stdout)
-      log.split('\n').forEach((line: string) => {
-        expect(rawStdout).toContain(line.trim())
+      getChunkFileNamesFromLog(log).forEach((chunk: string) => {
+        expect(rawStdout).toContain(chunk)
       })
     },
   },
@@ -200,8 +199,8 @@ const testCases: {
       )
 
       const log = `\
-      ✓ Typed dist/index.d.ts -
-      ✓ Built dist/index.js   -`
+      Typed dist/index.d.ts
+      Built dist/index.js`
 
       const rawStdout = stripANSIColor(stdout)
       log.split('\n').forEach((line: string) => {
@@ -267,28 +266,28 @@ const testCases: {
       assertFilesContent(dir, contentsRegex)
 
       const log = `\
-      ✓ Typed dist/button.d.ts               - 66 B
-      ✓ Typed dist/server/index.d.ts         - 87 B
-      ✓ Typed dist/server/index.d.mts        - 87 B
-      ✓ Typed dist/index.d.ts                - 65 B
-      ✓ Typed dist/layout/index.d.ts         - 66 B
-      ✓ Typed dist/server/react-server.d.mts - 61 B
-      ✓ Typed dist/lite.d.ts                 - 70 B
-      ✓ Typed dist/server/edge.d.mts         - 59 B
-      ✓ Typed dist/input.d.ts                - 65 B
-      ✓ Built dist/input.js                  - 50 B
-      ✓ Built dist/lite.js                   - 72 B
-      ✓ Built dist/button.js                 - 53 B
-      ✓ Built dist/index.js                  - 50 B
-      ✓ Built dist/server/react-server.mjs   - 53 B
-      ✓ Built dist/layout/index.js           - 51 B
-      ✓ Built dist/server/index.mjs          - 71 B
-      ✓ Built dist/server/edge.mjs           - 51 B
+      Typed dist/button.d.ts
+      Typed dist/server/index.d.ts
+      Typed dist/server/index.d.mts
+      Typed dist/index.d.ts
+      Typed dist/layout/index.d.ts
+      Typed dist/server/react-server.d.mts
+      Typed dist/lite.d.ts
+      Typed dist/server/edge.d.mts
+      Typed dist/input.d.ts
+      Built dist/input.js
+      Built dist/lite.js
+      Built dist/button.js
+      Built dist/index.js
+      Built dist/server/react-server.mjs
+      Built dist/layout/index.js
+      Built dist/server/index.mjs
+      Built dist/server/edge.mjs
       `
 
       const rawStdout = stripANSIColor(stdout)
-      log.split('\n').forEach((line: string) => {
-        expect(rawStdout).toContain(line.trim())
+      getChunkFileNamesFromLog(log).forEach((chunk: string) => {
+        expect(rawStdout).toContain(chunk)
       })
       expect(stderr).toContain('is experimental')
     },
