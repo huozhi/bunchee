@@ -25,6 +25,8 @@
     "jsx",
     "zero-config",
     "library",
+    "css",
+    "web",
     "server components"
   ],
   "files": [
