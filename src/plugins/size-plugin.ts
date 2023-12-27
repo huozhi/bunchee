@@ -2,7 +2,7 @@ import type { Plugin } from 'rollup'
 import path from 'path'
 import prettyBytes from 'pretty-bytes'
 import { dtsExtensionRegex } from '../constants'
-import { logger } from '../logger'
+import { paint } from '../logger'
 import { Entries } from '../types'
 
 type Pair = [string, string, number]
@@ -54,7 +54,7 @@ function createChunkSizeCollector({ entries }: { entries: Entries }): {
             const sourceFileName = chunk.facadeModuleId || ''
             const exportPath = reversedMapping.get(sourceFileName) || '.'
             addSize({
-              fileName: filePath.startsWith(cwd)
+              fileName: path.isAbsolute(cwd)
                 ? path.relative(cwd, filePath)
                 : filePath,
               size,
@@ -82,9 +82,10 @@ function logSizeStats(sizeCollector: ReturnType<typeof createChunkSizeCollector>
     filesList.forEach((item: Pair) => {
       const [filename, , size] = item
       const padding = ' '.repeat(maxLength - filename.length)
-      const action = dtsExtensionRegex.test(filename) ? 'Typed' : 'Built'
+      const isTypeFile = dtsExtensionRegex.test(filename)
+      const action = isTypeFile ? '[types]' : '[chunk]'
       const prettiedSize = prettyBytes(size)
-      logger.info(`${action} ${filename}${padding} - ${prettiedSize}`)
+      paint('  ' + action, isTypeFile ? 'blue' : 'white', `${filename}${padding}  - ${prettiedSize}`)
     })
   })
 }

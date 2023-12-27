@@ -85,6 +85,9 @@ devDependencies:
   lint-staged:
     specifier: ^13.2.3
     version: 13.2.3
+  picocolors:
+    specifier: ^1.0.0
+    version: 1.0.0
   prettier:
     specifier: ^3.0.0
     version: 3.0.0
