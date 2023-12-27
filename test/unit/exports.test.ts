@@ -99,7 +99,7 @@ describe('lib exports', () => {
           main: './dist/index.cjs',
           exports: {
             '.': {
-              sub: {
+              './sub': {
                 require: './dist/index.cjs',
               },
             },
@@ -149,6 +149,30 @@ describe('lib exports', () => {
         '.': {
           import: './dist/index.mjs',
           require: './dist/index.cjs',
+        },
+      })
+    })
+
+    it('should handle nested import and exports conditions', () => {
+      expect(
+        getExportPaths({
+          exports: {
+            ".": {
+              "import": {
+                "types": "./dist/index.d.ts",
+                "default": "./dist/index.mjs"
+              },
+              "require": {
+                "types": "./dist/index.d.ts",
+                "default": "./dist/index.js"
+              }
+            }
+          },
+        }),
+      ).toEqual({
+        '.': {
+          import: './dist/index.mjs',
+          require: './dist/index.js',
         },
       })
     })
