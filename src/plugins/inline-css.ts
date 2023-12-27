@@ -45,10 +45,9 @@ export function inlineCss(options: {
   skip?: boolean
   exclude?: FilterPattern
 }): Plugin {
+  const cssIds = new Set<string>()
   const filter = createFilter(['**/*.css'], options.exclude ?? [])
-  const cssTypeSet = new Set<'cssImport'>()
-  // wait for rollup 4 for better support of assertion support https://github.com/rollup/rollup/issues/4818
-  // | 'cssAssertionImport'
+  // Follow up for rollup 4 for better support of assertion support https://github.com/rollup/rollup/issues/4818
 
   return {
     name: 'inline-css',
@@ -56,23 +55,26 @@ export function inlineCss(options: {
       if (!filter(id)) return
       if (options.skip) return ''
       const cssCode = minifyCSS(code)
-
+      cssIds.add(id)
       return {
         code: helpers.cssImport.create(cssCode),
         map: { mappings: '' },
       }
     },
-    renderChunk(code) {
-      if (cssTypeSet.size === 0) return null
-
-      let prefix = ''
-      for (const cssType of cssTypeSet) {
-        const cssHelper = helpers[cssType]
-        prefix = `${cssHelper.global};\n${prefix}`
+    renderChunk(code, options) {
+      const dependenciesIds = this.getModuleIds()
+      let foundCss = false
+      for (const depId of dependenciesIds) {
+        if (depId && cssIds.has(depId)) {
+          foundCss = true
+          break
+        }
       }
 
+      if (!foundCss) return
+
       return {
-        code: `${prefix}${code}`,
+        code: `${helpers.cssImport.global}\n${code}`,
         map: { mappings: '' },
       }
     },
