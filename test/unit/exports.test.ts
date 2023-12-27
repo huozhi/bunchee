@@ -157,14 +157,14 @@ describe('lib exports', () => {
       expect(
         getExportPaths({
           exports: {
-            ".": {
-              "import": {
-                "types": "./dist/index.d.ts",
-                "default": "./dist/index.mjs"
+            '.': {
+              'import': {
+                'types': './dist/index.d.ts',
+                'default': './dist/index.mjs'
               },
-              "require": {
-                "types": "./dist/index.d.ts",
-                "default": "./dist/index.js"
+              'require': {
+                'types': './dist/index.d.ts',
+                'default': './dist/index.js'
               }
             }
           },
