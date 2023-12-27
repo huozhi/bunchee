@@ -37,13 +37,13 @@ function constructFullExportCondition(
       [isEsmPkg ? 'import' : 'require']: exportCondition,
     }
   } else {
-    const keys: string[] = Object.keys(exportCondition)
+    const exportTypes: string[] = Object.keys(exportCondition)
     fullExportCond = {}
-    keys.forEach((key) => {
-      const condition = exportCondition[key]
+    exportTypes.forEach((exportType) => {
+      const condition = exportCondition[exportType]
       // Filter out nullable value
-      if (key in exportCondition && condition) {
-        fullExportCond[key] = condition
+      if (condition) {
+        fullExportCond[exportType] = condition
       }
     })
   }
@@ -53,30 +53,41 @@ function constructFullExportCondition(
 
 function joinRelativePath(...segments: string[]) {
   let result = join(...segments)
-  // If the first segment starts with './', ensure the result does too.
-  if (segments[0] === '.' && !result.startsWith('./')) {
+  // If the first segment starts with '.', ensure the result does too.
+  if (segments[0] === '.' && !result.startsWith('.')) {
     result = './' + result
   }
   return result
 }
 
 function findExport(
-  name: string,
+  exportPath: string,
   exportCondition: ExportCondition,
   paths: Record<string, FullExportCondition>,
   packageType: 'commonjs' | 'module',
 ): void {
-  // TODO: handle export condition based on package.type
   if (isExportLike(exportCondition)) {
-    paths[name] = constructFullExportCondition(exportCondition, packageType)
+    const fullExportCondition = constructFullExportCondition(exportCondition, packageType)
+    paths[exportPath] = {
+      ...paths[exportPath],
+      ...fullExportCondition,
+    }
     return
   }
 
   Object.keys(exportCondition).forEach((subpath) => {
-    const nextName = joinRelativePath(name, subpath)
-
-    const nestedExportCondition = exportCondition[subpath]
-    findExport(nextName, nestedExportCondition, paths, packageType)
+    if (subpath.startsWith('.')) {
+      // subpath is actual export path, ./a, ./b, ...
+      const nestedExportPath = joinRelativePath(exportPath, subpath)
+      const nestedExportCondition = exportCondition[subpath]
+      findExport(nestedExportPath, nestedExportCondition, paths, packageType)
+    } else {
+      // subpath is exportType, import, require, ...
+      const exportType = subpath
+      const defaultPath = (exportCondition[subpath] as any).default
+      const nestedExportCondition = { [exportType]: defaultPath }
+      findExport(exportPath, nestedExportCondition, paths, packageType)
+    }
   })
 }
 
@@ -87,11 +98,10 @@ function findExport(
  *
  * Input:
  * {
- *   ".": {
- *     "sub": {
- *       "import": "./sub.js",
- *       "require": "./sub.cjs",
- *       "types": "./sub.d.ts
+ *   "./sub": {
+ *     "import": {
+ *       "types": "./sub.js",
+ *       "default": "./sub.cjs",
  *     }
  *   }
  * }
@@ -101,7 +111,7 @@ function findExport(
  *   "./sub": {
  *     "import": "./sub.js",
  *     "require": "./sub.cjs",
- *     "types": "./sub.d.ts,
+ *     "types": "./sub.d.ts",
  *   }
  * }
  *
@@ -279,7 +289,7 @@ export function isEsmExportName(name: string, ext: string) {
 
 function isCjsExportName(pkg: PackageMetadata, name: string, ext: string) {
   const isESModule = isESModulePackage(pkg.type)
-  return (!isESModule && ['require', 'main', 'node', 'default'].includes(name) && ext !== 'mjs') || ext === 'cjs'
+  return (!isESModule && ['require', 'main', 'node'].includes(name) && ext !== 'mjs') || ext === 'cjs'
 }
 
 export function getExportConditionDist(
@@ -315,9 +325,6 @@ export function getExportConditionDist(
   }
 
   if (dist.length === 0 && !pkg.bin) {
-    console.error(
-      `Doesn't fin any exports in ${pkg.name}, using default dist path dist/index.js`,
-    )
     const defaultFormat = isESModulePackage(pkg.type) ? 'esm' : 'cjs'
     dist.push({ format: defaultFormat, file: getDistPath('dist/index.js', cwd) })
   }
