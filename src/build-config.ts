@@ -303,7 +303,13 @@ function getModuleLater(moduleMeta: CustomPluginOptions) {
 }
 
 // dependencyGraphMap: Map<subModuleId, Set<entryParentId>>
-function createSplitChunks(dependencyGraphMap: Map<string, Set<string>>): GetManualChunk {
+function createSplitChunks(
+  dependencyGraphMap: Map<string, Set<[string, string]>>,
+  entryFiles: Set<string>
+): GetManualChunk {
+  // If there's existing chunk being splitted, and contains a layer { <id>: <chunkGroup> }
+  const splitChunksGroupMap = new Map<string, string>()
+
   return function splitChunks(id, ctx) {
     const moduleInfo = ctx.getModuleInfo(id)
     if (!moduleInfo) {
@@ -328,7 +334,7 @@ function createSplitChunks(dependencyGraphMap: Map<string, Set<string>>): GetMan
           if (!dependencyGraphMap.has(subId)) {
             dependencyGraphMap.set(subId, new Set())
           }
-          dependencyGraphMap.get(subId)!.add(id)
+          dependencyGraphMap.get(subId)!.add([ id, moduleLayer ])
         }
       }
     }
@@ -339,12 +345,31 @@ function createSplitChunks(dependencyGraphMap: Map<string, Set<string>>): GetMan
       // when the module layer is same as entry layer, keep it as part of entry and don't split it;
       // when the module layer is different from entry layer, split the module into a separate chunk as a separate boundary.
       if (dependencyGraphMap.has(id)) {
-        const parentModuleLayers = Array.from(dependencyGraphMap.get(id)!)
-        if (parentModuleLayers.every(layer => layer === moduleLayer)) {
+        const parentModuleIds = Array.from(dependencyGraphMap.get(id)!)
+        const isImportFromOtherEntry = parentModuleIds.some(([id]) => {
+          // If other entry is dependency of this entry
+          if (entryFiles.has(id)) {
+            const entryModuleInfo = ctx.getModuleInfo(id)
+            const entryModuleLayer = getModuleLater(entryModuleInfo ? entryModuleInfo.meta : {})
+            return entryModuleLayer === moduleLayer
+          }
+          return false
+        })
+        if (isImportFromOtherEntry) return
+
+        const isPartOfCurrentEntry = parentModuleIds.every(([, layer]) => layer === moduleLayer)
+        if (isPartOfCurrentEntry) {
+          if (splitChunksGroupMap.has(id)) {
+            return splitChunksGroupMap.get(id)
+          }
           return
         }
+
         const chunkName = path.basename(id, path.extname(id))
-        return `${chunkName}-${moduleLayer}`
+        const chunkGroup = `${chunkName}-${moduleLayer}`
+
+        splitChunksGroupMap.set(id, chunkGroup)
+        return chunkGroup
       }
     }
     return
@@ -352,6 +377,7 @@ function createSplitChunks(dependencyGraphMap: Map<string, Set<string>>): GetMan
 }
 
 function buildOutputConfigs(
+  entries: Entries,
   pkg: PackageMetadata,
   exportPaths: ExportPaths,
   options: BundleOptions,
@@ -383,6 +409,7 @@ function buildOutputConfigs(
 
   const dtsPathConfig = { dir: dtsFile ? dirname(dtsFile) : dtsDir }
   const outputFile: string = (dtsFile || file)!
+  const entryFiles = new Set(Object.values(entries).map((entry) => entry.source))
 
   return {
     name: pkg.name || name,
@@ -394,7 +421,10 @@ function buildOutputConfigs(
     freeze: false,
     strict: false,
     sourcemap: options.sourcemap,
-    manualChunks: createSplitChunks(pluginContext.moduleDirectiveLayerMap),
+    manualChunks: createSplitChunks(
+      pluginContext.moduleDirectiveLayerMap,
+      entryFiles
+    ),
     chunkFileNames: '[name]-[hash].js',
     // By default in rollup, when creating multiple chunks, transitive imports of entry chunks
     // will be added as empty imports to the entry chunks. Disable to avoid imports hoist outside of boundaries
@@ -584,6 +614,7 @@ async function buildConfig(
     const typeOutputExports = getExportTypeDist(exportCondition, cwd)
     outputConfigs = typeOutputExports.map((typeFile) =>
       buildOutputConfigs(
+        entries,
         pkg,
         exportPaths,
         {
@@ -603,6 +634,7 @@ async function buildConfig(
     // multi outputs with specified format
     outputConfigs = outputExports.map((exportDist) => {
       return buildOutputConfigs(
+        entries,
         pkg,
         exportPaths,
         {
@@ -623,6 +655,7 @@ async function buildConfig(
       const fallbackFormat = outputExports[0]?.format
       outputConfigs = [
         buildOutputConfigs(
+          entries,
           pkg,
           exportPaths,
           {
