@@ -24,3 +24,12 @@ export const dtsExtensions = {
   cjs: '.d.cts',
   mjs: '.d.mts',
 }
+
+export const disabledWarnings = new Set([
+  'MIXED_EXPORTS',
+  'PREFER_NAMED_EXPORTS',
+  'UNRESOLVED_IMPORT',
+  'THIS_IS_UNDEFINED',
+  'INVALID_ANNOTATION',
+  'SOURCEMAP_BROKEN',
+])

@@ -43,6 +43,7 @@ import {
   availableESExtensionsRegex,
   dtsExtensions,
   nodeResolveExtensions,
+  disabledWarnings,
 } from './constants'
 import { logger } from './logger'
 import { PluginContext } from './plugins/size-plugin'
@@ -250,15 +251,7 @@ async function buildInputConfig(
       const code = warning.code || ''
       // Some may not have types, like CLI binary
       if (dts && code === 'EMPTY_BUNDLE') return
-      if (
-        [
-          'MIXED_EXPORTS',
-          'PREFER_NAMED_EXPORTS',
-          'UNRESOLVED_IMPORT',
-          'THIS_IS_UNDEFINED',
-          'INVALID_ANNOTATION',
-        ].includes(code)
-      )
+      if (disabledWarnings.has(code))
         return
       // If the circular dependency warning is from node_modules, ignore it
       if (
