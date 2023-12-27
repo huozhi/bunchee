@@ -310,10 +310,6 @@ function createSplitChunks(
   // If there's existing chunk being splitted, and contains a layer { <id>: <chunkGroup> }
   const splitChunksGroupMap = new Map<string, string>()
 
-  for (const entryFile of entryFiles) {
-
-  }
-
   return function splitChunks(id, ctx) {
     const moduleInfo = ctx.getModuleInfo(id)
     if (!moduleInfo) {
@@ -350,10 +346,9 @@ function createSplitChunks(
       // when the module layer is different from entry layer, split the module into a separate chunk as a separate boundary.
       if (dependencyGraphMap.has(id)) {
         const parentModuleIds = Array.from(dependencyGraphMap.get(id)!)
-        const isPartOfCurrentEntry = parentModuleIds.every(([, layer]) => layer === moduleLayer)
-        const isPartOfOtherEntry = parentModuleIds.every(([id]) => {
-          const isEntry = entryFiles.has(id)
-          if (isEntry) {
+        const isImportFromOtherEntry = parentModuleIds.some(([id]) => {
+          // If other entry is dependency of this entry
+          if (entryFiles.has(id)) {
             const entryModuleInfo = ctx.getModuleInfo(id)
             if (entryModuleInfo && entryModuleInfo.meta) {
               const entryModuleLayer = getModuleLater(entryModuleInfo.meta)
@@ -362,7 +357,10 @@ function createSplitChunks(
           }
           return false
         })
-        if (isPartOfCurrentEntry || isPartOfOtherEntry) {
+        if (isImportFromOtherEntry) return
+
+        const isPartOfCurrentEntry = parentModuleIds.every(([, layer]) => layer === moduleLayer)
+        if (isPartOfCurrentEntry) {
           if (splitChunksGroupMap.has(id)) {
             return splitChunksGroupMap.get(id)
           }
