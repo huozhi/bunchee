@@ -350,10 +350,8 @@ function createSplitChunks(
           // If other entry is dependency of this entry
           if (entryFiles.has(id)) {
             const entryModuleInfo = ctx.getModuleInfo(id)
-            if (entryModuleInfo && entryModuleInfo.meta) {
-              const entryModuleLayer = getModuleLater(entryModuleInfo.meta)
-              return entryModuleLayer === moduleLayer
-            }
+            const entryModuleLayer = getModuleLater(entryModuleInfo ? entryModuleInfo.meta : {})
+            return entryModuleLayer === moduleLayer
           }
           return false
         })
