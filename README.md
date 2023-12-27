@@ -25,6 +25,12 @@ It uses the standard exports configuration in `package.json` as the only source 
 npm install --save-dev bunchee
 ```
 
+If you're using TypeScript
+
+```sh
+npm install --save-dev bunchee typescript
+```
+
 ### Configuration
 
 Create your library entry file and package.json.
@@ -37,9 +43,10 @@ touch package.json
 Then use use the [exports field in package.json](https://nodejs.org/api/packages.html#exports-sugar) to configure different conditions and leverage the same functionality as other bundlers, such as webpack. The exports field allows you to define multiple conditions.
 ```json
 {
+  "files": ["dist"],
   "exports": {
-    "import": "dist/index.mjs",
-    "require": "dist/index.cjs"
+    "import": "./dist/index.mjs",
+    "require": "./dist/index.cjs"
   },
   "scripts": {
     "build": "bunchee"
@@ -51,15 +58,19 @@ If you want to use ESM package, change the `type` field in package.json to `modu
 ```json
 {
   "type": "module",
+  "files": ["dist"],
   "exports": {
-    "import": "dist/index.mjs",
-    "require": "dist/index.cjs"
+    "import": "./dist/index.mjs",
+    "require": "./dist/index.cjs"
   },
   "scripts": {
     "build": "bunchee"
   }
 }
 ```
+
+Then files in `src` folders will be treated as entry files and match the export names in package.json. For example:
+`src/index.ts` will match the exports name `"."` or the only main export.
 
 Now just run `npm run build` (or `pnpm build` / `yarn build`) if you're using these package managers, `bunchee` will find the entry files and build them.
 The output format will based on the exports condition and also the file extension. Given an example:
@@ -73,12 +84,13 @@ The output format will based on the exports condition and also the file extensio
 
 While `exports` field is becoming the standard of exporting in node.js, bunchee also supports to build multiple exports all in one command.
 
-What you need to do is just add an entry file with the name (`[name].[ext]`) that matches the exported name from exports field in package.json. For instance:
+Provide entry files with the name (`[name].[ext]`) that matches the exported name from exports field in package.json. For instance:
 
 - `<cwd>/src/index.ts` will match `"."` export name or the if there's only one main export.
 - `<cwd>/src/lite.ts` will match `"./lite"` export name.
 
-The build script will be simplified to just `bunchee` in package.json without configure any input sources for each exports. Of course you can still specify other arguments as you need.
+The build script can be just `bunchee` without configure any input sources for each exports. Of course you can still specify other arguments as you need.
+Briefly, the entry files from `src/` folder will do matching with `exports` conditions from `package.json` and build them into bundles.
 
 Assuming you have default export package as `"."` and subpath export `"./lite"` with different exports condition listed in package.json
 
@@ -109,6 +121,28 @@ Then you need to add two entry files `index.ts` and `lite.ts` in project root di
 ```
 
 It will also look up for `index.<ext>` file under the directory having the name of the export path. For example, if you have `"./lite": "./dist/lite.js"` in exports field, then it will look up for `./lite/index.js` as the entry file as well.
+
+### TypeScript Declaration
+
+When you're using `.mjs` or `.cjs` extensions with TypeScript and modern module resolution (above node16), TypeScript will require specific type declaration files like `.d.mts` or `.d.cts` to match the extension.
+`bunchee` can automatically generate them to match the types to match the condition and extensions. One example is to configure your exports like this in package.json:
+
+```json
+{
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    }
+  }
+}
+```
 
 ### Multiple Runtime
 
