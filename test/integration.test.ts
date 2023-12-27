@@ -433,11 +433,12 @@ const testCases: {
       })
       expect(clientClientChunkFiles.length).toBe(2) // cjs and esm
 
-      const assetClientChunkFiles = distFiles.filter(f => f.includes('asset-client-'))
-      expect(assetClientChunkFiles.length).toBe(2) // cjs and esm
+      // asset is only being imported to ui, no split
+      const assetClientChunkFiles = distFiles.filter(f => f.includes('_asset-client-'))
+      expect(assetClientChunkFiles.length).toBe(0)
 
       // server component chunks will remain the directive
-      const serverChunkFiles = distFiles.filter(f => f.includes('actions-server-'))
+      const serverChunkFiles = distFiles.filter(f => f.includes('_actions-server-'))
       serverChunkFiles.forEach(async f => {
         const content = await fs.readFile(join(dir, 'dist', f), 'utf-8')
         expect(content).toContain('use server')
@@ -445,30 +446,28 @@ const testCases: {
       })
       expect(serverChunkFiles.length).toBe(2) // cjs and esm
 
-      // ui is split as client boundary, and directly import the splitted chunks
+      // For single entry ./ui, client is bundled into client
       const uiEsm = await fs.readFile(join(dir, 'dist/ui.js'), 'utf-8')
       expect(uiEsm).toContain('use client')
-      expect(uiEsm).toContain('./_client-client')
-      expect(uiEsm).toContain('./_asset-client')
+      expect(uiEsm).not.toContain('./_client-client')
+
+      // asset is only being imported to ui, no split
+      expect(uiEsm).not.toContain('./_asset-client')
     },
   },
   {
-    name: 'server-components-split',
+    name: 'server-components-same-layer',
     args: [],
     async expected(dir) {
       const distFiles = await fs.readdir(join(dir, 'dist'))
-      // client component chunks will remain the directive
       const clientChunkFiles = distFiles.filter(f => f.includes('client-client-'))
-      clientChunkFiles.forEach(async f => {
-        const content = await fs.readFile(join(dir, 'dist', f), 'utf-8')
-        expect(content).toContain('use client')
-      })
-      expect(clientChunkFiles.length).toBe(2)
+      expect(clientChunkFiles.length).toBe(0)
 
       // index doesn't have "use client" directive
       const indexCjs = await fs.readFile(join(dir, 'dist/index.cjs'), 'utf-8')
       const indexEsm = await fs.readFile(join(dir, 'dist/index.js'), 'utf-8')
-      expect(indexCjs + indexEsm).not.toContain('use client')
+      expect(indexCjs).toContain('use client')
+      expect(indexEsm).toContain('use client')
     }
   },
   {
