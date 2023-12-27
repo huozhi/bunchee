@@ -106,26 +106,26 @@ const testCases: {
       assertFilesContent(dir, contentsRegex)
 
       const log = `\
-      Typed dist/shared/index.d.mts
-      Typed dist/index.d.ts
-      Typed dist/server/index.d.ts
-      Typed dist/server/index.d.mts
-      Typed dist/lite.d.ts
-      Typed dist/server/edge.d.mts
-      Typed dist/shared/edge-light.d.mts
-      Typed dist/server/react-server.d.mts
-      Typed dist/client/index.d.ts
-      Typed dist/client/index.d.cts
-      Typed dist/client/index.d.mts
-      Built dist/shared/edge-light.mjs
-      Built dist/shared/index.mjs
-      Built dist/index.js
-      Built dist/client/index.cjs
-      Built dist/client/index.mjs
-      Built dist/lite.js
-      Built dist/server/react-server.mjs
-      Built dist/server/edge.mjs
-      Built dist/server/index.mjs
+      dist/shared/index.d.mts
+      dist/index.d.ts
+      dist/server/index.d.ts
+      dist/server/index.d.mts
+      dist/lite.d.ts
+      dist/server/edge.d.mts
+      dist/shared/edge-light.d.mts
+      dist/server/react-server.d.mts
+      dist/client/index.d.ts
+      dist/client/index.d.cts
+      dist/client/index.d.mts
+      dist/shared/edge-light.mjs
+      dist/shared/index.mjs
+      dist/index.js
+      dist/client/index.cjs
+      dist/client/index.mjs
+      dist/lite.js
+      dist/server/react-server.mjs
+      dist/server/edge.mjs
+      dist/server/index.mjs
       `
 
       const rawStdout = stripANSIColor(stdout)
@@ -199,8 +199,8 @@ const testCases: {
       )
 
       const log = `\
-      Typed dist/index.d.ts
-      Built dist/index.js`
+      dist/index.d.ts
+      dist/index.js`
 
       const rawStdout = stripANSIColor(stdout)
       log.split('\n').forEach((line: string) => {
@@ -266,23 +266,23 @@ const testCases: {
       assertFilesContent(dir, contentsRegex)
 
       const log = `\
-      Typed dist/button.d.ts
-      Typed dist/server/index.d.ts
-      Typed dist/server/index.d.mts
-      Typed dist/index.d.ts
-      Typed dist/layout/index.d.ts
-      Typed dist/server/react-server.d.mts
-      Typed dist/lite.d.ts
-      Typed dist/server/edge.d.mts
-      Typed dist/input.d.ts
-      Built dist/input.js
-      Built dist/lite.js
-      Built dist/button.js
-      Built dist/index.js
-      Built dist/server/react-server.mjs
-      Built dist/layout/index.js
-      Built dist/server/index.mjs
-      Built dist/server/edge.mjs
+      dist/button.d.ts
+      dist/server/index.d.ts
+      dist/server/index.d.mts
+      dist/index.d.ts
+      dist/layout/index.d.ts
+      dist/server/react-server.d.mts
+      dist/lite.d.ts
+      dist/server/edge.d.mts
+      dist/input.d.ts
+      dist/input.js
+      dist/lite.js
+      dist/button.js
+      dist/index.js
+      dist/server/react-server.mjs
+      dist/layout/index.js
+      dist/server/index.mjs
+      dist/server/edge.mjs
       `
 
       const rawStdout = stripANSIColor(stdout)

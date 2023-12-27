@@ -4,8 +4,8 @@ import type { CliArgs, BundleConfig } from '../types'
 
 import path from 'path'
 import arg from 'arg'
-import { exit, formatDuration, getPackageMeta, hasPackageJson } from '../utils'
-import { logger } from '../logger'
+import { exit, getPackageMeta, hasPackageJson } from '../utils'
+import { logger, paint } from '../logger'
 import { version } from '../../package.json'
 import { bundle } from '../../src/index'
 
@@ -140,11 +140,8 @@ async function run(args: CliArgs) {
 
   const entry = source ? path.resolve(cwd, source) : ''
 
-  let timeStart = Date.now()
-  let timeEnd
   try {
     await bundle(entry, bundleConfig)
-    timeEnd = Date.now()
   } catch (err: any) {
     if (err.name === 'NOT_EXISTED') {
       help()
@@ -153,7 +150,6 @@ async function run(args: CliArgs) {
     throw err
   }
 
-  const duration = timeEnd - timeStart
   // watching mode
   if (watch) {
     logger.log(`Watching assets in ${cwd}...`)
@@ -161,7 +157,8 @@ async function run(args: CliArgs) {
   }
 
   // build mode
-  logger.info(`Finished in ${formatDuration(duration)}`)
+  console.log()
+  paint('✓', 'green', `bunchee ${version} build completed`)
 
   await lintPackage(cwd)
 }
