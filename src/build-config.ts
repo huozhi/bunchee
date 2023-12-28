@@ -163,46 +163,41 @@ async function buildInputConfig(
     })
   ]
 
-  const baseResolvedTsOptions: any = {
-    declaration: true,
-    noEmit: false,
-    noEmitOnError: true,
-    emitDeclarationOnly: true,
-    checkJs: false,
-    declarationMap: false,
-    skipLibCheck: true,
-    preserveSymlinks: false,
-    // disable incremental build
-    incremental: false,
-    // use default tsBuildInfoFile value
-    tsBuildInfoFile: '.tsbuildinfo',
-    target: 'esnext',
-    module: 'esnext',
-    jsx: tsCompilerOptions.jsx || 'react-jsx',
-  }
-
   const typesPlugins = [
     ...commonPlugins,
     inlineCss({ skip: true }),
   ]
 
   if (useTypescript) {
+    const overrideResolvedTsOptions: any = {
+      declaration: true,
+      noEmit: false,
+      noEmitOnError: true,
+      emitDeclarationOnly: true,
+      checkJs: false,
+      declarationMap: false,
+      skipLibCheck: true,
+      preserveSymlinks: false,
+      target: 'esnext',
+      module: 'esnext',
+      jsx: tsCompilerOptions.jsx || 'react-jsx',
+    }
+
     const mergedOptions = {
-      ...baseResolvedTsOptions,
       ...tsCompilerOptions,
+      ...overrideResolvedTsOptions,
     }
 
     // error TS5074: Option '--incremental' can only be specified using tsconfig, emitting to single
     // file or when option '--tsBuildInfoFile' is specified.
-    if (!mergedOptions.incremental) {
-      delete mergedOptions.incremental
-      delete mergedOptions.tsBuildInfoFile
-    }
+    delete mergedOptions.incremental
+    delete mergedOptions.tsBuildInfoFile
 
     const dtsPlugin = (require('rollup-plugin-dts') as typeof import('rollup-plugin-dts')).default({
       tsconfig: undefined,
       compilerOptions: mergedOptions,
     })
+
     typesPlugins.push(dtsPlugin)
   }
 
