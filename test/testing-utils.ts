@@ -27,7 +27,7 @@ export function assertContainFiles(dir: string, filePaths: string[]) {
     const fullPath = path.join(dir, filePath)
     const existed = fs.existsSync(fullPath)
     if (existed) {
-      results.push(fullPath)
+      results.push(filePath)
     }
   }
   expect(results).toEqual(filePaths)
