@@ -9,7 +9,7 @@ import type {
   FullExportCondition,
 } from './types'
 import type { CustomPluginOptions, GetManualChunk, InputOptions, OutputOptions, Plugin } from 'rollup'
-import { type TypescriptOptions } from './typescript'
+import { convertCompilerOptions, type TypescriptOptions } from './typescript'
 
 import path, { resolve, dirname, join, basename } from 'path'
 import { wasm } from '@rollup/plugin-wasm'
@@ -168,7 +168,7 @@ async function buildInputConfig(
   ]
 
   if (useTypescript) {
-    const overrideResolvedTsOptions: any = {
+    const { options: overrideResolvedTsOptions }: any = await convertCompilerOptions(cwd, {
       declaration: true,
       noEmit: false,
       noEmitOnError: true,
@@ -176,26 +176,18 @@ async function buildInputConfig(
       checkJs: false,
       declarationMap: false,
       skipLibCheck: true,
-      preserveSymlinks: false,
       target: 'ESNext',
-      module: 'ESNext',
-      moduleResolution: 'NodeNext',
-      jsx: tsCompilerOptions.jsx || 'react-jsx',
-    }
-
-    const mergedOptions = {
-      ...tsCompilerOptions,
-      ...overrideResolvedTsOptions,
-    }
-
-    // error TS5074: Option '--incremental' can only be specified using tsconfig, emitting to single
-    // file or when option '--tsBuildInfoFile' is specified.
-    delete mergedOptions.incremental
-    delete mergedOptions.tsBuildInfoFile
+      ...(!tsCompilerOptions.jsx ? {
+        jsx: 'react-jsx',
+      } : undefined),
+      // error TS5074: Option '--incremental' can only be specified using tsconfig, emitting to single
+      // file or when option '--tsBuildInfoFile' is specified.
+      incremental: false,
+    })
 
     const dtsPlugin = (require('rollup-plugin-dts') as typeof import('rollup-plugin-dts')).default({
-      tsconfig: undefined,
-      compilerOptions: mergedOptions,
+      tsconfig: tsConfigPath,
+      compilerOptions: overrideResolvedTsOptions,
     })
 
     typesPlugins.push(dtsPlugin)

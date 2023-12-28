@@ -229,15 +229,15 @@ const testCases: {
     args: [],
     async expected(dir) {
       // TODO: disable incremental and avoid erroring
-      // const distFiles = ['./dist/index.js', './dist/index.d.ts']
+      const distFiles = ['./dist/index.js', './dist/index.d.ts']
 
-      // for (const f of distFiles) {
-      //   expect(await existsFile(join(dir, f))).toBe(true)
-      // }
-      // expect(await fs.readFile(join(dir, distFiles[1]), 'utf-8')).toContain(
-      //   'declare const _default: () => string;',
-      // )
-      // expect(await existsFile(join(dir, './dist/.tsbuildinfo'))).toBe(false)
+      for (const f of distFiles) {
+        expect(await existsFile(join(dir, f))).toBe(true)
+      }
+      expect(await fs.readFile(join(dir, distFiles[1]), 'utf-8')).toContain(
+        'declare const _default: () => string;',
+      )
+      expect(await existsFile(join(dir, './dist/.tsbuildinfo'))).toBe(false)
     },
   },
   {
