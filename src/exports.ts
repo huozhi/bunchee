@@ -30,11 +30,12 @@ function constructFullExportCondition(
   exportCondition: string | Record<string, string | undefined>,
   packageType: PackageType,
 ): FullExportCondition {
-  const isEsmPkg = isESModulePackage(packageType)
   let fullExportCond: FullExportCondition
   if (typeof exportCondition === 'string') {
+    const exportType = getExportTypeFromFile(exportCondition, packageType)
+
     fullExportCond = {
-      [isEsmPkg ? 'import' : 'require']: exportCondition,
+      [exportType]: exportCondition,
     }
   } else {
     const exportTypes: string[] = Object.keys(exportCondition)
@@ -66,6 +67,8 @@ function findExport(
   paths: Record<string, FullExportCondition>,
   packageType: 'commonjs' | 'module',
 ): void {
+  // Skip `types` field, it cannot be the entry point
+  if (exportPath === 'types') return
   if (isExportLike(exportCondition)) {
     const fullExportCondition = constructFullExportCondition(exportCondition, packageType)
     paths[exportPath] = {
@@ -349,4 +352,19 @@ export function getTypeFilePath(
         firstDistPath ? dirname(firstDistPath) : join(cwd, 'dist'),
         (exportName === '.' ? 'index' : exportName) + '.d.ts',
       )
+}
+
+export function getExportTypeFromFile(filename: string, pkgType: string | undefined) {
+  const isESModule = isESModulePackage(pkgType)
+  const isCjsExt = filename.endsWith('.cjs')
+  const isEsmExt = filename.endsWith('.mjs')
+
+  const exportType = isEsmExt
+    ? 'import'
+    : isCjsExt
+    ? 'require'
+    : isESModule
+    ? 'import'
+    : 'require'
+  return exportType
 }
