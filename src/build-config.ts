@@ -169,7 +169,7 @@ async function buildInputConfig(
   ]
 
   if (useTypescript) {
-    const baseResolvedTsOptions: any = {
+    const overrideResolvedTsOptions: any = {
       declaration: true,
       noEmit: false,
       noEmitOnError: true,
@@ -184,9 +184,14 @@ async function buildInputConfig(
     }
 
     const mergedOptions = {
-      ...baseResolvedTsOptions,
       ...tsCompilerOptions,
+      ...overrideResolvedTsOptions,
     }
+
+    // error TS5074: Option '--incremental' can only be specified using tsconfig, emitting to single
+    // file or when option '--tsBuildInfoFile' is specified.
+    delete mergedOptions.incremental
+    delete mergedOptions.tsBuildInfoFile
 
     const dtsPlugin = (require('rollup-plugin-dts') as typeof import('rollup-plugin-dts')).default({
       tsconfig: undefined,
