@@ -536,11 +536,12 @@ export async function collectEntries(
 
   const collectEntriesPromises = Object.keys(exportPaths).map(async (entryExport) => {
     const exportCond = exportPaths[entryExport]
-    await collectEntry('', exportCond, entryExport)
-
-    for (const exportType of availableExportConventions) {
-      if (exportCond[exportType]) {
-        await collectEntry(exportType, exportCond, entryExport)
+    if (entryExport.startsWith('.')) {
+      await collectEntry('', exportCond, entryExport)
+      for (const exportType of availableExportConventions) {
+        if (exportCond[exportType]) {
+          await collectEntry(exportType, exportCond, entryExport)
+        }
       }
     }
   })

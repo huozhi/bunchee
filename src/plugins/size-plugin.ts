@@ -76,8 +76,6 @@ function logSizeStats(sizeCollector: ReturnType<typeof createChunkSizeCollector>
   const allFileNameLengths = Array.from(stats.values()).flat(1).map(([filename]) => filename.length)
   const maxLength = Math.max(...allFileNameLengths)
 
-  const logged = new Set<string>()
-
   ;[...stats.entries()]
   .sort(([a], [b]) => a.length - b.length)
   .forEach(([, filesList]) => {
@@ -87,10 +85,7 @@ function logSizeStats(sizeCollector: ReturnType<typeof createChunkSizeCollector>
       const isTypeFile = dtsExtensionRegex.test(filename)
       const action = isTypeFile ? '[types]' : '[chunk]'
       const prettiedSize = prettyBytes(size)
-      if (!logged.has(filename)) {
-        logged.add(filename)
-        paint('  ' + action, isTypeFile ? 'blue' : 'white', `${filename}${padding}  - ${prettiedSize}`)
-      }
+      paint('  ' + action, isTypeFile ? 'blue' : 'white', `${filename}${padding}  - ${prettiedSize}`)
     })
   })
 }
