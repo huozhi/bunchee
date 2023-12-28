@@ -1,7 +1,7 @@
 import fs from 'fs/promises'
 import { execSync, fork } from 'child_process'
 import { resolve, join } from 'path'
-import { stripANSIColor, existsFile, assertFilesContent, getChunkFileNamesFromLog } from './testing-utils'
+import { stripANSIColor, existsFile, assertFilesContent, getChunkFileNamesFromLog, assertContainFiles } from './testing-utils'
 import * as debug from './utils/debug'
 
 jest.setTimeout(10 * 60 * 1000)
@@ -138,15 +138,12 @@ const testCases: {
     name: 'ts-dual-package-type-cjs',
     args: [],
     async expected(dir) {
-      const distFiles = [
-        join(dir, './dist/index.js'),
-        join(dir, './dist/index.mjs'),
-        join(dir, './dist/index.d.ts'),
-        join(dir, './dist/index.d.mts'),
-      ]
-      for (const f of distFiles) {
-        expect(await existsFile(f)).toBe(true)
-      }
+      assertContainFiles(dir, [
+        './dist/index.js',
+        './dist/index.mjs',
+        './dist/index.d.ts',
+        './dist/index.d.mts',
+      ])
     },
   },
   {
@@ -154,14 +151,12 @@ const testCases: {
     args: [],
     async expected(dir) {
       const distFiles = [
-        join(dir, './dist/index.js'),
-        join(dir, './dist/index.cjs'),
-        join(dir, './dist/index.d.ts'),
-        join(dir, './dist/index.d.cts'),
+        './dist/index.js',
+        './dist/index.cjs',
+        './dist/index.d.ts',
+        './dist/index.d.cts',
       ]
-      for (const f of distFiles) {
-        expect(await existsFile(f)).toBe(true)
-      }
+      assertContainFiles(dir, distFiles)
     },
   },
   {
@@ -169,15 +164,13 @@ const testCases: {
     args: [],
     async expected(dir) {
       const distFiles = [
-        join(dir, './dist/index.mjs'),
-        join(dir, './dist/index.cjs'),
-        join(dir, './dist/index.d.mts'),
-        join(dir, './dist/index.d.cts'),
-        join(dir, './dist/index.d.ts'),
+        './dist/index.mjs',
+        './dist/index.cjs',
+        './dist/index.d.mts',
+        './dist/index.d.cts',
+        './dist/index.d.ts',
       ]
-      for (const f of distFiles) {
-        expect(await existsFile(f)).toBe(true)
-      }
+      assertContainFiles(dir, distFiles)
     },
   },
   {
@@ -492,14 +485,12 @@ const testCases: {
     args: [],
     async expected(dir) {
       const distFiles = [
-        join(dir, './dist/index.js'),
-        join(dir, './dist/index.mjs'),
-        join(dir, './dist/shared.js'),
-        join(dir, './dist/shared.mjs'),
+        './dist/index.js',
+        './dist/index.mjs',
+        './dist/shared.js',
+        './dist/shared.mjs',
       ]
-      for (const f of distFiles) {
-        expect(await existsFile(f)).toBe(true)
-      }
+      assertContainFiles(dir, distFiles)
 
       // ESM bundle imports from <pkg/export>
       const indexEsm = await fs.readFile(join(dir, './dist/index.mjs'), 'utf-8')
