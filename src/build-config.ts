@@ -9,7 +9,7 @@ import type {
   FullExportCondition,
 } from './types'
 import type { CustomPluginOptions, GetManualChunk, InputOptions, OutputOptions, Plugin } from 'rollup'
-import { convertCompilerOptions, type TypescriptOptions } from './typescript'
+import { type TypescriptOptions } from './typescript'
 
 import path, { resolve, dirname, extname, join, basename } from 'path'
 import { wasm } from '@rollup/plugin-wasm'
