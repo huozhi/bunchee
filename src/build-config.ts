@@ -165,6 +165,7 @@ async function buildInputConfig(
 
   const baseResolvedTsOptions: any = {
     declaration: true,
+    // Avoid user overriding noEmit
     noEmit: false,
     noEmitOnError: true,
     emitDeclarationOnly: true,
@@ -172,10 +173,6 @@ async function buildInputConfig(
     declarationMap: false,
     skipLibCheck: true,
     preserveSymlinks: false,
-    // disable incremental build
-    incremental: false,
-    // use default tsBuildInfoFile value
-    tsBuildInfoFile: '.tsbuildinfo',
     target: 'esnext',
     module: 'esnext',
     jsx: tsCompilerOptions.jsx || 'react-jsx',
@@ -188,16 +185,14 @@ async function buildInputConfig(
 
   if (useTypescript) {
     const mergedOptions = {
-      ...baseResolvedTsOptions,
       ...tsCompilerOptions,
+      ...baseResolvedTsOptions,
     }
 
     // error TS5074: Option '--incremental' can only be specified using tsconfig, emitting to single
     // file or when option '--tsBuildInfoFile' is specified.
-    if (!mergedOptions.incremental) {
-      delete mergedOptions.incremental
-      delete mergedOptions.tsBuildInfoFile
-    }
+    delete mergedOptions.incremental
+    delete mergedOptions.tsBuildInfoFile
 
     const dtsPlugin = (require('rollup-plugin-dts') as typeof import('rollup-plugin-dts')).default({
       tsconfig: undefined,
