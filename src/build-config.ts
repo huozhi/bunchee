@@ -177,6 +177,12 @@ async function buildInputConfig(
       declarationMap: false,
       skipLibCheck: true,
       target: 'ESNext',
+      // Some react types required this to be false by default.
+      // Some type package like express might need this as it has other dependencies.
+      // Let users able to toggle this in tsconfig.
+      preserveSymlinks: 'preserveSymlinks' in tsCompilerOptions
+        ? tsCompilerOptions.preserveSymlinks
+        : false,
       ...(!tsCompilerOptions.jsx ? {
         jsx: 'react-jsx',
       } : undefined),
