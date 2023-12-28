@@ -153,18 +153,18 @@ describe('lib exports', () => {
       })
     })
 
-    it('should handle nested import and exports conditions', () => {
+    it('should handle nested exports conditions', () => {
       expect(
         getExportPaths({
           exports: {
             '.': {
-              'import': {
-                'types': './dist/index.d.ts',
-                'default': './dist/index.mjs'
+              import: {
+                types: './dist/index.d.ts',
+                default: './dist/index.mjs'
               },
-              'require': {
-                'types': './dist/index.d.ts',
-                'default': './dist/index.js'
+              require: {
+                types: './dist/index.d.ts',
+                default: './dist/index.js'
               }
             }
           },
@@ -172,6 +172,33 @@ describe('lib exports', () => {
       ).toEqual({
         '.': {
           import: './dist/index.mjs',
+          require: './dist/index.js',
+        },
+      })
+    })
+
+    it('should dedupe main and module with nested exports', () => {
+      expect(
+        getExportPaths({
+          main: './dist/index.js',
+          module: './dist/index.mjs',
+          exports: {
+            '.': {
+              import: {
+                types: './dist/index.d.ts',
+                default: './dist/index.mjs'
+              },
+              require: {
+                types: './dist/index.d.ts',
+                default: './dist/index.js'
+              }
+            }
+          },
+        }),
+      ).toEqual({
+        '.': {
+          import: './dist/index.mjs',
+          module: './dist/index.mjs',
           require: './dist/index.js',
         },
       })
