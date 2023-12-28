@@ -200,6 +200,7 @@ async function buildInputConfig(
           ...commonPlugins,
           inlineCss({ exclude: /node_modules/ }),
           rawContent({ exclude: /node_modules/ }),
+          esmShim(),
           preserveDirectives(),
           prependDirectives(),
           replace({
@@ -221,7 +222,6 @@ async function buildInputConfig(
             tsconfig: tsConfigPath,
             ...swcOptions,
           }),
-          esmShim()
         ]
   ).filter(isNotNull<Plugin>)
 
