@@ -43,7 +43,6 @@ export async function resolveTsConfig(
       basePath,
     ).options
   } else {
-    tsConfigPath = undefined
     return null
   }
   return {

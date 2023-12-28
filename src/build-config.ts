@@ -9,7 +9,7 @@ import type {
   FullExportCondition,
 } from './types'
 import type { CustomPluginOptions, GetManualChunk, InputOptions, OutputOptions, Plugin } from 'rollup'
-import { type TypescriptOptions } from './typescript'
+import { convertCompilerOptions, type TypescriptOptions } from './typescript'
 
 import path, { resolve, dirname, extname, join, basename } from 'path'
 import { wasm } from '@rollup/plugin-wasm'
@@ -163,41 +163,36 @@ async function buildInputConfig(
     })
   ]
 
-  const baseResolvedTsOptions: any = {
-    declaration: true,
-    // Avoid user overriding noEmit
-    noEmit: false,
-    noEmitOnError: true,
-    emitDeclarationOnly: true,
-    checkJs: false,
-    declarationMap: false,
-    skipLibCheck: true,
-    preserveSymlinks: false,
-    target: 'esnext',
-    module: 'esnext',
-    jsx: tsCompilerOptions.jsx || 'react-jsx',
-  }
-
   const typesPlugins = [
     ...commonPlugins,
     inlineCss({ skip: true }),
   ]
 
   if (useTypescript) {
-    const mergedOptions = {
-      ...tsCompilerOptions,
-      ...baseResolvedTsOptions,
+    const baseResolvedTsOptions: any = {
+      declaration: true,
+      noEmit: false,
+      noEmitOnError: true,
+      emitDeclarationOnly: true,
+      checkJs: false,
+      declarationMap: false,
+      skipLibCheck: true,
+      preserveSymlinks: false,
+      target: 'esnext',
+      module: 'esnext',
+      jsx: tsCompilerOptions.jsx || 'react-jsx',
     }
 
-    // error TS5074: Option '--incremental' can only be specified using tsconfig, emitting to single
-    // file or when option '--tsBuildInfoFile' is specified.
-    delete mergedOptions.incremental
-    delete mergedOptions.tsBuildInfoFile
+    const mergedOptions = {
+      ...baseResolvedTsOptions,
+      ...tsCompilerOptions,
+    }
 
     const dtsPlugin = (require('rollup-plugin-dts') as typeof import('rollup-plugin-dts')).default({
       tsconfig: undefined,
       compilerOptions: mergedOptions,
     })
+
     typesPlugins.push(dtsPlugin)
   }
 
