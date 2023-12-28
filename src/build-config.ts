@@ -11,7 +11,7 @@ import type {
 import type { CustomPluginOptions, GetManualChunk, InputOptions, OutputOptions, Plugin } from 'rollup'
 import { type TypescriptOptions } from './typescript'
 
-import path, { resolve, dirname, extname, join, basename } from 'path'
+import path, { resolve, dirname, join, basename } from 'path'
 import { wasm } from '@rollup/plugin-wasm'
 import { swc } from 'rollup-plugin-swc3'
 import commonjs from '@rollup/plugin-commonjs'
@@ -30,7 +30,7 @@ import {
   getExportConditionDist,
   isEsmExportName,
   getExportTypeDist,
-  isESModulePackage,
+  getExportTypeFromFile
 } from './exports'
 import {
   isNotNull,
@@ -41,7 +41,6 @@ import {
 import {
   availableExportConventions,
   availableESExtensionsRegex,
-  dtsExtensions,
   nodeResolveExtensions,
   disabledWarnings,
 } from './constants'
@@ -512,19 +511,8 @@ export async function collectEntries(
       : Object.keys(binaryExports)
         .map((key) => [join('bin', key), (binaryExports)[key]])
 
-    const isESModule = isESModulePackage(pkg.type)
     const binExportPaths = binPairs.reduce((acc, [binName, binDistPath]) => {
-      const ext = extname(binDistPath).slice(1) as keyof typeof dtsExtensions
-      const isCjsExt = ext === 'cjs'
-      const isEsmExt = ext === 'mjs'
-
-      const exportType = isEsmExt
-        ? 'import'
-        : isCjsExt
-        ? 'require'
-        : isESModule
-        ? 'import'
-        : 'require'
+      const exportType = getExportTypeFromFile(binDistPath, pkg.type)
 
       acc[binName] = {
         [exportType]: binDistPath,

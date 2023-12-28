@@ -176,6 +176,21 @@ describe('lib exports', () => {
         },
       })
     })
+
+    it('should skip types condition', () => {
+      expect(
+        getExportPaths({
+          exports: {
+            './sub': './dist/index.mjs',
+            types: './dist/index.d.ts',
+          },
+        }),
+      ).toEqual({
+        './sub': {
+          import: './dist/index.mjs',
+        }
+      })
+    })
   })
 
   describe('getExportConditionDist', () => {

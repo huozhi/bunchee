@@ -143,3 +143,4 @@ export const hasAvailableExtension = (filename: string): boolean =>
 
 export const hasCjsExtension = (filename: string): boolean =>
   path.extname(filename) === '.cjs'
+
