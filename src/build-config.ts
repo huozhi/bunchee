@@ -177,8 +177,9 @@ async function buildInputConfig(
       declarationMap: false,
       skipLibCheck: true,
       preserveSymlinks: false,
-      target: 'esnext',
-      module: 'esnext',
+      target: 'NodeNext',
+      module: 'NodeNext',
+      moduleResolution: 'NodeNext',
       jsx: tsCompilerOptions.jsx || 'react-jsx',
     }
 
