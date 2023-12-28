@@ -15,10 +15,7 @@ export function prependDirectives(): Plugin {
             return directiveCode + '\n' + code
           }
         }
-        return {
-          code,
-          map: null,
-        }
+        return null
       }
     }
   }
