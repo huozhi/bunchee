@@ -15,8 +15,8 @@ function resolveTypescript(cwd: string): typeof import('typescript') {
   m.paths = (Module as any)._nodeModulePaths(cwd)
   try {
     ts = m.require('typescript')
-  } catch (_) {
-    console.error(_)
+  } catch (e) {
+    console.error(e)
     if (!hasLoggedTsWarning) {
       hasLoggedTsWarning = true
       exit(

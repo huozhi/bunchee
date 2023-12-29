@@ -10,7 +10,7 @@ import type { BuncheeRollupConfig, BundleConfig, ExportPaths } from './types'
 import fs from 'fs/promises'
 import { resolve, relative } from 'path'
 import { watch as rollupWatch, rollup } from 'rollup'
-import { buildEntryConfig, collectEntries } from './build-config'
+import { buildEntryConfig, collectEntries, getReversedAlias } from './build-config'
 import { createChunkSizeCollector, logSizeStats, type PluginContext } from './plugins/size-plugin'
 import { logger } from './logger'
 import {
@@ -145,9 +145,11 @@ async function bundle(
 
   const entries = await collectEntries(pkg, entryPath, exportPaths, cwd)
   const sizeCollector = createChunkSizeCollector({ entries })
+  const entriesAlias = getReversedAlias(entries)
   const pluginContext: PluginContext = {
     sizeCollector,
     moduleDirectiveLayerMap: new Map(),
+    entriesAlias,
   }
   const buildConfigs = await buildEntryConfig(
     entries,

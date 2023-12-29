@@ -1,1 +1,7 @@
-{}
+{
+  "compilerOptions": {
+    "paths": {
+      "pkg-exports-ts-rsc/*": ["./src/*"]
+    }
+  }
+}

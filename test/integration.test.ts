@@ -83,6 +83,7 @@ const testCases: {
         './dist/react-server.mjs': /'react-server'/,
         './dist/react-native.js': /'react-native'/,
         './dist/index.d.ts': /declare const shared = true/,
+        './dist/api.mjs': /\'pkg-export-ts-rsc\'/,
       })
     },
   },

@@ -73,12 +73,15 @@ function getBuildEnv(envs: string[]) {
 }
 
 /**
- * return { '<pkg>/<export>': '<absolute source path> }
+ * return { '<absolute source path>': '<pkg>/<export>' }
  */
-function getEntriesAlias(entries: Entries) {
+export function getReversedAlias(entries: Entries) {
   const alias: Record<string, string> = {}
   for (const [entryImportPath, exportCondition] of Object.entries(entries)) {
-    alias[entryImportPath] = exportCondition.source
+    const exportType = entryImportPath.split('.').pop()
+    if (!exportType) {
+      alias[exportCondition.source] = entryImportPath
+    }
   }
   return alias
 }
@@ -93,13 +96,6 @@ async function buildInputConfig(
   pluginContext: PluginContext,
   dts: boolean,
 ): Promise<InputOptions> {
-  const entriesAlias = getEntriesAlias(entries)
-  const reversedAlias: Record<string, string> = {}
-  for (const [key, value] of Object.entries(entriesAlias)) {
-    if (value !== entry) {
-      reversedAlias[value] = key
-    }
-  }
   const hasNoExternal = options.external === null
   const externals = hasNoExternal
     ? []
@@ -109,7 +105,8 @@ async function buildInputConfig(
         .reduce((a: string[], b: string[]) => a.concat(b), [])
         .concat((options.external ?? []))
 
-  for (const [exportImportPath, entryFilePath] of Object.entries(entriesAlias)) {
+  for (const [exportImportPath, exportCondition] of Object.entries(entries)) {
+    const entryFilePath = exportCondition.source
     if (entryFilePath !== entry) {
       externals.push(exportImportPath)
       externals.push(entryFilePath)
@@ -158,7 +155,11 @@ async function buildInputConfig(
   const commonPlugins = [
     sizePlugin,
     aliasEntries({
-      entries: reversedAlias,
+      entries: {
+        ...pluginContext.entriesAlias,
+        // Do not alias current alias of package
+        [entry]: null,
+      },
     })
   ]
 
