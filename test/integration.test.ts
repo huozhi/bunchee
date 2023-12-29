@@ -62,17 +62,25 @@ const testCases: {
     },
   },
   {
+    name: 'entry-index-index',
+    args: [],
+    async expected(dir) {
+      assertFilesContent(dir, {
+        './dist/index.js': /'index'/,
+        './dist/react-server.js': /\'react-server\'/
+      })
+    },
+  },
+  {
     name: 'pkg-exports',
     args: ['index.js'],
     async expected(dir) {
       const distFiles = [
-        join(dir, './dist/index.cjs'),
-        join(dir, './dist/index.mjs'),
-        join(dir, './dist/index.esm.js'),
+        'dist/index.cjs',
+        'dist/index.mjs',
+        'dist/index.esm.js',
       ]
-      for (const f of distFiles) {
-        expect(await existsFile(f)).toBe(true)
-      }
+      assertContainFiles(dir, distFiles)
     },
   },
   {
