@@ -422,7 +422,7 @@ await bundle(path.resolve('./src/index.ts'), {
 
 #### Watch Mode
 
-Bunchee offers a convenient watch mode for rebuilding your library whenever changes are made to the source files. To enable this feature, use either -w or --watch.
+Bunchee offers a convenient watch mode for rebuilding your library whenever changes are made to the source files. To enable this feature, use either `-w` or `--watch`.
 
 #### `target`
 
