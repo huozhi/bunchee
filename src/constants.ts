@@ -31,4 +31,5 @@ export const disabledWarnings = new Set([
   'UNRESOLVED_IMPORT',
   'THIS_IS_UNDEFINED',
   'INVALID_ANNOTATION',
+  'UNUSED_EXTERNAL_IMPORT',
 ])
