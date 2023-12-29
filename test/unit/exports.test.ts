@@ -102,11 +102,13 @@ describe('lib exports', () => {
               './sub': {
                 require: './dist/index.cjs',
               },
+              import: './dist/index.mjs',
             },
           },
         }),
       ).toEqual({
         '.': {
+          import: './dist/index.mjs',
           require: './dist/index.cjs',
         },
         './sub': {
