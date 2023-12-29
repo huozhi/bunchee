@@ -78,7 +78,7 @@ function getBuildEnv(envs: string[]) {
 export function getReversedAlias(entries: Entries) {
   const alias: Record<string, string> = {}
   for (const [entryImportPath, exportCondition] of Object.entries(entries)) {
-    const exportType = entryImportPath.split('.').pop()
+    const exportType = entryImportPath.split('.')[1] // e.g. index.react-server, pick react-server
     if (!exportType) {
       alias[exportCondition.source] = entryImportPath
     }
@@ -150,7 +150,7 @@ async function buildInputConfig(
   } as const
 
   const sizePlugin = pluginContext.sizeCollector.plugin(cwd)
-
+  console.log('pluginContext.entriesAlias', pluginContext.entriesAlias)
   // common plugins for both dts and ts assets that need to be processed
   const commonPlugins = [
     sizePlugin,
