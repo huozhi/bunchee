@@ -97,7 +97,9 @@ function findExport(
     } else {
       // subpath is exportType, import, require, ...
       const exportType = subpath
-      const defaultPath = (exportCondition[subpath] as any).default
+      const defaultPath = typeof exportCondition[subpath] === 'object'
+        ? (exportCondition[subpath] as any).default
+        : exportCondition[subpath]
       const nestedExportCondition = { [exportType]: defaultPath }
       findExport(exportPath, nestedExportCondition, paths, packageType, currentPath)
     }
