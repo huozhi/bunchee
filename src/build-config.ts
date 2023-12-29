@@ -150,7 +150,7 @@ async function buildInputConfig(
   } as const
 
   const sizePlugin = pluginContext.sizeCollector.plugin(cwd)
-  console.log('pluginContext.entriesAlias', pluginContext.entriesAlias)
+
   // common plugins for both dts and ts assets that need to be processed
   const commonPlugins = [
     sizePlugin,
