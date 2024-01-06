@@ -1,7 +1,7 @@
 import type { Plugin } from 'rollup'
 import path from 'path'
 import prettyBytes from 'pretty-bytes'
-import { paint } from '../logger'
+import pc from 'picocolors'
 import { Entries } from '../types'
 
 type Pair = [string, string, number]
@@ -79,31 +79,69 @@ function isBin(filename: string) {
   return filename === 'bin' || filename.startsWith('bin/')
 }
 
+function isTypeFile(filename: string) {
+  return filename.endsWith('.d.ts') || filename.endsWith('.d.mts') || filename.endsWith('.d.cts')
+}
+
+function normalizeExportName(exportName: string): string {
+  const isBinary = isBin(exportName)
+  let result = isBinary
+    ? ((exportName.replace(/bin(\/|$)/, '') || '<>') + ' (bin)')
+    : exportName.includes('/')
+      ? ('/' + exportName.split('/')[1])
+      : '<>'
+      
+  // special export like pkg.react-server
+  if (result.includes('.')) {
+    const [originExportName, specialCondition] = result.split('.')
+    result = originExportName + ' (' + specialCondition + ')'
+  }
+  return result.replace('<>', '.')
+}
+
 function logOutputState(sizeCollector: ReturnType<typeof createOutputState>) {
   const stats = sizeCollector.getSizeStats()
   const allFileNameLengths = Array.from(stats.values()).flat(1).map(([filename]) => filename.length)
-  const maxLength = Math.max(...allFileNameLengths)
-
+  const maxFilenameLength = Math.max(...allFileNameLengths)
   const statsArray = [...stats.entries()]
     .sort(([a], [b]) => a.length - b.length)
   
-  const maxLengthOfExportName = Math.max(...statsArray.map(([exportName]) => exportName.length))
+  const maxLengthOfExportName = Math.max(...statsArray.map(([exportName]) => normalizeExportName(exportName).length))
+  console.log(
+    pc.underline('Exports'), ' '.repeat(maxLengthOfExportName - 'Exports'.length), 
+    pc.underline('File'), ' '.repeat(maxFilenameLength - 'File'.length), 
+    pc.underline('Size')
+  )
+
   statsArray.forEach(([exportName, filesList]) => {
-    filesList.forEach((item: Pair, index) => {
+    // sort by file type, first js files then types, js/mjs/cjs are prioritized than .d.ts/.d.mts/.d.cts
+    filesList.sort(
+      ([a], [b]) => {
+        const aIsType = isTypeFile(a)
+        const bIsType = isTypeFile(b)
+        if (aIsType && bIsType) {
+          return 0
+        }
+        if (aIsType) {
+          return 1
+        }
+        if (bIsType) {
+          return -1
+        }
+        return 0
+      }
+    ).forEach((item: Pair, index) => {
       const [filename, , size] = item
-      const normalizedPrefix = isBin(exportName) 
-        ? exportName.replace('bin/', '') 
-        : exportName.includes('/')
-          ? ('/' + exportName.split('/')[1])
-          : exportName
+      const normalizedExportName = normalizeExportName(exportName) 
       const prefix = index === 0 
-        ? normalizedPrefix + ' '.repeat(maxLengthOfExportName - normalizedPrefix.length) 
+        ? normalizedExportName + ' '.repeat(maxLengthOfExportName - normalizedExportName.length) 
         : ' '.repeat(maxLengthOfExportName)
       
-      const sizePadding = ' '.repeat(maxLength - filename.length)
+      const sizePadding = ' '.repeat(maxFilenameLength - filename.length)
       const prettiedSize = prettyBytes(size)
-      const isBinary = isBin(exportName)
-      paint(prefix, isBinary ? 'yellow' : 'blue', `${filename}${sizePadding}  - ${prettiedSize}`)
+      const isType = isTypeFile(filename)
+
+      console.log(` ${prefix} ${pc[isType ? 'dim' : 'bold'](filename)}${sizePadding}  ${prettiedSize}`)
     })
   })
 }
