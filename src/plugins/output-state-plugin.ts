@@ -93,7 +93,7 @@ function normalizeExportName(exportName: string): string {
     result = ((exportName.replace(/bin(\/|$)/, '') || '.') + ' (bin)')
   } else if (isSubpathExport || isSpecialExport) {
     const subExportName: string | undefined = exportName.split('/')[1] || exportName
-    if (subExportName.includes('.')) {
+    if (subExportName.includes('.') && subExportName !== '.') {
       const [originExportName, specialCondition] = subExportName.split('.')
       result = (isSubpathExport ? originExportName : '.') + ' (' + specialCondition + ')'
     } else {
@@ -121,8 +121,8 @@ function logOutputState(sizeCollector: ReturnType<typeof createOutputState>) {
   
   const maxLengthOfExportName = Math.max(...statsArray.map(([exportName]) => normalizeExportName(exportName).length))
   console.log(
-    pc.underline('Exports'), ' '.repeat(maxLengthOfExportName - 'Exports'.length), 
-    pc.underline('File'), ' '.repeat(maxFilenameLength - 'File'.length), 
+    pc.underline('Exports'), ' '.repeat(Math.max(maxLengthOfExportName - 'Exports'.length, 0)), 
+    pc.underline('File'), ' '.repeat(Math.max(maxFilenameLength - 'File'.length, 0)), 
     pc.underline('Size')
   )
 
