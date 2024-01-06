@@ -95,7 +95,7 @@ function normalizeExportName(exportName: string): string {
     const subExportName: string | undefined = exportName.split('/')[1] || exportName
     if (subExportName.includes('.') && subExportName !== '.') {
       const [originExportName, specialCondition] = subExportName.split('.')
-      result = (isSubpathExport ? originExportName : '.') + ' (' + specialCondition + ')'
+      result = (isSubpathExport ? ('./' + originExportName) : '.') + ' (' + specialCondition + ')'
     } else {
       result =  isSubpathExport ? ('./' + subExportName) : '.'
     }
