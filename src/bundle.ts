@@ -11,7 +11,7 @@ import fs from 'fs/promises'
 import { resolve, relative } from 'path'
 import { watch as rollupWatch, rollup } from 'rollup'
 import { buildEntryConfig, collectEntries, getReversedAlias } from './build-config'
-import { createChunkSizeCollector, logSizeStats, type PluginContext } from './plugins/size-plugin'
+import { createOutputState, logOutputState, type PluginContext } from './plugins/output-state-plugin'
 import { logger } from './logger'
 import {
   getPackageMeta,
@@ -144,10 +144,10 @@ async function bundle(
   }
 
   const entries = await collectEntries(pkg, entryPath, exportPaths, cwd)
-  const sizeCollector = createChunkSizeCollector({ entries })
+  const sizeCollector = createOutputState({ entries })
   const entriesAlias = getReversedAlias(entries)
   const pluginContext: PluginContext = {
-    sizeCollector,
+    outputState: sizeCollector,
     moduleDirectiveLayerMap: new Map(),
     entriesAlias,
   }
@@ -190,7 +190,7 @@ async function bundle(
     )
   }
 
-  logSizeStats(sizeCollector)
+  logOutputState(sizeCollector)
   return result
 }
 

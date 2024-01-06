@@ -1,14 +1,18 @@
 import type { Plugin } from 'rollup'
 import path from 'path'
 import prettyBytes from 'pretty-bytes'
-import { dtsExtensionRegex } from '../constants'
 import { paint } from '../logger'
 import { Entries } from '../types'
 
 type Pair = [string, string, number]
 type SizeStats = Map<string, Pair[]>
+type PluginContext = {
+  outputState: ReturnType<typeof createOutputState>
+  moduleDirectiveLayerMap: Map<string, Set<[string, string]>>
+  entriesAlias: Record<string, string>
+}
 
-function createChunkSizeCollector({ entries }: { entries: Entries }): {
+function createOutputState({ entries }: { entries: Entries }): {
   plugin(cwd: string): Plugin
   getSizeStats(): SizeStats
 } {
@@ -35,8 +39,8 @@ function createChunkSizeCollector({ entries }: { entries: Entries }): {
   }
 
   const reversedMapping = new Map<string, string>()
-  Object.entries(entries).forEach(([, entry]) => {
-    reversedMapping.set(entry.source, entry.name || '.')
+  Object.entries(entries).forEach(([resolvedExportName, entry]) => {
+    reversedMapping.set(entry.source, resolvedExportName)
   })
 
   return {
@@ -71,33 +75,41 @@ function createChunkSizeCollector({ entries }: { entries: Entries }): {
   }
 }
 
-function logSizeStats(sizeCollector: ReturnType<typeof createChunkSizeCollector>) {
+function isBin(filename: string) {
+  return filename === 'bin' || filename.startsWith('bin/')
+}
+
+function logOutputState(sizeCollector: ReturnType<typeof createOutputState>) {
   const stats = sizeCollector.getSizeStats()
   const allFileNameLengths = Array.from(stats.values()).flat(1).map(([filename]) => filename.length)
   const maxLength = Math.max(...allFileNameLengths)
 
-  ;[...stats.entries()]
-  .sort(([a], [b]) => a.length - b.length)
-  .forEach(([, filesList]) => {
-    filesList.forEach((item: Pair) => {
+  const statsArray = [...stats.entries()]
+    .sort(([a], [b]) => a.length - b.length)
+  
+  const maxLengthOfExportName = Math.max(...statsArray.map(([exportName]) => exportName.length))
+  statsArray.forEach(([exportName, filesList]) => {
+    filesList.forEach((item: Pair, index) => {
       const [filename, , size] = item
-      const padding = ' '.repeat(maxLength - filename.length)
-      const isTypeFile = dtsExtensionRegex.test(filename)
-      const action = isTypeFile ? '[types]' : '[chunk]'
+      const normalizedPrefix = isBin(exportName) 
+        ? exportName.replace('bin/', '') 
+        : exportName.includes('/')
+          ? ('/' + exportName.split('/')[1])
+          : exportName
+      const prefix = index === 0 
+        ? normalizedPrefix + ' '.repeat(maxLengthOfExportName - normalizedPrefix.length) 
+        : ' '.repeat(maxLengthOfExportName)
+      
+      const sizePadding = ' '.repeat(maxLength - filename.length)
       const prettiedSize = prettyBytes(size)
-      paint('  ' + action, isTypeFile ? 'blue' : 'white', `${filename}${padding}  - ${prettiedSize}`)
+      const isBinary = isBin(exportName)
+      paint(prefix, isBinary ? 'yellow' : 'blue', `${filename}${sizePadding}  - ${prettiedSize}`)
     })
   })
 }
 
-type PluginContext = {
-  sizeCollector: ReturnType<typeof createChunkSizeCollector>
-  moduleDirectiveLayerMap: Map<string, Set<[string, string]>>
-  entriesAlias: Record<string, string>
-}
-
 export {
-  logSizeStats,
-  createChunkSizeCollector,
+  logOutputState,
+  createOutputState,
   type PluginContext,
 }
