@@ -85,18 +85,28 @@ function isTypeFile(filename: string) {
 
 function normalizeExportName(exportName: string): string {
   const isBinary = isBin(exportName)
-  let result = isBinary
-    ? ((exportName.replace(/bin(\/|$)/, '') || '<>') + ' (bin)')
-    : exportName.includes('/')
-      ? ('/' + exportName.split('/')[1])
-      : '<>'
-      
-  // special export like pkg.react-server
-  if (result.includes('.')) {
-    const [originExportName, specialCondition] = result.split('.')
-    result = originExportName + ' (' + specialCondition + ')'
+  let result = exportName
+  
+  const isSubpathExport = exportName.includes('/')
+  const isSpecialExport = exportName.includes('.')
+  if (isBinary) {
+    result = ((exportName.replace(/bin(\/|$)/, '') || '.') + ' (bin)')
+  } else if (isSubpathExport || isSpecialExport) {
+    const subExportName: string | undefined = exportName.split('/')[1] || exportName
+    if (subExportName.includes('.')) {
+      const [originExportName, specialCondition] = subExportName.split('.')
+      result = (isSubpathExport ? originExportName : '.') + ' (' + specialCondition + ')'
+    } else {
+      result =  isSubpathExport ? ('./' + subExportName) : '.'
+    }
+  } else {
+    result = '.'
   }
-  return result.replace('<>', '.')
+  return result
+}
+
+function getExportNameWithoutExportCondition(exportName: string): string {
+  return exportName.includes('.') ? exportName.split('.')[0] : exportName
 }
 
 function logOutputState(sizeCollector: ReturnType<typeof createOutputState>) {
@@ -104,7 +114,10 @@ function logOutputState(sizeCollector: ReturnType<typeof createOutputState>) {
   const allFileNameLengths = Array.from(stats.values()).flat(1).map(([filename]) => filename.length)
   const maxFilenameLength = Math.max(...allFileNameLengths)
   const statsArray = [...stats.entries()]
-    .sort(([a], [b]) => a.length - b.length)
+    .sort(([a], [b]) => {
+      const comp = (getExportNameWithoutExportCondition(a).length - getExportNameWithoutExportCondition(b).length)
+      return comp === 0 ? a.localeCompare(b) : comp
+    })
   
   const maxLengthOfExportName = Math.max(...statsArray.map(([exportName]) => normalizeExportName(exportName).length))
   console.log(
