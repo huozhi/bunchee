@@ -40,6 +40,8 @@ touch ./src/index.ts
 touch package.json
 ```
 
+#### Basic
+
 Then use use the [exports field in package.json](https://nodejs.org/api/packages.html#exports-sugar) to configure different conditions and leverage the same functionality as other bundlers, such as webpack. The exports field allows you to define multiple conditions.
 ```json
 {
@@ -54,7 +56,10 @@ Then use use the [exports field in package.json](https://nodejs.org/api/packages
 }
 ```
 
-If you're build a TypeScript library, separate the types from the main entry file and specify the types path in package.json.
+#### TypeScript
+
+If you're build a TypeScript library, separate the types from the main entry file and specify the types path in package.json. When you're using `.mjs` or `.cjs` extensions with TypeScript and modern module resolution (above node16), TypeScript will require specific type declaration files like `.d.mts` or `.d.cts` to match the extension. `bunchee` can automatically generate them to match the types to match the condition and extensions. One example is to configure your exports like this in package.json:
+
 ```json
 {
   "files": ["dist"],
@@ -126,28 +131,6 @@ Then you need to add two entry files `index.ts` and `lite.ts` in project root di
 ```
 
 It will also look up for `index.<ext>` file under the directory having the name of the export path. For example, if you have `"./lite": "./dist/lite.js"` in exports field, then it will look up for `./lite/index.js` as the entry file as well.
-
-### TypeScript Declaration
-
-When you're using `.mjs` or `.cjs` extensions with TypeScript and modern module resolution (above node16), TypeScript will require specific type declaration files like `.d.mts` or `.d.cts` to match the extension.
-`bunchee` can automatically generate them to match the types to match the condition and extensions. One example is to configure your exports like this in package.json:
-
-```json
-{
-  "exports": {
-    ".": {
-      "import": {
-        "types": "./dist/index.d.mts",
-        "default": "./dist/index.mjs"
-      },
-      "require": {
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.js"
-      }
-    }
-  }
-}
-```
 
 ### Multiple Runtime
 
@@ -383,26 +366,6 @@ hello world
 output
 ```
 export default "hello world"
-```
-
-### TypeScript
-
-By default bunchee includes Typescript v3.9.x inside as a dependency. If you want to use your own version, just install typescript as another dev dependency then bunchee will automatically pick it.
-
-```sh
-npm i -D bunchee typescript
-```
-
-Create `tsconfig.json` to specify any compiler options for TypeScript.
-
-This library requires at least TypeScript 4.1.x.
-
-Adding `"types"` or `"typing"` field in your package.json, types will be generated with that path.
-
-```json
-{
-  "types": "dist/types/index.d.ts"
-}
 ```
 
 ### Node.js API
