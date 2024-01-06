@@ -2,14 +2,22 @@ import type { Plugin } from 'rollup'
 import path from 'path'
 import prettyBytes from 'pretty-bytes'
 import pc from 'picocolors'
-import { Entries } from '../types'
+import { Entries, FullExportCondition, PackageMetadata } from '../types'
+import type { TypescriptOptions } from '../typescript'
 
 type Pair = [string, string, number]
 type SizeStats = Map<string, Pair[]>
-type PluginContext = {
-  outputState: ReturnType<typeof createOutputState>
-  moduleDirectiveLayerMap: Map<string, Set<[string, string]>>
-  entriesAlias: Record<string, string>
+type BuildContext = {
+  entries: Entries
+  pkg: PackageMetadata
+  exportPaths: Record<string, FullExportCondition>
+  cwd: string
+  tsOptions: TypescriptOptions
+  pluginContext: {
+    outputState: ReturnType<typeof createOutputState>
+    moduleDirectiveLayerMap: Map<string, Set<[string, string]>>
+    entriesAlias: Record<string, string>
+  }
 }
 
 function createOutputState({ entries }: { entries: Entries }): {
@@ -162,5 +170,5 @@ function logOutputState(sizeCollector: ReturnType<typeof createOutputState>) {
 export {
   logOutputState,
   createOutputState,
-  type PluginContext,
+  type BuildContext,
 }

@@ -45,7 +45,7 @@ import {
   disabledWarnings,
 } from './constants'
 import { logger } from './logger'
-import { PluginContext } from './plugins/output-state-plugin'
+import { BuildContext } from './plugins/output-state-plugin'
 
 const swcMinifyOptions = {
   compress: true,
@@ -88,14 +88,11 @@ export function getReversedAlias(entries: Entries) {
 
 async function buildInputConfig(
   entry: string,
-  entries: Entries,
-  pkg: PackageMetadata,
   options: BundleOptions,
-  cwd: string,
-  { tsConfigPath, tsCompilerOptions }: TypescriptOptions,
-  pluginContext: PluginContext,
+  buildContext: BuildContext,
   dts: boolean,
 ): Promise<InputOptions> {
+  const { entries, pkg, cwd, tsOptions: { tsConfigPath, tsCompilerOptions }, pluginContext } = buildContext
   const hasNoExternal = options.external === null
   const externals = hasNoExternal
     ? []
@@ -364,17 +361,13 @@ function createSplitChunks(
 }
 
 function buildOutputConfigs(
-  entries: Entries,
-  pkg: PackageMetadata,
-  exportPaths: ExportPaths,
   options: BundleOptions,
   exportCondition: ParsedExportCondition,
-  cwd: string,
-  { tsCompilerOptions }: TypescriptOptions,
-  pluginContext: PluginContext,
+  buildContext: BuildContext,
   dts: boolean,
 ): OutputOptions {
   const { format } = options
+  const { entries, pkg, exportPaths, cwd, tsOptions: { tsCompilerOptions }, pluginContext } = buildContext
   // Add esm mark and interop helper if esm export is detected
   const useEsModuleMark = hasEsmExport(exportPaths, tsCompilerOptions)
   const typings: string | undefined = getTypings(pkg)
@@ -421,26 +414,17 @@ function buildOutputConfigs(
 }
 
 export async function buildEntryConfig(
-  entries: Entries,
-  pkg: PackageMetadata,
-  exportPaths: ExportPaths,
   bundleConfig: BundleConfig,
-  cwd: string,
-  tsOptions: TypescriptOptions,
-  pluginContext: PluginContext,
+  pluginContext: BuildContext,
   dts: boolean,
 ): Promise<BuncheeRollupConfig[]> {
   const configs: Promise<BuncheeRollupConfig>[] = []
+  const { entries } = pluginContext
 
   for (const exportCondition of Object.values(entries)) {
     const rollupConfig = buildConfig(
-      entries,
-      pkg,
-      exportPaths,
       bundleConfig,
       exportCondition,
-      cwd,
-      tsOptions,
       pluginContext,
       dts,
     )
@@ -558,27 +542,19 @@ export async function collectEntries(
 }
 
 async function buildConfig(
-  entries: Entries,
-  pkg: PackageMetadata,
-  exportPaths: ExportPaths,
   bundleConfig: BundleConfig,
   exportCondition: ParsedExportCondition,
-  cwd: string,
-  tsOptions: TypescriptOptions,
-  pluginContext: PluginContext,
+  pluginContext: BuildContext,
   dts: boolean,
 ): Promise<BuncheeRollupConfig> {
   const { file } = bundleConfig
+  const { pkg, cwd, tsOptions } = pluginContext
   const useTypescript = Boolean(tsOptions.tsConfigPath)
   const options = { ...bundleConfig, useTypescript }
   const entry = exportCondition.source
   const inputOptions = await buildInputConfig(
     entry,
-    entries,
-    pkg,
     options,
-    cwd,
-    tsOptions,
     pluginContext,
     dts,
   )
@@ -591,9 +567,6 @@ async function buildConfig(
     const typeOutputExports = getExportTypeDist(exportCondition, cwd)
     outputConfigs = typeOutputExports.map((typeFile) =>
       buildOutputConfigs(
-        entries,
-        pkg,
-        exportPaths,
         {
           ...bundleConfig,
           format: 'es',
@@ -601,8 +574,6 @@ async function buildConfig(
           file: typeFile,
         },
         exportCondition,
-        cwd,
-        tsOptions,
         pluginContext,
         dts,
       ),
@@ -611,9 +582,6 @@ async function buildConfig(
     // multi outputs with specified format
     outputConfigs = outputExports.map((exportDist) => {
       return buildOutputConfigs(
-        entries,
-        pkg,
-        exportPaths,
         {
           ...bundleConfig,
           file: exportDist.file,
@@ -621,8 +589,6 @@ async function buildConfig(
           useTypescript,
         },
         exportCondition,
-        cwd,
-        tsOptions,
         pluginContext,
         dts,
       )
@@ -632,9 +598,6 @@ async function buildConfig(
       const fallbackFormat = outputExports[0]?.format
       outputConfigs = [
         buildOutputConfigs(
-          entries,
-          pkg,
-          exportPaths,
           {
             ...bundleConfig,
             file,
@@ -642,8 +605,6 @@ async function buildConfig(
             useTypescript,
           },
           exportCondition,
-          cwd,
-          tsOptions,
           pluginContext,
           dts,
         ),

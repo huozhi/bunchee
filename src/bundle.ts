@@ -11,7 +11,7 @@ import fs from 'fs/promises'
 import { resolve, relative } from 'path'
 import { watch as rollupWatch, rollup } from 'rollup'
 import { buildEntryConfig, collectEntries, getReversedAlias } from './build-config'
-import { createOutputState, logOutputState, type PluginContext } from './plugins/output-state-plugin'
+import { createOutputState, logOutputState, type BuildContext } from './plugins/output-state-plugin'
 import { logger } from './logger'
 import {
   getPackageMeta,
@@ -146,19 +146,21 @@ async function bundle(
   const entries = await collectEntries(pkg, entryPath, exportPaths, cwd)
   const sizeCollector = createOutputState({ entries })
   const entriesAlias = getReversedAlias(entries)
-  const pluginContext: PluginContext = {
-    outputState: sizeCollector,
-    moduleDirectiveLayerMap: new Map(),
-    entriesAlias,
-  }
-  const buildConfigs = await buildEntryConfig(
+  const buildContext: BuildContext = {
     entries,
     pkg,
     exportPaths,
-    options,
     cwd,
-    defaultTsOptions,
-    pluginContext,
+    tsOptions: defaultTsOptions,
+    pluginContext: {
+      outputState: sizeCollector,
+      moduleDirectiveLayerMap: new Map(),
+      entriesAlias,
+    }
+  }
+  const buildConfigs = await buildEntryConfig(
+    options,
+    buildContext,
     false,
   )
   const assetsJobs = buildConfigs.map((rollupConfig) =>
@@ -168,13 +170,8 @@ async function bundle(
   const typesJobs = hasTsConfig
     ? (
         await buildEntryConfig(
-          entries,
-          pkg,
-          exportPaths,
           options,
-          cwd,
-          defaultTsOptions,
-          pluginContext,
+          buildContext,
           true,
         )
       ).map((rollupConfig) => bundleOrWatch(rollupConfig))
