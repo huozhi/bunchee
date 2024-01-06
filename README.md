@@ -54,14 +54,19 @@ Then use use the [exports field in package.json](https://nodejs.org/api/packages
 }
 ```
 
-If you want to use ESM package, change the `type` field in package.json to `module`, `bunchee` will change the output format to ESM.
+If you're build a TypeScript library, separate the types from the main entry file and specify the types path in package.json.
 ```json
 {
-  "type": "module",
   "files": ["dist"],
   "exports": {
-    "import": "./dist/index.mjs",
-    "require": "./dist/index.cjs"
+    "import": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    },
+    "require": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.cjs"
+    }
   },
   "scripts": {
     "build": "bunchee"
@@ -132,7 +137,7 @@ When you're using `.mjs` or `.cjs` extensions with TypeScript and modern module 
   "exports": {
     ".": {
       "import": {
-        "types": "./dist/index.d.ts",
+        "types": "./dist/index.d.mts",
         "default": "./dist/index.mjs"
       },
       "require": {
