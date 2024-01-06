@@ -47,8 +47,8 @@ Then use use the [exports field in package.json](https://nodejs.org/api/packages
 {
   "files": ["dist"],
   "exports": {
-    "import": "./dist/index.mjs",
-    "require": "./dist/index.cjs"
+    "import": "./dist/es/index.mjs",
+    "require": "./dist/cjs/index.cjs"
   },
   "scripts": {
     "build": "bunchee"
@@ -65,12 +65,38 @@ If you're build a TypeScript library, separate the types from the main entry fil
   "files": ["dist"],
   "exports": {
     "import": {
-      "types": "./dist/index.d.mts",
-      "default": "./dist/index.mjs"
+      "types": "./dist/es/index.d.mts",
+      "default": "./dist/es/index.mjs"
     },
     "require": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.cjs"
+      "types": "./dist/cjs/index.d.ts",
+      "default": "./dist/cjs/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "bunchee"
+  }
+}
+```
+
+#### Node 10 and Node 16 Module Resolution Compatible with TypeScript
+
+If you're using TypeScript with Node 10 and Node 16 module resolution, you can use the `types` field in package.json to specify the types path. Then `bunchee` will generate the types file with the same extension as the main entry file.
+
+```json
+{
+  "files": ["dist"],
+  "main": "./dist/cjs/index.cjs",
+  "module": "./dist/es/index.mjs",
+  "types": "./dist/cjs/index.d.ts",
+  "exports": {
+    "import": {
+      "types": "./dist/es/index.d.mts",
+      "default": "./dist/es/index.mjs"
+    },
+    "require": {
+      "types": "./dist/cjs/index.d.ts",
+      "default": "./dist/cjs/index.cjs"
     }
   },
   "scripts": {
@@ -310,7 +336,6 @@ This will match the export names `"foo"` and `"bar"` and will be treated as the 
 {
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     },
     "./foo": {
