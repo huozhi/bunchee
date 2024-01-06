@@ -45,7 +45,7 @@ import {
   disabledWarnings,
 } from './constants'
 import { logger } from './logger'
-import { PluginContext } from './plugins/size-plugin'
+import { PluginContext } from './plugins/output-state-plugin'
 
 const swcMinifyOptions = {
   compress: true,
@@ -149,7 +149,7 @@ async function buildInputConfig(
     isModule: true,
   } as const
 
-  const sizePlugin = pluginContext.sizeCollector.plugin(cwd)
+  const sizePlugin = pluginContext.outputState.plugin(cwd)
 
   // common plugins for both dts and ts assets that need to be processed
   const commonPlugins = [

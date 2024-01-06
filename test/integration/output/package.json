@@ -1,0 +1,13 @@
+{
+  "name": "output-app",
+  "bin": {
+    "cli": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "react-server": "./dist/index.react-server.js"
+    },
+    "./foo": "./dist/foo.js"    
+  }
+}

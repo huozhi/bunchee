@@ -553,6 +553,45 @@ const testCases: {
       expect(await fs.readFile(distFiles[0], 'utf-8')).toContain('export {')
       expect(await fs.readFile(distFiles[0], 'utf-8')).not.toContain('exports')
     },
+  },
+  {
+    name: 'output',
+    args: [],
+    async expected(dir, { stdout }) {
+      /*
+      output:
+
+      Exports          File                        Size
+      cli (bin)        dist/cli.js                 103 B
+      .                dist/index.js               42 B
+      . (react-server) dist/index.react-server.js  55 B
+      ./foo            dist/foo.js                 103 B
+      */
+
+      const lines = stdout.split('\n')
+      const [
+        tableHeads,
+        cliLine,
+        indexLine,
+        indexReactServerLine,
+        fooLine,
+      ] = lines
+      expect(tableHeads).toContain('Exports')
+      expect(tableHeads).toContain('File')
+      expect(tableHeads).toContain('Size')
+
+      expect(cliLine).toContain('cli (bin)')
+      expect(cliLine).toContain('dist/cli.js')
+
+      expect(indexLine).toContain('.')
+      expect(indexLine).toContain('dist/index.js')
+
+      expect(indexReactServerLine).toContain('. (react-server)')
+      expect(indexReactServerLine).toContain('dist/index.react-server.js')
+
+      expect(fooLine).toContain('./foo')
+      expect(fooLine).toContain('dist/foo.js')
+    },
   }
 ]
 
