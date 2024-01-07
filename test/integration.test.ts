@@ -607,7 +607,7 @@ const testCases: {
     async before(dir) {
       await deleteFile(join(dir, './package.json'))
     },
-    async expected(dir) {
+    async expected(dir, { stdout }) {
       assertContainFiles(dir, [
         'package.json',
       ])
@@ -636,6 +636,21 @@ const testCases: {
           }
         }  
       })
+
+      /*
+        Found binaries entries:
+          .: bin.js
+        Found exports entries:
+          ./foo: foo.js
+          ./index: index.js
+        ✓ Configured `exports` in package.json
+      */
+      expect(stdout).toContain('Found binaries entries:')
+      expect(stdout).toContain('.: bin.js')
+      expect(stdout).toContain('Found exports entries:')
+      expect(stdout).toContain('./foo: foo.js')
+      expect(stdout).toContain('./index: index.js')
+      expect(stripANSIColor(stdout)).toContain('✓ Configured `exports` in package.json')
     }
   },
 ]

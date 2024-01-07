@@ -4,6 +4,7 @@ import path from 'path'
 import { SRC, availableExtensions } from './constants'
 import { logger } from './logger'
 import { baseNameWithoutExtension, hasAvailableExtension } from './utils'
+import { relativify } from './lib/format'
 
 const DIST = 'dist'
 
@@ -77,12 +78,10 @@ export async function prepare(cwd: string): Promise<void> {
         }
       } else {
         // Search folder/<index>.<ext> convention entries
-        let foundIndexFile = null
         const extensions = availableExtensions
         for (const extension of extensions) {
           const indexFile = path.resolve(sourceFolder, dirent.name, `index.${extension}`)
           if (fs.existsSync(indexFile)) {
-            foundIndexFile = indexFile
             exportsEntries.set(dirent.name, indexFile)
             break
           }
@@ -105,6 +104,10 @@ export async function prepare(cwd: string): Promise<void> {
   }
   
   if (bins.size > 0) {
+    console.log('Found binaries entries:')
+    for (const [binName, binFile] of bins.entries()) {
+      console.log(`  ${relativify(binName)}: ${binFile}`)
+    }
     if (bins.size === 1 && bins.has('.')) {
       pkgJson.bin = getDistPath('bin', 'index.js')
     } else {
@@ -116,6 +119,10 @@ export async function prepare(cwd: string): Promise<void> {
     }
   }
   if (exportsEntries.size > 0) {
+    console.log('Found exports entries:')
+    for (const [exportName, exportFile] of exportsEntries.entries()) {
+      console.log(`  ${relativify(exportName)}: ${exportFile}`)
+    }
     pkgJson.exports = {}
     for (const [exportName] of exportsEntries.entries()) {
       pkgJson.exports[normalizeBaseNameToExportName(exportName)] = createExportCondition(exportName, pkgJson.type)
