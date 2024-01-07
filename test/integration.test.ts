@@ -1,7 +1,7 @@
 import fsp from 'fs/promises'
 import { execSync, fork } from 'child_process'
 import { resolve, join } from 'path'
-import { 
+import {
   stripANSIColor,
   existsFile,
   assertFilesContent,
@@ -50,7 +50,7 @@ const testCases: {
         // only contain file name once
         expect(stdout.split(filename).length).toBe(2)
       }
-    }
+    },
   },
   {
     name: 'ts-error',
@@ -75,7 +75,7 @@ const testCases: {
     async expected(dir) {
       assertFilesContent(dir, {
         './dist/index.js': /'index'/,
-        './dist/react-server.js': /\'react-server\'/
+        './dist/react-server.js': /\'react-server\'/,
       })
     },
   },
@@ -412,7 +412,7 @@ const testCases: {
       expect(await fsp.readFile(distFiles[0], 'utf-8')).toContain(
         '#!/usr/bin/env node',
       )
-    }
+    },
   },
   {
     name: 'esm-shims',
@@ -423,14 +423,20 @@ const testCases: {
         'const __dirname = cjsPath.dirname(__filename)',
         'const require = cjsModule.createRequire(import.meta.url)',
       ]
-      const esmOutput = await fsp.readFile(join(dir, './dist/index.mjs'), 'utf-8')
-      const cjsOutput = await fsp.readFile(join(dir, './dist/index.cjs'), 'utf-8')
-      expect(
-        shimsCode.every((code) => esmOutput.includes(code)),
-      ).toBe(true)
-      expect(
-        shimsCode.map((code) => cjsOutput.includes(code)),
-      ).toEqual([false, false, false])
+      const esmOutput = await fsp.readFile(
+        join(dir, './dist/index.mjs'),
+        'utf-8',
+      )
+      const cjsOutput = await fsp.readFile(
+        join(dir, './dist/index.cjs'),
+        'utf-8',
+      )
+      expect(shimsCode.every((code) => esmOutput.includes(code))).toBe(true)
+      expect(shimsCode.map((code) => cjsOutput.includes(code))).toEqual([
+        false,
+        false,
+        false,
+      ])
       // for import.meta.url, should use pathToFileURL + URL polyfill
       expect(cjsOutput).toContain('pathToFileURL')
       expect(cjsOutput).toContain('new URL')
@@ -443,9 +449,7 @@ const testCases: {
     async expected(dir) {
       const distFile = join(dir, './dist/index.js')
       expect(await existsFile(distFile)).toBe(true)
-      expect(await fsp.readFile(distFile, 'utf-8')).toContain(
-        `"thisismydata"`,
-      )
+      expect(await fsp.readFile(distFile, 'utf-8')).toContain(`"thisismydata"`)
     },
   },
   {
@@ -465,25 +469,34 @@ const testCases: {
       }
 
       // split chunks
-      const indexContent = await fsp.readFile(join(dir, 'dist/index.js'), 'utf-8')
+      const indexContent = await fsp.readFile(
+        join(dir, 'dist/index.js'),
+        'utf-8',
+      )
       expect(indexContent).not.toContain('use server')
       expect(indexContent).not.toContain('use client')
 
       // client component chunks will remain the directive
-      const clientClientChunkFiles = distFiles.filter(f => f.includes('client-client-'))
-      clientClientChunkFiles.forEach(async f => {
+      const clientClientChunkFiles = distFiles.filter((f) =>
+        f.includes('client-client-'),
+      )
+      clientClientChunkFiles.forEach(async (f) => {
         const content = await fsp.readFile(join(dir, 'dist', f), 'utf-8')
         expect(content).toContain('use client')
       })
       expect(clientClientChunkFiles.length).toBe(2) // cjs and esm
 
       // asset is only being imported to ui, no split
-      const assetClientChunkFiles = distFiles.filter(f => f.includes('_asset-client-'))
+      const assetClientChunkFiles = distFiles.filter((f) =>
+        f.includes('_asset-client-'),
+      )
       expect(assetClientChunkFiles.length).toBe(0)
 
       // server component chunks will remain the directive
-      const serverChunkFiles = distFiles.filter(f => f.includes('_actions-server-'))
-      serverChunkFiles.forEach(async f => {
+      const serverChunkFiles = distFiles.filter((f) =>
+        f.includes('_actions-server-'),
+      )
+      serverChunkFiles.forEach(async (f) => {
         const content = await fsp.readFile(join(dir, 'dist', f), 'utf-8')
         expect(content).toContain('use server')
         expect(content).not.toContain('use client')
@@ -504,7 +517,9 @@ const testCases: {
     args: [],
     async expected(dir) {
       const distFiles = await fsp.readdir(join(dir, 'dist'))
-      const clientChunkFiles = distFiles.filter(f => f.includes('client-client-'))
+      const clientChunkFiles = distFiles.filter((f) =>
+        f.includes('client-client-'),
+      )
       expect(clientChunkFiles.length).toBe(0)
 
       // index doesn't have "use client" directive
@@ -512,7 +527,7 @@ const testCases: {
       const indexEsm = await fsp.readFile(join(dir, 'dist/index.js'), 'utf-8')
       expect(indexCjs).toContain('use client')
       expect(indexEsm).toContain('use client')
-    }
+    },
   },
   {
     name: 'shared-entry',
@@ -527,7 +542,10 @@ const testCases: {
       assertContainFiles(dir, distFiles)
 
       // ESM bundle imports from <pkg/export>
-      const indexEsm = await fsp.readFile(join(dir, './dist/index.mjs'), 'utf-8')
+      const indexEsm = await fsp.readFile(
+        join(dir, './dist/index.mjs'),
+        'utf-8',
+      )
       expect(indexEsm).toContain('shared-entry/shared')
       expect(indexEsm).toContain('index-export')
       expect(indexEsm).not.toMatch(/['"]\.\/shared['"]/)
@@ -540,11 +558,17 @@ const testCases: {
       expect(indexCjs).not.toMatch(/['"]\.\/shared['"]/)
 
       // shared entry contains its own content
-      const sharedEsm = await fsp.readFile(join(dir, './dist/shared.mjs'), 'utf-8')
+      const sharedEsm = await fsp.readFile(
+        join(dir, './dist/shared.mjs'),
+        'utf-8',
+      )
       expect(sharedEsm).toContain('shared-export')
 
       // shared entry contains its own content
-      const sharedCjs = await fsp.readFile(join(dir, './dist/shared.js'), 'utf-8')
+      const sharedCjs = await fsp.readFile(
+        join(dir, './dist/shared.js'),
+        'utf-8',
+      )
       expect(sharedCjs).toContain('shared-export')
     },
   },
@@ -552,9 +576,7 @@ const testCases: {
     name: 'default-node-mjs',
     args: [],
     async expected(dir) {
-      const distFiles = [
-        join(dir, './dist/index.node.mjs'),
-      ]
+      const distFiles = [join(dir, './dist/index.node.mjs')]
       for (const f of distFiles) {
         expect(await existsFile(f)).toBe(true)
       }
@@ -577,13 +599,8 @@ const testCases: {
       */
 
       const lines = stdout.split('\n')
-      const [
-        tableHeads,
-        cliLine,
-        indexLine,
-        indexReactServerLine,
-        fooLine,
-      ] = lines
+      const [tableHeads, cliLine, indexLine, indexReactServerLine, fooLine] =
+        lines
       expect(tableHeads).toContain('Exports')
       expect(tableHeads).toContain('File')
       expect(tableHeads).toContain('Size')
@@ -602,39 +619,27 @@ const testCases: {
     },
   },
   {
-    name: 'prepare',
+    name: 'prepare-js',
     args: ['--prepare'],
     async before(dir) {
       await deleteFile(join(dir, './package.json'))
     },
     async expected(dir, { stdout }) {
-      assertContainFiles(dir, [
-        'package.json',
-      ])
-      const pkgJson = JSON.parse(await fsp.readFile(join(dir, './package.json'), 'utf-8'))
+      assertContainFiles(dir, ['package.json'])
+      const pkgJson = JSON.parse(
+        await fsp.readFile(join(dir, './package.json'), 'utf-8'),
+      )
       expect(pkgJson.files).toContain('dist')
       expect(pkgJson.bin).toBe('./dist/bin/index.js')
-      expect(pkgJson.exports).toMatchObject({
+      expect(pkgJson.exports).toEqual({
         './foo': {
-          'import': {
-            'types': './dist/cjs/foo.d.mts',
-            'default': './dist/es/foo.mjs'
-          },
-          'require': {
-            'types': './dist/cjs/foo.d.ts',
-            'default': './dist/es/foo.js'
-          }
+          import: './dist/foo.mjs',
+          require: './dist/foo.js',
         },
         '.': {
-          'import': {
-            'types': './dist/cjs/index.d.mts',
-            'default': './dist/es/index.mjs'
-          },
-          'require': {
-            'types': './dist/cjs/index.d.ts',
-            'default': './dist/es/index.js'
-          }
-        }  
+          import: './dist/index.mjs',
+          require: './dist/index.js',
+        },
       })
 
       /*
@@ -642,16 +647,78 @@ const testCases: {
           .: bin.js
         Found exports entries:
           ./foo: foo.js
-          ./index: index.js
+          .    : index.js
         ✓ Configured `exports` in package.json
       */
       expect(stdout).toContain('Found binaries entries:')
-      expect(stdout).toContain('.: bin.js')
+      expect(stdout).toMatch(/.\s*: bin.js/)
       expect(stdout).toContain('Found exports entries:')
-      expect(stdout).toContain('./foo: foo.js')
-      expect(stdout).toContain('./index: index.js')
-      expect(stripANSIColor(stdout)).toContain('✓ Configured `exports` in package.json')
-    }
+      expect(stdout).toMatch(/\.\/foo\s*: foo.js/)
+      expect(stdout).toMatch(/\.\s*: index.js/)
+      expect(stripANSIColor(stdout)).toContain(
+        '✓ Configured `exports` in package.json',
+      )
+    },
+  },
+  {
+    name: 'prepare-ts',
+    args: ['--prepare'],
+    async before(dir) {
+      await deleteFile(join(dir, './package.json'))
+    },
+    async expected(dir, { stdout }) {
+      assertContainFiles(dir, ['package.json'])
+      const pkgJson = JSON.parse(
+        await fsp.readFile(join(dir, './package.json'), 'utf-8'),
+      )
+      expect(pkgJson.files).toContain('dist')
+      expect(pkgJson.bin).toEqual({
+        cli: './dist/bin/cli.js',
+        cmd: './dist/bin/cmd.js',
+      })
+      expect(pkgJson.exports).toEqual({
+        './foo': {
+          import: {
+            types: './dist/cjs/foo.d.mts',
+            default: './dist/es/foo.mjs',
+          },
+          require: {
+            types: './dist/cjs/foo.d.ts',
+            default: './dist/es/foo.js',
+          },
+        },
+        '.': {
+          'react-server': './dist/es/index-react-server.mjs',
+          import: {
+            types: './dist/cjs/index.d.mts',
+            default: './dist/es/index.mjs',
+          },
+          require: {
+            types: './dist/cjs/index.d.ts',
+            default: './dist/es/index.js',
+          },
+        },
+      })
+
+      /*
+        Found binaries entries:
+          ./cli: cli.ts
+          ./cmd: cmd.ts
+        Found exports entries:
+          ./foo: foo.ts
+          .    : index.react-server.ts
+          .    : index.ts
+        ✓ Configured `exports` in package.json
+      */
+      expect(stdout).toContain('Found binaries entries:')
+      expect(stdout).toMatch(/\.\s*: index.ts/)
+      expect(stdout).toContain('Found exports entries:')
+      expect(stdout).toMatch(/\.\/foo\s*: foo.ts/)
+      expect(stdout).toMatch(/\.\s*: index.react-server.ts/)
+      expect(stripANSIColor(stdout)).toContain(
+        '✓ Configured `exports` in package.json',
+      )
+    },
   },
 ]
 

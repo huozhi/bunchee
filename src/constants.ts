@@ -33,3 +33,5 @@ export const disabledWarnings = new Set([
   'INVALID_ANNOTATION',
   'UNUSED_EXTERNAL_IMPORT',
 ])
+
+export const tsExtensions = ['.ts', '.tsx', '.cts', '.mts']
