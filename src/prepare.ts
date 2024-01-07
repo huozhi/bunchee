@@ -266,12 +266,11 @@ export async function prepare(cwd: string): Promise<void> {
     if (exportsEntries.has('index')) {
       const isESM = pkgJson.type === 'module'
       const mainExport = pkgExports['.']
-      const isObjectCondition = typeof mainExport.require === 'object'
       const mainCondition = isESM ? 'import' : 'require'
-      pkgJson.main = isObjectCondition
+      pkgJson.main = isUsingTs
         ? mainExport[mainCondition].default
         : mainExport[mainCondition]
-      pkgJson.module = isObjectCondition
+      pkgJson.module = isUsingTs
         ? mainExport.import.default
         : mainExport.import
 
