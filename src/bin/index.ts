@@ -20,6 +20,7 @@ Options:
   -o, --output <file>    specify output filename
   -f, --format <format>  type of output (esm, amd, cjs, iife, umd, system), default: esm
   -h, --help             output usage information
+  --prepare              auto configure package.json exports for building
   --external <mod>       specify an external dependency, separate by comma
   --no-external          do not bundle external dependencies
   --target <target>      js features target: swc target es versions. default: es2015
