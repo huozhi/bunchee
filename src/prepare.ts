@@ -26,12 +26,12 @@ function createExportCondition(exportName: string, sourceFile: string, moduleTyp
   if (isTypeScript) {
     return {
       import: {
-        types: getDistPath('cjs', `${exportName}.d.mts`),
+        types: getDistPath('es', `${exportName}.d.mts`),
         default: getDistPath('es', `${exportName}.mjs`),
       },
       require: {
         types: getDistPath('cjs', `${exportName}.d.ts`),
-        default: getDistPath('es', `${exportName}.${cjsExtension}`),
+        default: getDistPath('cjs', `${exportName}.${cjsExtension}`),
       },
     }
   }
