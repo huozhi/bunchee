@@ -6,8 +6,8 @@ import type {
   PackageType,
   ParsedExportCondition,
 } from './types'
-import { exit, filenameWithoutExtension, hasCjsExtension } from './utils'
-import { dtsExtensions } from './constants'
+import { baseNameWithoutExtension, exit, filePathWithoutExtension, hasCjsExtension } from './utils'
+import { dtsExtensionsMap } from './constants'
 
 export function getTypings(pkg: PackageMetadata) {
   return pkg.types || pkg.typings
@@ -268,9 +268,9 @@ export const getExportTypeDist = (
       existed.add(typeFile)
       continue
     }
-    const ext = extname(filePath).slice(1) as keyof typeof dtsExtensions
+    const ext = extname(filePath).slice(1) as keyof typeof dtsExtensionsMap
     const typeFile = getDistPath(
-      `${filenameWithoutExtension(filePath) || ''}${dtsExtensions[ext]}`,
+      `${filePathWithoutExtension(filePath) || ''}.${dtsExtensionsMap[ext]}`,
       cwd,
     )
     if (existed.has(typeFile)) {
@@ -360,7 +360,7 @@ export function getTypeFilePath(
   exportCondition: ParsedExportCondition | undefined,
   cwd: string,
 ): string {
-  const name = filenameWithoutExtension(entryFilePath)
+  const name = filePathWithoutExtension(entryFilePath)
   const firstDistPath = exportCondition
     ? Object.values(exportCondition.export)[0]
     : undefined

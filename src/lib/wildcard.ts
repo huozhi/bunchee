@@ -4,7 +4,7 @@ import path from 'path'
 import { SRC } from '../constants'
 import { ExportCondition } from '../types'
 import {
-  filenameWithoutExtension,
+  filePathWithoutExtension,
   hasAvailableExtension,
   nonNullable,
 } from '../utils'
@@ -59,7 +59,7 @@ function mapWildcard(
 ): ExportCondition[] {
   return exportables.map((exportable) => {
     const isFile = exportable.includes('.')
-    const filename = isFile ? filenameWithoutExtension(exportable)! : exportable
+    const filename = isFile ? filePathWithoutExtension(exportable)! : exportable
 
     return {
       [`./${filename}`]: Object.fromEntries(

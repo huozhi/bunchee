@@ -7,7 +7,7 @@ function color(prefixColor: any) {
 
 export const logger = {
   log(...arg: any[]) {
-    console.log(' ', ...arg)
+    console.log(...arg)
   },
   warn(...arg: any[]) {
     console.warn(color('yellow')('⚠️'), ...arg)

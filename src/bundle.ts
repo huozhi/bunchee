@@ -212,7 +212,6 @@ function runWatch(
         return onError(event.error)
       }
       case 'START': {
-        logger.log(`Start building ${metadata.source} ...`)
         break
       }
       case 'END': {
