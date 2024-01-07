@@ -622,7 +622,7 @@ const testCases: {
     name: 'prepare-js',
     args: ['--prepare'],
     async before(dir) {
-      await deleteFile(join(dir, './package.json'))
+      await fsp.writeFile(join(dir, './package.json'), '{ "type": "commonjs" }')
     },
     async expected(dir, { stdout }) {
       assertContainFiles(dir, ['package.json'])
