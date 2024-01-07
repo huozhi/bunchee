@@ -6,7 +6,7 @@ import type {
   PackageType,
   ParsedExportCondition,
 } from './types'
-import { baseNameWithoutExtension, exit, filePathWithoutExtension, hasCjsExtension } from './utils'
+import { exit, filePathWithoutExtension, hasCjsExtension } from './utils'
 import { dtsExtensionsMap } from './constants'
 
 export function getTypings(pkg: PackageMetadata) {
