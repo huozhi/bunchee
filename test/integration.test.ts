@@ -643,16 +643,16 @@ const testCases: {
       })
 
       /*
-        Found binaries entries:
+        Discovered binaries entries:
           .: bin.js
-        Found exports entries:
+        Discovered exports entries:
           ./foo: foo.js
           .    : index.js
         ✓ Configured `exports` in package.json
       */
-      expect(stdout).toContain('Found binaries entries:')
+      expect(stdout).toContain('Discovered binaries entries:')
       expect(stdout).toMatch(/.\s*: bin.js/)
-      expect(stdout).toContain('Found exports entries:')
+      expect(stdout).toContain('Discovered exports entries:')
       expect(stdout).toMatch(/\.\/foo\s*: foo.js/)
       expect(stdout).toMatch(/\.\s*: index.js/)
       expect(stripANSIColor(stdout)).toContain(
@@ -665,6 +665,7 @@ const testCases: {
     args: ['--prepare'],
     async before(dir) {
       await deleteFile(join(dir, './package.json'))
+      await deleteFile(join(dir, './tsconfig.json'))
     },
     async expected(dir, { stdout }) {
       assertContainFiles(dir, ['package.json'])
@@ -701,18 +702,19 @@ const testCases: {
       })
 
       /*
-        Found binaries entries:
+        Discovered binaries entries:
           ./cli: cli.ts
           ./cmd: cmd.ts
-        Found exports entries:
+        Discovered exports entries:
           ./foo: foo.ts
           .    : index.react-server.ts
           .    : index.ts
         ✓ Configured `exports` in package.json
       */
-      expect(stdout).toContain('Found binaries entries:')
+      expect(stripANSIColor(stdout)).toContain('Detected using TypeScript but tsconfig.json is missing, created a tsconfig.json for you.')
+      expect(stdout).toContain('Discovered binaries entries:')
       expect(stdout).toMatch(/\.\s*: index.ts/)
-      expect(stdout).toContain('Found exports entries:')
+      expect(stdout).toContain('Discovered exports entries:')
       expect(stdout).toMatch(/\.\/foo\s*: foo.ts/)
       expect(stdout).toMatch(/\.\s*: index.react-server.ts/)
       expect(stripANSIColor(stdout)).toContain(

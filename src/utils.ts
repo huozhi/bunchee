@@ -5,6 +5,7 @@ import {
   availableExportConventions,
   availableExtensions,
   SRC,
+  tsExtensions,
 } from './constants'
 import { logger } from './logger'
 
@@ -33,8 +34,8 @@ export async function getPackageMeta(cwd: string): Promise<PackageMetadata> {
 }
 
 export function isTypescriptFile(filename: string): boolean {
-  const ext = path.extname(filename)
-  return ext === '.ts' || ext === '.tsx'
+  const ext = path.extname(filename).slice(1)
+  return tsExtensions.includes(ext)
 }
 
 export async function fileExists(filePath: string) {

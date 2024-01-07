@@ -34,4 +34,4 @@ export const disabledWarnings = new Set([
   'UNUSED_EXTERNAL_IMPORT',
 ])
 
-export const tsExtensions = ['.ts', '.tsx', '.cts', '.mts']
+export const tsExtensions = ['ts', 'tsx', 'cts', 'mts']
