@@ -482,7 +482,10 @@ export async function collectEntries(
       export: exportCondForType,
     }
 
-    const entryImportPath = path.join(pkg.name || '', exportCondition.name) + (exportType ? `.${exportType}` : '')
+    const nameWithExportPath = pkg.name ? path.join(pkg.name, exportCondition.name) : exportCondition.name    
+    const needsDelimiter = !nameWithExportPath.endsWith('.') && exportType
+    const entryImportPath = nameWithExportPath + (needsDelimiter ? '.' : '') + exportType 
+
     entries[entryImportPath] = exportCondition
   }
 
