@@ -35,12 +35,26 @@ npm install --save-dev bunchee typescript
 
 Create your library entry file and package.json.
 ```sh
-cd ./my-lib && mkdir src
-touch ./src/index.ts
-touch package.json
+cd ./my-lib
+mkdir src && touch ./src/index.ts
 ```
 
-#### Basic
+#### Prepare
+
+```sh
+# Use bunchee to prepare package.json configuration
+npm bunchee --prepare
+# "If you're using other package manager such as pnpm"
+# pnpm bunchee --prepare
+
+# "Or use with npx"
+# npx bunchee@latest --prepare
+```
+
+Or you can checkout the following cases to configure your package.json.
+
+<details>
+  <summary> JavaScript</summary>
 
 Then use use the [exports field in package.json](https://nodejs.org/api/packages.html#exports-sugar) to configure different conditions and leverage the same functionality as other bundlers, such as webpack. The exports field allows you to define multiple conditions.
 ```json
@@ -55,8 +69,10 @@ Then use use the [exports field in package.json](https://nodejs.org/api/packages
   }
 }
 ```
+</details>
 
-#### TypeScript
+<details>
+  <summary>TypeScript</summary>
 
 If you're build a TypeScript library, separate the types from the main entry file and specify the types path in package.json. When you're using `.mjs` or `.cjs` extensions with TypeScript and modern module resolution (above node16), TypeScript will require specific type declaration files like `.d.mts` or `.d.cts` to match the extension. `bunchee` can automatically generate them to match the types to match the condition and extensions. One example is to configure your exports like this in package.json:
 
@@ -69,7 +85,7 @@ If you're build a TypeScript library, separate the types from the main entry fil
       "default": "./dist/es/index.mjs"
     },
     "require": {
-      "types": "./dist/cjs/index.d.ts",
+      "types": "./dist/cjs/index.d.cts",
       "default": "./dist/cjs/index.cjs"
     }
   },
@@ -78,9 +94,11 @@ If you're build a TypeScript library, separate the types from the main entry fil
   }
 }
 ```
+</details>
 
-#### Node 10 and Node 16 Module Resolution Compatible with TypeScript
 
+<details>
+  <summary>Hybrid (CJS & ESM) Module Resolution with TypeScript</summary>
 If you're using TypeScript with Node 10 and Node 16 module resolution, you can use the `types` field in package.json to specify the types path. Then `bunchee` will generate the types file with the same extension as the main entry file.
 
 ```json
@@ -95,7 +113,7 @@ If you're using TypeScript with Node 10 and Node 16 module resolution, you can u
       "default": "./dist/es/index.mjs"
     },
     "require": {
-      "types": "./dist/cjs/index.d.ts",
+      "types": "./dist/cjs/index.d.cts",
       "default": "./dist/cjs/index.cjs"
     }
   },
@@ -104,6 +122,9 @@ If you're using TypeScript with Node 10 and Node 16 module resolution, you can u
   }
 }
 ```
+</details>
+
+#### Build
 
 Then files in `src` folders will be treated as entry files and match the export names in package.json. For example:
 `src/index.ts` will match the exports name `"."` or the only main export.
