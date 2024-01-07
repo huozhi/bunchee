@@ -679,23 +679,23 @@ const testCases: {
       expect(pkgJson.exports).toEqual({
         './foo': {
           import: {
-            types: './dist/cjs/foo.d.mts',
+            types: './dist/es/foo.d.mts',
             default: './dist/es/foo.mjs',
           },
           require: {
             types: './dist/cjs/foo.d.ts',
-            default: './dist/es/foo.js',
+            default: './dist/cjs/foo.js',
           },
         },
         '.': {
           'react-server': './dist/es/index-react-server.mjs',
           import: {
-            types: './dist/cjs/index.d.mts',
+            types: './dist/es/index.d.mts',
             default: './dist/es/index.mjs',
           },
           require: {
             types: './dist/cjs/index.d.ts',
-            default: './dist/es/index.js',
+            default: './dist/cjs/index.js',
           },
         },
       })
