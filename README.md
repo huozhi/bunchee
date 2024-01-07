@@ -79,7 +79,10 @@ If you're build a TypeScript library, separate the types from the main entry fil
 }
 ```
 
+<details>
+<summary>
 #### Node 10 and Node 16 Module Resolution Compatible with TypeScript
+</summary>
 
 If you're using TypeScript with Node 10 and Node 16 module resolution, you can use the `types` field in package.json to specify the types path. Then `bunchee` will generate the types file with the same extension as the main entry file.
 
@@ -104,6 +107,8 @@ If you're using TypeScript with Node 10 and Node 16 module resolution, you can u
   }
 }
 ```
+</details>
+
 
 Then files in `src` folders will be treated as entry files and match the export names in package.json. For example:
 `src/index.ts` will match the exports name `"."` or the only main export.
