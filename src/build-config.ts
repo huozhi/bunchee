@@ -36,7 +36,7 @@ import {
   isNotNull,
   getSourcePathFromExportPath,
   resolveSourceFile,
-  filenameWithoutExtension,
+  filePathWithoutExtension,
 } from './utils'
 import {
   availableExportConventions,
@@ -374,7 +374,7 @@ function buildOutputConfigs(
   const file = options.file && resolve(cwd, options.file)
 
   const dtsDir = typings ? dirname(resolve(cwd, typings)) : resolve(cwd, 'dist')
-  const name = filenameWithoutExtension(file)
+  const name = filePathWithoutExtension(file)
 
   // TODO: simplify dts file name detection
   const dtsFile = file

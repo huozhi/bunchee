@@ -622,13 +622,16 @@ const testCases: {
     name: 'prepare-js',
     args: ['--prepare'],
     async before(dir) {
-      await deleteFile(join(dir, './package.json'))
+      await fsp.writeFile(join(dir, './package.json'), '{ "type": "commonjs" }')
     },
     async expected(dir, { stdout }) {
       assertContainFiles(dir, ['package.json'])
       const pkgJson = JSON.parse(
         await fsp.readFile(join(dir, './package.json'), 'utf-8'),
       )
+      expect(pkgJson.main).toBe('./dist/index.js')
+      expect(pkgJson.module).toBe('./dist/index.mjs')
+      expect(pkgJson.types).toBeFalsy()
       expect(pkgJson.files).toContain('dist')
       expect(pkgJson.bin).toBe('./dist/bin/index.js')
       expect(pkgJson.exports).toEqual({
@@ -684,8 +687,8 @@ const testCases: {
             default: './dist/es/foo.mjs',
           },
           require: {
-            types: './dist/cjs/foo.d.ts',
-            default: './dist/cjs/foo.js',
+            types: './dist/cjs/foo.d.cts',
+            default: './dist/cjs/foo.cjs',
           },
         },
         '.': {
@@ -695,8 +698,8 @@ const testCases: {
             default: './dist/es/index.mjs',
           },
           require: {
-            types: './dist/cjs/index.d.ts',
-            default: './dist/cjs/index.js',
+            types: './dist/cjs/index.d.cts',
+            default: './dist/cjs/index.cjs',
           },
         },
       })

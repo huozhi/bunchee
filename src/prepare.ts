@@ -2,9 +2,13 @@ import fs from 'fs'
 import fsp from 'fs/promises'
 import path from 'path'
 import pc from 'picocolors'
-import { SRC, availableExtensions } from './constants'
+import { SRC, availableExtensions, dtsExtensionsMap } from './constants'
 import { logger } from './logger'
-import { baseNameWithoutExtension, hasAvailableExtension, isTypescriptFile } from './utils'
+import {
+  baseNameWithoutExtension,
+  hasAvailableExtension,
+  isTypescriptFile,
+} from './utils'
 import { relativify } from './lib/format'
 
 const DIST = 'dist'
@@ -24,7 +28,7 @@ function createExportCondition(
   moduleType: string | undefined,
 ) {
   const isTsSourceFile = isTypescriptFile(sourceFile)
-  let cjsExtension = 'js'
+  let cjsExtension: 'js' | 'cjs' = 'js'
   if (moduleType === 'module') {
     cjsExtension = 'cjs'
   }
@@ -35,7 +39,10 @@ function createExportCondition(
         default: getDistPath('es', `${exportName}.mjs`),
       },
       require: {
-        types: getDistPath('cjs', `${exportName}.d.ts`),
+        types: getDistPath(
+          'cjs',
+          `${exportName}.${dtsExtensionsMap[cjsExtension]}`,
+        ),
         default: getDistPath('cjs', `${exportName}.${cjsExtension}`),
       },
     }
@@ -161,22 +168,36 @@ export async function prepare(cwd: string): Promise<void> {
   }
   pkgJson.files = files
 
+  let isUsingTs = false
   // Collect bins and exports entries
   const { bins, exportsEntries } = await collectSourceEntries(sourceFolder)
-
   const tsconfigPath = path.join(cwd, 'tsconfig.json')
+
   if (!fs.existsSync(tsconfigPath)) {
-    const sourceFiles: string[] = [...exportsEntries.values()].concat([...bins.values()])
-    const hasTypeScriptFiles = sourceFiles
-      .some((filename) => isTypescriptFile(filename))
+    const sourceFiles: string[] = [...exportsEntries.values()].concat([
+      ...bins.values(),
+    ])
+    const hasTypeScriptFiles = sourceFiles.some((filename) =>
+      isTypescriptFile(filename),
+    )
     if (hasTypeScriptFiles) {
+      isUsingTs = true
       await fsp.writeFile(tsconfigPath, '{}', 'utf-8')
-      console.log(`Detected using TypeScript but tsconfig.json is missing, created a ${pc.blue('tsconfig.json')} for you.`)
+      logger.log(
+        `Detected using TypeScript but tsconfig.json is missing, created a ${pc.blue(
+          'tsconfig.json',
+        )} for you.`,
+      )
     }
   }
 
+  // Configure as ESM package by default if there's no `type` field
+  if (!pkgJson.type) {
+    pkgJson.type = 'module'
+  }
+
   if (bins.size > 0) {
-    console.log('Discovered binaries entries:')
+    logger.log('Discovered binaries entries:')
     const maxLengthOfBinName = Math.max(
       ...Array.from(bins.keys()).map(
         (binName) => normalizeBaseNameToExportName(binName).length,
@@ -189,7 +210,7 @@ export async function prepare(cwd: string): Promise<void> {
           0,
         ),
       )
-      console.log(
+      logger.log(
         `  ${normalizeBaseNameToExportName(binName)}${spaces}: ${binFile}`,
       )
     }
@@ -205,9 +226,9 @@ export async function prepare(cwd: string): Promise<void> {
       }
     }
   }
-  
+
   if (exportsEntries.size > 0) {
-    console.log('Discovered exports entries:')
+    logger.log('Discovered exports entries:')
     const maxLengthOfExportName = Math.max(
       ...Array.from(exportsEntries.keys()).map(
         (exportName) => normalizeBaseNameToExportName(exportName).length,
@@ -221,12 +242,13 @@ export async function prepare(cwd: string): Promise<void> {
           0,
         ),
       )
-      console.log(
+      logger.log(
         `  ${normalizeBaseNameToExportName(
           exportName,
         )}${spaces}: ${exportFile}`,
       )
     }
+
     const pkgExports: Record<string, any> = {}
     for (const [exportName, sourceFile] of exportsEntries.entries()) {
       const [key, value] = createExportConditionPair(
@@ -242,13 +264,20 @@ export async function prepare(cwd: string): Promise<void> {
 
     // Configure node10 module resolution
     if (exportsEntries.has('index')) {
-      const mainCondition = pkgExports['.']
-      const isObjectCondition = typeof mainCondition.require === 'object'
-      pkgJson.main = isObjectCondition ? mainCondition.require.default : mainCondition.require
-      pkgJson.module = isObjectCondition ? mainCondition.import.default : mainCondition.import
+      const isESM = pkgJson.type === 'module'
+      const mainExport = pkgExports['.']
+      const mainCondition = isESM ? 'import' : 'require'
+      pkgJson.main = isUsingTs
+        ? mainExport[mainCondition].default
+        : mainExport[mainCondition]
+      pkgJson.module = isUsingTs
+        ? mainExport.import.default
+        : mainExport.import
 
-      if (mainCondition.require.types) {
-        pkgJson.types = mainCondition.require.types
+      if (isUsingTs) {
+        pkgJson.types = isESM
+          ? mainExport.import.types
+          : mainExport.require.types
       }
     }
 

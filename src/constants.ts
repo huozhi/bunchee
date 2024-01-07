@@ -19,10 +19,10 @@ export const dtsExtensionRegex = /\.d\.(m|c)?ts$/
 
 export const SRC = 'src'
 
-export const dtsExtensions = {
-  js: '.d.ts',
-  cjs: '.d.cts',
-  mjs: '.d.mts',
+export const dtsExtensionsMap = {
+  js: 'd.ts',
+  cjs: 'd.cts',
+  mjs: 'd.mts',
 }
 
 export const disabledWarnings = new Set([

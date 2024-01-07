@@ -128,7 +128,7 @@ export async function getSourcePathFromExportPath(
 }
 
 // Unlike path.basename, forcedly removing extension
-export function filenameWithoutExtension(file: string | undefined) {
+export function filePathWithoutExtension(file: string | undefined) {
   return file
     ? file.replace(new RegExp(`${path.extname(file)}$`), '')
     : undefined

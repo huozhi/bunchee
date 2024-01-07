@@ -163,7 +163,7 @@ async function run(args: CliArgs) {
   }
 
   // build mode
-  console.log()
+  logger.log()
   paint('✓', 'green', `bunchee ${version} build completed`)
 
   await lintPackage(cwd)
