@@ -4,6 +4,7 @@ import prettyBytes from 'pretty-bytes'
 import pc from 'picocolors'
 import { Entries, FullExportCondition, PackageMetadata } from '../types'
 import type { TypescriptOptions } from '../typescript'
+import { relativify } from '../lib/format'
 
 type Pair = [string, string, number]
 type SizeStats = Map<string, Pair[]>
@@ -103,9 +104,9 @@ function normalizeExportName(exportName: string): string {
     const subExportName: string | undefined = exportName.split('/')[1] || exportName
     if (subExportName.includes('.') && subExportName !== '.') {
       const [originExportName, specialCondition] = subExportName.split('.')
-      result = (isSubpathExport ? ('./' + originExportName) : '.') + ' (' + specialCondition + ')'
+      result = (isSubpathExport ? relativify(originExportName) : '.') + ' (' + specialCondition + ')'
     } else {
-      result =  isSubpathExport ? ('./' + subExportName) : '.'
+      result =  isSubpathExport ? relativify(subExportName) : '.'
     }
   } else {
     result = '.'

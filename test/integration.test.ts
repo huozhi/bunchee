@@ -1,7 +1,14 @@
-import fs from 'fs/promises'
+import fsp from 'fs/promises'
 import { execSync, fork } from 'child_process'
 import { resolve, join } from 'path'
-import { stripANSIColor, existsFile, assertFilesContent, getChunkFileNamesFromLog, assertContainFiles } from './testing-utils'
+import { 
+  stripANSIColor,
+  existsFile,
+  assertFilesContent,
+  getChunkFileNamesFromLog,
+  assertContainFiles,
+  deleteFile,
+} from './testing-utils'
 import * as debug from './utils/debug'
 
 jest.setTimeout(10 * 60 * 1000)
@@ -12,17 +19,18 @@ const getPath = (filepath: string) => join(integrationTestDir, filepath)
 const testCases: {
   name: string
   args?: string[]
+  before?(dir: string): Promise<void> | void
   expected(
     f: string,
     { stderr, stdout }: { stderr: string; stdout: string },
-  ): void
+  ): Promise<void> | void
 }[] = [
   {
     name: 'externals',
     args: ['index.js', '-o', './dist/index.js'],
     async expected(dir) {
       const distFile = join(dir, './dist/index.js')
-      const content = await fs.readFile(distFile, { encoding: 'utf-8' })
+      const content = await fsp.readFile(distFile, { encoding: 'utf-8' })
       expect(content).toMatch(/['"]peer-dep['"]/)
       expect(content).toMatch(/['"]peer-dep-meta['"]/)
     },
@@ -106,7 +114,7 @@ const testCases: {
       for (const f of distFiles) {
         expect(await existsFile(f)).toBe(true)
       }
-      const cjsFile = await fs.readFile(join(dir, './dist/index.cjs'), {
+      const cjsFile = await fsp.readFile(join(dir, './dist/index.cjs'), {
         encoding: 'utf-8',
       })
       expect(cjsFile).toContain(
@@ -210,10 +218,10 @@ const testCases: {
       for (const f of distFiles) {
         expect(await existsFile(f)).toBe(true)
       }
-      expect(await fs.readFile(distFiles[0], 'utf-8')).toContain(
+      expect(await fsp.readFile(distFiles[0], 'utf-8')).toContain(
         `Object.defineProperty(exports, '__esModule', { value: true });`,
       )
-      expect(await fs.readFile(distFiles[1], 'utf-8')).toContain(
+      expect(await fsp.readFile(distFiles[1], 'utf-8')).toContain(
         'declare const _default: () => string;',
       )
 
@@ -238,7 +246,7 @@ const testCases: {
       for (const f of distFiles) {
         expect(await existsFile(f)).toBe(true)
       }
-      expect(await fs.readFile(distFiles[1], 'utf-8')).toContain(
+      expect(await fsp.readFile(distFiles[1], 'utf-8')).toContain(
         'declare function _default(): string;',
       )
     },
@@ -253,7 +261,7 @@ const testCases: {
       for (const f of distFiles) {
         expect(await existsFile(join(dir, f))).toBe(true)
       }
-      expect(await fs.readFile(join(dir, distFiles[1]), 'utf-8')).toContain(
+      expect(await fsp.readFile(join(dir, distFiles[1]), 'utf-8')).toContain(
         'declare const _default: () => string;',
       )
       expect(await existsFile(join(dir, './dist/.tsbuildinfo'))).toBe(false)
@@ -269,7 +277,7 @@ const testCases: {
       for (const f of distFiles) {
         expect(await existsFile(join(dir, f))).toBe(true)
       }
-      expect(await fs.readFile(join(dir, distFiles[1]), 'utf-8')).toContain(
+      expect(await fsp.readFile(join(dir, distFiles[1]), 'utf-8')).toContain(
         'declare const _default: () => string;',
       )
       expect(await existsFile(join(dir, './dist/.tsbuildinfo'))).toBe(false)
@@ -359,7 +367,7 @@ const testCases: {
       for (const f of distFiles) {
         expect(await existsFile(f)).toBe(true)
       }
-      expect(await fs.readFile(distFiles[0], 'utf-8')).toContain(
+      expect(await fsp.readFile(distFiles[0], 'utf-8')).toContain(
         '#!/usr/bin/env node',
       )
     },
@@ -382,7 +390,7 @@ const testCases: {
         expect(await existsFile(distFile)).toBe(true)
       }
       for (const distScriptFile of distBinFiles) {
-        expect(await fs.readFile(distScriptFile, 'utf-8')).toContain(
+        expect(await fsp.readFile(distScriptFile, 'utf-8')).toContain(
           '#!/usr/bin/env node',
         )
       }
@@ -401,7 +409,7 @@ const testCases: {
         expect(await existsFile(distFile)).toBe(true)
       }
 
-      expect(await fs.readFile(distFiles[0], 'utf-8')).toContain(
+      expect(await fsp.readFile(distFiles[0], 'utf-8')).toContain(
         '#!/usr/bin/env node',
       )
     }
@@ -415,8 +423,8 @@ const testCases: {
         'const __dirname = cjsPath.dirname(__filename)',
         'const require = cjsModule.createRequire(import.meta.url)',
       ]
-      const esmOutput = await fs.readFile(join(dir, './dist/index.mjs'), 'utf-8')
-      const cjsOutput = await fs.readFile(join(dir, './dist/index.cjs'), 'utf-8')
+      const esmOutput = await fsp.readFile(join(dir, './dist/index.mjs'), 'utf-8')
+      const cjsOutput = await fsp.readFile(join(dir, './dist/index.cjs'), 'utf-8')
       expect(
         shimsCode.every((code) => esmOutput.includes(code)),
       ).toBe(true)
@@ -435,7 +443,7 @@ const testCases: {
     async expected(dir) {
       const distFile = join(dir, './dist/index.js')
       expect(await existsFile(distFile)).toBe(true)
-      expect(await fs.readFile(distFile, 'utf-8')).toContain(
+      expect(await fsp.readFile(distFile, 'utf-8')).toContain(
         `"thisismydata"`,
       )
     },
@@ -444,7 +452,7 @@ const testCases: {
     name: 'server-components',
     args: [],
     async expected(dir) {
-      const distFiles = await fs.readdir(join(dir, 'dist'))
+      const distFiles = await fsp.readdir(join(dir, 'dist'))
 
       const requiredFiles = [
         join(dir, 'dist/index.js'),
@@ -457,14 +465,14 @@ const testCases: {
       }
 
       // split chunks
-      const indexContent = await fs.readFile(join(dir, 'dist/index.js'), 'utf-8')
+      const indexContent = await fsp.readFile(join(dir, 'dist/index.js'), 'utf-8')
       expect(indexContent).not.toContain('use server')
       expect(indexContent).not.toContain('use client')
 
       // client component chunks will remain the directive
       const clientClientChunkFiles = distFiles.filter(f => f.includes('client-client-'))
       clientClientChunkFiles.forEach(async f => {
-        const content = await fs.readFile(join(dir, 'dist', f), 'utf-8')
+        const content = await fsp.readFile(join(dir, 'dist', f), 'utf-8')
         expect(content).toContain('use client')
       })
       expect(clientClientChunkFiles.length).toBe(2) // cjs and esm
@@ -476,14 +484,14 @@ const testCases: {
       // server component chunks will remain the directive
       const serverChunkFiles = distFiles.filter(f => f.includes('_actions-server-'))
       serverChunkFiles.forEach(async f => {
-        const content = await fs.readFile(join(dir, 'dist', f), 'utf-8')
+        const content = await fsp.readFile(join(dir, 'dist', f), 'utf-8')
         expect(content).toContain('use server')
         expect(content).not.toContain('use client')
       })
       expect(serverChunkFiles.length).toBe(2) // cjs and esm
 
       // For single entry ./ui, client is bundled into client
-      const uiEsm = await fs.readFile(join(dir, 'dist/ui.js'), 'utf-8')
+      const uiEsm = await fsp.readFile(join(dir, 'dist/ui.js'), 'utf-8')
       expect(uiEsm).toContain('use client')
       expect(uiEsm).not.toContain('./_client-client')
 
@@ -495,13 +503,13 @@ const testCases: {
     name: 'server-components-same-layer',
     args: [],
     async expected(dir) {
-      const distFiles = await fs.readdir(join(dir, 'dist'))
+      const distFiles = await fsp.readdir(join(dir, 'dist'))
       const clientChunkFiles = distFiles.filter(f => f.includes('client-client-'))
       expect(clientChunkFiles.length).toBe(0)
 
       // index doesn't have "use client" directive
-      const indexCjs = await fs.readFile(join(dir, 'dist/index.cjs'), 'utf-8')
-      const indexEsm = await fs.readFile(join(dir, 'dist/index.js'), 'utf-8')
+      const indexCjs = await fsp.readFile(join(dir, 'dist/index.cjs'), 'utf-8')
+      const indexEsm = await fsp.readFile(join(dir, 'dist/index.js'), 'utf-8')
       expect(indexCjs).toContain('use client')
       expect(indexEsm).toContain('use client')
     }
@@ -519,24 +527,24 @@ const testCases: {
       assertContainFiles(dir, distFiles)
 
       // ESM bundle imports from <pkg/export>
-      const indexEsm = await fs.readFile(join(dir, './dist/index.mjs'), 'utf-8')
+      const indexEsm = await fsp.readFile(join(dir, './dist/index.mjs'), 'utf-8')
       expect(indexEsm).toContain('shared-entry/shared')
       expect(indexEsm).toContain('index-export')
       expect(indexEsm).not.toMatch(/['"]\.\/shared['"]/)
       expect(indexEsm).not.toContain('shared-export')
 
       // CJS bundle imports from <pkg/export>
-      const indexCjs = await fs.readFile(join(dir, './dist/index.js'), 'utf-8')
+      const indexCjs = await fsp.readFile(join(dir, './dist/index.js'), 'utf-8')
       expect(indexCjs).toContain('shared-entry/shared')
       expect(indexCjs).toContain('index-export')
       expect(indexCjs).not.toMatch(/['"]\.\/shared['"]/)
 
       // shared entry contains its own content
-      const sharedEsm = await fs.readFile(join(dir, './dist/shared.mjs'), 'utf-8')
+      const sharedEsm = await fsp.readFile(join(dir, './dist/shared.mjs'), 'utf-8')
       expect(sharedEsm).toContain('shared-export')
 
       // shared entry contains its own content
-      const sharedCjs = await fs.readFile(join(dir, './dist/shared.js'), 'utf-8')
+      const sharedCjs = await fsp.readFile(join(dir, './dist/shared.js'), 'utf-8')
       expect(sharedCjs).toContain('shared-export')
     },
   },
@@ -550,8 +558,8 @@ const testCases: {
       for (const f of distFiles) {
         expect(await existsFile(f)).toBe(true)
       }
-      expect(await fs.readFile(distFiles[0], 'utf-8')).toContain('export {')
-      expect(await fs.readFile(distFiles[0], 'utf-8')).not.toContain('exports')
+      expect(await fsp.readFile(distFiles[0], 'utf-8')).toContain('export {')
+      expect(await fsp.readFile(distFiles[0], 'utf-8')).not.toContain('exports')
     },
   },
   {
@@ -592,7 +600,59 @@ const testCases: {
       expect(fooLine).toContain('./foo')
       expect(fooLine).toContain('dist/foo.js')
     },
-  }
+  },
+  {
+    name: 'prepare',
+    args: ['--prepare'],
+    async before(dir) {
+      await deleteFile(join(dir, './package.json'))
+    },
+    async expected(dir, { stdout }) {
+      assertContainFiles(dir, [
+        'package.json',
+      ])
+      const pkgJson = JSON.parse(await fsp.readFile(join(dir, './package.json'), 'utf-8'))
+      expect(pkgJson.files).toContain('dist')
+      expect(pkgJson.bin).toBe('./dist/bin/index.js')
+      expect(pkgJson.exports).toMatchObject({
+        './foo': {
+          'import': {
+            'types': './dist/cjs/foo.d.mts',
+            'default': './dist/es/foo.mjs'
+          },
+          'require': {
+            'types': './dist/cjs/foo.d.ts',
+            'default': './dist/es/foo.js'
+          }
+        },
+        '.': {
+          'import': {
+            'types': './dist/cjs/index.d.mts',
+            'default': './dist/es/index.mjs'
+          },
+          'require': {
+            'types': './dist/cjs/index.d.ts',
+            'default': './dist/es/index.js'
+          }
+        }  
+      })
+
+      /*
+        Found binaries entries:
+          .: bin.js
+        Found exports entries:
+          ./foo: foo.js
+          ./index: index.js
+        ✓ Configured `exports` in package.json
+      */
+      expect(stdout).toContain('Found binaries entries:')
+      expect(stdout).toContain('.: bin.js')
+      expect(stdout).toContain('Found exports entries:')
+      expect(stdout).toContain('./foo: foo.js')
+      expect(stdout).toContain('./index: index.js')
+      expect(stripANSIColor(stdout)).toContain('✓ Configured `exports` in package.json')
+    }
+  },
 ]
 
 async function runBundle(
@@ -626,11 +686,14 @@ async function runBundle(
 
 function runTests() {
   for (const testCase of testCases) {
-    const { name, args = [], expected } = testCase
+    const { name, args = [], expected, before } = testCase
     const dir = getPath(name)
     test(`integration ${name}`, async () => {
       debug.log(`Command: bunchee ${args.join(' ')}`)
       execSync(`rm -rf ${join(dir, 'dist')}`)
+      if (before) {
+        await before(dir)
+      }
       const { stdout, stderr } = await runBundle(dir, args)
       stdout && debug.log(stdout)
       stderr && debug.error(stderr)

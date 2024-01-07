@@ -8,6 +8,7 @@ import { exit, getPackageMeta, hasPackageJson } from '../utils'
 import { logger, paint } from '../logger'
 import { version } from '../../package.json'
 import { bundle } from '../../src/index'
+import { prepare } from '../prepare'
 
 const helpMessage = `
 Usage: bunchee [options]
@@ -71,6 +72,7 @@ function parseCliArgs(argv: string[]) {
       '--env': String,
       '--external': String,
       '--no-external': Boolean,
+      '--prepare': Boolean,
 
       '-h': '--help',
       '-v': '--version',
@@ -100,6 +102,7 @@ function parseCliArgs(argv: string[]) {
     target: args['--target'],
     external: !!args['--no-external'] ? null : args['--external'],
     env: args['--env'],
+    prepare: !!args['--prepare'],
   }
   return parsedArgs
 }
@@ -136,6 +139,9 @@ async function run(args: CliArgs) {
   }
   if (args.help) {
     return help()
+  }
+  if (args.prepare) {
+    return await prepare(cwd)
   }
 
   const entry = source ? path.resolve(cwd, source) : ''
