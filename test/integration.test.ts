@@ -687,8 +687,8 @@ const testCases: {
             default: './dist/es/foo.mjs',
           },
           require: {
-            types: './dist/cjs/foo.d.ts',
-            default: './dist/cjs/foo.js',
+            types: './dist/cjs/foo.d.cts',
+            default: './dist/cjs/foo.cjs',
           },
         },
         '.': {
@@ -698,8 +698,8 @@ const testCases: {
             default: './dist/es/index.mjs',
           },
           require: {
-            types: './dist/cjs/index.d.ts',
-            default: './dist/cjs/index.js',
+            types: './dist/cjs/index.d.cts',
+            default: './dist/cjs/index.cjs',
           },
         },
       })
