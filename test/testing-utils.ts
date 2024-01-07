@@ -67,3 +67,9 @@ export function getChunkFileNamesFromLog(log: string) {
     return line.replace(/- \d+ K?B/, '').trim()
   })
 }
+
+export async function deleteFile(f: string) {
+  if (await existsFile(f)) {
+    await fsp.unlink(f)
+  }
+}

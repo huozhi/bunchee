@@ -38,6 +38,7 @@ type BundleConfig = {
   env?: string[]
   dts?: boolean
   runtime?: string
+  pkg?: PackageMetadata
 }
 
 type PackageMetadata = {
@@ -75,6 +76,7 @@ type CliArgs = {
   external?: string
   dts?: boolean
   runtime?: string
+  prepare?: boolean
 }
 
 type BundleOptions = BundleConfig & {
