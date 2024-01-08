@@ -154,9 +154,11 @@ export async function prepare(cwd: string): Promise<void> {
     process.exit(1)
   }
 
+  let hasPackageJson = false
   const pkgJsonPath = path.join(cwd, 'package.json')
   let pkgJson: Record<string, any> = {}
   if (fs.existsSync(pkgJsonPath)) {
+    hasPackageJson = true
     const pkgJsonString = await fsp.readFile(pkgJsonPath, 'utf-8')
     pkgJson = JSON.parse(pkgJsonString)
   }
@@ -169,6 +171,7 @@ export async function prepare(cwd: string): Promise<void> {
   pkgJson.files = files
 
   let isUsingTs = false
+  
   // Collect bins and exports entries
   const { bins, exportsEntries } = await collectSourceEntries(sourceFolder)
   const tsconfigPath = path.join(cwd, 'tsconfig.json')
@@ -191,8 +194,8 @@ export async function prepare(cwd: string): Promise<void> {
     }
   }
 
-  // Configure as ESM package by default if there's no `type` field
-  if (!pkgJson.type) {
+  // Configure as ESM package by default if there's no package.json
+  if (!hasPackageJson) {
     pkgJson.type = 'module'
   }
 
