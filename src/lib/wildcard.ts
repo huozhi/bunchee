@@ -1,5 +1,5 @@
 import type { Dirent } from 'fs'
-import fs from 'fs/promises'
+import fsp from 'fs/promises'
 import path from 'path'
 import { SRC } from '../constants'
 import { ExportCondition } from '../types'
@@ -22,7 +22,7 @@ const isExportable = async (
   pathname: string,
 ): Promise<boolean> => {
   if (dirent.isDirectory()) {
-    const innerDirents = await fs.readdir(path.join(pathname, dirent.name), {
+    const innerDirents = await fsp.readdir(path.join(pathname, dirent.name), {
       withFileTypes: true,
     })
     return innerDirents.some(
@@ -41,7 +41,7 @@ async function getExportables(
   excludeKeys: string[],
 ): Promise<string[]> {
   const pathname = path.resolve(cwd, SRC)
-  const dirents = await fs.readdir(pathname, { withFileTypes: true })
+  const dirents = await fsp.readdir(pathname, { withFileTypes: true })
   const exportables: (string | undefined)[] = await Promise.all(
     dirents.map(async (dirent) =>
       (await isExportable(dirent, pathname)) &&
