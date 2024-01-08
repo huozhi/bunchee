@@ -89,10 +89,11 @@ export async function findSourceEntryFile(
       exportTypeSuffix ? `.${exportTypeSuffix}` : ''
     }.${ext}`,
   )
-
-  if (await fileExists(subFolderIndexFilename)) {
-    return subFolderIndexFilename
-  }
+  try {
+    if (await fileExists(subFolderIndexFilename)) {
+      return subFolderIndexFilename
+    }
+  } catch {}
   return undefined
 }
 
@@ -106,7 +107,7 @@ export async function getSourcePathFromExportPath(
 ): Promise<string | undefined> {
   for (const ext of availableExtensions) {
     // ignore package.json
-    if (exportPath.endsWith('package.json')) return
+    if (exportPath === '/package.json') return
     if (exportPath === '.') exportPath = './index'
 
     // Find convention-based source file for specific export types

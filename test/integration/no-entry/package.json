@@ -1,4 +1,8 @@
 {
   "name": "no-entry",
-  "main": "./dist/index.js"
+  "main": "./dist/index.js",
+  "exports": {
+    "./package.json": "./package.json",
+    "./style.css": "./src/style.css"
+  }
 }
