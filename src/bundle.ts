@@ -17,6 +17,7 @@ import {
   getPackageMeta,
   getSourcePathFromExportPath,
   getExportPath,
+  removeDir,
 } from './utils'
 import {
   constructDefaultExportCondition,
@@ -113,7 +114,7 @@ async function bundle(
     }
   }
 
-  const bundleOrWatch = (
+  const bundleOrWatch = async (
     rollupConfig: BuncheeRollupConfig,
   ): Promise<RollupWatcher | RollupOutput[] | void> => {
     const { input, exportName } = rollupConfig
@@ -125,6 +126,9 @@ async function bundle(
     const buildMetadata: BuildMetadata = {
       source,
     }
+
+    await removeOutputDir(rollupConfig.output)
+
     if (options.watch) {
       return Promise.resolve(runWatch(rollupConfig, buildMetadata))
     }
@@ -135,7 +139,7 @@ async function bundle(
     ? (fs.existsSync(entryPath)) && (await fsp.stat(entryPath)).isFile()
     : false
 
-  
+
   const hasNoEntry = !hasSpecifiedEntryFile && !isMultiEntries && !hasBin
 
   if (hasNoEntry) {
@@ -168,23 +172,15 @@ async function bundle(
       entriesAlias,
     },
   }
-  const buildConfigs = await buildEntryConfig(
-    options,
-    buildContext,
-    false,
-  )
+  const buildConfigs = await buildEntryConfig(options, buildContext, false)
   const assetsJobs = buildConfigs.map((rollupConfig) =>
     bundleOrWatch(rollupConfig),
   )
 
   const typesJobs = hasTsConfig
-    ? (
-        await buildEntryConfig(
-          options,
-          buildContext,
-          true,
-        )
-      ).map((rollupConfig) => bundleOrWatch(rollupConfig))
+    ? (await buildEntryConfig(options, buildContext, true)).map(
+        (rollupConfig) => bundleOrWatch(rollupConfig),
+      )
     : []
 
   const result = await Promise.all(assetsJobs.concat(typesJobs))
@@ -235,6 +231,14 @@ function runWatch(
   return watcher
 }
 
+async function removeOutputDir(output: BuncheeRollupConfig['output']) {
+  const dirs = new Set(output.map(({ dir }) => dir))
+
+  for (const dir of dirs) {
+    if (dir) await removeDir(dir)
+  }
+}
+
 function runBundle({ input, output }: BuncheeRollupConfig) {
   return rollup(input)
     .then(
@@ -243,7 +247,7 @@ function runBundle({ input, output }: BuncheeRollupConfig) {
           bundle.write(options),
         )
         return Promise.all(writeJobs)
-      }, 
+      },
       catchErrorHandler
     )
 }
