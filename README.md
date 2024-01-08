@@ -135,6 +135,9 @@ The output format will based on the exports condition and also the file extensio
 - It's CommonJS for `require` and ESM for `import` based on the exports condition.
 - It's CommonJS for `.js` and ESM for `.mjs` based on the extension regardless the exports condition. Then for export condition like "node" you could choose the format with your extension.
 
+> [!NOTE]
+> All the `dependencies` and `peerDependencies` will be marked as external automatically and not included in the bundle. If you want to include them in the bundle, you can use the `--no-external` option.
+
 ## Usage
 
 ### File Conventions
@@ -277,13 +280,14 @@ bunchee ./src/index.js --runtime node --target es2019
 
 #### Specifying extra external dependencies
 
-If you want to mark specific dependencies as external and not include them in the bundle, use the `--external` option followed by a comma-separated list of dependency names:
+By default, `bunchee` will mark all the `dependencies` and `peerDependencies` as externals so you don't need to pass them as CLI args. 
+But if there's any dependency that used but not in the dependency list and you want to mark as external, you can use the `--external` option to specify them.
 
 ```sh
-bunchee --external=dependency1,dependency2,dependency3
+bunchee --external=dep1,dep2,dep3
 ```
 
-Replace `dependency1`, `dependency2`, and `dependency3` with the names of the dependencies you want to exclude from the bundle.
+Replace `dep1`, `dep2`, and `dep3` with the names of the dependencies you want to exclude from the bundle.
 
 #### Bundling everything without external dependencies
 
