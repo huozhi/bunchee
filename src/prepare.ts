@@ -230,8 +230,6 @@ export async function prepare(cwd: string): Promise<void> {
     }
   }
 
-  const isESM = pkgJson.type === 'module'
-
   if (exportsEntries.size > 0) {
     logger.log('Discovered exports entries:')
     const maxLengthOfExportName = Math.max(
