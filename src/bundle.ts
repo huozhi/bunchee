@@ -15,7 +15,6 @@ import { createOutputState, logOutputState, type BuildContext } from './plugins/
 import { logger } from './logger'
 import {
   getPackageMeta,
-  fileExists,
   getSourcePathFromExportPath,
   getExportPath,
 } from './utils'
