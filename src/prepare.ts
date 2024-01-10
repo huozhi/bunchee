@@ -70,23 +70,21 @@ async function collectSourceEntries(sourceFolderPath: string) {
         )
         for (const binDirent of binDirentList) {
           if (binDirent.isFile()) {
-            const binFile = path.join(
+            const binFileAbsolutePath = path.join(
               sourceFolderPath,
               dirent.name,
               binDirent.name,
             )
             const binName = baseNameWithoutExtension(binDirent.name)
-            if (fs.existsSync(binFile)) {
+            if (fs.existsSync(binFileAbsolutePath)) {
               bins.set(binName, binDirent.name)
             }
           }
         }
       } else {
         // Search folder/<index>.<ext> convention entries
-        const extensions = availableExtensions
-        for (const extension of extensions) {
+        for (const extension of availableExtensions) {
           const indexFile = path.join(
-            sourceFolderPath,
             dirent.name,
             `index.${extension}`,
           )
@@ -97,7 +95,7 @@ async function collectSourceEntries(sourceFolderPath: string) {
         }
       }
     } else if (dirent.isFile()) {
-      const isAvailableExtension = availableExtensions.includes(
+      const isAvailableExtension = availableExtensions.has(
         path.extname(dirent.name).slice(1),
       )
       if (isAvailableExtension) {

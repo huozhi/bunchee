@@ -455,7 +455,7 @@ export async function collectEntries(
   ) {
     let exportCondForType: FullExportCondition = { ...exportCondRef }
     // Special cases of export type, only pass down the exportPaths for the type
-    if (availableExportConventions.includes(exportType)) {
+    if (availableExportConventions.has(exportType)) {
       exportCondForType = {
         [entryExport]: exportCondRef[exportType],
       }
