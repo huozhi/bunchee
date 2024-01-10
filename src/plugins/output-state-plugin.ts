@@ -8,6 +8,7 @@ import { relativify } from '../lib/format'
 
 type Pair = [string, string, number]
 type SizeStats = Map<string, Pair[]>
+// TODO: move BuildContext type to src/types as shared type
 type BuildContext = {
   entries: Entries
   pkg: PackageMetadata
@@ -20,6 +21,9 @@ type BuildContext = {
     entriesAlias: Record<string, string>
   }
 }
+
+// Example: @foo/bar -> bar
+const removeScope = (exportPath: string) => exportPath.replace(/^@[^/]+\//, '')
 
 function createOutputState({ entries }: { entries: Entries }): {
   plugin(cwd: string): Plugin
@@ -65,7 +69,7 @@ function createOutputState({ entries }: { entries: Entries }): {
             }
             const size = chunk.code.length
             const sourceFileName = chunk.facadeModuleId || ''
-            const exportPath = reversedMapping.get(sourceFileName) || '.'
+            const exportPath = removeScope(reversedMapping.get(sourceFileName) || '.')
             addSize({
               fileName: path.isAbsolute(cwd)
                 ? path.relative(cwd, filePath)
