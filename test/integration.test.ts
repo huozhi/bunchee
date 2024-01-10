@@ -135,6 +135,7 @@ const testCases: {
         './dist/shared/edge-light.mjs': /'shared.edge-light'/,
         './dist/server/edge.mjs': /'server.edge-light'/,
         './dist/server/react-server.mjs': /'server.react-server'/,
+        './dist/server/index.d.ts': /export { Client } from 'multi-entries\/client';\s*\S*export { Shared } from 'multi-entries\/shared';/,
       }
 
       assertFilesContent(dir, contentsRegex)

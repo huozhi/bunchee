@@ -1,4 +1,4 @@
-export const availableExtensions = [
+export const availableExtensions = new Set([
   'js',
   'cjs',
   'mjs',
@@ -7,13 +7,13 @@ export const availableExtensions = [
   'tsx',
   'cts',
   'mts',
-]
+])
 export const nodeResolveExtensions = ['.mjs', '.cjs', '.js', '.json', '.node', '.jsx']
-export const availableExportConventions = [
+export const availableExportConventions = new Set([
   'react-server',
   'react-native',
   'edge-light',
-]
+])
 export const availableESExtensionsRegex = /\.(m|c)?[jt]sx?$/
 export const dtsExtensionRegex = /\.d\.(m|c)?ts$/
 
@@ -34,4 +34,4 @@ export const disabledWarnings = new Set([
   'UNUSED_EXTERNAL_IMPORT',
 ])
 
-export const tsExtensions = ['ts', 'tsx', 'cts', 'mts']
+export const tsExtensions = new Set(['ts', 'tsx', 'cts', 'mts'])

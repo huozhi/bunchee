@@ -36,7 +36,7 @@ export async function getPackageMeta(cwd: string): Promise<PackageMetadata> {
 
 export function isTypescriptFile(filename: string): boolean {
   const ext = path.extname(filename).slice(1)
-  return tsExtensions.includes(ext)
+  return tsExtensions.has(ext)
 }
 
 export function fileExists(filePath: string) {
@@ -105,7 +105,7 @@ export async function getSourcePathFromExportPath(
 
     // Find convention-based source file for specific export types
     // $binary represents `pkg.bin`
-    if (availableExportConventions.includes(exportType) && exportType !== '$binary') {
+    if (availableExportConventions.has(exportType) && exportType !== '$binary') {
       const filename = await findSourceEntryFile(
         cwd,
         exportPath,
@@ -134,7 +134,7 @@ export const fileExtension = (file: string | undefined) =>
   file ? path.extname(file).slice(1) : undefined
 
 export const hasAvailableExtension = (filename: string): boolean =>
-  availableExtensions.includes(path.extname(filename).slice(1))
+  availableExtensions.has(path.extname(filename).slice(1))
 
 export const hasCjsExtension = (filename: string): boolean =>
   path.extname(filename) === '.cjs'

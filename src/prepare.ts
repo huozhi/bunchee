@@ -83,8 +83,7 @@ async function collectSourceEntries(sourceFolderPath: string) {
         }
       } else {
         // Search folder/<index>.<ext> convention entries
-        const extensions = availableExtensions
-        for (const extension of extensions) {
+        for (const extension of availableExtensions) {
           const indexFile = path.join(
             sourceFolderPath,
             dirent.name,
@@ -97,7 +96,7 @@ async function collectSourceEntries(sourceFolderPath: string) {
         }
       }
     } else if (dirent.isFile()) {
-      const isAvailableExtension = availableExtensions.includes(
+      const isAvailableExtension = availableExtensions.has(
         path.extname(dirent.name).slice(1),
       )
       if (isAvailableExtension) {
