@@ -176,22 +176,22 @@ export async function prepare(cwd: string): Promise<void> {
   const { bins, exportsEntries } = await collectSourceEntries(sourceFolder)
   const tsconfigPath = path.join(cwd, 'tsconfig.json')
 
-  if (!fs.existsSync(tsconfigPath)) {
-    const sourceFiles: string[] = [...exportsEntries.values()].concat([
-      ...bins.values(),
-    ])
-    const hasTypeScriptFiles = sourceFiles.some((filename) =>
-      isTypescriptFile(filename),
-    )
-    if (hasTypeScriptFiles) {
-      isUsingTs = true
+  const sourceFiles: string[] = [...exportsEntries.values()].concat([
+    ...bins.values(),
+  ])
+  const hasTypeScriptFiles = sourceFiles.some((filename) =>
+    isTypescriptFile(filename),
+  )
+  if (hasTypeScriptFiles) {
+    isUsingTs = true
+    if (!fs.existsSync(tsconfigPath)) {
       await fsp.writeFile(tsconfigPath, '{}', 'utf-8')
-      logger.log(
-        `Detected using TypeScript but tsconfig.json is missing, created a ${pc.blue(
-          'tsconfig.json',
-        )} for you.`,
-      )
     }
+    logger.log(
+      `Detected using TypeScript but tsconfig.json is missing, created a ${pc.blue(
+        'tsconfig.json',
+      )} for you.`,
+    )
   }
 
   // Configure as ESM package by default if there's no package.json
@@ -270,17 +270,20 @@ export async function prepare(cwd: string): Promise<void> {
       const isESM = pkgJson.type === 'module'
       const mainExport = pkgExports['.']
       const mainCondition = isESM ? 'import' : 'require'
-      pkgJson.main = isUsingTs
-        ? mainExport[mainCondition].default
-        : mainExport[mainCondition]
-      pkgJson.module = isUsingTs
-        ? mainExport.import.default
-        : mainExport.import
+
+      if (!pkgJson.main) {
+        pkgJson.main = isUsingTs
+          ? mainExport[mainCondition].default
+          : mainExport[mainCondition]
+      }
+      if (!pkgJson.module) {
+        pkgJson.module = isUsingTs
+          ? mainExport.import.default
+          : mainExport.import
+      }
 
       if (isUsingTs) {
-        pkgJson.types = isESM
-          ? mainExport.import.types
-          : mainExport.require.types
+        pkgJson.types = mainExport[mainCondition].types
       }
     }
 
