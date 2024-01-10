@@ -71,7 +71,6 @@ async function collectSourceEntries(sourceFolderPath: string) {
         for (const binDirent of binDirentList) {
           if (binDirent.isFile()) {
             const binFile = path.join(
-              sourceFolderPath,
               dirent.name,
               binDirent.name,
             )
@@ -85,7 +84,6 @@ async function collectSourceEntries(sourceFolderPath: string) {
         // Search folder/<index>.<ext> convention entries
         for (const extension of availableExtensions) {
           const indexFile = path.join(
-            sourceFolderPath,
             dirent.name,
             `index.${extension}`,
           )
