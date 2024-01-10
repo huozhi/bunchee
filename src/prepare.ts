@@ -70,12 +70,13 @@ async function collectSourceEntries(sourceFolderPath: string) {
         )
         for (const binDirent of binDirentList) {
           if (binDirent.isFile()) {
-            const binFile = path.join(
+            const binFileAbsolutePath = path.join(
+              sourceFolderPath,
               dirent.name,
               binDirent.name,
             )
             const binName = baseNameWithoutExtension(binDirent.name)
-            if (fs.existsSync(binFile)) {
+            if (fs.existsSync(binFileAbsolutePath)) {
               bins.set(binName, binDirent.name)
             }
           }
