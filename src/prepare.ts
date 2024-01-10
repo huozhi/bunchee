@@ -12,6 +12,12 @@ import {
 import { relativify } from './lib/format'
 
 const DIST = 'dist'
+const DEFAULT_TS_CONFIG = {
+  compilerOptions: {
+    module: 'ESNext',
+    moduleResolution: 'bundler'
+  }
+}
 
 // Output with posix style in package.json
 function getDistPath(...subPaths: string[]) {
@@ -183,7 +189,7 @@ export async function prepare(cwd: string): Promise<void> {
   if (hasTypeScriptFiles) {
     isUsingTs = true
     if (!fs.existsSync(tsconfigPath)) {
-      await fsp.writeFile(tsconfigPath, '{}', 'utf-8')
+      await fsp.writeFile(tsconfigPath, JSON.stringify(DEFAULT_TS_CONFIG, null, 2), 'utf-8')
     }
     logger.log(
       `Detected using TypeScript but tsconfig.json is missing, created a ${pc.blue(
