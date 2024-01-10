@@ -9,17 +9,8 @@ import type { BuncheeRollupConfig, BundleConfig, ExportPaths } from './types'
 
 import fs from 'fs/promises'
 import { resolve, relative } from 'path'
-import { watch as rollupWatch, rollup } from 'rollup'
-import {
-  buildEntryConfig,
-  collectEntries,
-  getReversedAlias,
-} from './build-config'
-import {
-  createOutputState,
-  logOutputState,
-  type BuildContext,
-} from './plugins/output-state-plugin'
+import { buildEntryConfig, collectEntries, getReversedAlias } from './build-config'
+import { createOutputState, logOutputState, type BuildContext } from './plugins/output-state-plugin'
 import { logger } from './logger'
 import {
   getPackageMeta,
@@ -166,15 +157,23 @@ async function bundle(
       entriesAlias,
     },
   }
-  const buildConfigs = await buildEntryConfig(options, buildContext, false)
+  const buildConfigs = await buildEntryConfig(
+    options,
+    buildContext,
+    false,
+  )
   const assetsJobs = buildConfigs.map((rollupConfig) =>
     bundleOrWatch(rollupConfig),
   )
 
   const typesJobs = hasTsConfig
-    ? (await buildEntryConfig(options, buildContext, true)).map(
-        (rollupConfig) => bundleOrWatch(rollupConfig),
-      )
+    ? (
+        await buildEntryConfig(
+          options,
+          buildContext,
+          true,
+        )
+      ).map((rollupConfig) => bundleOrWatch(rollupConfig))
     : []
 
   const result = await Promise.all(assetsJobs.concat(typesJobs))
