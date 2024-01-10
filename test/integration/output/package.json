@@ -1,5 +1,5 @@
 {
-  "name": "output-app",
+  "name": "@scope/output-app",
   "bin": {
     "cli": "./dist/cli.js"
   },
