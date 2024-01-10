@@ -6,7 +6,7 @@ import type {
   RollupOutput,
 } from 'rollup'
 import type { BuncheeRollupConfig, BundleConfig, ExportPaths } from './types'
-
+import { watch as rollupWatch, rollup } from 'rollup'
 import fs from 'fs/promises'
 import { resolve, relative } from 'path'
 import { buildEntryConfig, collectEntries, getReversedAlias } from './build-config'
