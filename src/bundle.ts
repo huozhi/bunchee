@@ -209,11 +209,7 @@ function runWatch(
   watcher.on('event', (event) => {
     switch (event.code) {
       case 'ERROR': {
-        try {
-          onError(event.error)
-        } catch (err) {
-          logger.error(err)
-        }
+        logError(event.error)
         break
       }
       case 'START': {
@@ -230,20 +226,29 @@ function runWatch(
 }
 
 function runBundle({ input, output }: BuncheeRollupConfig) {
-  return rollup(input).then((bundle: RollupBuild) => {
-    const writeJobs = output.map((options: OutputOptions) =>
-      bundle.write(options),
+  return rollup(input)
+    .then(
+      (bundle: RollupBuild) => {
+        const writeJobs = output.map((options: OutputOptions) =>
+          bundle.write(options),
+        )
+        return Promise.all(writeJobs)
+      }, 
+      catchErrorHandler
     )
-    return Promise.all(writeJobs)
-  }, onError)
 }
 
-function onError(error: any) {
+function logError(error: any) {
   if (!error) return
   // logging source code in format
   if (error.frame) {
     process.stderr.write(error.frame + '\n')
   }
+}
+
+function catchErrorHandler(error: any) {
+  if (!error) return
+  logError(error)
   // filter out the rollup plugin error information such as loc/frame/code...
   const err = new Error(error.message)
   err.stack = error.stack
