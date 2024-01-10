@@ -7,14 +7,14 @@ import type {
 } from 'rollup'
 import type { BuncheeRollupConfig, BundleConfig, ExportPaths } from './types'
 import { watch as rollupWatch, rollup } from 'rollup'
-import fs from 'fs/promises'
+import fsp from 'fs/promises'
+import fs from 'fs'
 import { resolve, relative } from 'path'
 import { buildEntryConfig, collectEntries, getReversedAlias } from './build-config'
 import { createOutputState, logOutputState, type BuildContext } from './plugins/output-state-plugin'
 import { logger } from './logger'
 import {
   getPackageMeta,
-  fileExists,
   getSourcePathFromExportPath,
   getExportPath,
 } from './utils'
@@ -132,14 +132,25 @@ async function bundle(
   }
 
   const hasSpecifiedEntryFile = entryPath
-    ? (await fileExists(entryPath)) && (await fs.stat(entryPath)).isFile()
+    ? (fs.existsSync(entryPath)) && (await fsp.stat(entryPath)).isFile()
     : false
 
+  
   const hasNoEntry = !hasSpecifiedEntryFile && !isMultiEntries && !hasBin
+
   if (hasNoEntry) {
-    const err = new Error(`Entry file \`${entryPath}\` is not existed`)
-    err.name = 'NOT_EXISTED'
-    return Promise.reject(err)
+    if (entryPath) {
+      const err = new Error(`Entry file "${entryPath}" does not exist`)
+      err.name = 'NOT_EXISTED'
+      return Promise.reject(err)
+    } else if (cwd) {
+      const hasProjectDir = (fs.existsSync(cwd)) && (await fsp.stat(cwd)).isDirectory()
+      if (!hasProjectDir) {
+        const err = new Error(`Project directory "${cwd}" does not exist`)
+        err.name = 'NOT_EXISTED'
+        return Promise.reject(err)
+      }
+    }
   }
 
   const entries = await collectEntries(pkg, entryPath, exportPaths, cwd)

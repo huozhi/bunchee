@@ -1,4 +1,5 @@
-import fs from 'fs/promises'
+import fs from 'fs'
+import fsp from 'fs/promises'
 import path from 'path'
 import { PackageMetadata } from './types'
 import {
@@ -17,8 +18,8 @@ export function exit(err: string | Error) {
 export const formatDuration = (duration: number) =>
   duration >= 1000 ? `${duration / 1000}s` : `${duration}ms`
 
-export async function hasPackageJson(cwd: string) {
-  return await fileExists(path.resolve(cwd, 'package.json'))
+export function hasPackageJson(cwd: string) {
+  return fileExists(path.resolve(cwd, 'package.json'))
 }
 
 export async function getPackageMeta(cwd: string): Promise<PackageMetadata> {
@@ -26,7 +27,7 @@ export async function getPackageMeta(cwd: string): Promise<PackageMetadata> {
   let targetPackageJson = {}
   try {
     targetPackageJson = JSON.parse(
-      await fs.readFile(pkgFilePath, { encoding: 'utf-8' }),
+      await fsp.readFile(pkgFilePath, { encoding: 'utf-8' }),
     )
   } catch (_) {}
 
@@ -38,16 +39,8 @@ export function isTypescriptFile(filename: string): boolean {
   return tsExtensions.includes(ext)
 }
 
-export async function fileExists(filePath: string) {
-  try {
-    await fs.access(filePath)
-    return true
-  } catch (err: any) {
-    if (err.code === 'ENOENT') {
-      return false
-    }
-    throw err
-  }
+export function fileExists(filePath: string) {
+  return fs.existsSync(filePath)
 }
 
 // . -> pkg name
@@ -68,18 +61,18 @@ export function resolveSourceFile(cwd: string, filename: string) {
   return path.resolve(cwd, SRC, filename)
 }
 
-export async function findSourceEntryFile(
+export function findSourceEntryFile(
   cwd: string,
   exportPath: string,
   exportTypeSuffix: string | null,
   ext: string,
-): Promise<string | undefined> {
+): string | undefined {
   const filename = resolveSourceFile(
     cwd,
     `${exportPath}${exportTypeSuffix ? `.${exportTypeSuffix}` : ''}.${ext}`,
   )
 
-  if (await fileExists(filename)) {
+  if (fileExists(filename)) {
     return filename
   }
 
@@ -90,7 +83,7 @@ export async function findSourceEntryFile(
     }.${ext}`,
   )
   try {
-    if (await fileExists(subFolderIndexFilename)) {
+    if (fileExists(subFolderIndexFilename)) {
       return subFolderIndexFilename
     }
   } catch {}
