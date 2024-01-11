@@ -753,6 +753,34 @@ const testCases: {
       expect(pkgJson.module).toBe('./dist/es/index.mjs')
     },
   },
+  {
+    name: 'no-clean',
+    args: ['--no-clean'],
+    async before(dir) {
+      execSync(`rm -rf ${join(dir, 'dist')}`)
+      await fsp.mkdir(join(dir, 'dist'))
+      await fsp.writeFile(join(dir, './dist/no-clean.json'), '{}')
+    },
+    async expected(dir) {
+      const distFiles = [join(dir, './dist/no-clean.json')]
+      for (const f of distFiles) {
+        expect(await existsFile(f)).toBe(true)
+      }
+    },
+  },
+  {
+    name: 'no-clean',
+    args: [],
+    async before(dir) {
+      execSync(`rm -rf ${join(dir, 'dist')}`)
+      await fsp.mkdir(join(dir, 'dist'))
+      await fsp.writeFile(join(dir, './dist/no-clean.json'), '{}')
+    },
+    async expected(dir) {
+      expect(await existsFile(join(dir, './dist/no-clean.json'))).toBe(false)
+      expect(await existsFile(join(dir, './dist/index.js'))).toBe(true)
+    },
+  },
 ]
 
 async function runBundle(
