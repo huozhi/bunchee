@@ -1,16 +1,14 @@
 import fs, { promises as fsp } from 'fs'
 import path from 'path'
 import os from 'os'
-import { fork, execSync } from 'child_process'
+import { fork } from 'child_process'
 import { stripANSIColor } from './testing-utils'
 import * as debug from './utils/debug'
 
 jest.setTimeout(10 * 60 * 1000)
 
 const fixturesDir = path.join(__dirname, 'fixtures/cli')
-const resolveFromTest = (filepath: string) =>
-  path.join(fixturesDir, filepath)
-
+const resolveFromTest = (filepath: string) => path.join(fixturesDir, filepath)
 
 async function removeDirectory(tempDirPath: string) {
   await fsp.rm(tempDirPath, { recursive: true, force: true })
@@ -285,8 +283,6 @@ describe('cli', () => {
         distFile = args[args.length - 1]
       }
 
-      execSync(`rm -rf ${distDir}`)
-      debug.log(`Command: rm -rf ${distDir}`)
       debug.log(`Command: bunchee ${args.join(' ')}`)
 
       const ps = fork(
