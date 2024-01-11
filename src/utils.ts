@@ -46,7 +46,7 @@ export function fileExists(filePath: string) {
 
 export async function removeDir(dirPath: string) {
   try {
-    const dirStat = await fs.stat(dirPath)
+    const dirStat = await fsp.stat(dirPath)
     if (dirStat.isDirectory()) {
       await rimraf(dirPath)
     }
@@ -119,7 +119,10 @@ export async function getSourcePathFromExportPath(
 
     // Find convention-based source file for specific export types
     // $binary represents `pkg.bin`
-    if (availableExportConventions.has(exportType) && exportType !== '$binary') {
+    if (
+      availableExportConventions.has(exportType) &&
+      exportType !== '$binary'
+    ) {
       const filename = await findSourceEntryFile(
         cwd,
         exportPath,

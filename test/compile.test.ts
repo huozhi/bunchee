@@ -82,10 +82,17 @@ for (const unitName of unitTestDirs) {
     const baseOptions = {
       cwd: dir,
       format: (pkgJson.main ? 'cjs' : 'esm') as 'cjs' | 'esm',
+      noClean: true,
     }
 
-    // build dist file
-    const isTsFile = ['.ts', '.tsx'].includes(extname(inputFileName))
+    // build dist file and minified file
+    await bundle(inputFileName, { ...baseOptions, file: distFile })
+    await bundle(inputFileName, {
+      ...baseOptions,
+      file: minifiedDistFile,
+      minify: true,
+    })
+
     const compareSnapshot: CompareFn = (
       bundledAssetContent,
       currentOutputSnapshot,
@@ -93,20 +100,11 @@ for (const unitName of unitTestDirs) {
       expect(bundledAssetContent).toEqual(currentOutputSnapshot)
     }
 
-    await bundle(inputFileName, { ...baseOptions, file: distFile })
     await compareOrUpdateSnapshot(distFile, unitName, compareSnapshot)
-    if (isTsFile) {
-      await compareOrUpdateSnapshot(distTypesFile, unitName, compareSnapshot)
-    }
-
-    // build minified file
-    await bundle(inputFileName, {
-      ...baseOptions,
-      file: minifiedDistFile,
-      minify: true,
-    })
     await compareOrUpdateSnapshot(minifiedDistFile, unitName, compareSnapshot)
-    if (isTsFile) {
+
+    if (['.ts', '.tsx'].includes(extname(inputFileName))) {
+      await compareOrUpdateSnapshot(distTypesFile, unitName, compareSnapshot)
       await compareOrUpdateSnapshot(
         minifiedDistTypesFile,
         unitName,
