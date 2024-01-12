@@ -24,7 +24,7 @@ export async function existsFile(filePath: string) {
 export function assertContainFiles(dir: string, filePaths: string[]) {
   const results = []
   for (const filePath of filePaths) {
-    const fullPath = path.join(dir, filePath)
+    const fullPath = path.resolve(dir, filePath)
     const existed = fs.existsSync(fullPath)
     if (existed) {
       results.push(filePath)
