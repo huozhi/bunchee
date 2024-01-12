@@ -736,7 +736,7 @@ const testCases: {
       await fsp.writeFile(join(dir, './package.json'), '{ "name": "prepare-ts-with-pkg-json" }')
       await deleteFile(join(dir, './tsconfig.json'))
     },
-    async expected(dir, { stdout }) {
+    async expected(dir) {
       assertContainFiles(dir, ['package.json'])
       const pkgJson = JSON.parse(
         await fsp.readFile(join(dir, './package.json'), 'utf-8'),
