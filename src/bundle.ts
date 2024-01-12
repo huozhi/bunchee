@@ -10,8 +10,16 @@ import { watch as rollupWatch, rollup } from 'rollup'
 import fsp from 'fs/promises'
 import fs from 'fs'
 import { resolve, relative } from 'path'
-import { buildEntryConfig, collectEntries, getReversedAlias } from './build-config'
-import { createOutputState, logOutputState, type BuildContext } from './plugins/output-state-plugin'
+import {
+  buildEntryConfig,
+  collectEntries,
+  getReversedAlias,
+} from './build-config'
+import {
+  createOutputState,
+  logOutputState,
+  type BuildContext,
+} from './plugins/output-state-plugin'
 import { logger } from './logger'
 import {
   getPackageMeta,
@@ -132,10 +140,9 @@ async function bundle(
   }
 
   const hasSpecifiedEntryFile = entryPath
-    ? (fs.existsSync(entryPath)) && (await fsp.stat(entryPath)).isFile()
+    ? fs.existsSync(entryPath) && (await fsp.stat(entryPath)).isFile()
     : false
 
-  
   const hasNoEntry = !hasSpecifiedEntryFile && !isMultiEntries && !hasBin
 
   if (hasNoEntry) {
@@ -144,7 +151,8 @@ async function bundle(
       err.name = 'NOT_EXISTED'
       return Promise.reject(err)
     } else if (cwd) {
-      const hasProjectDir = (fs.existsSync(cwd)) && (await fsp.stat(cwd)).isDirectory()
+      const hasProjectDir =
+        fs.existsSync(cwd) && (await fsp.stat(cwd)).isDirectory()
       if (!hasProjectDir) {
         const err = new Error(`Project directory "${cwd}" does not exist`)
         err.name = 'NOT_EXISTED'
@@ -168,23 +176,15 @@ async function bundle(
       entriesAlias,
     },
   }
-  const buildConfigs = await buildEntryConfig(
-    options,
-    buildContext,
-    false,
-  )
+  const buildConfigs = await buildEntryConfig(options, buildContext, false)
   const assetsJobs = buildConfigs.map((rollupConfig) =>
     bundleOrWatch(rollupConfig),
   )
 
   const typesJobs = hasTsConfig
-    ? (
-        await buildEntryConfig(
-          options,
-          buildContext,
-          true,
-        )
-      ).map((rollupConfig) => bundleOrWatch(rollupConfig))
+    ? (await buildEntryConfig(options, buildContext, true)).map(
+        (rollupConfig) => bundleOrWatch(rollupConfig),
+      )
     : []
 
   const result = await Promise.all(assetsJobs.concat(typesJobs))
@@ -236,16 +236,12 @@ function runWatch(
 }
 
 function runBundle({ input, output }: BuncheeRollupConfig) {
-  return rollup(input)
-    .then(
-      (bundle: RollupBuild) => {
-        const writeJobs = output.map((options: OutputOptions) =>
-          bundle.write(options),
-        )
-        return Promise.all(writeJobs)
-      }, 
-      catchErrorHandler
+  return rollup(input).then((bundle: RollupBuild) => {
+    const writeJobs = output.map((options: OutputOptions) =>
+      bundle.write(options),
     )
+    return Promise.all(writeJobs)
+  }, catchErrorHandler)
 }
 
 function logError(error: any) {

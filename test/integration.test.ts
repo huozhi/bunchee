@@ -135,7 +135,8 @@ const testCases: {
         './dist/shared/edge-light.mjs': /'shared.edge-light'/,
         './dist/server/edge.mjs': /'server.edge-light'/,
         './dist/server/react-server.mjs': /'server.react-server'/,
-        './dist/server/index.d.ts': /export { Client } from 'multi-entries\/client';\s*\S*export { Shared } from 'multi-entries\/shared';/,
+        './dist/server/index.d.ts':
+          /export { Client } from 'multi-entries\/client';\s*\S*export { Shared } from 'multi-entries\/shared';/,
       }
 
       assertFilesContent(dir, contentsRegex)
@@ -718,7 +719,9 @@ const testCases: {
           .    : index.ts
         ✓ Configured `exports` in package.json
       */
-      expect(stripANSIColor(stdout)).toContain('Detected using TypeScript but tsconfig.json is missing, created a tsconfig.json for you.')
+      expect(stripANSIColor(stdout)).toContain(
+        'Detected using TypeScript but tsconfig.json is missing, created a tsconfig.json for you.',
+      )
       expect(stdout).toContain('Discovered binaries entries:')
       expect(stdout).toMatch(/\.\s*: index.ts/)
       expect(stdout).toContain('Discovered exports entries:')
@@ -733,7 +736,10 @@ const testCases: {
     name: 'prepare-ts-with-pkg-json',
     args: ['--prepare'],
     async before(dir) {
-      await fsp.writeFile(join(dir, './package.json'), '{ "name": "prepare-ts-with-pkg-json" }')
+      await fsp.writeFile(
+        join(dir, './package.json'),
+        '{ "name": "prepare-ts-with-pkg-json" }',
+      )
       await deleteFile(join(dir, './tsconfig.json'))
     },
     async expected(dir) {
@@ -746,7 +752,7 @@ const testCases: {
       expect(pkgJson.main).toBe('./dist/cjs/index.js')
       expect(pkgJson.module).toBe('./dist/es/index.mjs')
     },
-  }
+  },
 ]
 
 async function runBundle(

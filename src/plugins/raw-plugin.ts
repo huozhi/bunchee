@@ -15,7 +15,6 @@ export function rawContent({ exclude }: { exclude: FilterPattern }): Plugin {
         }
       }
       return null
-    }
+    },
   }
 }
-

@@ -8,9 +8,7 @@ import * as debug from './utils/debug'
 jest.setTimeout(10 * 60 * 1000)
 
 const fixturesDir = path.join(__dirname, 'fixtures/cli')
-const resolveFromTest = (filepath: string) =>
-  path.join(fixturesDir, filepath)
-
+const resolveFromTest = (filepath: string) => path.join(fixturesDir, filepath)
 
 async function removeDirectory(tempDirPath: string) {
   await fsp.rm(tempDirPath, { recursive: true, force: true })

@@ -8,7 +8,13 @@ import type {
   ExportPaths,
   FullExportCondition,
 } from './types'
-import type { CustomPluginOptions, GetManualChunk, InputOptions, OutputOptions, Plugin } from 'rollup'
+import type {
+  CustomPluginOptions,
+  GetManualChunk,
+  InputOptions,
+  OutputOptions,
+  Plugin,
+} from 'rollup'
 import { convertCompilerOptions, type TypescriptOptions } from './typescript'
 
 import path, { resolve, dirname, join, basename } from 'path'
@@ -30,7 +36,7 @@ import {
   getExportConditionDist,
   isEsmExportName,
   getExportTypeDist,
-  getExportTypeFromFile
+  getExportTypeFromFile,
 } from './exports'
 import {
   isNotNull,
@@ -92,7 +98,13 @@ async function buildInputConfig(
   buildContext: BuildContext,
   dts: boolean,
 ): Promise<InputOptions> {
-  const { entries, pkg, cwd, tsOptions: { tsConfigPath, tsCompilerOptions }, pluginContext } = buildContext
+  const {
+    entries,
+    pkg,
+    cwd,
+    tsOptions: { tsConfigPath, tsCompilerOptions },
+    pluginContext,
+  } = buildContext
   const hasNoExternal = options.external === null
   const externals = hasNoExternal
     ? []
@@ -100,7 +112,7 @@ async function buildInputConfig(
         .filter(<T>(n?: T): n is T => Boolean(n))
         .map((o: { [key: string]: any }): string[] => Object.keys(o))
         .reduce((a: string[], b: string[]) => a.concat(b), [])
-        .concat((options.external ?? []))
+        .concat(options.external ?? [])
 
   for (const [exportImportPath, exportCondition] of Object.entries(entries)) {
     const entryFilePath = exportCondition.source
@@ -116,9 +128,7 @@ async function buildInputConfig(
     target: jscTarget,
     minify: shouldMinify,
   } = options
-  const hasSpecifiedTsTarget = Boolean(
-    tsCompilerOptions.target && tsConfigPath,
-  )
+  const hasSpecifiedTsTarget = Boolean(tsCompilerOptions.target && tsConfigPath)
 
   const swcParserConfig = {
     syntax: useTypescript ? 'typescript' : 'ecmascript',
@@ -157,39 +167,42 @@ async function buildInputConfig(
         // Do not alias current alias of package
         [entry]: null,
       },
-    })
+    }),
   ]
 
-  const typesPlugins = [
-    ...commonPlugins,
-    inlineCss({ skip: true }),
-  ]
+  const typesPlugins = [...commonPlugins, inlineCss({ skip: true })]
 
   if (useTypescript) {
-    const { options: overrideResolvedTsOptions }: any = await convertCompilerOptions(cwd, {
-      declaration: true,
-      noEmit: false,
-      noEmitOnError: true,
-      emitDeclarationOnly: true,
-      checkJs: false,
-      declarationMap: false,
-      skipLibCheck: true,
-      target: 'ESNext',
-      // Some react types required this to be false by default.
-      // Some type package like express might need this as it has other dependencies.
-      // Let users able to toggle this in tsconfig.
-      preserveSymlinks: 'preserveSymlinks' in tsCompilerOptions
-        ? tsCompilerOptions.preserveSymlinks
-        : false,
-      ...(!tsCompilerOptions.jsx ? {
-        jsx: 'react-jsx',
-      } : undefined),
-      // error TS5074: Option '--incremental' can only be specified using tsconfig, emitting to single
-      // file or when option '--tsBuildInfoFile' is specified.
-      incremental: false,
-    })
+    const { options: overrideResolvedTsOptions }: any =
+      await convertCompilerOptions(cwd, {
+        declaration: true,
+        noEmit: false,
+        noEmitOnError: true,
+        emitDeclarationOnly: true,
+        checkJs: false,
+        declarationMap: false,
+        skipLibCheck: true,
+        target: 'ESNext',
+        // Some react types required this to be false by default.
+        // Some type package like express might need this as it has other dependencies.
+        // Let users able to toggle this in tsconfig.
+        preserveSymlinks:
+          'preserveSymlinks' in tsCompilerOptions
+            ? tsCompilerOptions.preserveSymlinks
+            : false,
+        ...(!tsCompilerOptions.jsx
+          ? {
+              jsx: 'react-jsx',
+            }
+          : undefined),
+        // error TS5074: Option '--incremental' can only be specified using tsconfig, emitting to single
+        // file or when option '--tsBuildInfoFile' is specified.
+        incremental: false,
+      })
 
-    const dtsPlugin = (require('rollup-plugin-dts') as typeof import('rollup-plugin-dts')).default({
+    const dtsPlugin = (
+      require('rollup-plugin-dts') as typeof import('rollup-plugin-dts')
+    ).default({
       tsconfig: tsConfigPath,
       compilerOptions: overrideResolvedTsOptions,
     })
@@ -242,8 +255,7 @@ async function buildInputConfig(
       const code = warning.code || ''
       // Some may not have types, like CLI binary
       if (dts && code === 'EMPTY_BUNDLE') return
-      if (disabledWarnings.has(code))
-        return
+      if (disabledWarnings.has(code)) return
       // If the circular dependency warning is from node_modules, ignore it
       if (
         code === 'CIRCULAR_DEPENDENCY' &&
@@ -278,7 +290,9 @@ function hasEsmExport(
 }
 
 function getModuleLater(moduleMeta: CustomPluginOptions) {
-  const directives = (moduleMeta.preserveDirectives || { directives: [] }).directives
+  const directives = (
+    moduleMeta.preserveDirectives || { directives: [] }
+  ).directives
     .map((d: string) => d.replace(/^use /, ''))
     .filter((d: string) => d !== 'strict')
 
@@ -289,7 +303,7 @@ function getModuleLater(moduleMeta: CustomPluginOptions) {
 // dependencyGraphMap: Map<subModuleId, Set<entryParentId>>
 function createSplitChunks(
   dependencyGraphMap: Map<string, Set<[string, string]>>,
-  entryFiles: Set<string>
+  entryFiles: Set<string>,
 ): GetManualChunk {
   // If there's existing chunk being splitted, and contains a layer { <id>: <chunkGroup> }
   const splitChunksGroupMap = new Map<string, string>()
@@ -318,7 +332,7 @@ function createSplitChunks(
           if (!dependencyGraphMap.has(subId)) {
             dependencyGraphMap.set(subId, new Set())
           }
-          dependencyGraphMap.get(subId)!.add([ id, moduleLayer ])
+          dependencyGraphMap.get(subId)!.add([id, moduleLayer])
         }
       }
     }
@@ -334,14 +348,18 @@ function createSplitChunks(
           // If other entry is dependency of this entry
           if (entryFiles.has(id)) {
             const entryModuleInfo = ctx.getModuleInfo(id)
-            const entryModuleLayer = getModuleLater(entryModuleInfo ? entryModuleInfo.meta : {})
+            const entryModuleLayer = getModuleLater(
+              entryModuleInfo ? entryModuleInfo.meta : {},
+            )
             return entryModuleLayer === moduleLayer
           }
           return false
         })
         if (isImportFromOtherEntry) return
 
-        const isPartOfCurrentEntry = parentModuleIds.every(([, layer]) => layer === moduleLayer)
+        const isPartOfCurrentEntry = parentModuleIds.every(
+          ([, layer]) => layer === moduleLayer,
+        )
         if (isPartOfCurrentEntry) {
           if (splitChunksGroupMap.has(id)) {
             return splitChunksGroupMap.get(id)
@@ -367,7 +385,14 @@ function buildOutputConfigs(
   dts: boolean,
 ): OutputOptions {
   const { format } = options
-  const { entries, pkg, exportPaths, cwd, tsOptions: { tsCompilerOptions }, pluginContext } = buildContext
+  const {
+    entries,
+    pkg,
+    exportPaths,
+    cwd,
+    tsOptions: { tsCompilerOptions },
+    pluginContext,
+  } = buildContext
   // Add esm mark and interop helper if esm export is detected
   const useEsModuleMark = hasEsmExport(exportPaths, tsCompilerOptions)
   const typings: string | undefined = getTypings(pkg)
@@ -389,7 +414,9 @@ function buildOutputConfigs(
 
   const dtsPathConfig = { dir: dtsFile ? dirname(dtsFile) : dtsDir }
   const outputFile: string = (dtsFile || file)!
-  const entryFiles = new Set(Object.values(entries).map((entry) => entry.source))
+  const entryFiles = new Set(
+    Object.values(entries).map((entry) => entry.source),
+  )
 
   return {
     name: pkg.name || name,
@@ -403,7 +430,7 @@ function buildOutputConfigs(
     sourcemap: options.sourcemap,
     manualChunks: createSplitChunks(
       pluginContext.moduleDirectiveLayerMap,
-      entryFiles
+      entryFiles,
     ),
     chunkFileNames: '[name]-[hash].js',
     // By default in rollup, when creating multiple chunks, transitive imports of entry chunks
@@ -430,7 +457,7 @@ export async function buildEntryConfig(
     )
     configs.push(rollupConfig)
   }
-  return (await Promise.all(configs))
+  return await Promise.all(configs)
 }
 
 /*
@@ -482,9 +509,12 @@ export async function collectEntries(
       export: exportCondForType,
     }
 
-    const nameWithExportPath = pkg.name ? path.join(pkg.name, exportCondition.name) : exportCondition.name    
+    const nameWithExportPath = pkg.name
+      ? path.join(pkg.name, exportCondition.name)
+      : exportCondition.name
     const needsDelimiter = !nameWithExportPath.endsWith('.') && exportType
-    const entryImportPath = nameWithExportPath + (needsDelimiter ? '.' : '') + exportType 
+    const entryImportPath =
+      nameWithExportPath + (needsDelimiter ? '.' : '') + exportType
 
     entries[entryImportPath] = exportCondition
   }
@@ -493,10 +523,13 @@ export async function collectEntries(
 
   if (binaryExports) {
     // binDistPaths: [ [ 'bin1', './dist/bin1.js'], [ 'bin2', './dist/bin2.js'] ]
-    const binPairs = typeof binaryExports === 'string'
-      ? [['bin', binaryExports]]
-      : Object.keys(binaryExports)
-        .map((key) => [join('bin', key), (binaryExports)[key]])
+    const binPairs =
+      typeof binaryExports === 'string'
+        ? [['bin', binaryExports]]
+        : Object.keys(binaryExports).map((key) => [
+            join('bin', key),
+            binaryExports[key],
+          ])
 
     const binExportPaths = binPairs.reduce((acc, [binName, binDistPath]) => {
       const exportType = getExportTypeFromFile(binDistPath, pkg.type)
@@ -508,11 +541,7 @@ export async function collectEntries(
     }, {} as ExportPaths)
 
     for (const [binName] of binPairs) {
-      const source = await getSourcePathFromExportPath(
-        cwd,
-        binName,
-        '$binary'
-      )
+      const source = await getSourcePathFromExportPath(cwd, binName, '$binary')
 
       if (!source) {
         logger.warn(`Cannot find source file for ${binName}`)
@@ -528,17 +557,19 @@ export async function collectEntries(
     }
   }
 
-  const collectEntriesPromises = Object.keys(exportPaths).map(async (entryExport) => {
-    const exportCond = exportPaths[entryExport]
-    if (entryExport.startsWith('.')) {
-      await collectEntry('', exportCond, entryExport)
-      for (const exportType of availableExportConventions) {
-        if (exportCond[exportType]) {
-          await collectEntry(exportType, exportCond, entryExport)
+  const collectEntriesPromises = Object.keys(exportPaths).map(
+    async (entryExport) => {
+      const exportCond = exportPaths[entryExport]
+      if (entryExport.startsWith('.')) {
+        await collectEntry('', exportCond, entryExport)
+        for (const exportType of availableExportConventions) {
+          if (exportCond[exportType]) {
+            await collectEntry(exportType, exportCond, entryExport)
+          }
         }
       }
-    }
-  })
+    },
+  )
 
   await Promise.all(collectEntriesPromises)
   return entries

@@ -61,7 +61,6 @@ export async function assertFilesContent(
 export const fullExtension = (filename: string) =>
   filename.slice(filename.indexOf('.'))
 
-
 export function getChunkFileNamesFromLog(log: string) {
   return log.split('\n').map((line: string) => {
     return line.replace(/- \d+ K?B/, '').trim()

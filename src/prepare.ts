@@ -15,8 +15,8 @@ const DIST = 'dist'
 const DEFAULT_TS_CONFIG = {
   compilerOptions: {
     module: 'ESNext',
-    moduleResolution: 'bundler'
-  }
+    moduleResolution: 'bundler',
+  },
 }
 
 // Output with posix style in package.json
@@ -90,10 +90,7 @@ async function collectSourceEntries(sourceFolderPath: string) {
       } else {
         // Search folder/<index>.<ext> convention entries
         for (const extension of availableExtensions) {
-          const indexFile = path.join(
-            dirent.name,
-            `index.${extension}`,
-          )
+          const indexFile = path.join(dirent.name, `index.${extension}`)
           if (fs.existsSync(indexFile)) {
             exportsEntries.set(dirent.name, indexFile)
             break
@@ -175,7 +172,7 @@ export async function prepare(cwd: string): Promise<void> {
   pkgJson.files = files
 
   let isUsingTs = false
-  
+
   // Collect bins and exports entries
   const { bins, exportsEntries } = await collectSourceEntries(sourceFolder)
   const tsconfigPath = path.join(cwd, 'tsconfig.json')
@@ -189,7 +186,11 @@ export async function prepare(cwd: string): Promise<void> {
   if (hasTypeScriptFiles) {
     isUsingTs = true
     if (!fs.existsSync(tsconfigPath)) {
-      await fsp.writeFile(tsconfigPath, JSON.stringify(DEFAULT_TS_CONFIG, null, 2), 'utf-8')
+      await fsp.writeFile(
+        tsconfigPath,
+        JSON.stringify(DEFAULT_TS_CONFIG, null, 2),
+        'utf-8',
+      )
       logger.log(
         `Detected using TypeScript but tsconfig.json is missing, created a ${pc.blue(
           'tsconfig.json',

@@ -34,6 +34,7 @@ npm install --save-dev bunchee typescript
 ### Configuration
 
 Create your library entry file and package.json.
+
 ```sh
 cd ./my-lib
 mkdir src && touch ./src/index.ts
@@ -57,6 +58,7 @@ Or you can checkout the following cases to configure your package.json.
   <summary> JavaScript</summary>
 
 Then use use the [exports field in package.json](https://nodejs.org/api/packages.html#exports-sugar) to configure different conditions and leverage the same functionality as other bundlers, such as webpack. The exports field allows you to define multiple conditions.
+
 ```json
 {
   "files": ["dist"],
@@ -69,6 +71,7 @@ Then use use the [exports field in package.json](https://nodejs.org/api/packages
   }
 }
 ```
+
 </details>
 
 <details>
@@ -94,8 +97,8 @@ If you're build a TypeScript library, separate the types from the main entry fil
   }
 }
 ```
-</details>
 
+</details>
 
 <details>
   <summary>Hybrid (CJS & ESM) Module Resolution with TypeScript</summary>
@@ -122,6 +125,7 @@ If you're using TypeScript with Node 10 and Node 16 module resolution, you can u
   }
 }
 ```
+
 </details>
 
 #### Build
@@ -240,7 +244,6 @@ This will match the `bin` field in package.json as:
 
 > Note: For multiple `bin` files, the filename should match the key name in the `bin` field.
 
-
 ### Server Components
 
 `bunchee` supports to build server components and server actions with library directives like `"use client"` or `"use server"`. It will generate the corresponding chunks for client and server that scope the client and server boundaries properly.
@@ -280,7 +283,7 @@ bunchee ./src/index.js --runtime node --target es2019
 
 #### Specifying extra external dependencies
 
-By default, `bunchee` will mark all the `dependencies` and `peerDependencies` as externals so you don't need to pass them as CLI args. 
+By default, `bunchee` will mark all the `dependencies` and `peerDependencies` as externals so you don't need to pass them as CLI args.
 But if there's any dependency that used but not in the dependency list and you want to mark as external, you can use the `--external` option to specify them.
 
 ```sh
@@ -309,7 +312,6 @@ bunchee --env=ENV1,ENV2,ENV3
 
 Replace `ENV1`, `ENV2`, and `ENV3` with the names of the environment variables you want to include in your bundled code. These environment variables will be inlined during the bundling process.
 
-
 You can use `index.<export-type>.<ext>` to override the input source file for specific export name. Or using `<export-path>/index.<export-type>.<ext>` also works. Such as:
 
 ```
@@ -320,7 +322,6 @@ You can use `index.<export-type>.<ext>` to override the input source file for sp
 ```
 
 This will match the export name `"react-server"` and `"edge-light"` then use the corresponding input source file to build the bundle.
-
 
 ### Wildcard Exports
 
@@ -402,6 +403,7 @@ If you just want to import a file as string content, you can name the extension 
 For example:
 
 src/index.ts
+
 ```js
 import data from './data.txt'
 
@@ -409,11 +411,13 @@ export default data
 ```
 
 src/data.txt
+
 ```txt
 hello world
 ```
 
 output
+
 ```
 export default "hello world"
 ```
@@ -449,7 +453,6 @@ If you specify `target` option in `tsconfig.json`, then you don't have to pass i
 #### Package lint
 
 `bunchee` has support for checking the package bundles are matched with package exports configuration.
-
 
 ### License
 

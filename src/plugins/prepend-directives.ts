@@ -8,7 +8,8 @@ export function prependDirectives(): Plugin {
       handler(code, id) {
         const moduleInfo = this.getModuleInfo(id)
         if (moduleInfo?.meta?.preserveDirectives) {
-          const firstDirective = moduleInfo.meta.preserveDirectives.directives[0]
+          const firstDirective =
+            moduleInfo.meta.preserveDirectives.directives[0]
           if (firstDirective) {
             const directive = firstDirective.value
             const directiveCode = `'${directive}';`
@@ -16,8 +17,7 @@ export function prependDirectives(): Plugin {
           }
         }
         return null
-      }
-    }
+      },
+    },
   }
 }
-
