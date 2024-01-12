@@ -183,13 +183,6 @@ async function buildInputConfig(
         declarationMap: false,
         skipLibCheck: true,
         target: 'ESNext',
-        // Some react types required this to be false by default.
-        // Some type package like express might need this as it has other dependencies.
-        // Let users able to toggle this in tsconfig.
-        preserveSymlinks:
-          'preserveSymlinks' in tsCompilerOptions
-            ? tsCompilerOptions.preserveSymlinks
-            : false,
         ...(!tsCompilerOptions.jsx
           ? {
               jsx: 'react-jsx',
@@ -197,7 +190,11 @@ async function buildInputConfig(
           : undefined),
         // error TS5074: Option '--incremental' can only be specified using tsconfig, emitting to single
         // file or when option '--tsBuildInfoFile' is specified.
-        incremental: false,
+        ...(tsCompilerOptions.incremental && !tsCompilerOptions.tsBuildInfoFile
+          ? {
+            incremental: false,
+          } : undefined
+        )
       })
 
     const dtsPlugin = (
