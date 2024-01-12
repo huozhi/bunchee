@@ -197,7 +197,9 @@ async function bundle(
     )
   }
 
-  logOutputState(sizeCollector)
+  if (!options.watch) {
+    logOutputState(sizeCollector)
+  }
   return result
 }
 
