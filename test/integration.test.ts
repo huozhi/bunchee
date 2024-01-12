@@ -734,9 +734,8 @@ const testCases: {
     args: ['--prepare'],
     async before(dir) {
       await fsp.writeFile(join(dir, './package.json'), '{ "name": "prepare-ts-with-pkg-json" }')
-      await deleteFile(join(dir, './tsconfig.json'))
     },
-    async expected(dir) {
+    async expected(dir, { stdout }) {
       assertContainFiles(dir, ['package.json'])
       const pkgJson = JSON.parse(
         await fsp.readFile(join(dir, './package.json'), 'utf-8'),
@@ -745,6 +744,9 @@ const testCases: {
       expect(pkgJson.type).toBeUndefined()
       expect(pkgJson.main).toBe('./dist/cjs/index.js')
       expect(pkgJson.module).toBe('./dist/es/index.mjs')
+      expect(stripANSIColor(stdout)).not.toContain(
+        'Detected using TypeScript but tsconfig.json is missing, created a tsconfig.json for you.',
+      )
     },
   }
 ]
