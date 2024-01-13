@@ -77,7 +77,7 @@ async function bundle(
   const hasBin = Boolean(pkg.bin)
 
   let tsConfig = await resolveTsConfig(cwd)
-  const hasTsConfig = Boolean(tsConfig?.tsConfigPath)
+  let hasTsConfig = Boolean(tsConfig?.tsConfigPath)
   const defaultTsOptions: TypescriptOptions = {
     tsConfigPath: tsConfig?.tsConfigPath,
     tsCompilerOptions: tsConfig?.tsCompilerOptions || {},
@@ -177,6 +177,7 @@ async function bundle(
         'tsconfig.json',
       )} for you.`,
     )
+    hasTsConfig = true
   }
 
   const sizeCollector = createOutputState({ entries })
