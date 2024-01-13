@@ -2,7 +2,7 @@ import type { PackageMetadata } from 'src/types'
 import path from 'path'
 import {
   getExportPaths,
-  getExportConditionDist,
+  getExportsDistFilesOfCondition,
 } from '../../src/exports'
 
 describe('lib exports', () => {
@@ -233,7 +233,7 @@ describe('lib exports', () => {
         export: parsedExportCondition[exportName],
       }
       // Get only basename to skip path.resolve result for `file` property
-      return getExportConditionDist(pkg, parsedExport, '').map((item) => ({
+      return getExportsDistFilesOfCondition(pkg, parsedExport, '').map((item) => ({
         ...item,
         file: path.basename(item.file),
       }))

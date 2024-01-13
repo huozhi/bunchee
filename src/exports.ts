@@ -14,10 +14,6 @@ export function getTypings(pkg: PackageMetadata) {
   return pkg.types || pkg.typings
 }
 
-function getDistPath(distPath: string, cwd: string) {
-  return resolve(cwd, distPath)
-}
-
 // Reached the end of the export path
 function isExportLike(field: any): field is string | FullExportCondition {
   if (typeof field === 'string') return true
@@ -302,55 +298,40 @@ export function isEsmExportName(name: string, ext: string) {
   return ['import', 'module'].includes(name) || ext === 'mjs'
 }
 
-function isCjsExportName(pkg: PackageMetadata, name: string, ext: string) {
+export function isCjsExportName(pkg: PackageMetadata, exportCondition: string, ext: string) {
   const isESModule = isESModulePackage(pkg.type)
   return (
     (!isESModule &&
-      ['require', 'main', 'node'].includes(name) &&
+      ['require', 'main'].includes(exportCondition) &&
       ext !== 'mjs') ||
     ext === 'cjs'
   )
 }
 
-export function getExportConditionDist(
+export function getExportsDistFilesOfCondition(
   pkg: PackageMetadata,
   parsedExportCondition: ParsedExportCondition,
   cwd: string,
 ): { format: OutputOptions['format']; file: string }[] {
   const dist: { format: OutputOptions['format']; file: string }[] = []
-  const existed = new Set<string>()
-  const exportTypes = Object.keys(parsedExportCondition.export)
-
-  for (const exportType of exportTypes) {
-    if (exportType === 'types') {
+  const exportConditionNames = Object.keys(parsedExportCondition.export)
+  const uniqueFiles = new Set<string>()
+  for (const exportCondition of exportConditionNames) {
+    if (exportCondition === 'types') {
       continue
     }
-    const filePath = parsedExportCondition.export[exportType]
+    const filePath = parsedExportCondition.export[exportCondition]
     const ext = extname(filePath).slice(1)
-    const relativePath = parsedExportCondition.export[exportType]
-    const distFile = getDistPath(relativePath, cwd)
-
-    let format: OutputOptions['format'] = 'esm'
-    if (isCjsExportName(pkg, exportType, ext)) {
-      format = 'cjs'
-    }
-
-    // Deduplicate the same path jobs
-    // TODO: detect conflicts paths but with different format
-    if (existed.has(distFile)) {
+    const relativePath = parsedExportCondition.export[exportCondition]
+    const distFile = resolve(cwd, relativePath)
+    const format: OutputOptions['format'] = isCjsExportName(pkg, exportCondition, ext) ? 'cjs' : 'esm'
+    if (uniqueFiles.has(distFile)) {
       continue
     }
-    existed.add(distFile)
+    uniqueFiles.add(distFile)
     dist.push({ format, file: distFile })
   }
 
-  if (dist.length === 0 && !pkg.bin) {
-    const defaultFormat: OutputOptions['format'] = isESModulePackage(pkg.type) ? 'esm' : 'cjs'
-    dist.push({
-      format: defaultFormat,
-      file: getDistPath('dist/index.js', cwd),
-    })
-  }
   return dist
 }
 
