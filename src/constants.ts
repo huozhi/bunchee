@@ -8,7 +8,14 @@ export const availableExtensions = new Set([
   'cts',
   'mts',
 ])
-export const nodeResolveExtensions = ['.mjs', '.cjs', '.js', '.json', '.node', '.jsx']
+export const nodeResolveExtensions = [
+  '.mjs',
+  '.cjs',
+  '.js',
+  '.json',
+  '.node',
+  '.jsx',
+]
 export const availableExportConventions = new Set([
   'react-server',
   'react-native',

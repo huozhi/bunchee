@@ -4,7 +4,11 @@ import { Plugin } from 'rollup'
 // e.g.
 // For a resolved file, if it's one of the entries,
 // aliases it as export path, such as <absolute file> -> <pkg>/<export path>
-export function aliasEntries({ entries }: { entries: Record<string, string | null> }): Plugin {
+export function aliasEntries({
+  entries,
+}: {
+  entries: Record<string, string | null>
+}): Plugin {
   return {
     name: 'alias',
     resolveId: {
@@ -19,6 +23,6 @@ export function aliasEntries({ entries }: { entries: Record<string, string | nul
         }
         return null
       },
-    }
+    },
   }
 }

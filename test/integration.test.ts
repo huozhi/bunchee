@@ -18,6 +18,7 @@ const getPath = (filepath: string) => join(integrationTestDir, filepath)
 
 const testCases: {
   name: string
+  dir?: string
   args?: string[]
   before?(dir: string): Promise<void> | void
   expected(
@@ -245,9 +246,7 @@ const testCases: {
         join(dir, './dist/index.js'),
         join(dir, './dist/index.d.ts'),
       ]
-      for (const f of distFiles) {
-        expect(await existsFile(f)).toBe(true)
-      }
+      await assertContainFiles(dir, distFiles)
       expect(await fsp.readFile(distFiles[1], 'utf-8')).toContain(
         'declare function _default(): string;',
       )
@@ -260,9 +259,21 @@ const testCases: {
       // TODO: disable incremental and avoid erroring
       const distFiles = ['./dist/index.js', './dist/index.d.ts']
 
-      for (const f of distFiles) {
-        expect(await existsFile(join(dir, f))).toBe(true)
-      }
+      await assertContainFiles(dir, distFiles)
+      expect(await fsp.readFile(join(dir, distFiles[1]), 'utf-8')).toContain(
+        'declare const _default: () => string;',
+      )
+      expect(await existsFile(join(dir, './dist/.tsbuildinfo'))).toBe(false)
+    },
+  },
+  {
+    name: 'ts-incremental-with-buildinfofile',
+    args: [],
+    async expected(dir) {
+      // TODO: disable incremental and avoid erroring
+      const distFiles = ['./dist/index.js', './dist/index.d.ts']
+      await assertContainFiles(dir, distFiles)
+
       expect(await fsp.readFile(join(dir, distFiles[1]), 'utf-8')).toContain(
         'declare const _default: () => string;',
       )
@@ -276,9 +287,7 @@ const testCases: {
       // should still emit declaration files
       const distFiles = ['./dist/index.js', './dist/index.d.ts']
 
-      for (const f of distFiles) {
-        expect(await existsFile(join(dir, f))).toBe(true)
-      }
+      await assertContainFiles(dir, distFiles)
       expect(await fsp.readFile(join(dir, distFiles[1]), 'utf-8')).toContain(
         'declare const _default: () => string;',
       )
@@ -366,9 +375,7 @@ const testCases: {
         join(dir, './dist/bin.js'),
         join(dir, './dist/bin.d.ts'),
       ]
-      for (const f of distFiles) {
-        expect(await existsFile(f)).toBe(true)
-      }
+      await assertContainFiles(dir, distFiles)
       expect(await fsp.readFile(distFiles[0], 'utf-8')).toContain(
         '#!/usr/bin/env node',
       )
@@ -683,13 +690,13 @@ const testCases: {
         cmd: './dist/bin/cmd.js',
       })
       expect(pkgJson.type).toBe('module')
-      expect(pkgJson.main).toBe('./dist/es/index.mjs')
-      expect(pkgJson.module).toBe('./dist/es/index.mjs')
+      expect(pkgJson.main).toBe('./dist/es/index.js')
+      expect(pkgJson.module).toBe('./dist/es/index.js')
       expect(pkgJson.exports).toEqual({
         './foo': {
           import: {
-            types: './dist/es/foo.d.mts',
-            default: './dist/es/foo.mjs',
+            types: './dist/es/foo.d.ts',
+            default: './dist/es/foo.js',
           },
           require: {
             types: './dist/cjs/foo.d.cts',
@@ -699,8 +706,8 @@ const testCases: {
         '.': {
           'react-server': './dist/es/index-react-server.mjs',
           import: {
-            types: './dist/es/index.d.mts',
-            default: './dist/es/index.mjs',
+            types: './dist/es/index.d.ts',
+            default: './dist/es/index.js',
           },
           require: {
             types: './dist/cjs/index.d.cts',
@@ -815,7 +822,7 @@ async function runBundle(
 function runTests() {
   for (const testCase of testCases) {
     const { name, args = [], expected, before } = testCase
-    const dir = getPath(name)
+    const dir = getPath(testCase.dir ?? name)
     test(`integration ${name}`, async () => {
       debug.log(`Command: bunchee ${args.join(' ')}`)
       if (before) {

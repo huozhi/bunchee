@@ -15,8 +15,8 @@ const DIST = 'dist'
 const DEFAULT_TS_CONFIG = {
   compilerOptions: {
     module: 'ESNext',
-    moduleResolution: 'bundler'
-  }
+    moduleResolution: 'bundler',
+  },
 }
 
 // Output with posix style in package.json
@@ -35,14 +35,16 @@ function createExportCondition(
 ) {
   const isTsSourceFile = isTypescriptFile(sourceFile)
   let cjsExtension: 'js' | 'cjs' = 'js'
+  let esmExtension: 'js' | 'mjs' = 'mjs'
   if (moduleType === 'module') {
     cjsExtension = 'cjs'
+    esmExtension = 'js'
   }
   if (isTsSourceFile) {
     return {
       import: {
-        types: getDistPath('es', `${exportName}.d.mts`),
-        default: getDistPath('es', `${exportName}.mjs`),
+        types: getDistPath('es', `${exportName}.${dtsExtensionsMap[esmExtension]}`),
+        default: getDistPath('es', `${exportName}.${esmExtension}`),
       },
       require: {
         types: getDistPath(
@@ -90,10 +92,7 @@ async function collectSourceEntries(sourceFolderPath: string) {
       } else {
         // Search folder/<index>.<ext> convention entries
         for (const extension of availableExtensions) {
-          const indexFile = path.join(
-            dirent.name,
-            `index.${extension}`,
-          )
+          const indexFile = path.join(dirent.name, `index.${extension}`)
           if (fs.existsSync(indexFile)) {
             exportsEntries.set(dirent.name, indexFile)
             break
@@ -175,7 +174,7 @@ export async function prepare(cwd: string): Promise<void> {
   pkgJson.files = files
 
   let isUsingTs = false
-  
+
   // Collect bins and exports entries
   const { bins, exportsEntries } = await collectSourceEntries(sourceFolder)
   const tsconfigPath = path.join(cwd, 'tsconfig.json')
@@ -189,13 +188,17 @@ export async function prepare(cwd: string): Promise<void> {
   if (hasTypeScriptFiles) {
     isUsingTs = true
     if (!fs.existsSync(tsconfigPath)) {
-      await fsp.writeFile(tsconfigPath, JSON.stringify(DEFAULT_TS_CONFIG, null, 2), 'utf-8')
+      await fsp.writeFile(
+        tsconfigPath,
+        JSON.stringify(DEFAULT_TS_CONFIG, null, 2),
+        'utf-8',
+      )
+      logger.log(
+        `Detected using TypeScript but tsconfig.json is missing, created a ${pc.blue(
+          'tsconfig.json',
+        )} for you.`,
+      )
     }
-    logger.log(
-      `Detected using TypeScript but tsconfig.json is missing, created a ${pc.blue(
-        'tsconfig.json',
-      )} for you.`,
-    )
   }
 
   // Configure as ESM package by default if there's no package.json
@@ -275,16 +278,12 @@ export async function prepare(cwd: string): Promise<void> {
       const mainExport = pkgExports['.']
       const mainCondition = isESM ? 'import' : 'require'
 
-      if (!pkgJson.main) {
-        pkgJson.main = isUsingTs
-          ? mainExport[mainCondition].default
-          : mainExport[mainCondition]
-      }
-      if (!pkgJson.module) {
-        pkgJson.module = isUsingTs
-          ? mainExport.import.default
-          : mainExport.import
-      }
+      pkgJson.main = isUsingTs
+        ? mainExport[mainCondition].default
+        : mainExport[mainCondition]
+      pkgJson.module = isUsingTs
+        ? mainExport.import.default
+        : mainExport.import
 
       if (isUsingTs) {
         pkgJson.types = mainExport[mainCondition].types
@@ -293,7 +292,14 @@ export async function prepare(cwd: string): Promise<void> {
 
     // Assign the properties by order: files, main, module, types, exports
     if (Object.keys(pkgExports).length > 0) {
-      pkgJson.exports = pkgExports
+      if (!pkgJson.exports) {
+        pkgJson.exports = pkgExports
+      } else {
+        // Update existing exports
+        Object.keys(pkgExports).forEach((exportName) => {
+          pkgJson.exports[exportName] = pkgExports[exportName]
+        })
+      }
     }
   }
 

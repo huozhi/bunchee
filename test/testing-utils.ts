@@ -24,7 +24,7 @@ export async function existsFile(filePath: string) {
 export function assertContainFiles(dir: string, filePaths: string[]) {
   const results = []
   for (const filePath of filePaths) {
-    const fullPath = path.join(dir, filePath)
+    const fullPath = path.resolve(dir, filePath)
     const existed = fs.existsSync(fullPath)
     if (existed) {
       results.push(filePath)
@@ -60,7 +60,6 @@ export async function assertFilesContent(
 // bundle.min.js => .min.js
 export const fullExtension = (filename: string) =>
   filename.slice(filename.indexOf('.'))
-
 
 export function getChunkFileNamesFromLog(log: string) {
   return log.split('\n').map((line: string) => {

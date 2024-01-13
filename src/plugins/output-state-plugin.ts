@@ -15,6 +15,7 @@ type BuildContext = {
   exportPaths: Record<string, FullExportCondition>
   cwd: string
   tsOptions: TypescriptOptions
+  useTypeScript: boolean
   pluginContext: {
     outputState: ReturnType<typeof createOutputState>
     moduleDirectiveLayerMap: Map<string, Set<[string, string]>>
@@ -69,7 +70,9 @@ function createOutputState({ entries }: { entries: Entries }): {
             }
             const size = chunk.code.length
             const sourceFileName = chunk.facadeModuleId || ''
-            const exportPath = removeScope(reversedMapping.get(sourceFileName) || '.')
+            const exportPath = removeScope(
+              reversedMapping.get(sourceFileName) || '.',
+            )
             addSize({
               fileName: path.isAbsolute(cwd)
                 ? path.relative(cwd, filePath)
@@ -79,7 +82,7 @@ function createOutputState({ entries }: { entries: Entries }): {
               exportPath,
             })
           })
-        }
+        },
       }
     },
     getSizeStats() {
@@ -93,24 +96,33 @@ function isBin(filename: string) {
 }
 
 function isTypeFile(filename: string) {
-  return filename.endsWith('.d.ts') || filename.endsWith('.d.mts') || filename.endsWith('.d.cts')
+  return (
+    filename.endsWith('.d.ts') ||
+    filename.endsWith('.d.mts') ||
+    filename.endsWith('.d.cts')
+  )
 }
 
 function normalizeExportName(exportName: string): string {
   const isBinary = isBin(exportName)
   let result = exportName
-  
+
   const isSubpathExport = exportName.includes('/')
   const isSpecialExport = exportName.includes('.')
   if (isBinary) {
-    result = ((exportName.replace(/bin(\/|$)/, '') || '.') + ' (bin)')
+    result = (exportName.replace(/bin(\/|$)/, '') || '.') + ' (bin)'
   } else if (isSubpathExport || isSpecialExport) {
-    const subExportName: string | undefined = exportName.split('/')[1] || exportName
+    const subExportName: string | undefined =
+      exportName.split('/')[1] || exportName
     if (subExportName.includes('.') && subExportName !== '.') {
       const [originExportName, specialCondition] = subExportName.split('.')
-      result = (isSubpathExport ? relativify(originExportName) : '.') + ' (' + specialCondition + ')'
+      result =
+        (isSubpathExport ? relativify(originExportName) : '.') +
+        ' (' +
+        specialCondition +
+        ')'
     } else {
-      result =  isSubpathExport ? relativify(subExportName) : '.'
+      result = isSubpathExport ? relativify(subExportName) : '.'
     }
   } else {
     result = '.'
@@ -124,25 +136,32 @@ function getExportNameWithoutExportCondition(exportName: string): string {
 
 function logOutputState(sizeCollector: ReturnType<typeof createOutputState>) {
   const stats = sizeCollector.getSizeStats()
-  const allFileNameLengths = Array.from(stats.values()).flat(1).map(([filename]) => filename.length)
+  const allFileNameLengths = Array.from(stats.values())
+    .flat(1)
+    .map(([filename]) => filename.length)
   const maxFilenameLength = Math.max(...allFileNameLengths)
-  const statsArray = [...stats.entries()]
-    .sort(([a], [b]) => {
-      const comp = (getExportNameWithoutExportCondition(a).length - getExportNameWithoutExportCondition(b).length)
-      return comp === 0 ? a.localeCompare(b) : comp
-    })
-  
-  const maxLengthOfExportName = Math.max(...statsArray.map(([exportName]) => normalizeExportName(exportName).length))
+  const statsArray = [...stats.entries()].sort(([a], [b]) => {
+    const comp =
+      getExportNameWithoutExportCondition(a).length -
+      getExportNameWithoutExportCondition(b).length
+    return comp === 0 ? a.localeCompare(b) : comp
+  })
+
+  const maxLengthOfExportName = Math.max(
+    ...statsArray.map(([exportName]) => normalizeExportName(exportName).length),
+  )
   console.log(
-    pc.underline('Exports'), ' '.repeat(Math.max(maxLengthOfExportName - 'Exports'.length, 0)), 
-    pc.underline('File'), ' '.repeat(Math.max(maxFilenameLength - 'File'.length, 0)), 
-    pc.underline('Size')
+    pc.underline('Exports'),
+    ' '.repeat(Math.max(maxLengthOfExportName - 'Exports'.length, 0)),
+    pc.underline('File'),
+    ' '.repeat(Math.max(maxFilenameLength - 'File'.length, 0)),
+    pc.underline('Size'),
   )
 
   statsArray.forEach(([exportName, filesList]) => {
     // sort by file type, first js files then types, js/mjs/cjs are prioritized than .d.ts/.d.mts/.d.cts
-    filesList.sort(
-      ([a], [b]) => {
+    filesList
+      .sort(([a], [b]) => {
         const aIsType = isTypeFile(a)
         const bIsType = isTypeFile(b)
         if (aIsType && bIsType) {
@@ -155,25 +174,27 @@ function logOutputState(sizeCollector: ReturnType<typeof createOutputState>) {
           return -1
         }
         return 0
-      }
-    ).forEach((item: Pair, index) => {
-      const [filename, , size] = item
-      const normalizedExportName = normalizeExportName(exportName) 
-      const prefix = index === 0 
-        ? normalizedExportName + ' '.repeat(maxLengthOfExportName - normalizedExportName.length) 
-        : ' '.repeat(maxLengthOfExportName)
-      
-      const sizePadding = ' '.repeat(maxFilenameLength - filename.length)
-      const prettiedSize = prettyBytes(size)
-      const isType = isTypeFile(filename)
+      })
+      .forEach((item: Pair, index) => {
+        const [filename, , size] = item
+        const normalizedExportName = normalizeExportName(exportName)
+        const prefix =
+          index === 0
+            ? normalizedExportName +
+              ' '.repeat(maxLengthOfExportName - normalizedExportName.length)
+            : ' '.repeat(maxLengthOfExportName)
 
-      console.log(` ${prefix} ${pc[isType ? 'dim' : 'bold'](filename)}${sizePadding}  ${prettiedSize}`)
-    })
+        const sizePadding = ' '.repeat(maxFilenameLength - filename.length)
+        const prettiedSize = prettyBytes(size)
+        const isType = isTypeFile(filename)
+
+        console.log(
+          ` ${prefix} ${pc[isType ? 'dim' : 'bold'](
+            filename,
+          )}${sizePadding}  ${prettiedSize}`,
+        )
+      })
   })
 }
 
-export {
-  logOutputState,
-  createOutputState,
-  type BuildContext,
-}
+export { logOutputState, createOutputState, type BuildContext }

@@ -81,9 +81,7 @@ type CliArgs = {
   noClean?: boolean
 }
 
-type BundleOptions = BundleConfig & {
-  useTypescript: boolean
-}
+type BundleOptions = BundleConfig
 
 type BuildMetadata = {
   source: string

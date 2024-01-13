@@ -27,9 +27,7 @@ function resolveTypescript(cwd: string): typeof import('typescript') {
   return ts
 }
 
-export function resolveTsConfig(
-  cwd: string,
-): null | TypescriptOptions {
+export function resolveTsConfig(cwd: string): null | TypescriptOptions {
   let tsCompilerOptions: CompilerOptions = {}
   let tsConfigPath: string | undefined
   tsConfigPath = resolve(cwd, 'tsconfig.json')
