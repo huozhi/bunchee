@@ -295,19 +295,6 @@ const testCases: {
     },
   },
   {
-    name: 'publint',
-    args: [],
-    expected(dir, { stdout }) {
-      const text = stripANSIColor(stdout)
-      expect(text).toContain(
-        'pkg.types is ./dist/missing.d.ts but the file does not exist.',
-      )
-      expect(text).toContain(
-        'pkg.exports["."].types is ./dist/missing.d.ts but the file does not exist.',
-      )
-    },
-  },
-  {
     name: 'wildcard-exports',
     args: [],
     async expected(dir, { stdout, stderr }) {

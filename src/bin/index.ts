@@ -4,7 +4,7 @@ import type { CliArgs, BundleConfig } from '../types'
 
 import path from 'path'
 import arg from 'arg'
-import { exit, getPackageMeta, hasPackageJson } from '../utils'
+import { exit, hasPackageJson } from '../utils'
 import { logger, paint } from '../logger'
 import { version } from '../../package.json'
 import { bundle } from '../../src/index'
@@ -40,19 +40,6 @@ async function lintPackage(cwd: string) {
   // Not package.json detected, skip package linting
   if (!(await hasPackageJson(cwd))) {
     return
-  }
-
-  const { publint } = await import('publint')
-  const { formatMessage } = await import('publint/utils')
-
-  const { messages } = await publint({
-    pkgDir: cwd,
-    level: 'error',
-  })
-
-  const pkg = await getPackageMeta(cwd)
-  for (const message of messages) {
-    console.log(formatMessage(message, pkg))
   }
 }
 
