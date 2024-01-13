@@ -80,9 +80,6 @@ type CliArgs = {
 }
 
 type BundleOptions = BundleConfig
-//  & {
-//   // useTypescript: boolean
-// }
 
 type BuildMetadata = {
   source: string

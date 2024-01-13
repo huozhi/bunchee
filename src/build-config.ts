@@ -80,7 +80,7 @@ function getBuildEnv(envs: string[]) {
 
 /**
  * return { 
- *   <absolute source path>: .<relative path to pkg>/<export>
+ *   <absolute source path>: <pkg>/<export>
  * }
  */
 export function getReversedAlias(entries: Entries) {
@@ -126,7 +126,6 @@ async function buildInputConfig(
 
   const { useTypeScript } = buildContext
   const {
-    // useTypescript,
     runtime,
     target: jscTarget,
     minify: shouldMinify,
