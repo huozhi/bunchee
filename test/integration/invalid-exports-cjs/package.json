@@ -1,0 +1,10 @@
+{
+  "exports": {
+    ".": {
+      "require": "./dist/index.mjs"
+    },
+    "./foo": {
+      "import": "./dist/foo.js"
+    }
+  } 
+}

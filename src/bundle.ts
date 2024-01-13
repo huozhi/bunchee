@@ -9,7 +9,7 @@ import type { BuncheeRollupConfig, BundleConfig, ExportPaths } from './types'
 import { watch as rollupWatch, rollup } from 'rollup'
 import fsp from 'fs/promises'
 import fs from 'fs'
-import { resolve, relative } from 'path'
+import { resolve } from 'path'
 import pc from 'picocolors'
 import {
   buildEntryConfig,
@@ -24,7 +24,6 @@ import { logger } from './logger'
 import {
   getPackageMeta,
   getSourcePathFromExportPath,
-  getExportPath,
   removeDir,
   isTypescriptFile,
 } from './utils'
@@ -34,7 +33,7 @@ import {
   getExportPaths,
   getPackageType,
 } from './exports'
-import type { BuildMetadata, BuildContext } from './types'
+import type { BuildContext } from './types'
 import { TypescriptOptions, resolveTsConfig } from './typescript'
 import { resolveWildcardExports } from './lib/wildcard'
 import { DEFAULT_TS_CONFIG } from './constants'
@@ -72,7 +71,7 @@ async function bundle(
   const resolvedWildcardExports = await resolveWildcardExports(pkg.exports, cwd)
   const packageType = getPackageType(pkg)
 
-  const exportPaths = getExportPaths(pkg, packageType, resolvedWildcardExports)
+  const exportPaths = getExportPaths(pkg, resolvedWildcardExports)
   const isMultiEntries = hasMultiEntryExport(exportPaths) // exportPathsLength > 1
   const hasBin = Boolean(pkg.bin)
 
@@ -93,6 +92,7 @@ async function bundle(
       ''
   }
 
+  // Handle CLI input
   if (entryPath) {
     let mainEntryPath: string | undefined
     let typesEntryPath: string | undefined
@@ -119,21 +119,12 @@ async function bundle(
   const bundleOrWatch = async (
     rollupConfig: BuncheeRollupConfig,
   ): Promise<RollupWatcher | RollupOutput[] | void> => {
-    const { input, exportName } = rollupConfig
-    const exportPath = getExportPath(pkg, cwd, exportName)
-    // Log original entry file relative path
-    const source =
-      typeof input.input === 'string' ? relative(cwd, input.input) : exportPath
-
-    const buildMetadata: BuildMetadata = {
-      source,
-    }
     if (options.clean) {
       await removeOutputDir(rollupConfig.output)
     }
 
     if (options.watch) {
-      return Promise.resolve(runWatch(rollupConfig, buildMetadata))
+      return Promise.resolve(runWatch(rollupConfig))
     }
     return runBundle(rollupConfig)
   }
@@ -222,10 +213,7 @@ async function bundle(
   return result
 }
 
-function runWatch(
-  { input, output }: BuncheeRollupConfig,
-  metadata: BuildMetadata,
-): RollupWatcher {
+function runWatch({ input, output }: BuncheeRollupConfig): RollupWatcher {
   const watchOptions: RollupWatchOptions[] = [
     {
       ...input,

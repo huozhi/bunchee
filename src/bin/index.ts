@@ -4,6 +4,7 @@ import type { CliArgs, BundleConfig } from '../types'
 
 import path from 'path'
 import arg from 'arg'
+import { lint as lintPackage } from '../lint'
 import { exit, getPackageMeta, hasPackageJson } from '../utils'
 import { logger, paint } from '../logger'
 import { version } from '../../package.json'
@@ -36,24 +37,12 @@ function help() {
   logger.log(helpMessage)
 }
 
-async function lintPackage(cwd: string) {
+async function lint(cwd: string) {
   // Not package.json detected, skip package linting
   if (!(await hasPackageJson(cwd))) {
     return
   }
-
-  const { publint } = await import('publint')
-  const { formatMessage } = await import('publint/utils')
-
-  const { messages } = await publint({
-    pkgDir: cwd,
-    level: 'error',
-  })
-
-  const pkg = await getPackageMeta(cwd)
-  for (const message of messages) {
-    console.log(formatMessage(message, pkg))
-  }
+  await lintPackage(await getPackageMeta(cwd))
 }
 
 function parseCliArgs(argv: string[]) {
@@ -152,6 +141,9 @@ async function run(args: CliArgs) {
 
   const entry = source ? path.resolve(cwd, source) : ''
 
+  // lint package
+  await lint(cwd)
+
   try {
     await bundle(entry, bundleConfig)
   } catch (err: any) {
@@ -167,9 +159,6 @@ async function run(args: CliArgs) {
     logger.log(`Watching assets in ${cwd}...`)
     return
   }
-
-  // lint package
-  await lintPackage(cwd)
 
   // build mode
   logger.log()
