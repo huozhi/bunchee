@@ -58,6 +58,21 @@ function joinRelativePath(...segments: string[]) {
   return result
 }
 
+const getFirstExportPath = (
+  fullExportCondition: ExportCondition | FullExportCondition,
+): string => {
+  // Handle all export cond { <require|import|default>: ... }
+  if (typeof fullExportCondition === 'object') {
+    for (const key of Object.keys(fullExportCondition)) {
+      if (key.startsWith('.') || key === 'types') {
+        continue
+      }
+      return fullExportCondition[key] as string
+    }
+  }
+  return fullExportCondition as string
+}
+
 function findExport(
   exportPath: string,
   exportCondition: ExportCondition,
@@ -78,15 +93,13 @@ function findExport(
         ...fullExportCondition,
       }
     } else {
+      const exportJsBundlePath = getFirstExportPath(fullExportCondition)
+
       // exportPath is exportType, import, require, ...
       // merge to currentPath
       paths[currentPath] = {
         ...paths[currentPath],
-        [exportPath]:
-          typeof fullExportCondition === 'object'
-            ? // Handle all export cond { <require|import|default>: ... }
-              Object.values(fullExportCondition)[0]
-            : fullExportCondition,
+        [exportPath]: exportJsBundlePath,
       }
     }
     return
