@@ -126,7 +126,7 @@ async function bundle(
     const buildMetadata: BuildMetadata = {
       source,
     }
-    if (options.noClean !== true) {
+    if (options.clean) {
       await removeOutputDir(rollupConfig.output)
     }
 

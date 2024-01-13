@@ -39,7 +39,7 @@ type BundleConfig = {
   dts?: boolean
   runtime?: string
   pkg?: PackageMetadata
-  noClean?: boolean
+  clean?: boolean
 }
 
 type PackageMetadata = {
@@ -78,7 +78,7 @@ type CliArgs = {
   dts?: boolean
   runtime?: string
   prepare?: boolean
-  noClean?: boolean
+  clean?: boolean
 }
 
 type BundleOptions = BundleConfig

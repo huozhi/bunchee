@@ -104,7 +104,7 @@ function parseCliArgs(argv: string[]) {
     runtime: args['--runtime'],
     target: args['--target'],
     external: !!args['--no-external'] ? null : args['--external'],
-    noClean: args['--no-clean'],
+    clean: !args['--no-clean'],
     env: args['--env'],
     prepare: !!args['--prepare'],
   }
@@ -122,7 +122,7 @@ async function run(args: CliArgs) {
     runtime,
     dts,
     env,
-    noClean,
+    clean,
   } = args
   const cwd = args.cwd || process.cwd()
   const file = args.file ? path.resolve(cwd, args.file) : undefined
@@ -138,7 +138,7 @@ async function run(args: CliArgs) {
     minify: !!minify,
     sourcemap: sourcemap === false ? false : true,
     env: env?.split(',') || [],
-    noClean: noClean === true ? true : false,
+    clean,
   }
   if (args.version) {
     return logger.log(version)
