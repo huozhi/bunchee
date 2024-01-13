@@ -168,11 +168,12 @@ async function run(args: CliArgs) {
     return
   }
 
+  // lint package
+  await lintPackage(cwd)
+
   // build mode
   logger.log()
   paint('✓', 'green', `bunchee ${version} build completed`)
-
-  await lintPackage(cwd)
 }
 
 async function main() {

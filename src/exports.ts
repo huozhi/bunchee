@@ -58,6 +58,21 @@ function joinRelativePath(...segments: string[]) {
   return result
 }
 
+const getFirstExportPath = (
+  fullExportCondition: ExportCondition | FullExportCondition,
+): string => {
+  // Handle all export cond { <require|import|default>: ... }
+  if (typeof fullExportCondition === 'object') {
+    for (const key of Object.keys(fullExportCondition)) {
+      if (key.startsWith('.') || key === 'types') {
+        continue
+      }
+      return fullExportCondition[key] as string
+    }
+  }
+  return fullExportCondition as string
+}
+
 function findExport(
   exportPath: string,
   exportCondition: ExportCondition,
@@ -78,11 +93,13 @@ function findExport(
         ...fullExportCondition,
       }
     } else {
+      const exportJsBundlePath = getFirstExportPath(fullExportCondition)
+
       // exportPath is exportType, import, require, ...
       // merge to currentPath
       paths[currentPath] = {
         ...paths[currentPath],
-        [exportPath]: fullExportCondition.default,
+        [exportPath]: exportJsBundlePath,
       }
     }
     return
@@ -298,7 +315,11 @@ export function isEsmExportName(name: string, ext: string) {
   return ['import', 'module'].includes(name) || ext === 'mjs'
 }
 
-export function isCjsExportName(pkg: PackageMetadata, exportCondition: string, ext: string) {
+export function isCjsExportName(
+  pkg: PackageMetadata,
+  exportCondition: string,
+  ext: string,
+) {
   const isESModule = isESModulePackage(pkg.type)
   return (
     (!isESModule &&
@@ -324,7 +345,13 @@ export function getExportsDistFilesOfCondition(
     const ext = extname(filePath).slice(1)
     const relativePath = parsedExportCondition.export[exportCondition]
     const distFile = resolve(cwd, relativePath)
-    const format: OutputOptions['format'] = isCjsExportName(pkg, exportCondition, ext) ? 'cjs' : 'esm'
+    const format: OutputOptions['format'] = isCjsExportName(
+      pkg,
+      exportCondition,
+      ext,
+    )
+      ? 'cjs'
+      : 'esm'
     if (uniqueFiles.has(distFile)) {
       continue
     }
@@ -335,15 +362,14 @@ export function getExportsDistFilesOfCondition(
   return dist
 }
 
-export function getExportFileTypePath(
-  absoluteJsBundlePath: string
-) {
+export function getExportFileTypePath(absoluteJsBundlePath: string) {
   const dirName = dirname(absoluteJsBundlePath)
   const baseName = baseNameWithoutExtension(absoluteJsBundlePath)
-  const ext = extname(absoluteJsBundlePath).slice(1) as keyof typeof dtsExtensionsMap
+  const ext = extname(absoluteJsBundlePath).slice(
+    1,
+  ) as keyof typeof dtsExtensionsMap
   const typeExtension = dtsExtensionsMap[ext]
-  return join(dirName, baseName + '.' + typeExtension) 
-
+  return join(dirName, baseName + '.' + typeExtension)
 }
 
 export function getExportTypeFromFile(
