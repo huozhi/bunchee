@@ -7,6 +7,7 @@ import { logger } from './logger'
 import {
   baseNameWithoutExtension,
   hasAvailableExtension,
+  isTestFile,
   isTypescriptFile,
 } from './utils'
 import { relativify } from './lib/format'
@@ -43,7 +44,10 @@ function createExportCondition(
   if (isTsSourceFile) {
     return {
       import: {
-        types: getDistPath('es', `${exportName}.${dtsExtensionsMap[esmExtension]}`),
+        types: getDistPath(
+          'es',
+          `${exportName}.${dtsExtensionsMap[esmExtension]}`,
+        ),
         default: getDistPath('es', `${exportName}.${esmExtension}`),
       },
       require: {
@@ -93,7 +97,7 @@ async function collectSourceEntries(sourceFolderPath: string) {
         // Search folder/<index>.<ext> convention entries
         for (const extension of availableExtensions) {
           const indexFile = path.join(dirent.name, `index.${extension}`)
-          if (fs.existsSync(indexFile)) {
+          if (fs.existsSync(indexFile) && !isTestFile(indexFile)) {
             exportsEntries.set(dirent.name, indexFile)
             break
           }
@@ -109,7 +113,7 @@ async function collectSourceEntries(sourceFolderPath: string) {
         if (isBinFile) {
           bins.set('.', dirent.name)
         } else {
-          if (hasAvailableExtension(dirent.name)) {
+          if (hasAvailableExtension(dirent.name) && !isTestFile(dirent.name)) {
             exportsEntries.set(baseName, dirent.name)
           }
         }
@@ -281,9 +285,7 @@ export async function prepare(cwd: string): Promise<void> {
       pkgJson.main = isUsingTs
         ? mainExport[mainCondition].default
         : mainExport[mainCondition]
-      pkgJson.module = isUsingTs
-        ? mainExport.import.default
-        : mainExport.import
+      pkgJson.module = isUsingTs ? mainExport.import.default : mainExport.import
 
       if (isUsingTs) {
         pkgJson.types = mainExport[mainCondition].types

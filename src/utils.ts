@@ -157,3 +157,7 @@ export const hasCjsExtension = (filename: string): boolean =>
 // TODO: add unit test
 export const baseNameWithoutExtension = (filename: string): string =>
   path.basename(filename, path.extname(filename))
+
+export const isTestFile = (filename: string): boolean =>
+  // include .test. or .spec. in filename
+  /\.(test|spec)\./.test(filename)

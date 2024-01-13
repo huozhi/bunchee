@@ -740,6 +740,25 @@ const testCases: {
     },
   },
   {
+    name: 'prepare-ts-with-test-file',
+    args: ['--prepare'],
+    async before(dir) {
+      await deleteFile(join(dir, './package.json'))
+      await deleteFile(join(dir, './tsconfig.json'))
+    },
+    async expected(dir) {
+      assertContainFiles(dir, ['package.json'])
+      const pkgJson = JSON.parse(
+        await fsp.readFile(join(dir, './package.json'), 'utf-8'),
+      )
+      expect(pkgJson.files).toContain('dist')
+      expect(pkgJson.main).toBe('./dist/es/index.js')
+      expect(pkgJson.module).toBe('./dist/es/index.js')
+      expect(Object.keys(pkgJson.exports)).toEqual(['.', './foo'])
+      expect(Object.keys(pkgJson.exports['.'])).not.toContain('./test')
+    },
+  },
+  {
     name: 'prepare-ts-with-pkg-json',
     args: ['--prepare'],
     async before(dir) {
