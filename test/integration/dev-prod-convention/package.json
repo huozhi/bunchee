@@ -2,6 +2,8 @@
   "name": "dev-prod-convention",
   "exports": {
     "development": "./dist/development.js",
-    "production": "./dist/production.js"
+    "production": {
+      "default": "./dist/production.js"
+    }
   }
 }
