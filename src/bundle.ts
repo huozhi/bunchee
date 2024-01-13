@@ -72,7 +72,7 @@ async function bundle(
   const resolvedWildcardExports = await resolveWildcardExports(pkg.exports, cwd)
   const packageType = getPackageType(pkg)
 
-  const exportPaths = getExportPaths(pkg, packageType, resolvedWildcardExports)
+  const exportPaths = getExportPaths(pkg, resolvedWildcardExports)
   const isMultiEntries = hasMultiEntryExport(exportPaths) // exportPathsLength > 1
   const hasBin = Boolean(pkg.bin)
 
@@ -93,6 +93,7 @@ async function bundle(
       ''
   }
 
+  // Handle CLI input
   if (entryPath) {
     let mainEntryPath: string | undefined
     let typesEntryPath: string | undefined
@@ -119,21 +120,12 @@ async function bundle(
   const bundleOrWatch = async (
     rollupConfig: BuncheeRollupConfig,
   ): Promise<RollupWatcher | RollupOutput[] | void> => {
-    const { input, exportName } = rollupConfig
-    const exportPath = getExportPath(pkg, cwd, exportName)
-    // Log original entry file relative path
-    const source =
-      typeof input.input === 'string' ? relative(cwd, input.input) : exportPath
-
-    const buildMetadata: BuildMetadata = {
-      source,
-    }
     if (options.clean) {
       await removeOutputDir(rollupConfig.output)
     }
 
     if (options.watch) {
-      return Promise.resolve(runWatch(rollupConfig, buildMetadata))
+      return Promise.resolve(runWatch(rollupConfig))
     }
     return runBundle(rollupConfig)
   }
@@ -222,10 +214,7 @@ async function bundle(
   return result
 }
 
-function runWatch(
-  { input, output }: BuncheeRollupConfig,
-  metadata: BuildMetadata,
-): RollupWatcher {
+function runWatch({ input, output }: BuncheeRollupConfig): RollupWatcher {
   const watchOptions: RollupWatchOptions[] = [
     {
       ...input,

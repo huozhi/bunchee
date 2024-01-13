@@ -350,7 +350,7 @@ const testCases: {
     args: [],
     async expected(_, { stderr }) {
       expect(stderr).toContain(
-        'Cannot export main field with .cjs extension in ESM package, only .mjs and .js extensions are allowed',
+        'Cannot export `main` field with .cjs extension in ESM package, only .mjs and .js extensions are allowed',
       )
     },
   },
@@ -785,6 +785,34 @@ const testCases: {
     async expected(dir) {
       expect(await existsFile(join(dir, './dist/no-clean.json'))).toBe(false)
       expect(await existsFile(join(dir, './dist/index.js'))).toBe(true)
+    },
+  },
+  {
+    name: 'invalid-exports-cjs',
+    async expected(dir, { stderr }) {
+      expect(stderr).toContain('Missing package name')
+      expect(stderr).toContain(
+        'Cannot export `require` field with .mjs extension in CJS package, only .cjs and .js extensions are allowed',
+      )
+      expect(stderr).toContain('./dist/index.mjs')
+      expect(stderr).toContain(
+        'Cannot export `import` field with .js or .cjs extension in CJS package, only .mjs extensions are allowed',
+      )
+      expect(stderr).toContain('./dist/foo.js')
+    },
+  },
+  {
+    name: 'invalid-exports-esm',
+    async expected(dir, { stderr }) {
+      expect(stderr).not.toContain('Missing package name')
+      expect(stderr).toContain(
+        'Cannot export `require` field with .js or .mjs extension in ESM package, only .cjs extensions are allowed',
+      )
+      expect(stderr).toContain('./dist/index.js')
+      expect(stderr).toContain(
+        'Cannot export `import` field with .cjs extension in ESM package, only .js and .mjs extensions are allowed',
+      )
+      expect(stderr).toContain('./dist/foo.cjs')
     },
   },
 ]

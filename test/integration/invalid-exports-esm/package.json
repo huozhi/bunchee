@@ -1,0 +1,12 @@
+{
+  "name": "invalid-exports-esm",
+  "type": "module",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js"
+    },
+    "./foo": {
+      "import": "./dist/foo.cjs"
+    }
+  }
+}
