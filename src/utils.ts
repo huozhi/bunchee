@@ -1,6 +1,7 @@
 import fs from 'fs'
 import fsp from 'fs/promises'
 import path from 'path'
+import { rimraf } from 'rimraf'
 import { PackageMetadata } from './types'
 import {
   availableExportConventions,
@@ -41,6 +42,19 @@ export function isTypescriptFile(filename: string): boolean {
 
 export function fileExists(filePath: string) {
   return fs.existsSync(filePath)
+}
+
+export async function removeDir(dirPath: string) {
+  try {
+    const dirStat = await fsp.stat(dirPath)
+    if (dirStat.isDirectory()) {
+      await rimraf(dirPath)
+    }
+  } catch (err: any) {
+    if (err.code !== 'ENOENT') {
+      throw err
+    }
+  }
 }
 
 // . -> pkg name

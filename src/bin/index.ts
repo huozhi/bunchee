@@ -23,6 +23,7 @@ Options:
   --prepare              auto configure package.json exports for building
   --external <mod>       specify an external dependency, separate by comma
   --no-external          do not bundle external dependencies
+  --no-clean             do not clean dist folder before building, default: false
   --target <target>      js features target: swc target es versions. default: es2015
   --runtime <runtime>    build runtime (nodejs, browser). default: browser
   --env <env>            inlined process env variables, separate by comma. default: NODE_ENV
@@ -73,6 +74,7 @@ function parseCliArgs(argv: string[]) {
       '--env': String,
       '--external': String,
       '--no-external': Boolean,
+      '--no-clean': Boolean,
       '--prepare': Boolean,
 
       '-h': '--help',
@@ -102,6 +104,7 @@ function parseCliArgs(argv: string[]) {
     runtime: args['--runtime'],
     target: args['--target'],
     external: !!args['--no-external'] ? null : args['--external'],
+    noClean: args['--no-clean'],
     env: args['--env'],
     prepare: !!args['--prepare'],
   }
@@ -119,6 +122,7 @@ async function run(args: CliArgs) {
     runtime,
     dts,
     env,
+    noClean,
   } = args
   const cwd = args.cwd || process.cwd()
   const file = args.file ? path.resolve(cwd, args.file) : undefined
@@ -134,6 +138,7 @@ async function run(args: CliArgs) {
     minify: !!minify,
     sourcemap: sourcemap === false ? false : true,
     env: env?.split(',') || [],
+    noClean: noClean === true ? true : false,
   }
   if (args.version) {
     return logger.log(version)

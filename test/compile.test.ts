@@ -82,6 +82,7 @@ for (const unitName of unitTestDirs) {
     const baseOptions = {
       cwd: dir,
       format: (pkgJson.main ? 'cjs' : 'esm') as 'cjs' | 'esm',
+      noClean: true,
     }
 
     // build dist file and minified file
