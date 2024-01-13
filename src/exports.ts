@@ -82,7 +82,11 @@ function findExport(
       // merge to currentPath
       paths[currentPath] = {
         ...paths[currentPath],
-        [exportPath]: fullExportCondition.default,
+        [exportPath]:
+          typeof fullExportCondition === 'object'
+            ? // Handle all export cond { <require|import|default>: ... }
+              Object.values(fullExportCondition)[0]
+            : fullExportCondition,
       }
     }
     return
@@ -298,7 +302,11 @@ export function isEsmExportName(name: string, ext: string) {
   return ['import', 'module'].includes(name) || ext === 'mjs'
 }
 
-export function isCjsExportName(pkg: PackageMetadata, exportCondition: string, ext: string) {
+export function isCjsExportName(
+  pkg: PackageMetadata,
+  exportCondition: string,
+  ext: string,
+) {
   const isESModule = isESModulePackage(pkg.type)
   return (
     (!isESModule &&
@@ -324,7 +332,13 @@ export function getExportsDistFilesOfCondition(
     const ext = extname(filePath).slice(1)
     const relativePath = parsedExportCondition.export[exportCondition]
     const distFile = resolve(cwd, relativePath)
-    const format: OutputOptions['format'] = isCjsExportName(pkg, exportCondition, ext) ? 'cjs' : 'esm'
+    const format: OutputOptions['format'] = isCjsExportName(
+      pkg,
+      exportCondition,
+      ext,
+    )
+      ? 'cjs'
+      : 'esm'
     if (uniqueFiles.has(distFile)) {
       continue
     }
@@ -335,15 +349,14 @@ export function getExportsDistFilesOfCondition(
   return dist
 }
 
-export function getExportFileTypePath(
-  absoluteJsBundlePath: string
-) {
+export function getExportFileTypePath(absoluteJsBundlePath: string) {
   const dirName = dirname(absoluteJsBundlePath)
   const baseName = baseNameWithoutExtension(absoluteJsBundlePath)
-  const ext = extname(absoluteJsBundlePath).slice(1) as keyof typeof dtsExtensionsMap
+  const ext = extname(absoluteJsBundlePath).slice(
+    1,
+  ) as keyof typeof dtsExtensionsMap
   const typeExtension = dtsExtensionsMap[ext]
-  return join(dirName, baseName + '.' + typeExtension) 
-
+  return join(dirName, baseName + '.' + typeExtension)
 }
 
 export function getExportTypeFromFile(
