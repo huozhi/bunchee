@@ -10,10 +10,10 @@ export const logger = {
     console.log(...arg)
   },
   warn(...arg: any[]) {
-    console.warn(color('yellow')('⚠️ WARN'), ...arg)
+    console.warn(color('yellow')('⚠️'), ...arg)
   },
   error(...arg: any) {
-    console.error(color('red')('⨯ ERROR'), ...arg)
+    console.error(color('red')('⨯'), ...arg)
   },
   info(...arg: any) {
     console.log(color('green')('✓'), ...arg)
