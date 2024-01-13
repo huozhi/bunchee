@@ -35,9 +35,7 @@ import {
   getExportPaths,
   getExportConditionDist,
   isEsmExportName,
-  getExportTypeDist,
   getExportTypeFromFile,
-  getTypeFilePath,
   getExportFileTypePath,
 } from './exports'
 import {
@@ -486,7 +484,7 @@ export async function collectEntries(
     // Special cases of export type, only pass down the exportPaths for the type
     if (availableExportConventions.has(exportType)) {
       exportCondForType = {
-        [entryExport]: exportCondRef[exportType],
+        [exportType]: exportCondRef[exportType],
       }
       // Basic export type, pass down the exportPaths with erasing the special ones
     } else {
@@ -654,39 +652,6 @@ async function buildConfig(
       dts
     )
   })
-
-  // Generate dts job - single config
-  // if (dts) {
-  //   outputConfigs = outputExports.map((exportDist) => {
-  //     return buildOutputConfigs(
-  //       {
-  //         ...bundleConfig,
-  //         file: exportDist.file,
-  //         format: 'es',
-  //         useTypescript,
-  //       },
-  //       exportCondition,
-  //       pluginContext,
-  //       dts,
-  //     )
-  //   })
-  //   const typeOutputExports = getExportTypeDist(exportCondition, cwd)
-  //   // outputConfigs = typeOutputExports.map((typeFile) =>
-  //   //   buildOutputConfigs(
-  //   //     {
-  //   //       ...bundleConfig,
-  //   //       format: 'es',
-  //   //       useTypescript,
-  //   //       file: typeFile,
-  //   //     },
-  //   //     exportCondition,
-  //   //     pluginContext,
-  //   //     dts,
-  //   //   ),
-  //   // )
-  // } else {
-    
-  // }
 
   return {
     input: inputOptions,

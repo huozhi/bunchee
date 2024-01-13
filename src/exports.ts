@@ -272,38 +272,6 @@ export function getExportPaths(
   return pathsMap
 }
 
-export const getExportTypeDist = (
-  parsedExportCondition: ParsedExportCondition,
-  cwd: string,
-) => {
-  const existed = new Set<string>()
-  const exportTypes = Object.keys(parsedExportCondition.export)
-  for (const key of exportTypes) {
-    if (key === 'module') {
-      continue
-    }
-    const filePath = parsedExportCondition.export[key]
-    if (key === 'types') {
-      const typeFile = getDistPath(filePath, cwd)
-      if (existed.has(typeFile)) {
-        continue
-      }
-      existed.add(typeFile)
-      continue
-    }
-    const ext = extname(filePath).slice(1) as keyof typeof dtsExtensionsMap
-    const typeFile = getDistPath(
-      `${filePathWithoutExtension(filePath) || ''}.${dtsExtensionsMap[ext]}`,
-      cwd,
-    )
-    if (existed.has(typeFile)) {
-      continue
-    }
-    existed.add(typeFile)
-  }
-  return Array.from(existed)
-}
-
 export function getPackageType(pkg: PackageMetadata): PackageType {
   return pkg.type || 'commonjs'
 }
@@ -354,7 +322,7 @@ export function getExportConditionDist(
   const exportTypes = Object.keys(parsedExportCondition.export)
 
   for (const exportType of exportTypes) {
-    if (exportType === 'types' || exportType.startsWith('.')) {
+    if (exportType === 'types') {
       continue
     }
     const filePath = parsedExportCondition.export[exportType]
@@ -395,26 +363,6 @@ export function getExportFileTypePath(
   const typeExtension = dtsExtensionsMap[ext]
   return join(dirName, baseName + '.' + typeExtension) 
 
-}
-
-export function getTypeFilePath(
-  entryFilePath: string,
-  exportCondition: ParsedExportCondition | undefined,
-  cwd: string,
-): string {
-  const firstDistPath = exportCondition
-  ? Object.values(exportCondition.export)[0]
-  : undefined
-  
-  const exportName = exportCondition?.name || 'index'
-  const name = filePathWithoutExtension(entryFilePath)
-
-  return entryFilePath
-    ? name + '.d.ts'
-    : resolve(
-        firstDistPath ? dirname(firstDistPath) : join(cwd, 'dist'),
-        (exportName === '.' ? 'index' : exportName) + '.d.ts',
-      )
 }
 
 export function getExportTypeFromFile(
