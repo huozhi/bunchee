@@ -15,6 +15,7 @@ type BuildContext = {
   exportPaths: Record<string, FullExportCondition>
   cwd: string
   tsOptions: TypescriptOptions
+  useTypeScript: boolean
   pluginContext: {
     outputState: ReturnType<typeof createOutputState>
     moduleDirectiveLayerMap: Map<string, Set<[string, string]>>

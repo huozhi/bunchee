@@ -79,9 +79,10 @@ type CliArgs = {
   prepare?: boolean
 }
 
-type BundleOptions = BundleConfig & {
-  useTypescript: boolean
-}
+type BundleOptions = BundleConfig
+//  & {
+//   // useTypescript: boolean
+// }
 
 type BuildMetadata = {
   source: string

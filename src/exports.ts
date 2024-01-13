@@ -6,8 +6,9 @@ import type {
   PackageType,
   ParsedExportCondition,
 } from './types'
-import { exit, filePathWithoutExtension, hasCjsExtension } from './utils'
+import { baseNameWithoutExtension, exit, filePathWithoutExtension, hasCjsExtension } from './utils'
 import { dtsExtensionsMap } from './constants'
+import { OutputOptions } from 'rollup'
 
 export function getTypings(pkg: PackageMetadata) {
   return pkg.types || pkg.typings
@@ -347,13 +348,13 @@ export function getExportConditionDist(
   pkg: PackageMetadata,
   parsedExportCondition: ParsedExportCondition,
   cwd: string,
-) {
-  const dist: { format: 'cjs' | 'esm'; file: string }[] = []
+): { format: OutputOptions['format']; file: string }[] {
+  const dist: { format: OutputOptions['format']; file: string }[] = []
   const existed = new Set<string>()
   const exportTypes = Object.keys(parsedExportCondition.export)
 
   for (const exportType of exportTypes) {
-    if (exportType === 'types') {
+    if (exportType === 'types' || exportType.startsWith('.')) {
       continue
     }
     const filePath = parsedExportCondition.export[exportType]
@@ -361,7 +362,7 @@ export function getExportConditionDist(
     const relativePath = parsedExportCondition.export[exportType]
     const distFile = getDistPath(relativePath, cwd)
 
-    let format: 'cjs' | 'esm' = 'esm'
+    let format: OutputOptions['format'] = 'esm'
     if (isCjsExportName(pkg, exportType, ext)) {
       format = 'cjs'
     }
@@ -376,7 +377,7 @@ export function getExportConditionDist(
   }
 
   if (dist.length === 0 && !pkg.bin) {
-    const defaultFormat = isESModulePackage(pkg.type) ? 'esm' : 'cjs'
+    const defaultFormat: OutputOptions['format'] = isESModulePackage(pkg.type) ? 'esm' : 'cjs'
     dist.push({
       format: defaultFormat,
       file: getDistPath('dist/index.js', cwd),
@@ -385,17 +386,28 @@ export function getExportConditionDist(
   return dist
 }
 
+export function getExportFileTypePath(
+  absoluteJsBundlePath: string
+) {
+  const dirName = dirname(absoluteJsBundlePath)
+  const baseName = baseNameWithoutExtension(absoluteJsBundlePath)
+  const ext = extname(absoluteJsBundlePath).slice(1) as keyof typeof dtsExtensionsMap
+  const typeExtension = dtsExtensionsMap[ext]
+  return join(dirName, baseName + '.' + typeExtension) 
+
+}
+
 export function getTypeFilePath(
   entryFilePath: string,
   exportCondition: ParsedExportCondition | undefined,
   cwd: string,
 ): string {
-  const name = filePathWithoutExtension(entryFilePath)
   const firstDistPath = exportCondition
-    ? Object.values(exportCondition.export)[0]
-    : undefined
-
+  ? Object.values(exportCondition.export)[0]
+  : undefined
+  
   const exportName = exportCondition?.name || 'index'
+  const name = filePathWithoutExtension(entryFilePath)
 
   return entryFilePath
     ? name + '.d.ts'

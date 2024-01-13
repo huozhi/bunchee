@@ -170,6 +170,7 @@ async function bundle(
     exportPaths,
     cwd,
     tsOptions: defaultTsOptions,
+    useTypeScript: hasTsConfig,
     pluginContext: {
       outputState: sizeCollector,
       moduleDirectiveLayerMap: new Map(),

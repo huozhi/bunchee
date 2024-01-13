@@ -124,6 +124,7 @@ export async function getSourcePathFromExportPath(
   return
 }
 
+// TODO: add unit test
 // Unlike path.basename, forcedly removing extension
 export function filePathWithoutExtension(file: string | undefined) {
   return file
@@ -142,5 +143,6 @@ export const hasAvailableExtension = (filename: string): boolean =>
 export const hasCjsExtension = (filename: string): boolean =>
   path.extname(filename) === '.cjs'
 
+// TODO: add unit test
 export const baseNameWithoutExtension = (filename: string): string =>
   path.basename(filename, path.extname(filename))
