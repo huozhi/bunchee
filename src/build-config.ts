@@ -31,12 +31,12 @@ import { rawContent } from './plugins/raw-plugin'
 import { aliasEntries } from './plugins/alias-plugin'
 import { prependDirectives } from './plugins/prepend-directives'
 import {
-  getTypings,
   getExportPaths,
-  getExportConditionDist,
+  getExportsDistFilesOfCondition,
   isEsmExportName,
   getExportTypeFromFile,
   getExportFileTypePath,
+  isESModulePackage,
 } from './exports'
 import {
   isNotNull,
@@ -98,6 +98,7 @@ async function buildInputConfig(
   entry: string,
   options: BundleOptions,
   buildContext: BuildContext,
+  exportCondition: ParsedExportCondition,
   dts: boolean,
 ): Promise<InputOptions> {
   const {
@@ -394,32 +395,24 @@ function buildOutputConfigs(
   } = buildContext
   // Add esm mark and interop helper if esm export is detected
   const useEsModuleMark = hasEsmExport(exportPaths, tsCompilerOptions)
-  const typings: string | undefined = getTypings(pkg)
-  const file = options.file && resolve(cwd, options.file)
-
-  const dtsDir = typings ? dirname(resolve(cwd, typings)) : resolve(cwd, 'dist')
-  const name = filePathWithoutExtension(file)
-
-  // TODO: simplify dts file name detection
-  const dtsFile = file
-    ? file
-    : exportCondition.export['types']
-    ? resolve(cwd, exportCondition.export['types'])
-    : resolve(
-        dtsDir,
-        (exportCondition.name === '.' ? 'index' : exportCondition.name) +
-          '.d.ts',
-      )
-
-  const dtsPathDir = { dir: dtsFile ? dirname(dtsFile) : dtsDir }
-  const outputFile: string = (dtsFile || file)!
+  const absoluteOutputFile = resolve(cwd, options.file!)
+  const name = filePathWithoutExtension(absoluteOutputFile)
+  const dtsFile = resolve(
+    cwd, 
+    dts 
+      ? options.file!
+      : exportCondition.export.types ?? getExportFileTypePath(options.file!)
+    )
+  const typesDir = dirname(dtsFile)
+  const jsDir = dirname(absoluteOutputFile!)
+  const outputFile: string = dts ? dtsFile : absoluteOutputFile
   const entryFiles = new Set(
     Object.values(entries).map((entry) => entry.source),
   )
 
   return {
     name: pkg.name || name,
-    ...(dts ? dtsPathDir : { dir: dirname(file!) }),
+    dir: dts ? typesDir : jsDir,
     format,
     exports: 'named',
     esModule: useEsModuleMark || 'if-default-prop',
@@ -589,10 +582,19 @@ async function buildConfig(
     entry,
     options,
     pluginContext,
+    exportCondition,
     dts,
   )
-  const outputExports = getExportConditionDist(pkg, exportCondition, cwd)
-
+  const outputExports = getExportsDistFilesOfCondition(pkg, exportCondition, cwd)
+  
+  // If there's nothing found, give a default output
+  if (outputExports.length === 0 && !pkg.bin) {
+    const defaultFormat: OutputOptions['format'] = isESModulePackage(pkg.type) ? 'esm' : 'cjs'
+    outputExports.push({
+      format: defaultFormat,
+      file: join(cwd, 'dist/index.js'),
+    })
+  }
   let bundleOptions: (
     {
       format: OutputOptions['format'],
