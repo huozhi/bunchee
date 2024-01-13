@@ -462,6 +462,59 @@ export async function buildEntryConfig(
   return await Promise.all(configs)
 }
 
+async function collectEntry(
+  // export type, e.g. react-server, edge-light those special cases required suffix
+  exportType: string,
+  options: {
+    cwd: string
+    pkg: PackageMetadata
+    entries: Entries
+    entryPath: string
+    exportCondRef: FullExportCondition
+    // export name, e.g. ./<export-path> in exports field of package.json
+    entryExport: string
+  },
+): Promise<void> {
+  const { cwd, pkg, entries, entryPath, exportCondRef, entryExport } = options
+  let exportCondForType: FullExportCondition = { ...exportCondRef }
+  // Special cases of export type, only pass down the exportPaths for the type
+  if (suffixedExportConventions.has(exportType)) {
+    exportCondForType = {
+      [exportType]: exportCondRef[exportType],
+    }
+    // Basic export type, pass down the exportPaths with erasing the special ones
+  } else {
+    for (const exportType of suffixedExportConventions) {
+      delete exportCondForType[exportType]
+    }
+  }
+
+  let source: string | undefined = entryPath
+  if (source) {
+    source = resolveSourceFile(cwd!, source)
+  } else {
+    source = await getSourcePathFromExportPath(cwd, entryExport, exportType)
+  }
+  if (!source) {
+    return
+  }
+
+  const exportCondition: ParsedExportCondition = {
+    source,
+    name: entryExport,
+    export: exportCondForType,
+  }
+
+  const nameWithExportPath = pkg.name
+    ? path.join(pkg.name, exportCondition.name)
+    : exportCondition.name
+  const needsDelimiter = !nameWithExportPath.endsWith('.') && exportType
+  const entryImportPath =
+    nameWithExportPath + (needsDelimiter ? '.' : '') + exportType
+
+  entries[entryImportPath] = exportCondition
+}
+
 /*
  * build configs for each entry from package exports
  *
@@ -474,52 +527,6 @@ export async function collectEntries(
   cwd: string,
 ): Promise<Entries> {
   const entries: Entries = {}
-
-  async function collectEntry(
-    // export type, e.g. react-server, edge-light those special cases required suffix
-    exportType: string,
-    exportCondRef: FullExportCondition,
-    // export name, e.g. ./<export-path> in exports field of package.json
-    entryExport: string,
-  ) {
-    let exportCondForType: FullExportCondition = { ...exportCondRef }
-    // Special cases of export type, only pass down the exportPaths for the type
-    if (suffixedExportConventions.has(exportType)) {
-      exportCondForType = {
-        [exportType]: exportCondRef[exportType],
-      }
-      // Basic export type, pass down the exportPaths with erasing the special ones
-    } else {
-      for (const exportType of suffixedExportConventions) {
-        delete exportCondForType[exportType]
-      }
-    }
-
-    let source: string | undefined = entryPath
-    if (source) {
-      source = resolveSourceFile(cwd!, source)
-    } else {
-      source = await getSourcePathFromExportPath(cwd, entryExport, exportType)
-    }
-    if (!source) {
-      return undefined
-    }
-
-    const exportCondition: ParsedExportCondition = {
-      source,
-      name: entryExport,
-      export: exportCondForType,
-    }
-
-    const nameWithExportPath = pkg.name
-      ? path.join(pkg.name, exportCondition.name)
-      : exportCondition.name
-    const needsDelimiter = !nameWithExportPath.endsWith('.') && exportType
-    const entryImportPath =
-      nameWithExportPath + (needsDelimiter ? '.' : '') + exportType
-
-    entries[entryImportPath] = exportCondition
-  }
 
   const binaryExports = pkg.bin
 
@@ -562,11 +569,19 @@ export async function collectEntries(
   const collectEntriesPromises = Object.keys(exportPaths).map(
     async (entryExport) => {
       const exportCond = exportPaths[entryExport]
+      const collectEntryOptions = {
+        cwd,
+        pkg,
+        entries,
+        entryPath,
+        exportCondRef: exportCond,
+        entryExport,
+      }
       if (entryExport.startsWith('.')) {
-        await collectEntry('', exportCond, entryExport)
-        for (const exportType of suffixedExportConventions) {
-          if (exportCond[exportType]) {
-            await collectEntry(exportType, exportCond, entryExport)
+        await collectEntry('', collectEntryOptions)
+        for (const exportCondType of suffixedExportConventions) {
+          if (exportCond[exportCondType]) {
+            await collectEntry(exportCondType, collectEntryOptions)
           }
         }
       }
