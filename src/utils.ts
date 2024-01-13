@@ -4,7 +4,7 @@ import path from 'path'
 import { rimraf } from 'rimraf'
 import { PackageMetadata } from './types'
 import {
-  availableExportConventions,
+  suffixedExportConventions,
   availableExtensions,
   SRC,
   tsExtensions,
@@ -119,10 +119,7 @@ export async function getSourcePathFromExportPath(
 
     // Find convention-based source file for specific export types
     // $binary represents `pkg.bin`
-    if (
-      availableExportConventions.has(exportType) &&
-      exportType !== '$binary'
-    ) {
+    if (suffixedExportConventions.has(exportType) && exportType !== '$binary') {
       const filename = await findSourceEntryFile(
         cwd,
         exportPath,

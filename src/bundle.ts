@@ -18,7 +18,6 @@ import {
 import {
   createOutputState,
   logOutputState,
-  type BuildContext,
 } from './plugins/output-state-plugin'
 import { logger } from './logger'
 import {
@@ -33,7 +32,7 @@ import {
   getExportPaths,
   getPackageType,
 } from './exports'
-import type { BuildMetadata } from './types'
+import type { BuildMetadata, BuildContext } from './types'
 import { TypescriptOptions, resolveTsConfig } from './typescript'
 import { resolveWildcardExports } from './lib/wildcard'
 

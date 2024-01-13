@@ -1,5 +1,7 @@
 import type { JscTarget } from '@swc/types'
 import type { InputOptions, OutputOptions, RollupOptions } from 'rollup'
+import type { OutputState } from './plugins/output-state-plugin'
+import type { TypescriptOptions } from './typescript'
 
 type PackageType = 'commonjs' | 'module'
 
@@ -97,6 +99,20 @@ type ExportPaths = Record<string, FullExportCondition>
 
 type Entries = Record<string, ParsedExportCondition>
 
+type BuildContext = {
+  entries: Entries
+  pkg: PackageMetadata
+  exportPaths: Record<string, FullExportCondition>
+  cwd: string
+  tsOptions: TypescriptOptions
+  useTypeScript: boolean
+  pluginContext: {
+    outputState: OutputState
+    moduleDirectiveLayerMap: Map<string, Set<[string, string]>>
+    entriesAlias: Record<string, string>
+  }
+}
+
 export type {
   ExportPaths,
   ExportType,
@@ -111,4 +127,5 @@ export type {
   PackageType,
   ParsedExportCondition,
   Entries,
+  BuildContext,
 }

@@ -45,13 +45,13 @@ import {
   filePathWithoutExtension,
 } from './utils'
 import {
-  availableExportConventions,
+  suffixedExportConventions,
   availableESExtensionsRegex,
   nodeResolveExtensions,
   disabledWarnings,
 } from './constants'
 import { logger } from './logger'
-import { BuildContext } from './plugins/output-state-plugin'
+import { BuildContext } from './types'
 
 const swcMinifyOptions = {
   compress: true,
@@ -63,7 +63,11 @@ const swcMinifyOptions = {
   },
 } as const
 
-function getBuildEnv(envs: string[]) {
+// return { 'process.env.<key>': '<value>' }
+function getBuildEnv(
+  envs: string[],
+  exportConditions: FullExportCondition,
+): Record<string, string> {
   if (!envs.includes('NODE_ENV')) {
     envs.push('NODE_ENV')
   }
@@ -75,11 +79,19 @@ function getBuildEnv(envs: string[]) {
     return acc
   }, {})
 
+  // For development and production convention, we override the NODE_ENV value
+  const exportConditionNames = new Set(Object.keys(exportConditions))
+  if (exportConditionNames.has('development')) {
+    envVars['process.env.NODE_ENV'] = JSON.stringify('development')
+  } else if (exportConditionNames.has('production')) {
+    envVars['process.env.NODE_ENV'] = JSON.stringify('production')
+  }
+
   return envVars
 }
 
 /**
- * return { 
+ * return {
  *   <absolute source path>: <pkg>/<export>
  * }
  */
@@ -125,12 +137,10 @@ async function buildInputConfig(
     }
   }
 
+  const envValues = getBuildEnv(options.env || [], exportCondition.export)
+
   const { useTypeScript } = buildContext
-  const {
-    runtime,
-    target: jscTarget,
-    minify: shouldMinify,
-  } = options
+  const { runtime, target: jscTarget, minify: shouldMinify } = options
   const hasSpecifiedTsTarget = Boolean(tsCompilerOptions.target && tsConfigPath)
 
   const swcParserConfig = {
@@ -195,9 +205,9 @@ async function buildInputConfig(
         // file or when option '--tsBuildInfoFile' is specified.
         ...(tsCompilerOptions.incremental && !tsCompilerOptions.tsBuildInfoFile
           ? {
-            incremental: false,
-          } : undefined
-        )
+              incremental: false,
+            }
+          : undefined),
       })
 
     const dtsPlugin = (
@@ -221,7 +231,7 @@ async function buildInputConfig(
           preserveDirectives(),
           prependDirectives(),
           replace({
-            values: getBuildEnv(options.env || []),
+            values: envValues,
             preventAssignment: true,
           }),
           nodeResolve({
@@ -398,11 +408,11 @@ function buildOutputConfigs(
   const absoluteOutputFile = resolve(cwd, options.file!)
   const name = filePathWithoutExtension(absoluteOutputFile)
   const dtsFile = resolve(
-    cwd, 
-    dts 
+    cwd,
+    dts
       ? options.file!
-      : exportCondition.export.types ?? getExportFileTypePath(options.file!)
-    )
+      : exportCondition.export.types ?? getExportFileTypePath(options.file!),
+  )
   const typesDir = dirname(dtsFile)
   const jsDir = dirname(absoluteOutputFile!)
   const outputFile: string = dts ? dtsFile : absoluteOutputFile
@@ -474,13 +484,13 @@ export async function collectEntries(
   ) {
     let exportCondForType: FullExportCondition = { ...exportCondRef }
     // Special cases of export type, only pass down the exportPaths for the type
-    if (availableExportConventions.has(exportType)) {
+    if (suffixedExportConventions.has(exportType)) {
       exportCondForType = {
         [exportType]: exportCondRef[exportType],
       }
       // Basic export type, pass down the exportPaths with erasing the special ones
     } else {
-      for (const exportType of availableExportConventions) {
+      for (const exportType of suffixedExportConventions) {
         delete exportCondForType[exportType]
       }
     }
@@ -554,7 +564,7 @@ export async function collectEntries(
       const exportCond = exportPaths[entryExport]
       if (entryExport.startsWith('.')) {
         await collectEntry('', exportCond, entryExport)
-        for (const exportType of availableExportConventions) {
+        for (const exportType of suffixedExportConventions) {
           if (exportCond[exportType]) {
             await collectEntry(exportType, exportCond, entryExport)
           }
@@ -585,25 +595,29 @@ async function buildConfig(
     exportCondition,
     dts,
   )
-  const outputExports = getExportsDistFilesOfCondition(pkg, exportCondition, cwd)
-  
+  const outputExports = getExportsDistFilesOfCondition(
+    pkg,
+    exportCondition,
+    cwd,
+  )
+
   // If there's nothing found, give a default output
   if (outputExports.length === 0 && !pkg.bin) {
-    const defaultFormat: OutputOptions['format'] = isESModulePackage(pkg.type) ? 'esm' : 'cjs'
+    const defaultFormat: OutputOptions['format'] = isESModulePackage(pkg.type)
+      ? 'esm'
+      : 'cjs'
     outputExports.push({
       format: defaultFormat,
       file: join(cwd, 'dist/index.js'),
     })
   }
-  let bundleOptions: (
-    {
-      format: OutputOptions['format'],
-      resolvedFile: string
-    }
-  )[] = []
+  let bundleOptions: {
+    format: OutputOptions['format']
+    resolvedFile: string
+  }[] = []
 
   // multi outputs with specified format
-  
+
   // CLI output option is always prioritized
   if (file) {
     const fallbackFormat = outputExports[0]?.format
@@ -647,10 +661,10 @@ async function buildConfig(
         ...bundleConfig,
         file: bundleOption.resolvedFile,
         format: bundleOption.format,
-      }, 
-      exportCondition, 
-      pluginContext, 
-      dts
+      },
+      exportCondition,
+      pluginContext,
+      dts,
     )
   })
 

@@ -2,26 +2,13 @@ import type { Plugin } from 'rollup'
 import path from 'path'
 import prettyBytes from 'pretty-bytes'
 import pc from 'picocolors'
-import { Entries, FullExportCondition, PackageMetadata } from '../types'
-import type { TypescriptOptions } from '../typescript'
+import { type Entries } from '../types'
 import { relativify } from '../lib/format'
+import { logger } from '../logger'
 
 type Pair = [string, string, number]
 type SizeStats = Map<string, Pair[]>
-// TODO: move BuildContext type to src/types as shared type
-type BuildContext = {
-  entries: Entries
-  pkg: PackageMetadata
-  exportPaths: Record<string, FullExportCondition>
-  cwd: string
-  tsOptions: TypescriptOptions
-  useTypeScript: boolean
-  pluginContext: {
-    outputState: ReturnType<typeof createOutputState>
-    moduleDirectiveLayerMap: Map<string, Set<[string, string]>>
-    entriesAlias: Record<string, string>
-  }
-}
+export type OutputState = ReturnType<typeof createOutputState>
 
 // Example: @foo/bar -> bar
 const removeScope = (exportPath: string) => exportPath.replace(/^@[^/]+\//, '')
@@ -136,6 +123,12 @@ function getExportNameWithoutExportCondition(exportName: string): string {
 
 function logOutputState(sizeCollector: ReturnType<typeof createOutputState>) {
   const stats = sizeCollector.getSizeStats()
+
+  if (stats.size === 0) {
+    logger.warn('No build info can be logged')
+    return
+  }
+
   const allFileNameLengths = Array.from(stats.values())
     .flat(1)
     .map(([filename]) => filename.length)
@@ -197,4 +190,4 @@ function logOutputState(sizeCollector: ReturnType<typeof createOutputState>) {
   })
 }
 
-export { logOutputState, createOutputState, type BuildContext }
+export { logOutputState, createOutputState }

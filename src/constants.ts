@@ -16,10 +16,12 @@ export const nodeResolveExtensions = [
   '.node',
   '.jsx',
 ]
-export const availableExportConventions = new Set([
+export const suffixedExportConventions = new Set([
   'react-server',
   'react-native',
   'edge-light',
+  'development',
+  'production',
 ])
 export const availableESExtensionsRegex = /\.(m|c)?[jt]sx?$/
 export const dtsExtensionRegex = /\.d\.(m|c)?ts$/
