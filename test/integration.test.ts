@@ -690,13 +690,13 @@ const testCases: {
         cmd: './dist/bin/cmd.js',
       })
       expect(pkgJson.type).toBe('module')
-      expect(pkgJson.main).toBe('./dist/es/index.mjs')
-      expect(pkgJson.module).toBe('./dist/es/index.mjs')
+      expect(pkgJson.main).toBe('./dist/es/index.js')
+      expect(pkgJson.module).toBe('./dist/es/index.js')
       expect(pkgJson.exports).toEqual({
         './foo': {
           import: {
-            types: './dist/es/foo.d.mts',
-            default: './dist/es/foo.mjs',
+            types: './dist/es/foo.d.ts',
+            default: './dist/es/foo.js',
           },
           require: {
             types: './dist/cjs/foo.d.cts',
@@ -706,8 +706,8 @@ const testCases: {
         '.': {
           'react-server': './dist/es/index-react-server.mjs',
           import: {
-            types: './dist/es/index.d.mts',
-            default: './dist/es/index.mjs',
+            types: './dist/es/index.d.ts',
+            default: './dist/es/index.js',
           },
           require: {
             types: './dist/cjs/index.d.cts',

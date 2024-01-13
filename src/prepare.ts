@@ -35,14 +35,16 @@ function createExportCondition(
 ) {
   const isTsSourceFile = isTypescriptFile(sourceFile)
   let cjsExtension: 'js' | 'cjs' = 'js'
+  let esmExtension: 'js' | 'mjs' = 'mjs'
   if (moduleType === 'module') {
     cjsExtension = 'cjs'
+    esmExtension = 'js'
   }
   if (isTsSourceFile) {
     return {
       import: {
-        types: getDistPath('es', `${exportName}.d.mts`),
-        default: getDistPath('es', `${exportName}.mjs`),
+        types: getDistPath('es', `${exportName}.${dtsExtensionsMap[esmExtension]}`),
+        default: getDistPath('es', `${exportName}.${esmExtension}`),
       },
       require: {
         types: getDistPath(
@@ -276,16 +278,12 @@ export async function prepare(cwd: string): Promise<void> {
       const mainExport = pkgExports['.']
       const mainCondition = isESM ? 'import' : 'require'
 
-      if (!pkgJson.main) {
-        pkgJson.main = isUsingTs
-          ? mainExport[mainCondition].default
-          : mainExport[mainCondition]
-      }
-      if (!pkgJson.module) {
-        pkgJson.module = isUsingTs
-          ? mainExport.import.default
-          : mainExport.import
-      }
+      pkgJson.main = isUsingTs
+        ? mainExport[mainCondition].default
+        : mainExport[mainCondition]
+      pkgJson.module = isUsingTs
+        ? mainExport.import.default
+        : mainExport.import
 
       if (isUsingTs) {
         pkgJson.types = mainExport[mainCondition].types
@@ -294,7 +292,14 @@ export async function prepare(cwd: string): Promise<void> {
 
     // Assign the properties by order: files, main, module, types, exports
     if (Object.keys(pkgExports).length > 0) {
-      pkgJson.exports = pkgExports
+      if (!pkgJson.exports) {
+        pkgJson.exports = pkgExports
+      } else {
+        // Update existing exports
+        Object.keys(pkgExports).forEach((exportName) => {
+          pkgJson.exports[exportName] = pkgExports[exportName]
+        })
+      }
     }
   }
 
