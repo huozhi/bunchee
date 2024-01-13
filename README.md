@@ -64,7 +64,7 @@ Then use use the [exports field in package.json](https://nodejs.org/api/packages
   "files": ["dist"],
   "exports": {
     "import": "./dist/es/index.mjs",
-    "require": "./dist/cjs/index.cjs"
+    "require": "./dist/cjs/index.js"
   },
   "scripts": {
     "build": "bunchee"
@@ -88,8 +88,8 @@ If you're build a TypeScript library, separate the types from the main entry fil
       "default": "./dist/es/index.mjs"
     },
     "require": {
-      "types": "./dist/cjs/index.d.cts",
-      "default": "./dist/cjs/index.cjs"
+      "types": "./dist/cjs/index.d.ts",
+      "default": "./dist/cjs/index.js"
     }
   },
   "scripts": {
@@ -107,13 +107,13 @@ If you're using TypeScript with Node 10 and Node 16 module resolution, you can u
 ```json
 {
   "files": ["dist"],
-  "main": "./dist/cjs/index.cjs",
+  "main": "./dist/cjs/index.js",
   "module": "./dist/es/index.mjs",
   "types": "./dist/cjs/index.d.ts",
   "exports": {
     "import": {
-      "types": "./dist/es/index.d.mts",
-      "default": "./dist/es/index.mjs"
+      "types": "./dist/es/index.d.ts",
+      "default": "./dist/es/index.js"
     },
     "require": {
       "types": "./dist/cjs/index.d.cts",
@@ -322,6 +322,21 @@ You can use `index.<export-type>.<ext>` to override the input source file for sp
 ```
 
 This will match the export name `"react-server"` and `"edge-light"` then use the corresponding input source file to build the bundle.
+
+#### Auto Development and Production Mode
+
+`process.env.NODE_ENV` is injected by default if present that you don't need to manually inject yourself. If you need to separate the development build and production build, `bunchee` provides different export conditions for development and production mode with `development` and `production` export conditions.
+
+```json
+{
+  "exports": {
+    "development": "./dist/index.development.js",
+    "production": "./dist/index.production.js"
+  }
+}
+```
+
+Then you can use `bunchee` to build the development bundle and production bundle automatically.
 
 ### Wildcard Exports
 

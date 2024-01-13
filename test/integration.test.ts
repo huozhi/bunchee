@@ -761,6 +761,18 @@ const testCases: {
     },
   },
   {
+    name: 'dev-prod-convention',
+    async expected(dir) {
+      const distFiles = ['./dist/development.js', './dist/production.js']
+      assertContainFiles(dir, distFiles)
+
+      assertFilesContent(dir, {
+        './dist/development.js': /= "development"/,
+        './dist/production.js': /= "production"/,
+      })
+    },
+  },
+  {
     name: 'no-clean',
     args: ['--no-clean'],
     async before(dir) {
