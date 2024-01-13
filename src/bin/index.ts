@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import type { CliArgs, BundleConfig } from '../types'
-import { getExportPaths } from '../exports'
 
 import path from 'path'
 import arg from 'arg'

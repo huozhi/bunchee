@@ -6,7 +6,7 @@ import type {
   PackageType,
   ParsedExportCondition,
 } from './types'
-import { baseNameWithoutExtension, exit, hasCjsExtension } from './utils'
+import { baseNameWithoutExtension } from './utils'
 import { dtsExtensionsMap } from './constants'
 import { OutputOptions } from 'rollup'
 

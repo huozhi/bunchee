@@ -9,7 +9,7 @@ import type { BuncheeRollupConfig, BundleConfig, ExportPaths } from './types'
 import { watch as rollupWatch, rollup } from 'rollup'
 import fsp from 'fs/promises'
 import fs from 'fs'
-import { resolve, relative } from 'path'
+import { resolve } from 'path'
 import pc from 'picocolors'
 import {
   buildEntryConfig,
@@ -24,7 +24,6 @@ import { logger } from './logger'
 import {
   getPackageMeta,
   getSourcePathFromExportPath,
-  getExportPath,
   removeDir,
   isTypescriptFile,
 } from './utils'
@@ -34,7 +33,7 @@ import {
   getExportPaths,
   getPackageType,
 } from './exports'
-import type { BuildMetadata, BuildContext } from './types'
+import type { BuildContext } from './types'
 import { TypescriptOptions, resolveTsConfig } from './typescript'
 import { resolveWildcardExports } from './lib/wildcard'
 import { DEFAULT_TS_CONFIG } from './constants'
