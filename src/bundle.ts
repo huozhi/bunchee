@@ -10,6 +10,7 @@ import { watch as rollupWatch, rollup } from 'rollup'
 import fsp from 'fs/promises'
 import fs from 'fs'
 import { resolve, relative } from 'path'
+import pc from 'picocolors'
 import {
   buildEntryConfig,
   collectEntries,
@@ -25,6 +26,7 @@ import {
   getSourcePathFromExportPath,
   getExportPath,
   removeDir,
+  isTypescriptFile,
 } from './utils'
 import {
   constructDefaultExportCondition,
@@ -35,6 +37,7 @@ import {
 import type { BuildMetadata, BuildContext } from './types'
 import { TypescriptOptions, resolveTsConfig } from './typescript'
 import { resolveWildcardExports } from './lib/wildcard'
+import { DEFAULT_TS_CONFIG } from './constants'
 
 function assignDefault(
   options: BundleConfig,
@@ -73,8 +76,8 @@ async function bundle(
   const isMultiEntries = hasMultiEntryExport(exportPaths) // exportPathsLength > 1
   const hasBin = Boolean(pkg.bin)
 
-  const tsConfig = await resolveTsConfig(cwd)
-  const hasTsConfig = Boolean(tsConfig?.tsConfigPath)
+  let tsConfig = await resolveTsConfig(cwd)
+  let hasTsConfig = Boolean(tsConfig?.tsConfigPath)
   const defaultTsOptions: TypescriptOptions = {
     tsConfigPath: tsConfig?.tsConfigPath,
     tsCompilerOptions: tsConfig?.tsCompilerOptions || {},
@@ -158,6 +161,25 @@ async function bundle(
   }
 
   const entries = await collectEntries(pkg, entryPath, exportPaths, cwd)
+  const hasTypeScriptFiles = Object.values(entries).some((entry) =>
+    isTypescriptFile(entry.source),
+  )
+  if (hasTypeScriptFiles && !hasTsConfig) {
+    const tsConfigPath = resolve(cwd, 'tsconfig.json')
+    defaultTsOptions.tsConfigPath = tsConfigPath
+    await fsp.writeFile(
+      tsConfigPath,
+      JSON.stringify(DEFAULT_TS_CONFIG, null, 2),
+      'utf-8',
+    )
+    logger.log(
+      `Detected using TypeScript but tsconfig.json is missing, created a ${pc.blue(
+        'tsconfig.json',
+      )} for you.`,
+    )
+    hasTsConfig = true
+  }
+
   const sizeCollector = createOutputState({ entries })
   const entriesAlias = getReversedAlias(entries)
   const buildContext: BuildContext = {

@@ -27,6 +27,7 @@ export const availableESExtensionsRegex = /\.(m|c)?[jt]sx?$/
 export const dtsExtensionRegex = /\.d\.(m|c)?ts$/
 
 export const SRC = 'src'
+export const DIST = 'dist'
 
 export const dtsExtensionsMap = {
   js: 'd.ts',
@@ -44,3 +45,10 @@ export const disabledWarnings = new Set([
 ])
 
 export const tsExtensions = new Set(['ts', 'tsx', 'cts', 'mts'])
+
+export const DEFAULT_TS_CONFIG = {
+  compilerOptions: {
+    module: 'ESNext',
+    moduleResolution: 'bundler',
+  },
+}

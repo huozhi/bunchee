@@ -10,14 +10,7 @@ import {
   isTypescriptFile,
 } from './utils'
 import { relativify } from './lib/format'
-
-const DIST = 'dist'
-const DEFAULT_TS_CONFIG = {
-  compilerOptions: {
-    module: 'ESNext',
-    moduleResolution: 'bundler',
-  },
-}
+import { DEFAULT_TS_CONFIG, DIST } from './constants'
 
 // Output with posix style in package.json
 function getDistPath(...subPaths: string[]) {
@@ -43,7 +36,10 @@ function createExportCondition(
   if (isTsSourceFile) {
     return {
       import: {
-        types: getDistPath('es', `${exportName}.${dtsExtensionsMap[esmExtension]}`),
+        types: getDistPath(
+          'es',
+          `${exportName}.${dtsExtensionsMap[esmExtension]}`,
+        ),
         default: getDistPath('es', `${exportName}.${esmExtension}`),
       },
       require: {
@@ -281,9 +277,7 @@ export async function prepare(cwd: string): Promise<void> {
       pkgJson.main = isUsingTs
         ? mainExport[mainCondition].default
         : mainExport[mainCondition]
-      pkgJson.module = isUsingTs
-        ? mainExport.import.default
-        : mainExport.import
+      pkgJson.module = isUsingTs ? mainExport.import.default : mainExport.import
 
       if (isUsingTs) {
         pkgJson.types = mainExport[mainCondition].types
