@@ -6,8 +6,9 @@ import type {
   PackageType,
   ParsedExportCondition,
 } from './types'
-import { exit, filePathWithoutExtension, hasCjsExtension } from './utils'
+import { baseNameWithoutExtension, exit, hasCjsExtension } from './utils'
 import { dtsExtensionsMap } from './constants'
+import { OutputOptions } from 'rollup'
 
 export function getTypings(pkg: PackageMetadata) {
   return pkg.types || pkg.typings
@@ -271,38 +272,6 @@ export function getExportPaths(
   return pathsMap
 }
 
-export const getExportTypeDist = (
-  parsedExportCondition: ParsedExportCondition,
-  cwd: string,
-) => {
-  const existed = new Set<string>()
-  const exportTypes = Object.keys(parsedExportCondition.export)
-  for (const key of exportTypes) {
-    if (key === 'module') {
-      continue
-    }
-    const filePath = parsedExportCondition.export[key]
-    if (key === 'types') {
-      const typeFile = getDistPath(filePath, cwd)
-      if (existed.has(typeFile)) {
-        continue
-      }
-      existed.add(typeFile)
-      continue
-    }
-    const ext = extname(filePath).slice(1) as keyof typeof dtsExtensionsMap
-    const typeFile = getDistPath(
-      `${filePathWithoutExtension(filePath) || ''}.${dtsExtensionsMap[ext]}`,
-      cwd,
-    )
-    if (existed.has(typeFile)) {
-      continue
-    }
-    existed.add(typeFile)
-  }
-  return Array.from(existed)
-}
-
 export function getPackageType(pkg: PackageMetadata): PackageType {
   return pkg.type || 'commonjs'
 }
@@ -347,8 +316,8 @@ export function getExportConditionDist(
   pkg: PackageMetadata,
   parsedExportCondition: ParsedExportCondition,
   cwd: string,
-) {
-  const dist: { format: 'cjs' | 'esm'; file: string }[] = []
+): { format: OutputOptions['format']; file: string }[] {
+  const dist: { format: OutputOptions['format']; file: string }[] = []
   const existed = new Set<string>()
   const exportTypes = Object.keys(parsedExportCondition.export)
 
@@ -361,7 +330,7 @@ export function getExportConditionDist(
     const relativePath = parsedExportCondition.export[exportType]
     const distFile = getDistPath(relativePath, cwd)
 
-    let format: 'cjs' | 'esm' = 'esm'
+    let format: OutputOptions['format'] = 'esm'
     if (isCjsExportName(pkg, exportType, ext)) {
       format = 'cjs'
     }
@@ -376,7 +345,7 @@ export function getExportConditionDist(
   }
 
   if (dist.length === 0 && !pkg.bin) {
-    const defaultFormat = isESModulePackage(pkg.type) ? 'esm' : 'cjs'
+    const defaultFormat: OutputOptions['format'] = isESModulePackage(pkg.type) ? 'esm' : 'cjs'
     dist.push({
       format: defaultFormat,
       file: getDistPath('dist/index.js', cwd),
@@ -385,24 +354,15 @@ export function getExportConditionDist(
   return dist
 }
 
-export function getTypeFilePath(
-  entryFilePath: string,
-  exportCondition: ParsedExportCondition | undefined,
-  cwd: string,
-): string {
-  const name = filePathWithoutExtension(entryFilePath)
-  const firstDistPath = exportCondition
-    ? Object.values(exportCondition.export)[0]
-    : undefined
+export function getExportFileTypePath(
+  absoluteJsBundlePath: string
+) {
+  const dirName = dirname(absoluteJsBundlePath)
+  const baseName = baseNameWithoutExtension(absoluteJsBundlePath)
+  const ext = extname(absoluteJsBundlePath).slice(1) as keyof typeof dtsExtensionsMap
+  const typeExtension = dtsExtensionsMap[ext]
+  return join(dirName, baseName + '.' + typeExtension) 
 
-  const exportName = exportCondition?.name || 'index'
-
-  return entryFilePath
-    ? name + '.d.ts'
-    : resolve(
-        firstDistPath ? dirname(firstDistPath) : join(cwd, 'dist'),
-        (exportName === '.' ? 'index' : exportName) + '.d.ts',
-      )
 }
 
 export function getExportTypeFromFile(

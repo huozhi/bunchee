@@ -35,8 +35,8 @@ import {
   getExportPaths,
   getExportConditionDist,
   isEsmExportName,
-  getExportTypeDist,
   getExportTypeFromFile,
+  getExportFileTypePath,
 } from './exports'
 import {
   isNotNull,
@@ -79,7 +79,9 @@ function getBuildEnv(envs: string[]) {
 }
 
 /**
- * return { '<absolute source path>': '<pkg>/<export>' }
+ * return { 
+ *   <absolute source path>: <pkg>/<export>
+ * }
  */
 export function getReversedAlias(entries: Entries) {
   const alias: Record<string, string> = {}
@@ -122,8 +124,8 @@ async function buildInputConfig(
     }
   }
 
+  const { useTypeScript } = buildContext
   const {
-    useTypescript,
     runtime,
     target: jscTarget,
     minify: shouldMinify,
@@ -131,8 +133,8 @@ async function buildInputConfig(
   const hasSpecifiedTsTarget = Boolean(tsCompilerOptions.target && tsConfigPath)
 
   const swcParserConfig = {
-    syntax: useTypescript ? 'typescript' : 'ecmascript',
-    [useTypescript ? 'tsx' : 'jsx']: true,
+    syntax: useTypeScript ? 'typescript' : 'ecmascript',
+    [useTypeScript ? 'tsx' : 'jsx']: true,
     exportDefaultFrom: true,
   } as const
 
@@ -172,7 +174,7 @@ async function buildInputConfig(
 
   const typesPlugins = [...commonPlugins, inlineCss({ skip: true })]
 
-  if (useTypescript) {
+  if (useTypeScript) {
     const { options: overrideResolvedTsOptions }: any =
       await convertCompilerOptions(cwd, {
         declaration: true,
@@ -409,7 +411,7 @@ function buildOutputConfigs(
           '.d.ts',
       )
 
-  const dtsPathConfig = { dir: dtsFile ? dirname(dtsFile) : dtsDir }
+  const dtsPathDir = { dir: dtsFile ? dirname(dtsFile) : dtsDir }
   const outputFile: string = (dtsFile || file)!
   const entryFiles = new Set(
     Object.values(entries).map((entry) => entry.source),
@@ -417,7 +419,7 @@ function buildOutputConfigs(
 
   return {
     name: pkg.name || name,
-    ...(dts ? dtsPathConfig : { dir: dirname(outputFile) }),
+    ...(dts ? dtsPathDir : { dir: dirname(file!) }),
     format,
     exports: 'named',
     esModule: useEsModuleMark || 'if-default-prop',
@@ -481,7 +483,7 @@ export async function collectEntries(
     // Special cases of export type, only pass down the exportPaths for the type
     if (availableExportConventions.has(exportType)) {
       exportCondForType = {
-        [entryExport]: exportCondRef[exportType],
+        [exportType]: exportCondRef[exportType],
       }
       // Basic export type, pass down the exportPaths with erasing the special ones
     } else {
@@ -591,57 +593,64 @@ async function buildConfig(
   )
   const outputExports = getExportConditionDist(pkg, exportCondition, cwd)
 
-  let outputConfigs = []
-
-  // Generate dts job - single config
-  if (dts) {
-    const typeOutputExports = getExportTypeDist(exportCondition, cwd)
-    outputConfigs = typeOutputExports.map((typeFile) =>
-      buildOutputConfigs(
-        {
-          ...bundleConfig,
-          format: 'es',
-          useTypescript,
-          file: typeFile,
-        },
-        exportCondition,
-        pluginContext,
-        dts,
-      ),
-    )
-  } else {
-    // multi outputs with specified format
-    outputConfigs = outputExports.map((exportDist) => {
-      return buildOutputConfigs(
-        {
-          ...bundleConfig,
-          file: exportDist.file,
-          format: exportDist.format,
-          useTypescript,
-        },
-        exportCondition,
-        pluginContext,
-        dts,
-      )
-    })
-    // CLI output option is always prioritized
-    if (file) {
-      const fallbackFormat = outputExports[0]?.format
-      outputConfigs = [
-        buildOutputConfigs(
-          {
-            ...bundleConfig,
-            file,
-            format: bundleConfig.format || fallbackFormat,
-            useTypescript,
-          },
-          exportCondition,
-          pluginContext,
-          dts,
-        ),
-      ]
+  let bundleOptions: (
+    {
+      format: OutputOptions['format'],
+      resolvedFile: string
     }
+  )[] = []
+
+  // multi outputs with specified format
+  
+  // CLI output option is always prioritized
+  if (file) {
+    const fallbackFormat = outputExports[0]?.format
+    bundleOptions = [
+      {
+        resolvedFile: resolve(cwd, file),
+        format: bundleConfig.format || fallbackFormat,
+      },
+    ]
+  } else {
+    bundleOptions = outputExports.map((exportDist) => {
+      return {
+        resolvedFile: resolve(cwd, exportDist.file),
+        format: exportDist.format,
+      }
+    })
   }
+  if (dts) {
+    // types could have duplicates, dedupe them
+    // e.g. { types, import, .. } use the same `types` condition with all conditions
+    const uniqTypes = new Set<string>()
+    bundleOptions.forEach((bundleOption) => {
+      if (exportCondition.export.types) {
+        uniqTypes.add(resolve(cwd, exportCondition.export.types))
+      }
+      const typeForExtension = getExportFileTypePath(bundleOption.resolvedFile)
+      uniqTypes.add(typeForExtension)
+    })
+
+    bundleOptions = Array.from(uniqTypes).map((typeFile) => {
+      return {
+        resolvedFile: typeFile,
+        format: 'es',
+      }
+    })
+  }
+
+  const outputConfigs = bundleOptions.map((bundleOption) => {
+    return buildOutputConfigs(
+      {
+        ...bundleConfig,
+        file: bundleOption.resolvedFile,
+        format: bundleOption.format,
+      }, 
+      exportCondition, 
+      pluginContext, 
+      dts
+    )
+  })
 
   return {
     input: inputOptions,

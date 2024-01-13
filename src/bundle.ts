@@ -28,9 +28,9 @@ import {
 } from './utils'
 import {
   constructDefaultExportCondition,
+  getExportFileTypePath,
   getExportPaths,
   getPackageType,
-  getTypeFilePath,
 } from './exports'
 import type { BuildMetadata } from './types'
 import { TypescriptOptions, resolveTsConfig } from './typescript'
@@ -70,10 +70,6 @@ async function bundle(
   const packageType = getPackageType(pkg)
 
   const exportPaths = getExportPaths(pkg, packageType, resolvedWildcardExports)
-  const exportKeys = Object.keys(exportPaths).filter(
-    (key) => key !== './package.json',
-  )
-  // const exportPathsLength = Object.keys(exportPaths).length
   const isMultiEntries = hasMultiEntryExport(exportPaths) // exportPathsLength > 1
   const hasBin = Boolean(pkg.bin)
 
@@ -101,14 +97,10 @@ async function bundle(
     if (options.file) {
       mainEntryPath = options.file
     }
-    // without -o, use default path dist
-    else if (exportKeys.length === 0) {
-      mainEntryPath = resolve(cwd, 'dist/index.js')
-    }
 
     if (mainEntryPath) {
       if (options.dts) {
-        typesEntryPath = getTypeFilePath(mainEntryPath, undefined, cwd)
+        typesEntryPath = getExportFileTypePath(mainEntryPath)
       }
 
       exportPaths['.'] = constructDefaultExportCondition(
@@ -170,6 +162,7 @@ async function bundle(
     exportPaths,
     cwd,
     tsOptions: defaultTsOptions,
+    useTypeScript: hasTsConfig,
     pluginContext: {
       outputState: sizeCollector,
       moduleDirectiveLayerMap: new Map(),
