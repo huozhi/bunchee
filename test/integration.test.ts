@@ -741,7 +741,7 @@ const testCases: {
       expect(pkgJson.files).toContain('dist')
       expect(pkgJson.main).toBe('./dist/es/index.js')
       expect(pkgJson.module).toBe('./dist/es/index.js')
-      expect(Object.keys(pkgJson.exports)).toEqual(['.', './foo'])
+      expect(Object.keys(pkgJson.exports)).toEqual(['.'])
       expect(Object.keys(pkgJson.exports['.'])).not.toContain('./test')
     },
   },
