@@ -268,6 +268,7 @@ If you're using `"use client"` or `"use server"` in a file that used as a depend
 - Types (`--dts`): Generate TypeScript declaration files along with assets.
 - Minify (`-m`): Compress output.
 - Watch (`-w`): Watch for source file changes.
+- No Clean(`--no-clean`): Do not clean the dist folder before building. (default: `false`)
 
 ```sh
 cd <project-root-dir>
@@ -454,6 +455,7 @@ await bundle(path.resolve('./src/index.ts'), {
   target: 'es2015', // ES syntax target
   runtime: 'nodejs', // 'browser' | 'nodejs'
   cwd: process.cwd(), // string
+  clean: true, // boolean
 })
 ```
 
