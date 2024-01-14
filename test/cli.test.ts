@@ -196,17 +196,12 @@ const testCases: {
       '--cwd',
       path.join(fixturesDir, './single-entry-js'),
     ],
-    expected(distFile, { stdout }) {
+    expected(distFile) {
       return [
         [fs.existsSync(distFile), true],
         // specifying types in package.json for js entry file won't work
         // if there's no tsconfig.json and entry file is js
-        [
-          stripANSIColor(stdout).includes(
-            'pkg.types is ./dist/index.d.ts but the file does not exist.',
-          ),
-          true,
-        ],
+        [fs.existsSync(distFile.replace('.js', '.d.ts')), true],
       ]
     },
   },

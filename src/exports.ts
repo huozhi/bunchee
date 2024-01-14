@@ -6,7 +6,7 @@ import type {
   PackageType,
   ParsedExportCondition,
 } from './types'
-import { baseNameWithoutExtension, exit, hasCjsExtension } from './utils'
+import { baseNameWithoutExtension } from './utils'
 import { dtsExtensionsMap } from './constants'
 import { OutputOptions } from 'rollup'
 
@@ -231,11 +231,10 @@ function parseExport(
 
 export function getExportPaths(
   pkg: PackageMetadata,
-  pkgType?: PackageType,
   resolvedWildcardExports?: ExportCondition,
 ) {
   let pathsMap: Record<string, FullExportCondition> = {}
-  const packageType = pkgType ?? getPackageType(pkg)
+  const packageType = getPackageType(pkg)
   const isEsmPackage = isESModulePackage(packageType)
 
   const exportsConditions = resolvedWildcardExports ?? pkg.exports
@@ -247,13 +246,6 @@ export function getExportPaths(
       ...paths,
     }
   }
-
-  if (isEsmPackage && pkg.main && hasCjsExtension(pkg.main)) {
-    exit(
-      'Cannot export main field with .cjs extension in ESM package, only .mjs and .js extensions are allowed',
-    )
-  }
-
   // main export '.' from main/module/typings
   const defaultMainExport = constructFullExportCondition(
     {

@@ -85,10 +85,6 @@ type CliArgs = {
 
 type BundleOptions = BundleConfig
 
-type BuildMetadata = {
-  source: string
-}
-
 type ParsedExportCondition = {
   source: string
   name: string
@@ -121,7 +117,6 @@ export type {
   BundleOptions,
   ExportCondition,
   PackageMetadata,
-  BuildMetadata,
   FullExportCondition,
   BuncheeRollupConfig,
   PackageType,

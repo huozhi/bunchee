@@ -11,14 +11,7 @@ import {
   isTypescriptFile,
 } from './utils'
 import { relativify } from './lib/format'
-
-const DIST = 'dist'
-const DEFAULT_TS_CONFIG = {
-  compilerOptions: {
-    module: 'ESNext',
-    moduleResolution: 'bundler',
-  },
-}
+import { DEFAULT_TS_CONFIG, DIST } from './constants'
 
 // Output with posix style in package.json
 function getDistPath(...subPaths: string[]) {
