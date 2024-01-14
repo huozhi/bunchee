@@ -109,7 +109,7 @@
     },
     "testPathIgnorePatterns": [
       "/node_modules/",
-      "<rootDir>/test/integration/"
+      "<rootDir>/test/integration/.*/*src"
     ]
   },
   "packageManager": "pnpm@8.8.0"
