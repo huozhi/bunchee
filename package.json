@@ -81,6 +81,7 @@
     "@huozhi/testing-package": "1.0.0",
     "@swc/jest": "^0.2.29",
     "@swc/types": "^0.1.5",
+    "@types/clean-css": "^4.2.11",
     "@types/jest": "29.0.0",
     "@types/node": "^20.4.1",
     "bunchee": "link:./",
