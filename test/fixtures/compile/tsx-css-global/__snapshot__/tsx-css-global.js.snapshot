@@ -7,7 +7,7 @@ function __insertCSS(code) {
   ;style.styleSheet ? (style.styleSheet.cssText = code) : style.appendChild(document.createTextNode(code))
 }
 
-__insertCSS(".foo{color:orange;}");
+__insertCSS(".foo{transform-origin:center}");
 
 function Foo() {
     return /*#__PURE__*/ React.createElement("p", {
