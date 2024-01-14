@@ -1,17 +1,6 @@
 import type { Plugin } from 'rollup'
+import CleanCSS from 'clean-css'
 import { type FilterPattern, createFilter } from '@rollup/pluginutils'
-
-function minifyCSS(content: string) {
-  return content.replace(
-    /\/\*[\s\S]*?\*\/|([^:]|^)\/\/.*$|(?:^|\s)(\s+)|\s*([\{\};,:])\s*|\s+(!)\s+/g,
-    (match, p1, p2, p3, p4) => {
-      if (p1) return p1 === ' ' ? '' : p1
-      if (p2) return ' '
-      if (p3) return p3
-      if (p4) return '!'
-    },
-  )
-}
 
 const helpers = {
   cssImport: {
@@ -41,6 +30,11 @@ export default sheet`
   },
 } as const
 
+const cleanCssInstance = new CleanCSS({})
+function minify(code: string) {
+  return cleanCssInstance.minify(code).styles
+}
+
 export function inlineCss(options: {
   skip?: boolean
   exclude?: FilterPattern
@@ -54,14 +48,14 @@ export function inlineCss(options: {
     transform(code, id) {
       if (!filter(id)) return
       if (options.skip) return ''
-      const cssCode = minifyCSS(code)
+      const cssCode = minify(code)
       cssIds.add(id)
       return {
         code: helpers.cssImport.create(cssCode),
         map: { mappings: '' },
       }
     },
-    renderChunk(code, options) {
+    renderChunk(code) {
       const dependenciesIds = this.getModuleIds()
       let foundCss = false
       for (const depId of dependenciesIds) {
