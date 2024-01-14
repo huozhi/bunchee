@@ -109,7 +109,7 @@
     },
     "testPathIgnorePatterns": [
       "/node_modules/",
-      "<rootDir>/test/integration/prepare-ts-with-test-file/"
+      "<rootDir>/test/integration/"
     ]
   },
   "packageManager": "pnpm@8.8.0"
