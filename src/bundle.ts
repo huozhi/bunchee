@@ -10,6 +10,7 @@ import { watch as rollupWatch, rollup } from 'rollup'
 import fsp from 'fs/promises'
 import fs from 'fs'
 import { resolve } from 'path'
+import { performance } from 'perf_hooks'
 import pc from 'picocolors'
 import {
   buildEntryConfig,
@@ -212,7 +213,44 @@ async function bundle(
 
   if (!options.watch) {
     logOutputState(sizeCollector)
+  } else {
+    let watcherCounter = 0
+    let startTime = 0
+    function start() {
+      if (watcherCounter === 0) {
+        startTime = performance.now()
+      }
+      watcherCounter++
+    }
+    function end() {
+      watcherCounter--
+      if (watcherCounter === 0) {
+        logger.info(`Build in ${(performance.now() - startTime).toFixed(2)}ms`)
+      }
+    }
+
+    ;(result as RollupWatcher[]).map((watcher: RollupWatcher) => {
+      watcher.on('event', (event) => {
+        switch (event.code) {
+          case 'ERROR': {
+            logError(event.error)
+            break
+          }
+          case 'START': {
+            start()
+            break
+          }
+          case 'END': {
+            end()
+            break
+          }
+          default:
+            return
+        }
+      })
+    })
   }
+
   return result
 }
 
@@ -228,22 +266,6 @@ function runWatch({ input, output }: BuncheeRollupConfig): RollupWatcher {
   ]
   const watcher = rollupWatch(watchOptions)
 
-  watcher.on('event', (event) => {
-    switch (event.code) {
-      case 'ERROR': {
-        logError(event.error)
-        break
-      }
-      case 'START': {
-        break
-      }
-      case 'END': {
-        break
-      }
-      default:
-        return
-    }
-  })
   return watcher
 }
 
