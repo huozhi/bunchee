@@ -238,17 +238,18 @@ async function buildInputConfig(
             preferBuiltins: runtime === 'node',
             extensions: nodeResolveExtensions,
           }),
-          commonjs({
-            exclude: options.external || null,
-          }),
-          json(),
           wasm(),
           swc({
             include: availableESExtensionsRegex,
             exclude: 'node_modules',
-            tsconfig: tsConfigPath,
+            // Use `false` to disable retrieving tsconfig.json
+            tsconfig: tsConfigPath ?? false,
             ...swcOptions,
           }),
+          commonjs({
+            exclude: options.external || null,
+          }),
+          json(),
         ]
   ).filter(isNotNull<Plugin>)
 
