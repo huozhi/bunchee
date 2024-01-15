@@ -1,0 +1,8 @@
+{
+  "name": "output-short",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    }
+  }
+}

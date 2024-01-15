@@ -173,18 +173,24 @@ function logOutputState(sizeCollector: ReturnType<typeof createOutputState>) {
         const normalizedExportName = normalizeExportName(exportName)
         const prefix =
           index === 0
-            ? normalizedExportName +
-              ' '.repeat(maxLengthOfExportName - normalizedExportName.length)
-            : ' '.repeat(maxLengthOfExportName)
-
-        const sizePadding = ' '.repeat(maxFilenameLength - filename.length)
-        const prettiedSize = prettyBytes(size)
+            ? normalizedExportName
+            : ' '.repeat(normalizedExportName.length)
+        const filenamePadding = ' '.repeat(
+          Math.max(maxLengthOfExportName, 'Exports'.length) -
+            normalizedExportName.length,
+        )
         const isType = isTypeFile(filename)
+        const sizePadding = ' '.repeat(
+          Math.max(maxFilenameLength, 'File'.length) - filename.length,
+        )
+        const prettiedSize = prettyBytes(size)
 
         console.log(
-          ` ${prefix} ${pc[isType ? 'dim' : 'bold'](
-            filename,
-          )}${sizePadding}  ${prettiedSize}`,
+          prefix,
+          filenamePadding,
+          `${pc[isType ? 'dim' : 'bold'](filename)}`,
+          sizePadding,
+          prettiedSize,
         )
       })
   })
