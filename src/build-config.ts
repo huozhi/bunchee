@@ -220,7 +220,6 @@ async function buildInputConfig(
     typesPlugins.push(dtsPlugin)
   }
 
-  // console.log('tsConfigPath', tsConfigPath)
   const plugins: Plugin[] = (
     dts
       ? typesPlugins
