@@ -27,6 +27,14 @@ const testCases: {
   ): Promise<void> | void
 }[] = [
   {
+    name: 'basic-jsx',
+    async expected(dir, { stderr, stdout }) {
+      // No warnings from swc3 plugin
+      expect(stderr + stdout).not.toContain('(swc plugin)')
+      assertContainFiles(dir, ['./dist/index.js', './dist/index.mjs'])
+    },
+  },
+  {
     name: 'externals',
     args: ['index.js', '-o', './dist/index.js'],
     async expected(dir) {
