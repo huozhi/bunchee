@@ -186,6 +186,20 @@ async function buildInputConfig(
   const typesPlugins = [...commonPlugins, inlineCss({ skip: true })]
 
   if (useTypeScript) {
+    const enableIncrementalWithoutBuildInfo =
+      tsCompilerOptions.incremental && !tsCompilerOptions.tsBuildInfoFile
+    const incrementalOptions = enableIncrementalWithoutBuildInfo
+      ? {
+          incremental: false,
+        }
+      : undefined
+    const compositeOptions =
+      tsCompilerOptions.composite && enableIncrementalWithoutBuildInfo
+        ? {
+            composite: false,
+          }
+        : undefined
+
     const { options: overrideResolvedTsOptions }: any =
       await convertCompilerOptions(cwd, {
         declaration: true,
@@ -203,11 +217,9 @@ async function buildInputConfig(
           : undefined),
         // error TS5074: Option '--incremental' can only be specified using tsconfig, emitting to single
         // file or when option '--tsBuildInfoFile' is specified.
-        ...(tsCompilerOptions.incremental && !tsCompilerOptions.tsBuildInfoFile
-          ? {
-              incremental: false,
-            }
-          : undefined),
+        ...incrementalOptions,
+        // error TS6379: Composite projects may not disable incremental compilation.
+        ...compositeOptions,
       })
 
     const dtsPlugin = (
