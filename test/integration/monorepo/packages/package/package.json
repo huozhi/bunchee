@@ -1,0 +1,5 @@
+{
+  "name": "package",
+  "main": "./dist/index.ts",
+  "types": "./dist/index.d.ts"
+}

@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "es2016",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "composite": true,
+    "incremental": true
+  },
+  "references": [
+    {
+      "path": "./packages/package"
+    }
+  ]
+}
