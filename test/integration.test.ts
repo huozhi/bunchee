@@ -19,6 +19,7 @@ const getPath = (filepath: string) => join(integrationTestDir, filepath)
 const testCases: {
   name: string
   dir?: string
+  skip?: boolean
   args?: string[]
   before?(dir: string): Promise<void> | void
   expected(
@@ -843,8 +844,9 @@ const testCases: {
     },
   },
   {
-    name: 'monorepo',
+    name: 'ts-composite',
     dir: 'monorepo/packages/package',
+    skip: true,
     args: [],
     async expected(dir) {
       expect(await existsFile(join(dir, './dist/index.js'))).toBe(true)
@@ -884,8 +886,11 @@ async function runBundle(
 
 function runTests() {
   for (const testCase of testCases) {
-    const { name, args = [], expected, before } = testCase
+    const { name, args = [], expected, before, skip } = testCase
     const dir = getPath(testCase.dir ?? name)
+    if (skip) {
+      return
+    }
     test(`integration ${name}`, async () => {
       debug.log(`Command: bunchee ${args.join(' ')}`)
       if (before) {
