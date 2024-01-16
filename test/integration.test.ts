@@ -842,6 +842,15 @@ const testCases: {
       expect(stderr).toContain('./dist/foo.cjs')
     },
   },
+  {
+    name: 'monorepo',
+    dir: 'monorepo/packages/package',
+    args: [],
+    async expected(dir) {
+      expect(await existsFile(join(dir, './dist/index.js'))).toBe(true)
+      expect(await existsFile(join(dir, './dist/index.d.ts'))).toBe(true)
+    },
+  },
 ]
 
 async function runBundle(
