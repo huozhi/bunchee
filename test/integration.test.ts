@@ -846,8 +846,6 @@ const testCases: {
   {
     name: 'ts-composite',
     dir: 'monorepo/packages/package',
-    skip: true,
-    args: [],
     async expected(dir) {
       expect(await existsFile(join(dir, './dist/index.js'))).toBe(true)
       expect(await existsFile(join(dir, './dist/index.d.ts'))).toBe(true)
