@@ -139,7 +139,7 @@ async function run(args: CliArgs) {
     return await prepare(cwd)
   }
 
-  const cliEntry = source ?? ''
+  const cliEntry = source ? path.resolve(cwd, source) : ''
 
   // lint package
   await lint(cwd)
