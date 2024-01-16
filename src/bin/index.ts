@@ -139,13 +139,13 @@ async function run(args: CliArgs) {
     return await prepare(cwd)
   }
 
-  const entry = source ? path.resolve(cwd, source) : ''
+  const cliEntry = source ? path.resolve(cwd, source) : ''
 
   // lint package
   await lint(cwd)
 
   try {
-    await bundle(entry, bundleConfig)
+    await bundle(cliEntry, bundleConfig)
   } catch (err: any) {
     if (err.name === 'NOT_EXISTED') {
       help()

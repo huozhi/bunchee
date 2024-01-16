@@ -59,7 +59,7 @@ function hasMultiEntryExport(exportPaths: ExportPaths): boolean {
 }
 
 async function bundle(
-  entryPath: string,
+  cliEntryPath: string,
   { cwd: _cwd, ...options }: BundleConfig = {},
 ): Promise<any> {
   const cwd = resolve(process.cwd(), _cwd || '')
@@ -74,6 +74,7 @@ async function bundle(
   const exportPaths = getExportPaths(pkg, resolvedWildcardExports)
   const isMultiEntries = hasMultiEntryExport(exportPaths) // exportPathsLength > 1
   const hasBin = Boolean(pkg.bin)
+  const isFromCli = Boolean(cliEntryPath)
 
   let tsConfig = await resolveTsConfig(cwd)
   let hasTsConfig = Boolean(tsConfig?.tsConfigPath)
@@ -86,14 +87,14 @@ async function bundle(
   if (!isMultiEntries) {
     // Use specified string file path if possible, then fallback to the default behavior entry picking logic
     // e.g. "exports": "./dist/index.js" -> use "./index.<ext>" as entry
-    entryPath =
-      entryPath ||
+    cliEntryPath =
+      cliEntryPath ||
       (await getSourcePathFromExportPath(cwd, '.', 'default')) ||
       ''
   }
 
   // Handle CLI input
-  if (entryPath) {
+  if (cliEntryPath) {
     let mainEntryPath: string | undefined
     let typesEntryPath: string | undefined
     // with -o option
@@ -120,7 +121,9 @@ async function bundle(
     rollupConfig: BuncheeRollupConfig,
   ): Promise<RollupWatcher | RollupOutput[] | void> => {
     if (options.clean) {
-      await removeOutputDir(rollupConfig.output)
+      if (!isFromCli) {
+        await removeOutputDir(rollupConfig.output)
+      }
     }
 
     if (options.watch) {
@@ -129,15 +132,15 @@ async function bundle(
     return runBundle(rollupConfig)
   }
 
-  const hasSpecifiedEntryFile = entryPath
-    ? fs.existsSync(entryPath) && (await fsp.stat(entryPath)).isFile()
+  const hasSpecifiedEntryFile = cliEntryPath
+    ? fs.existsSync(cliEntryPath) && (await fsp.stat(cliEntryPath)).isFile()
     : false
 
   const hasNoEntry = !hasSpecifiedEntryFile && !isMultiEntries && !hasBin
 
   if (hasNoEntry) {
-    if (entryPath) {
-      const err = new Error(`Entry file "${entryPath}" does not exist`)
+    if (cliEntryPath) {
+      const err = new Error(`Entry file "${cliEntryPath}" does not exist`)
       err.name = 'NOT_EXISTED'
       return Promise.reject(err)
     } else if (cwd) {
@@ -151,7 +154,7 @@ async function bundle(
     }
   }
 
-  const entries = await collectEntries(pkg, entryPath, exportPaths, cwd)
+  const entries = await collectEntries(pkg, cliEntryPath, exportPaths, cwd)
   const hasTypeScriptFiles = Object.values(entries).some((entry) =>
     isTypescriptFile(entry.source),
   )
