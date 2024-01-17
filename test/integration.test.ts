@@ -15,9 +15,10 @@ jest.setTimeout(10 * 60 * 1000)
 
 const integrationTestDir = resolve(__dirname, 'integration')
 const getPath = (filepath: string) => join(integrationTestDir, filepath)
-const getSizeIndex = (line: string): number => {
+
+const getOutputSizeColumnIndex = (line: string): number => {
   let match
-  while ((match = /\d+\sB/g.exec(line)) !== null) {
+  if ((match = /\d+\sK?B/g.exec(line)) !== null) {
     return match.index
   }
   return -1
@@ -637,11 +638,11 @@ const testCases: {
 
       expect(cliLine.indexOf('cli (bin)')).toEqual(exportsIndex)
       expect(cliLine.indexOf('dist/cli.js')).toEqual(fileIndex)
-      expect(getSizeIndex(cliLine)).toEqual(sizeIndex)
+      expect(getOutputSizeColumnIndex(cliLine)).toEqual(sizeIndex)
 
       expect(indexLine.indexOf('.')).toEqual(exportsIndex)
       expect(indexLine.indexOf('dist/index.js')).toEqual(fileIndex)
-      expect(getSizeIndex(indexLine)).toEqual(sizeIndex)
+      expect(getOutputSizeColumnIndex(indexLine)).toEqual(sizeIndex)
 
       expect(indexReactServerLine.indexOf('. (react-server)')).toEqual(
         exportsIndex,
@@ -649,11 +650,11 @@ const testCases: {
       expect(
         indexReactServerLine.indexOf('dist/index.react-server.js'),
       ).toEqual(fileIndex)
-      expect(getSizeIndex(indexReactServerLine)).toEqual(sizeIndex)
+      expect(getOutputSizeColumnIndex(indexReactServerLine)).toEqual(sizeIndex)
 
       expect(fooLine.indexOf('./foo')).toEqual(exportsIndex)
       expect(fooLine.indexOf('dist/foo.js')).toEqual(fileIndex)
-      expect(getSizeIndex(fooLine)).toEqual(sizeIndex)
+      expect(getOutputSizeColumnIndex(fooLine)).toEqual(sizeIndex)
     },
   },
   {
@@ -682,7 +683,7 @@ const testCases: {
 
       expect(indexLine.indexOf('.')).toEqual(exportsIndex)
       expect(indexLine.indexOf('dist/index.js')).toEqual(fileIndex)
-      expect(getSizeIndex(indexLine)).toEqual(sizeIndex)
+      expect(getOutputSizeColumnIndex(indexLine)).toEqual(sizeIndex)
     },
   },
   {
