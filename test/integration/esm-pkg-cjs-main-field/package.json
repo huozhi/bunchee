@@ -1,0 +1,11 @@
+{
+  "name": "esm-pkg-cjs-main-field",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  }
+}

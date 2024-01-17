@@ -6,7 +6,7 @@ import type {
   PackageType,
   ParsedExportCondition,
 } from './types'
-import { baseNameWithoutExtension } from './utils'
+import { baseNameWithoutExtension, hasCjsExtension } from './utils'
 import { dtsExtensionsMap } from './constants'
 import { OutputOptions } from 'rollup'
 
@@ -247,9 +247,18 @@ export function getExportPaths(
     }
   }
   // main export '.' from main/module/typings
+  let mainExportCondition
+  if (pkg.main) {
+    const mainExportType = isEsmPackage
+      ? hasCjsExtension(pkg.main!)
+        ? 'require'
+        : 'import'
+      : 'require'
+    mainExportCondition = { [mainExportType]: pkg.main }
+  }
   const defaultMainExport = constructFullExportCondition(
     {
-      [isEsmPackage ? 'import' : 'require']: pkg.main,
+      ...mainExportCondition,
       module: pkg.module,
       types: getTypings(pkg),
     },
