@@ -16,6 +16,14 @@ jest.setTimeout(10 * 60 * 1000)
 const integrationTestDir = resolve(__dirname, 'integration')
 const getPath = (filepath: string) => join(integrationTestDir, filepath)
 
+const getOutputSizeColumnIndex = (line: string): number => {
+  let match
+  if ((match = /\d+\sK?B/g.exec(line)) !== null) {
+    return match.index
+  }
+  return -1
+}
+
 const testCases: {
   name: string
   dir?: string
@@ -603,7 +611,7 @@ const testCases: {
       ./foo            dist/foo.js                 103 B
       */
 
-      const lines = stdout.split('\n')
+      const lines = stripANSIColor(stdout).split('\n')
       const [tableHeads, cliLine, indexLine, indexReactServerLine, fooLine] =
         lines
       expect(tableHeads).toContain('Exports')
@@ -621,6 +629,61 @@ const testCases: {
 
       expect(fooLine).toContain('./foo')
       expect(fooLine).toContain('dist/foo.js')
+
+      const [exportsIndex, fileIndex, sizeIndex] = [
+        tableHeads.indexOf('Exports'),
+        tableHeads.indexOf('File'),
+        tableHeads.indexOf('Size'),
+      ]
+
+      expect(cliLine.indexOf('cli (bin)')).toEqual(exportsIndex)
+      expect(cliLine.indexOf('dist/cli.js')).toEqual(fileIndex)
+      expect(getOutputSizeColumnIndex(cliLine)).toEqual(sizeIndex)
+
+      expect(indexLine.indexOf('.')).toEqual(exportsIndex)
+      expect(indexLine.indexOf('dist/index.js')).toEqual(fileIndex)
+      expect(getOutputSizeColumnIndex(indexLine)).toEqual(sizeIndex)
+
+      expect(indexReactServerLine.indexOf('. (react-server)')).toEqual(
+        exportsIndex,
+      )
+      expect(
+        indexReactServerLine.indexOf('dist/index.react-server.js'),
+      ).toEqual(fileIndex)
+      expect(getOutputSizeColumnIndex(indexReactServerLine)).toEqual(sizeIndex)
+
+      expect(fooLine.indexOf('./foo')).toEqual(exportsIndex)
+      expect(fooLine.indexOf('dist/foo.js')).toEqual(fileIndex)
+      expect(getOutputSizeColumnIndex(fooLine)).toEqual(sizeIndex)
+    },
+  },
+  {
+    name: 'output-short',
+    args: [],
+    async expected(dir, { stdout, stderr }) {
+      /*
+      output:
+
+      Exports File          Size
+      .       dist/index.js 30 B
+      */
+      const [tableHeads, indexLine] = stripANSIColor(stdout).split('\n')
+      expect(tableHeads).toContain('Exports')
+      expect(tableHeads).toContain('File')
+      expect(tableHeads).toContain('Size')
+
+      expect(indexLine).toContain('.')
+      expect(indexLine).toContain('dist/index.js')
+
+      const [exportsIndex, fileIndex, sizeIndex] = [
+        tableHeads.indexOf('Exports'),
+        tableHeads.indexOf('File'),
+        tableHeads.indexOf('Size'),
+      ]
+
+      expect(indexLine.indexOf('.')).toEqual(exportsIndex)
+      expect(indexLine.indexOf('dist/index.js')).toEqual(fileIndex)
+      expect(getOutputSizeColumnIndex(indexLine)).toEqual(sizeIndex)
     },
   },
   {
@@ -895,6 +958,7 @@ function runTests() {
         await before(dir)
       }
       const { stdout, stderr } = await runBundle(dir, args)
+
       stdout && debug.log(stdout)
       stderr && debug.error(stderr)
 

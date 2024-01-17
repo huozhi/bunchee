@@ -1,0 +1,8 @@
+{
+  "name": "output-short",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js"
+    }
+  }
+}
