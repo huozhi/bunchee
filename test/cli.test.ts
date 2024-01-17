@@ -28,6 +28,8 @@ const testCases: {
   distFile?: string
   env?: Record<string, string>
   dist?: (() => Promise<string>) | string
+  timeoutClose?: number
+  expectedCode?: number
   expected(
     f: string,
     { stderr, stdout }: { stderr: string; stdout: string },
@@ -254,11 +256,35 @@ const testCases: {
       ]
     },
   },
+  {
+    name: 'output-in-watch',
+    dist: createTempDir,
+    timeoutClose: 4000,
+    expectedCode: 143,
+    args: [resolveFromTest('hello.js'), '-w'],
+    expected(_, { stdout }) {
+      const watchOutputRegex = /Build in \d+(.\d{2})ms/
+      return [
+        [stdout.includes('Watching assets in'), true],
+        [watchOutputRegex.test(stdout), true],
+        [stdout.includes('Exports'), false],
+      ]
+    },
+  },
 ]
 
 describe('cli', () => {
   for (const testCase of testCases) {
-    const { name, args, expected, dist, distFile: _distFile, env } = testCase
+    const {
+      name,
+      args,
+      expected,
+      dist,
+      distFile: _distFile,
+      env,
+      timeoutClose,
+      expectedCode,
+    } = testCase
     it(`cli ${name} should work properly`, async () => {
       // Delete the of dist folder: folder of dist file (as last argument) or `dist` option
       let distDir
@@ -294,6 +320,11 @@ describe('cli', () => {
       let stdout = ''
       ps.stdout?.on('data', (chunk) => (stdout += chunk.toString()))
       ps.stderr?.on('data', (chunk) => (stderr += chunk.toString()))
+      if (typeof timeoutClose === 'number') {
+        setTimeout(() => {
+          ps.kill('SIGTERM')
+        }, timeoutClose)
+      }
       const code = await new Promise((resolve) => {
         ps.on('close', resolve)
       })
@@ -305,7 +336,7 @@ describe('cli', () => {
         expect(left).toBe(right)
       }
       expect(fs.existsSync(distFile)).toBe(true)
-      expect(code).toBe(0)
+      expect(code).toBe(expectedCode ?? 0)
       debug.log(`Clean up ${distDir}`)
 
       await removeDirectory(distDir)
