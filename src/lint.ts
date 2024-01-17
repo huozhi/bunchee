@@ -50,10 +50,6 @@ export function lint(pkg: PackageMetadata) {
 
   // Validate ESM package
   if (isESM) {
-    if (main && hasCjsExtension(main)) {
-      state.badMainExtension = true
-    }
-
     if (exports) {
       if (typeof exports === 'string') {
         if (hasCjsExtension(exports)) {
@@ -87,6 +83,9 @@ export function lint(pkg: PackageMetadata) {
       }
     }
   } else {
+    if (main && path.extname(main) === '.mjs') {
+      state.badMainExtension = true
+    }
     // Validate CJS package
     if (exports) {
       if (typeof exports === 'string') {
@@ -124,7 +123,7 @@ export function lint(pkg: PackageMetadata) {
 
   if (state.badMainExtension) {
     logger.warn(
-      'Cannot export `main` field with .cjs extension in ESM package, only .mjs and .js extensions are allowed',
+      'Cannot export `main` field with .mjs extension in CJS package, only .js extension is allowed',
     )
   }
   if (state.badMainExport) {
