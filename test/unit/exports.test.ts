@@ -263,7 +263,7 @@ describe('lib exports', () => {
       ])
     })
 
-    it('should handle special exports', () => {
+    it('should handle basic special exports', () => {
       const pkg: PackageMetadata = {
         exports: {
           '.': {
@@ -276,6 +276,35 @@ describe('lib exports', () => {
 
       expect(getExportConditionDistHelper(pkg)).toEqual([
         { file: 'index.cjs', format: 'cjs' },
+        { file: 'index.mjs', format: 'esm' },
+      ])
+    })
+
+    it('should handle dev and prod special exports', () => {
+      const pkg = {
+        exports: {
+          ".": {
+            "import": {
+              "development": "./dist/index.development.mjs",
+              "production": "./dist/index.production.mjs",
+              "default": "./dist/index.mjs"
+            },
+            "require": {
+              "production": "./dist/index.production.js",
+              "development": "./dist/index.development.js",
+              "default": "./dist/index.js"
+            },
+            "default": "./dist/index.js"
+          },
+        }
+      }
+
+      expect(getExportConditionDistHelper(pkg)).toEqual([
+        { file: 'index.development.mjs', format: 'esm' },
+        { file: 'index.production.mjs', format: 'esm' },
+        { file: 'index.development.js', format: 'cjs' },
+        { file: 'index.production.js', format: 'cjs' },
+        { file: 'index.js', format: 'cjs' },
         { file: 'index.mjs', format: 'esm' },
       ])
     })

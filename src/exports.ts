@@ -1,4 +1,4 @@
-import { join, resolve, dirname, extname } from 'path'
+import path, { join, resolve, dirname, extname } from 'path'
 import type {
   PackageMetadata,
   ExportCondition,
@@ -7,7 +7,7 @@ import type {
   ParsedExportCondition,
 } from './types'
 import { baseNameWithoutExtension, hasCjsExtension } from './utils'
-import { dtsExtensionsMap } from './constants'
+import { dtsExtensionsMap, suffixedExportConventions } from './constants'
 import { OutputOptions } from 'rollup'
 
 export function getTypings(pkg: PackageMetadata) {
@@ -73,6 +73,10 @@ const getFirstExportPath = (
   return fullExportCondition as string
 }
 
+const joinExportAndCondition = (exportPath: string, condition: string) => {
+  return (exportPath === '.' ? '' : exportPath) + '.' + condition
+}
+
 function findExport(
   exportPath: string,
   exportCondition: ExportCondition,
@@ -87,6 +91,7 @@ function findExport(
       exportCondition,
       packageType,
     )
+    // console.log('fullExportCondition', fullExportCondition)
     if (exportPath.startsWith('.')) {
       paths[exportPath] = {
         ...paths[exportPath],
@@ -95,11 +100,30 @@ function findExport(
     } else {
       const exportJsBundlePath = getFirstExportPath(fullExportCondition)
 
-      // exportPath is exportType, import, require, ...
-      // merge to currentPath
-      paths[currentPath] = {
-        ...paths[currentPath],
-        [exportPath]: exportJsBundlePath,
+      console.log(
+        'exportJsBundlePath',
+        exportJsBundlePath,
+        'exportPath',
+        exportPath,
+        'currentPath',
+        currentPath,
+        'exportCondition',
+        exportCondition,
+      )
+
+      if (suffixedExportConventions.has(exportPath)) {
+        const specialPath = joinExportAndCondition(currentPath, exportPath)
+        paths[specialPath] = {
+          ...paths[specialPath],
+          ...(exportCondition as FullExportCondition),
+        }
+      } else {
+        // exportPath is exportType, import, require, ...
+        // merge to currentPath
+        paths[currentPath] = {
+          ...paths[currentPath],
+          [exportPath]: exportJsBundlePath,
+        }
       }
     }
     return
@@ -120,6 +144,41 @@ function findExport(
     } else {
       // subpath is exportType, import, require, ...
       const exportType = subpath
+      if (typeof exportCondition[subpath] === 'object') {
+        const defaultPath = (exportCondition[subpath] as any).default
+        if (defaultPath) {
+          const nestedExportCondition = { [exportType]: defaultPath }
+          findExport(
+            exportPath,
+            nestedExportCondition,
+            paths,
+            packageType,
+            currentPath,
+          )
+        }
+        // Find special export type, such as import: { development: './dev.js', production: './prod.js' }
+        const conditionSpecialTypes = Object.keys(
+          exportCondition[exportType],
+        ).filter((key) => suffixedExportConventions.has(key))
+        if (conditionSpecialTypes.length > 0) {
+          for (const conditionSpecialType of conditionSpecialTypes) {
+            const nestedExportConditionPath = {
+              [exportType]: (exportCondition[exportType] as any)[
+                conditionSpecialType
+              ],
+            }
+            findExport(
+              conditionSpecialType,
+              nestedExportConditionPath,
+              paths,
+              packageType,
+              currentPath,
+              // (currentPath === '.' ? currentPath : currentPath + '.') + conditionSpecialType,
+            )
+          }
+        }
+      } else {
+      }
       const defaultPath =
         typeof exportCondition[subpath] === 'object'
           ? (exportCondition[subpath] as any).default
@@ -283,6 +342,7 @@ export function getExportPaths(
     }
   }
 
+  console.log('pathsMap', pathsMap)
   return pathsMap
 }
 
@@ -322,12 +382,8 @@ export function isCjsExportName(
   ext: string,
 ) {
   const isESModule = isESModulePackage(pkg.type)
-  return (
-    (!isESModule &&
-      ['require', 'main'].includes(exportCondition) &&
-      ext !== 'mjs') ||
-    ext === 'cjs'
-  )
+  const isCjsCondition = ['require', 'main'].includes(exportCondition)
+  return (!isESModule && (ext !== 'mjs' || isCjsCondition)) || ext === 'cjs'
 }
 
 export function getExportsDistFilesOfCondition(
