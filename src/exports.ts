@@ -100,17 +100,6 @@ function findExport(
     } else {
       const exportJsBundlePath = getFirstExportPath(fullExportCondition)
 
-      console.log(
-        'exportJsBundlePath',
-        exportJsBundlePath,
-        'exportPath',
-        exportPath,
-        'currentPath',
-        currentPath,
-        'exportCondition',
-        exportCondition,
-      )
-
       if (suffixedExportConventions.has(exportPath)) {
         const specialPath = joinExportAndCondition(currentPath, exportPath)
         paths[specialPath] = {
@@ -305,6 +294,7 @@ export function getExportPaths(
       ...paths,
     }
   }
+  console.log('pathsMap', pathsMap)
   // main export '.' from main/module/typings
   let mainExportCondition
   if (pkg.main) {
@@ -342,7 +332,6 @@ export function getExportPaths(
     }
   }
 
-  console.log('pathsMap', pathsMap)
   return pathsMap
 }
 

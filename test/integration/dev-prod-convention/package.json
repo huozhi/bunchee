@@ -1,9 +1,18 @@
 {
   "name": "dev-prod-convention",
   "exports": {
-    "development": "./dist/development.js",
-    "production": {
-      "default": "./dist/production.js"
+    ".": {
+      "import": {
+        "development": "./dist/index.development.mjs",
+        "production": "./dist/index.production.mjs",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "production": "./dist/index.production.js",
+        "development": "./dist/index.development.js",
+        "default": "./dist/index.js"
+      },
+      "default": "./dist/index.js"
     }
   }
 }
