@@ -117,7 +117,7 @@ const testCases: {
         './dist/react-server.mjs': /'react-server'/,
         './dist/react-native.js': /'react-native'/,
         './dist/index.d.ts': /declare const shared = true/,
-        './dist/api.mjs': /\'pkg-export-ts-rsc\'/,
+        './dist/api.mjs': `import index$1 from './index`,
       })
     },
   },
@@ -566,14 +566,14 @@ const testCases: {
         join(dir, './dist/index.mjs'),
         'utf-8',
       )
-      expect(indexEsm).toContain('shared-entry/shared')
+      expect(indexEsm).toContain('./shared')
       expect(indexEsm).toContain('index-export')
       expect(indexEsm).not.toMatch(/['"]\.\/shared['"]/)
       expect(indexEsm).not.toContain('shared-export')
 
       // CJS bundle imports from <pkg/export>
       const indexCjs = await fsp.readFile(join(dir, './dist/index.js'), 'utf-8')
-      expect(indexCjs).toContain('shared-entry/shared')
+      expect(indexCjs).toContain('./shared')
       expect(indexCjs).toContain('index-export')
       expect(indexCjs).not.toMatch(/['"]\.\/shared['"]/)
 

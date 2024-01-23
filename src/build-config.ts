@@ -175,11 +175,9 @@ async function buildInputConfig(
   const commonPlugins = [
     sizePlugin,
     aliasEntries({
-      entries: {
-        ...pluginContext.entriesAlias,
-        // Do not alias current alias of package
-        [entry]: null,
-      },
+      entry,
+      entries,
+      reversedAlias: pluginContext.entriesAlias,
     }),
   ]
 
