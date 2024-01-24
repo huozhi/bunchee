@@ -1,4 +1,4 @@
-import { Plugin } from 'rollup'
+import { OutputOptions, Plugin } from 'rollup'
 import { Entries } from '../types'
 import path from 'path'
 import { filePathWithoutExtension } from '../utils'
@@ -36,25 +36,35 @@ function _findCommonPrefixDirectory(paths: string[]): string {
 export function aliasEntries({
   entry,
   entries,
-  reversedAlias,
+  format,
 }: {
   entry: string
   entries: Entries
-  reversedAlias: Record<string, string | null>
+  format: OutputOptions['format']
 }): Plugin {
   let currentDistPath = ''
   const pathToRelativeDistMap = new Map<string, string>()
   for (const [, exportCondition] of Object.entries(entries)) {
-    // const distPaths = Object.values(exportCondition.export)
-    const firstDistPath =
-      exportCondition.export.import ||
-      exportCondition.export.require ||
-      exportCondition.export.default
+    const {
+      import: importCond,
+      require: requireCond,
+      default: defaultCond,
+    } = exportCondition.export
+    const firstCond = Object.entries(exportCondition.export).find(
+      ([key, cond]) => key !== 'types' && cond != null,
+    )?.[1]
 
-    if (entry !== exportCondition.source) {
-      pathToRelativeDistMap.set(exportCondition.source, firstDistPath)
-    } else {
-      currentDistPath = firstDistPath
+    const fallbackCond = defaultCond || firstCond
+    // For cjs, use require() instead of import
+    const firstDistPath =
+      (format === 'cjs' ? requireCond : importCond) || fallbackCond
+
+    if (firstDistPath) {
+      if (entry !== exportCondition.source) {
+        pathToRelativeDistMap.set(exportCondition.source, firstDistPath)
+      } else {
+        currentDistPath = firstDistPath
+      }
     }
   }
 
@@ -67,11 +77,11 @@ export function aliasEntries({
           const aliasedId = pathToRelativeDistMap.get(resolvedId.id)
 
           if (aliasedId != null && aliasedId !== currentDistPath) {
-            const relativePath = relativify(
-              filePathWithoutExtension(
-                path.relative(path.dirname(currentDistPath), aliasedId),
-              )!,
-            )
+            const ext = path.extname(aliasedId)
+            const filePathBase = filePathWithoutExtension(
+              path.relative(path.dirname(currentDistPath), aliasedId),
+            )!
+            const relativePath = relativify(filePathBase + ext)
             return { id: relativePath, external: true }
           }
         }

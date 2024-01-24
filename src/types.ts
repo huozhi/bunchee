@@ -58,10 +58,9 @@ type PackageMetadata = {
   typings?: string
 }
 
-type BuncheeRollupConfig = Partial<Omit<RollupOptions, 'input' | 'output'>> & {
-  exportName?: string
+type BuncheeRollupConfig = {
   input: InputOptions
-  output: OutputOptions[]
+  output: OutputOptions
 }
 
 type CliArgs = {
