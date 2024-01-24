@@ -117,7 +117,7 @@ const testCases: {
         './dist/react-server.mjs': /'react-server'/,
         './dist/react-native.js': /'react-native'/,
         './dist/index.d.ts': /declare const shared = true/,
-        './dist/api.mjs': `import index$1 from './index`,
+        './dist/api.mjs': /\'pkg-export-ts-rsc\'/,
       })
     },
   },
@@ -153,8 +153,10 @@ const testCases: {
         './dist/shared/edge-light.mjs': /'shared.edge-light'/,
         './dist/server/edge.mjs': /'server.edge-light'/,
         './dist/server/react-server.mjs': /'server.react-server'/,
-        './dist/server/index.d.ts':
-          /export { Client } from 'multi-entries\/client';\s*\S*export { Shared } from 'multi-entries\/shared';/,
+        // types
+        './dist/server/index.d.ts': `export { Client } from '../client/index.mjs';\nexport { Shared } from '../shared/index.mjs';`,
+        './dist/client/index.d.mts': `export { Shared } from '../shared/index.mjs'`,
+        './dist/client/index.d.cts': `export { Shared } from '../shared/index.cjs'`,
       }
 
       assertFilesContent(dir, contentsRegex)
@@ -566,14 +568,14 @@ const testCases: {
         join(dir, './dist/index.mjs'),
         'utf-8',
       )
-      expect(indexEsm).toContain('./shared')
+      expect(indexEsm).toContain('shared-entry/shared')
       expect(indexEsm).toContain('index-export')
       expect(indexEsm).not.toMatch(/['"]\.\/shared['"]/)
       expect(indexEsm).not.toContain('shared-export')
 
       // CJS bundle imports from <pkg/export>
       const indexCjs = await fsp.readFile(join(dir, './dist/index.js'), 'utf-8')
-      expect(indexCjs).toContain('./shared')
+      expect(indexCjs).toContain('shared-entry/shared')
       expect(indexCjs).toContain('index-export')
       expect(indexCjs).not.toMatch(/['"]\.\/shared['"]/)
 
