@@ -4,31 +4,6 @@ import path from 'path'
 import { filePathWithoutExtension } from '../utils'
 import { relativify } from '../lib/format'
 
-function findCommonPrefix(strings: string[]): string {
-  if (strings.length === 0) {
-    return ''
-  }
-  let prefix = strings[0]
-  for (const str of strings) {
-    for (let i = 0; i < prefix.length; i++) {
-      if (prefix[i] !== str[i]) {
-        prefix = prefix.slice(0, i)
-        break
-      }
-    }
-  }
-  return prefix
-}
-
-function _findCommonPrefixDirectory(paths: string[]): string {
-  const directories = paths.map((path) => {
-    const dir = path.split('/')
-    dir.pop()
-    return dir.join('/')
-  })
-  return findCommonPrefix(directories)
-}
-
 // Alias entries to import path
 // e.g.
 // For a resolved file, if it's one of the entries,
