@@ -1,5 +1,5 @@
 import type { JscTarget } from '@swc/types'
-import type { InputOptions, OutputOptions, RollupOptions } from 'rollup'
+import type { InputOptions, OutputOptions } from 'rollup'
 import type { OutputState } from './plugins/output-state-plugin'
 import type { TypescriptOptions } from './typescript'
 
@@ -58,10 +58,9 @@ type PackageMetadata = {
   typings?: string
 }
 
-type BuncheeRollupConfig = Partial<Omit<RollupOptions, 'input' | 'output'>> & {
-  exportName?: string
+type BuncheeRollupConfig = {
   input: InputOptions
-  output: OutputOptions[]
+  output: OutputOptions
 }
 
 type CliArgs = {

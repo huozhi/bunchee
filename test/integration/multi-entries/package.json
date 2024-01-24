@@ -1,5 +1,6 @@
 {
   "name": "multi-entries",
+  "version": "0.0.0",
   "types": "./dist/index.d.ts",
   "exports": {
     "./package.json": "./package.json",
@@ -12,6 +13,7 @@
     },
     "./shared": {
       "import": "./dist/shared/index.mjs",
+      "require": "./dist/shared/index.cjs",
       "edge-light": "./dist/shared/edge-light.mjs"
     },
     "./server": {

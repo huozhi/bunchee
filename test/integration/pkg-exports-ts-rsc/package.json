@@ -5,8 +5,12 @@
       "types": "./dist/index.d.ts",
       "react-server": "./dist/react-server.mjs",
       "react-native": "./dist/react-native.js",
-      "import": "./dist/index.mjs"
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
     },
-    "./api": "./dist/api.mjs"
+    "./api": {
+      "import": "./dist/api.mjs",
+      "require": "./dist/api.cjs"
+    }
   }
 }

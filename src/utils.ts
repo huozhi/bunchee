@@ -137,10 +137,17 @@ export async function getSourcePathFromExportPath(
 
 // TODO: add unit test
 // Unlike path.basename, forcedly removing extension
-export function filePathWithoutExtension(file: string | undefined) {
-  return file
-    ? file.replace(new RegExp(`${path.extname(file)}$`), '')
-    : undefined
+export function filePathWithoutExtension(filePath: string | undefined) {
+  if (!filePath) return
+
+  const lastDotIndex = filePath.lastIndexOf('.')
+  const lastSlashIndex = filePath.lastIndexOf('/')
+
+  if (lastDotIndex !== -1 && lastDotIndex > lastSlashIndex) {
+    return filePath.slice(0, filePath.indexOf('.', lastSlashIndex + 1))
+  }
+
+  return filePath
 }
 
 export const nonNullable = <T>(n?: T): n is T => Boolean(n)
