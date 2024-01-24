@@ -184,7 +184,9 @@ async function buildInputConfig(
     aliasEntries({
       entry,
       entries,
+      entriesAlias: pluginContext.entriesAlias,
       format: aliasFormat,
+      dts,
     }),
   ]
 

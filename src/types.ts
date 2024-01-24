@@ -1,5 +1,5 @@
 import type { JscTarget } from '@swc/types'
-import type { InputOptions, OutputOptions, RollupOptions } from 'rollup'
+import type { InputOptions, OutputOptions } from 'rollup'
 import type { OutputState } from './plugins/output-state-plugin'
 import type { TypescriptOptions } from './typescript'
 

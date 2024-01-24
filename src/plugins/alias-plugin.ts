@@ -36,13 +36,21 @@ function _findCommonPrefixDirectory(paths: string[]): string {
 export function aliasEntries({
   entry,
   entries,
+  entriesAlias,
   format,
+  dts,
 }: {
   entry: string
   entries: Entries
+  entriesAlias: Record<string, string>
   format: OutputOptions['format']
+  dts: boolean
 }): Plugin {
   let currentDistPath = ''
+  const entryAliasWithoutSelf = {
+    ...entriesAlias,
+    [entry]: null,
+  }
   const pathToRelativeDistMap = new Map<string, string>()
   for (const [, exportCondition] of Object.entries(entries)) {
     const {
@@ -54,16 +62,18 @@ export function aliasEntries({
       ([key, cond]) => key !== 'types' && cond != null,
     )?.[1]
 
-    const fallbackCond = defaultCond || firstCond
-    // For cjs, use require() instead of import
-    const firstDistPath =
-      (format === 'cjs' ? requireCond : importCond) || fallbackCond
+    if (dts) {
+      const fallbackCond = defaultCond || firstCond
+      // For cjs, use require() instead of import
+      const firstDistPath =
+        (format === 'cjs' ? requireCond : importCond) || fallbackCond
 
-    if (firstDistPath) {
-      if (entry !== exportCondition.source) {
-        pathToRelativeDistMap.set(exportCondition.source, firstDistPath)
-      } else {
-        currentDistPath = firstDistPath
+      if (firstDistPath) {
+        if (entry !== exportCondition.source) {
+          pathToRelativeDistMap.set(exportCondition.source, firstDistPath)
+        } else {
+          currentDistPath = firstDistPath
+        }
       }
     }
   }
@@ -74,15 +84,25 @@ export function aliasEntries({
       async handler(source, importer, options) {
         const resolvedId = await this.resolve(source, importer, options)
         if (resolvedId != null) {
-          const aliasedId = pathToRelativeDistMap.get(resolvedId.id)
+          if (dts) {
+            // For types, generate relative path to the other type files,
+            // this will be compatible for the node10 ts module resolution.
+            const aliasedId = pathToRelativeDistMap.get(resolvedId.id)
 
-          if (aliasedId != null && aliasedId !== currentDistPath) {
-            const ext = path.extname(aliasedId)
-            const filePathBase = filePathWithoutExtension(
-              path.relative(path.dirname(currentDistPath), aliasedId),
-            )!
-            const relativePath = relativify(filePathBase + ext)
-            return { id: relativePath, external: true }
+            if (aliasedId != null && aliasedId !== currentDistPath) {
+              const ext = path.extname(aliasedId)
+              const filePathBase = filePathWithoutExtension(
+                path.relative(path.dirname(currentDistPath), aliasedId),
+              )!
+              const relativePath = relativify(filePathBase + ext)
+              return { id: relativePath, external: true }
+            }
+          } else {
+            const aliasedId = entryAliasWithoutSelf[resolvedId.id]
+
+            if (aliasedId != null) {
+              return { id: aliasedId }
+            }
           }
         }
         return null
