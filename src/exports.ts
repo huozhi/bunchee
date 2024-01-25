@@ -1,4 +1,4 @@
-import path, { join, resolve, dirname, extname } from 'path'
+import { join, resolve, dirname, extname } from 'path'
 import type {
   PackageMetadata,
   ExportCondition,
