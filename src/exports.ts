@@ -91,7 +91,7 @@ function findExport(
       exportCondition,
       packageType,
     )
-    // console.log('fullExportCondition', fullExportCondition)
+
     if (exportPath.startsWith('.')) {
       paths[exportPath] = {
         ...paths[exportPath],
@@ -162,7 +162,6 @@ function findExport(
               paths,
               packageType,
               currentPath,
-              // (currentPath === '.' ? currentPath : currentPath + '.') + conditionSpecialType,
             )
           }
         }

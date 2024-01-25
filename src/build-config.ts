@@ -513,7 +513,8 @@ async function collectEntry(
     entryExport: string
   },
 ): Promise<void> {
-  const { cwd, pkg, entries, entryPath, exportCondRef, entryExport } = options
+  const { cwd, pkg, entries, entryPath, exportCondRef } = options
+  let { entryExport } = options
   let exportCondForType: FullExportCondition = { ...exportCondRef }
   // Special cases of export type, only pass down the exportPaths for the type
   if (suffixedExportConventions.has(exportType)) {
@@ -521,6 +522,13 @@ async function collectEntry(
       [exportType]: exportCondRef[exportType],
     }
     // Basic export type, pass down the exportPaths with erasing the special ones
+  } else if (
+    exportType[0] === '.' &&
+    suffixedExportConventions.has(exportType.slice(1))
+  ) {
+    exportCondForType = exportCondRef
+    exportType = exportType.slice(1)
+    entryExport = entryExport.replace(exportType, '')
   } else {
     for (const exportType of suffixedExportConventions) {
       delete exportCondForType[exportType]
@@ -620,6 +628,8 @@ export async function collectEntries(
         for (const exportCondType of suffixedExportConventions) {
           if (exportCond[exportCondType]) {
             await collectEntry(exportCondType, collectEntryOptions)
+          } else if (entryExport === '.' + exportCondType) {
+            await collectEntry(entryExport, collectEntryOptions)
           }
         }
       }
