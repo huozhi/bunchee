@@ -161,13 +161,13 @@ describe('lib exports', () => {
             '.': {
               import: {
                 types: './dist/index.d.ts',
-                default: './dist/index.mjs'
+                default: './dist/index.mjs',
               },
               require: {
                 types: './dist/index.d.ts',
-                default: './dist/index.js'
-              }
-            }
+                default: './dist/index.js',
+              },
+            },
           },
         }),
       ).toEqual({
@@ -187,13 +187,13 @@ describe('lib exports', () => {
             '.': {
               import: {
                 types: './dist/index.d.ts',
-                default: './dist/index.mjs'
+                default: './dist/index.mjs',
               },
               require: {
                 types: './dist/index.d.ts',
-                default: './dist/index.js'
-              }
-            }
+                default: './dist/index.js',
+              },
+            },
           },
         }),
       ).toEqual({
@@ -216,12 +216,12 @@ describe('lib exports', () => {
       ).toEqual({
         './sub': {
           import: './dist/index.mjs',
-        }
+        },
       })
     })
   })
 
-  describe('getExportConditionDist', () => {
+  describe('getExportsDistFilesOfCondition', () => {
     function getExportConditionDistHelper(
       pkg: PackageMetadata,
       exportName: string = '.',
@@ -233,10 +233,14 @@ describe('lib exports', () => {
         export: parsedExportCondition[exportName],
       }
       // Get only basename to skip path.resolve result for `file` property
-      return getExportsDistFilesOfCondition(pkg, parsedExport, '').map((item) => ({
-        ...item,
-        file: path.basename(item.file),
-      }))
+      const apiResult = getExportsDistFilesOfCondition(pkg, parsedExport, '')
+
+      return apiResult.map(
+        (item) => ({
+          ...item,
+          file: path.basename(item.file),
+        }),
+      )
     }
 
     it('should dedupe the same path import and module if they are the same path', () => {
@@ -263,7 +267,7 @@ describe('lib exports', () => {
       ])
     })
 
-    it('should handle special exports', () => {
+    it('should handle basic special exports', () => {
       const pkg: PackageMetadata = {
         exports: {
           '.': {
@@ -277,6 +281,39 @@ describe('lib exports', () => {
       expect(getExportConditionDistHelper(pkg)).toEqual([
         { file: 'index.cjs', format: 'cjs' },
         { file: 'index.mjs', format: 'esm' },
+      ])
+    })
+
+    it('should handle dev and prod special exports', () => {
+      const pkg = {
+        exports: {
+          '.': {
+            import: {
+              development: './dist/index.development.mjs',
+              production: './dist/index.production.mjs',
+              default: './dist/index.mjs',
+            },
+            require: {
+              production: './dist/index.production.js',
+              development: './dist/index.development.js',
+              default: './dist/index.js',
+            },
+            default: './dist/index.js',
+          },
+        },
+      }
+
+      expect(getExportConditionDistHelper(pkg, '.')).toEqual([
+        { file: 'index.mjs', format: 'esm' },
+        { file: 'index.js', format: 'cjs' },
+      ])
+      expect(getExportConditionDistHelper(pkg, '.development')).toEqual([
+        { file: 'index.development.mjs', format: 'esm' },
+        { file: 'index.development.js', format: 'cjs' },
+      ])
+      expect(getExportConditionDistHelper(pkg, '.production')).toEqual([
+        { file: 'index.production.mjs', format: 'esm' },
+        { file: 'index.production.js', format: 'cjs' },
       ])
     })
   })
