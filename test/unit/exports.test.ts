@@ -233,7 +233,9 @@ describe('lib exports', () => {
         export: parsedExportCondition[exportName],
       }
       // Get only basename to skip path.resolve result for `file` property
-      return getExportsDistFilesOfCondition(pkg, parsedExport, '').map(
+      const apiResult = getExportsDistFilesOfCondition(pkg, parsedExport, '')
+
+      return apiResult.map(
         (item) => ({
           ...item,
           file: path.basename(item.file),

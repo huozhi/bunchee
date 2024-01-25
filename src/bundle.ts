@@ -155,7 +155,6 @@ async function bundle(
   }
 
   const entries = await collectEntries(pkg, cliEntryPath, exportPaths, cwd)
-  console.log('entries', entries)
   const hasTypeScriptFiles = Object.values(entries).some((entry) =>
     isTypescriptFile(entry.source),
   )

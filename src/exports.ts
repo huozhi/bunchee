@@ -294,7 +294,6 @@ export function getExportPaths(
       ...paths,
     }
   }
-  console.log('pathsMap', pathsMap)
   // main export '.' from main/module/typings
   let mainExportCondition
   if (pkg.main) {
@@ -372,7 +371,11 @@ export function isCjsExportName(
 ) {
   const isESModule = isESModulePackage(pkg.type)
   const isCjsCondition = ['require', 'main'].includes(exportCondition)
-  return (!isESModule && (ext !== 'mjs' || isCjsCondition)) || ext === 'cjs'
+  const isNotEsmExportName = !isEsmExportName(exportCondition, ext)
+  return (
+    (!isESModule && isNotEsmExportName && (ext !== 'mjs' || isCjsCondition)) ||
+    ext === 'cjs'
+  )
 }
 
 export function getExportsDistFilesOfCondition(
@@ -398,6 +401,7 @@ export function getExportsDistFilesOfCondition(
     )
       ? 'cjs'
       : 'esm'
+
     if (uniqueFiles.has(distFile)) {
       continue
     }
