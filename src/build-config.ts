@@ -66,7 +66,7 @@ const swcMinifyOptions = {
 // return { 'process.env.<key>': '<value>' }
 function getBuildEnv(
   envs: string[],
-  exportConditions: FullExportCondition,
+  parsedExportCondition: ParsedExportCondition,
 ): Record<string, string> {
   if (!envs.includes('NODE_ENV')) {
     envs.push('NODE_ENV')
@@ -79,8 +79,15 @@ function getBuildEnv(
     return acc
   }, {})
 
+  // handle .development, .production
+  const condName = parsedExportCondition.name.startsWith('.')
+    ? parsedExportCondition.name.slice(1)
+    : parsedExportCondition.name
+
+  const exportConditionNames = new Set(
+    Object.keys(parsedExportCondition.export).concat(condName),
+  )
   // For development and production convention, we override the NODE_ENV value
-  const exportConditionNames = new Set(Object.keys(exportConditions))
   if (exportConditionNames.has('development')) {
     envVars['process.env.NODE_ENV'] = JSON.stringify('development')
   } else if (exportConditionNames.has('production')) {
@@ -137,7 +144,7 @@ async function buildInputConfig(
     }
   }
 
-  const envValues = getBuildEnv(bundleConfig.env || [], exportCondition.export)
+  const envValues = getBuildEnv(bundleConfig.env || [], exportCondition)
 
   const { useTypeScript } = buildContext
   const { runtime, target: jscTarget, minify: shouldMinify } = bundleConfig
@@ -513,23 +520,31 @@ async function collectEntry(
     entryExport: string
   },
 ): Promise<void> {
-  const { cwd, pkg, entries, entryPath, exportCondRef } = options
-  let { entryExport } = options
+  const {
+    cwd,
+    pkg,
+    entries,
+    entryPath,
+    exportCondRef,
+    entryExport: originEntryExport,
+  } = options
+  let entryExport = originEntryExport
   let exportCondForType: FullExportCondition = { ...exportCondRef }
   // Special cases of export type, only pass down the exportPaths for the type
   if (suffixedExportConventions.has(exportType)) {
     exportCondForType = {
       [exportType]: exportCondRef[exportType],
     }
-    // Basic export type, pass down the exportPaths with erasing the special ones
   } else if (
     exportType[0] === '.' &&
     suffixedExportConventions.has(exportType.slice(1))
   ) {
+    // e.g. .development, .production that has both esm and cjs export
     exportCondForType = exportCondRef
     exportType = exportType.slice(1)
     entryExport = entryExport.replace(exportType, '')
   } else {
+    // Basic export type, pass down the exportPaths with erasing the special ones
     for (const exportType of suffixedExportConventions) {
       delete exportCondForType[exportType]
     }
@@ -547,7 +562,7 @@ async function collectEntry(
 
   const exportCondition: ParsedExportCondition = {
     source,
-    name: entryExport,
+    name: originEntryExport,
     export: exportCondForType,
   }
 

@@ -91,7 +91,7 @@ const testCases: {
     name: 'entry-index-index',
     args: [],
     async expected(dir) {
-      assertFilesContent(dir, {
+      await assertFilesContent(dir, {
         './dist/index.js': /'index'/,
         './dist/react-server.js': /\'react-server\'/,
       })
@@ -112,7 +112,7 @@ const testCases: {
   {
     name: 'pkg-exports-ts-rsc',
     async expected(dir) {
-      assertFilesContent(dir, {
+      await assertFilesContent(dir, {
         './dist/index.mjs': /const shared = true/,
         './dist/react-server.mjs': /'react-server'/,
         './dist/react-native.js': /'react-native'/,
@@ -159,7 +159,7 @@ const testCases: {
         './dist/client/index.d.cts': `export { Shared } from '../shared/index.cjs'`,
       }
 
-      assertFilesContent(dir, contentsRegex)
+      await assertFilesContent(dir, contentsRegex)
 
       const log = `\
       dist/shared/index.d.mts
@@ -324,7 +324,7 @@ const testCases: {
         './dist/server/react-server.mjs': /'server.react-server'/,
       }
 
-      assertFilesContent(dir, contentsRegex)
+      await assertFilesContent(dir, contentsRegex)
 
       const log = `\
       dist/button.d.ts
@@ -850,12 +850,13 @@ const testCases: {
   {
     name: 'dev-prod-convention',
     async expected(dir) {
-      const distFiles = ['./dist/development.js', './dist/production.js']
-      assertContainFiles(dir, distFiles)
-
-      assertFilesContent(dir, {
-        './dist/development.js': /= "development"/,
-        './dist/production.js': /= "production"/,
+      await assertFilesContent(dir, {
+        './dist/index.development.js': /= "development"/,
+        './dist/index.development.mjs': /= "development"/,
+        './dist/index.production.js': /= "production"/,
+        'dist/index.production.mjs': /= "production"/,
+        './dist/index.js': /= 'index'/,
+        './dist/index.mjs': /= 'index'/,
       })
     },
   },
