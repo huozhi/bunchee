@@ -260,7 +260,7 @@ const testCases: {
     name: 'output-in-watch',
     dist: createTempDir,
     timeoutClose: 4000,
-    expectedCode: 143,
+    expectedCode: 143, // finish watch mode by `ps.kill('SIGTERM')`, and it will send 143 code
     args: [resolveFromTest('hello.js'), '-w'],
     expected(_, { stdout }) {
       const watchOutputRegex = /Build in \d+(.\d{2})ms/
@@ -285,7 +285,7 @@ describe('cli', () => {
       timeoutClose,
       expectedCode,
     } = testCase
-    it(`cli ${name} should work properly`, async () => {
+    it(`cli ${name} should work properly`, async (done) => {
       // Delete the of dist folder: folder of dist file (as last argument) or `dist` option
       let distDir
       let distFile
