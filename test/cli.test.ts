@@ -265,7 +265,7 @@ const testCases: {
     expected(_, { stdout }) {
       const watchOutputRegex = /Build in \d+(.\d{2})ms/
       return [
-        [stdout.includes('Watching assets in'), true],
+        [stdout.includes('Watching project'), true],
         [watchOutputRegex.test(stdout), true],
         [stdout.includes('Exports'), false],
       ]
