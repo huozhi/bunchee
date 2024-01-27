@@ -1,6 +1,6 @@
 {
   "name": "monorepo",
   "dependencies": {
-    "package": "link:./packages/package"
+    "package": "link:./packages/a"
   }
 }

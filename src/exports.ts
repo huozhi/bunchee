@@ -10,7 +10,7 @@ import { baseNameWithoutExtension, hasCjsExtension } from './utils'
 import { dtsExtensionsMap, suffixedExportConventions } from './constants'
 import { OutputOptions } from 'rollup'
 
-export function getTypings(pkg: PackageMetadata) {
+export function getPackageTypings(pkg: PackageMetadata) {
   return pkg.types || pkg.typings
 }
 
@@ -307,7 +307,7 @@ export function getExportPaths(
     {
       ...mainExportCondition,
       module: pkg.module,
-      types: getTypings(pkg),
+      types: getPackageTypings(pkg),
     },
     packageType,
   )
@@ -348,7 +348,7 @@ export function constructDefaultExportCondition(
   const isEsmPackage = isESModulePackage(packageType)
   let exportCondition
   if (typeof value === 'string') {
-    const types = getTypings(value as PackageMetadata)
+    const types = getPackageTypings(value as PackageMetadata)
     exportCondition = {
       [isEsmPackage ? 'import' : 'require']: value,
       ...(types && { types }),

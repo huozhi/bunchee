@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
     "composite": true,
-    "incremental": true
+    "incremental": false,
   },
+  "files": [],
   "references": [
     {
-      "path": "./packages/package"
+      "path": "./packages/a"
     }
   ]
 }

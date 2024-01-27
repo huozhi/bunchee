@@ -214,12 +214,11 @@ async function buildInputConfig(
           incremental: false,
         }
       : undefined
-    const compositeOptions =
-      tsCompilerOptions.composite && enableIncrementalWithoutBuildInfo
-        ? {
-            composite: false,
-          }
-        : undefined
+    const compositeOptions = tsCompilerOptions.composite
+      ? {
+          composite: false,
+        }
+      : undefined
 
     const { options: overrideResolvedTsOptions }: any =
       await convertCompilerOptions(cwd, {
