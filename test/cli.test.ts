@@ -28,8 +28,8 @@ const testCases: {
   distFile?: string
   env?: Record<string, string>
   dist?: (() => Promise<string>) | string
-  timeoutClose?: number
-  expectedCode?: number
+  abortTimeout?: number
+  exitCode?: number
   expected(
     f: string,
     { stderr, stdout }: { stderr: string; stdout: string },
@@ -259,8 +259,8 @@ const testCases: {
   {
     name: 'output-in-watch',
     dist: createTempDir,
-    timeoutClose: 4000,
-    expectedCode: 143, // finish watch mode by `ps.kill('SIGTERM')`, and it will send 143 code
+    abortTimeout: 3000,
+    exitCode: 143, // SIGTERM exit code
     args: [resolveFromTest('hello.js'), '-w'],
     expected(_, { stdout }) {
       const watchOutputRegex = /Build in \d+(.\d{2})ms/
@@ -282,10 +282,10 @@ describe('cli', () => {
       dist,
       distFile: _distFile,
       env,
-      timeoutClose,
-      expectedCode,
+      abortTimeout,
+      exitCode,
     } = testCase
-    it(`cli ${name} should work properly`, async (done) => {
+    it(`cli ${name} should work properly`, async () => {
       // Delete the of dist folder: folder of dist file (as last argument) or `dist` option
       let distDir
       let distFile
@@ -307,7 +307,6 @@ describe('cli', () => {
       execSync(`rm -rf ${distDir}`)
       debug.log(`Command: rm -rf ${distDir}`)
       debug.log(`Command: bunchee ${args.join(' ')}`)
-
       const ps = fork(
         `${require.resolve('tsx/cli')}`,
         [__dirname + '/../src/bin/index.ts'].concat(args),
@@ -320,10 +319,11 @@ describe('cli', () => {
       let stdout = ''
       ps.stdout?.on('data', (chunk) => (stdout += chunk.toString()))
       ps.stderr?.on('data', (chunk) => (stderr += chunk.toString()))
-      if (typeof timeoutClose === 'number') {
+
+      if (typeof abortTimeout === 'number') {
         setTimeout(() => {
           ps.kill('SIGTERM')
-        }, timeoutClose)
+        }, abortTimeout)
       }
       const code = await new Promise((resolve) => {
         ps.on('close', resolve)
@@ -336,7 +336,7 @@ describe('cli', () => {
         expect(left).toBe(right)
       }
       expect(fs.existsSync(distFile)).toBe(true)
-      expect(code).toBe(expectedCode ?? 0)
+      expect(code).toBe(exitCode ?? 0)
       debug.log(`Clean up ${distDir}`)
 
       await removeDirectory(distDir)
