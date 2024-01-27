@@ -123,7 +123,7 @@ async function bundle(
   ): Promise<RollupWatcher | RollupOutput | void> => {
     if (options.clean) {
       if (!isFromCli) {
-        await removeOutputDir(rollupConfig.output)
+        await removeOutputDir(rollupConfig.output, cwd)
       }
     }
 
@@ -271,8 +271,9 @@ function logWatcherBuildTime(result: RollupWatcher[]) {
   })
 }
 
-async function removeOutputDir(output: OutputOptions) {
-  if (output.dir) await removeDir(output.dir)
+async function removeOutputDir(output: OutputOptions, cwd: string) {
+  const dir = output.dir
+  if (dir && dir !== cwd) await removeDir(dir)
 }
 
 function runBundle({ input, output }: BuncheeRollupConfig) {
