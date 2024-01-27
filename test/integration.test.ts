@@ -16,6 +16,14 @@ jest.setTimeout(10 * 60 * 1000)
 const integrationTestDir = resolve(__dirname, 'integration')
 const getPath = (filepath: string) => join(integrationTestDir, filepath)
 
+const getOutputSizeColumnIndex = (line: string): number => {
+  let match
+  if ((match = /\d+\sK?B/g.exec(line)) !== null) {
+    return match.index
+  }
+  return -1
+}
+
 const testCases: {
   name: string
   dir?: string
@@ -83,7 +91,7 @@ const testCases: {
     name: 'entry-index-index',
     args: [],
     async expected(dir) {
-      assertFilesContent(dir, {
+      await assertFilesContent(dir, {
         './dist/index.js': /'index'/,
         './dist/react-server.js': /\'react-server\'/,
       })
@@ -104,7 +112,7 @@ const testCases: {
   {
     name: 'pkg-exports-ts-rsc',
     async expected(dir) {
-      assertFilesContent(dir, {
+      await assertFilesContent(dir, {
         './dist/index.mjs': /const shared = true/,
         './dist/react-server.mjs': /'react-server'/,
         './dist/react-native.js': /'react-native'/,
@@ -145,11 +153,13 @@ const testCases: {
         './dist/shared/edge-light.mjs': /'shared.edge-light'/,
         './dist/server/edge.mjs': /'server.edge-light'/,
         './dist/server/react-server.mjs': /'server.react-server'/,
-        './dist/server/index.d.ts':
-          /export { Client } from 'multi-entries\/client';\s*\S*export { Shared } from 'multi-entries\/shared';/,
+        // types
+        './dist/server/index.d.ts': `export { Client } from '../client/index.mjs';\nexport { Shared } from '../shared/index.mjs';`,
+        './dist/client/index.d.mts': `export { Shared } from '../shared/index.mjs'`,
+        './dist/client/index.d.cts': `export { Shared } from '../shared/index.cjs'`,
       }
 
-      assertFilesContent(dir, contentsRegex)
+      await assertFilesContent(dir, contentsRegex)
 
       const log = `\
       dist/shared/index.d.mts
@@ -314,7 +324,7 @@ const testCases: {
         './dist/server/react-server.mjs': /'server.react-server'/,
       }
 
-      assertFilesContent(dir, contentsRegex)
+      await assertFilesContent(dir, contentsRegex)
 
       const log = `\
       dist/button.d.ts
@@ -355,12 +365,19 @@ const testCases: {
     },
   },
   {
-    name: 'esm-pkg-cjs-main-field',
+    name: 'cjs-pkg-esm-main-field',
     args: [],
     async expected(_, { stderr }) {
       expect(stderr).toContain(
-        'Cannot export `main` field with .cjs extension in ESM package, only .mjs and .js extensions are allowed',
+        'Cannot export `main` field with .mjs extension in CJS package, only .js extension is allowed',
       )
+    },
+  },
+  {
+    name: 'esm-pkg-cjs-main-field',
+    async expected(dir) {
+      const distFiles = ['./dist/index.cjs', './dist/index.mjs']
+      assertContainFiles(dir, distFiles)
     },
   },
   {
@@ -603,7 +620,7 @@ const testCases: {
       ./foo            dist/foo.js                 103 B
       */
 
-      const lines = stdout.split('\n')
+      const lines = stripANSIColor(stdout).split('\n')
       const [tableHeads, cliLine, indexLine, indexReactServerLine, fooLine] =
         lines
       expect(tableHeads).toContain('Exports')
@@ -621,6 +638,61 @@ const testCases: {
 
       expect(fooLine).toContain('./foo')
       expect(fooLine).toContain('dist/foo.js')
+
+      const [exportsIndex, fileIndex, sizeIndex] = [
+        tableHeads.indexOf('Exports'),
+        tableHeads.indexOf('File'),
+        tableHeads.indexOf('Size'),
+      ]
+
+      expect(cliLine.indexOf('cli (bin)')).toEqual(exportsIndex)
+      expect(cliLine.indexOf('dist/cli.js')).toEqual(fileIndex)
+      expect(getOutputSizeColumnIndex(cliLine)).toEqual(sizeIndex)
+
+      expect(indexLine.indexOf('.')).toEqual(exportsIndex)
+      expect(indexLine.indexOf('dist/index.js')).toEqual(fileIndex)
+      expect(getOutputSizeColumnIndex(indexLine)).toEqual(sizeIndex)
+
+      expect(indexReactServerLine.indexOf('. (react-server)')).toEqual(
+        exportsIndex,
+      )
+      expect(
+        indexReactServerLine.indexOf('dist/index.react-server.js'),
+      ).toEqual(fileIndex)
+      expect(getOutputSizeColumnIndex(indexReactServerLine)).toEqual(sizeIndex)
+
+      expect(fooLine.indexOf('./foo')).toEqual(exportsIndex)
+      expect(fooLine.indexOf('dist/foo.js')).toEqual(fileIndex)
+      expect(getOutputSizeColumnIndex(fooLine)).toEqual(sizeIndex)
+    },
+  },
+  {
+    name: 'output-short',
+    args: [],
+    async expected(dir, { stdout, stderr }) {
+      /*
+      output:
+
+      Exports File          Size
+      .       dist/index.js 30 B
+      */
+      const [tableHeads, indexLine] = stripANSIColor(stdout).split('\n')
+      expect(tableHeads).toContain('Exports')
+      expect(tableHeads).toContain('File')
+      expect(tableHeads).toContain('Size')
+
+      expect(indexLine).toContain('.')
+      expect(indexLine).toContain('dist/index.js')
+
+      const [exportsIndex, fileIndex, sizeIndex] = [
+        tableHeads.indexOf('Exports'),
+        tableHeads.indexOf('File'),
+        tableHeads.indexOf('Size'),
+      ]
+
+      expect(indexLine.indexOf('.')).toEqual(exportsIndex)
+      expect(indexLine.indexOf('dist/index.js')).toEqual(fileIndex)
+      expect(getOutputSizeColumnIndex(indexLine)).toEqual(sizeIndex)
     },
   },
   {
@@ -778,12 +850,13 @@ const testCases: {
   {
     name: 'dev-prod-convention',
     async expected(dir) {
-      const distFiles = ['./dist/development.js', './dist/production.js']
-      assertContainFiles(dir, distFiles)
-
-      assertFilesContent(dir, {
-        './dist/development.js': /= "development"/,
-        './dist/production.js': /= "production"/,
+      await assertFilesContent(dir, {
+        './dist/index.development.js': /= "development"/,
+        './dist/index.development.mjs': /= "development"/,
+        './dist/index.production.js': /= "production"/,
+        'dist/index.production.mjs': /= "production"/,
+        './dist/index.js': /= 'index'/,
+        './dist/index.mjs': /= 'index'/,
       })
     },
   },
@@ -851,6 +924,15 @@ const testCases: {
       expect(await existsFile(join(dir, './dist/index.d.ts'))).toBe(true)
     },
   },
+  {
+    name: 'edge-variable',
+    async expected(dir) {
+      assertFilesContent(dir, {
+        './dist/index.js': /typeof EdgeRuntime/,
+        './dist/index.edge.js': /typeof "edge-runtime"/,
+      })
+    },
+  },
 ]
 
 async function runBundle(
@@ -895,6 +977,7 @@ function runTests() {
         await before(dir)
       }
       const { stdout, stderr } = await runBundle(dir, args)
+
       stdout && debug.log(stdout)
       stderr && debug.error(stderr)
 

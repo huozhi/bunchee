@@ -64,7 +64,7 @@ async function bundle(
   { cwd: _cwd, ...options }: BundleConfig = {},
 ): Promise<any> {
   const cwd = resolve(process.cwd(), _cwd || '')
-  assignDefault(options, 'format', 'es')
+  assignDefault(options, 'format', 'esm')
   assignDefault(options, 'minify', false)
   assignDefault(options, 'target', 'es2015')
 
@@ -120,7 +120,7 @@ async function bundle(
 
   const bundleOrWatch = async (
     rollupConfig: BuncheeRollupConfig,
-  ): Promise<RollupWatcher | RollupOutput[] | void> => {
+  ): Promise<RollupWatcher | RollupOutput | void> => {
     if (options.clean) {
       if (!isFromCli) {
         await removeOutputDir(rollupConfig.output)
@@ -271,20 +271,13 @@ function logWatcherBuildTime(result: RollupWatcher[]) {
   })
 }
 
-async function removeOutputDir(output: BuncheeRollupConfig['output']) {
-  const dirs = new Set(output.map(({ dir }) => dir))
-
-  for (const dir of dirs) {
-    if (dir) await removeDir(dir)
-  }
+async function removeOutputDir(output: OutputOptions) {
+  if (output.dir) await removeDir(output.dir)
 }
 
 function runBundle({ input, output }: BuncheeRollupConfig) {
   return rollup(input).then((bundle: RollupBuild) => {
-    const writeJobs = output.map((options: OutputOptions) =>
-      bundle.write(options),
-    )
-    return Promise.all(writeJobs)
+    return bundle.write(output)
   }, catchErrorHandler)
 }
 

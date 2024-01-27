@@ -45,7 +45,7 @@ export async function assertFilesContent(
     }).toMatchObject({ [file]: 'existed' })
   }
 
-  for (const [file, regex] of Object.entries(contentsRegex)) {
+  const promises = Object.entries(contentsRegex).map(async ([file, regex]) => {
     const content = await fsp.readFile(path.join(dir, file), {
       encoding: 'utf-8',
     })
@@ -54,7 +54,8 @@ export async function assertFilesContent(
     } else {
       expect(content).toContain(regex)
     }
-  }
+  })
+  await Promise.all(promises)
 }
 
 // bundle.min.js => .min.js

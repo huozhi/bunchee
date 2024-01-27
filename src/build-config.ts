@@ -64,9 +64,9 @@ const swcMinifyOptions = {
 } as const
 
 // return { 'process.env.<key>': '<value>' }
-function getBuildEnv(
+function getDefinedInlineVariables(
   envs: string[],
-  exportConditions: FullExportCondition,
+  parsedExportCondition: ParsedExportCondition,
 ): Record<string, string> {
   if (!envs.includes('NODE_ENV')) {
     envs.push('NODE_ENV')
@@ -79,12 +79,23 @@ function getBuildEnv(
     return acc
   }, {})
 
+  // handle .development, .production
+  const condName = parsedExportCondition.name.startsWith('.')
+    ? parsedExportCondition.name.slice(1)
+    : parsedExportCondition.name
+
+  const exportConditionNames = new Set(
+    Object.keys(parsedExportCondition.export).concat(condName),
+  )
   // For development and production convention, we override the NODE_ENV value
-  const exportConditionNames = new Set(Object.keys(exportConditions))
   if (exportConditionNames.has('development')) {
     envVars['process.env.NODE_ENV'] = JSON.stringify('development')
   } else if (exportConditionNames.has('production')) {
     envVars['process.env.NODE_ENV'] = JSON.stringify('production')
+  }
+
+  if (exportConditionNames.has('edge-light')) {
+    envVars['EdgeRuntime'] = JSON.stringify('edge-runtime')
   }
 
   return envVars
@@ -108,9 +119,9 @@ export function getReversedAlias(entries: Entries) {
 
 async function buildInputConfig(
   entry: string,
-  options: BundleOptions,
-  buildContext: BuildContext,
+  bundleConfig: BundleOptions,
   exportCondition: ParsedExportCondition,
+  buildContext: BuildContext,
   dts: boolean,
 ): Promise<InputOptions> {
   const {
@@ -120,14 +131,14 @@ async function buildInputConfig(
     tsOptions: { tsConfigPath, tsCompilerOptions },
     pluginContext,
   } = buildContext
-  const hasNoExternal = options.external === null
+  const hasNoExternal = bundleConfig.external === null
   const externals = hasNoExternal
     ? []
     : [pkg.peerDependencies, pkg.dependencies, pkg.peerDependenciesMeta]
         .filter(<T>(n?: T): n is T => Boolean(n))
         .map((o: { [key: string]: any }): string[] => Object.keys(o))
         .reduce((a: string[], b: string[]) => a.concat(b), [])
-        .concat(options.external ?? [])
+        .concat(bundleConfig.external ?? [])
 
   for (const [exportImportPath, exportCondition] of Object.entries(entries)) {
     const entryFilePath = exportCondition.source
@@ -137,10 +148,13 @@ async function buildInputConfig(
     }
   }
 
-  const envValues = getBuildEnv(options.env || [], exportCondition.export)
+  const inlineDefinedValues = getDefinedInlineVariables(
+    bundleConfig.env || [],
+    exportCondition,
+  )
 
   const { useTypeScript } = buildContext
-  const { runtime, target: jscTarget, minify: shouldMinify } = options
+  const { runtime, target: jscTarget, minify: shouldMinify } = bundleConfig
   const hasSpecifiedTsTarget = Boolean(tsCompilerOptions.target && tsConfigPath)
 
   const swcParserConfig = {
@@ -160,11 +174,11 @@ async function buildInputConfig(
       ...(shouldMinify && {
         minify: {
           ...swcMinifyOptions,
-          sourceMap: options.sourcemap,
+          sourceMap: bundleConfig.sourcemap,
         },
       }),
     },
-    sourceMaps: options.sourcemap,
+    sourceMaps: bundleConfig.sourcemap,
     inlineSourcesContent: false,
     isModule: true,
   } as const
@@ -172,14 +186,21 @@ async function buildInputConfig(
   const sizePlugin = pluginContext.outputState.plugin(cwd)
 
   // common plugins for both dts and ts assets that need to be processed
+
+  const aliasFormat = dts
+    ? bundleConfig.file?.endsWith('.d.cts')
+      ? 'cjs'
+      : 'esm'
+    : bundleConfig.format
+
   const commonPlugins = [
     sizePlugin,
     aliasEntries({
-      entries: {
-        ...pluginContext.entriesAlias,
-        // Do not alias current alias of package
-        [entry]: null,
-      },
+      entry,
+      entries,
+      entriesAlias: pluginContext.entriesAlias,
+      format: aliasFormat,
+      dts,
     }),
   ]
 
@@ -243,7 +264,7 @@ async function buildInputConfig(
           preserveDirectives(),
           prependDirectives(),
           replace({
-            values: envValues,
+            values: inlineDefinedValues,
             preventAssignment: true,
           }),
           nodeResolve({
@@ -259,7 +280,7 @@ async function buildInputConfig(
             ...swcOptions,
           }),
           commonjs({
-            exclude: options.external || null,
+            exclude: bundleConfig.external || null,
           }),
           json(),
         ]
@@ -401,13 +422,17 @@ function createSplitChunks(
   }
 }
 
-function buildOutputConfigs(
-  options: BundleOptions,
+async function buildOutputConfigs(
+  entry: string,
+  bundleConfig: BundleConfig,
   exportCondition: ParsedExportCondition,
   buildContext: BuildContext,
   dts: boolean,
-): OutputOptions {
-  const { format } = options
+): Promise<{
+  input: InputOptions
+  output: OutputOptions
+}> {
+  const { format } = bundleConfig
   const {
     entries,
     pkg,
@@ -418,13 +443,14 @@ function buildOutputConfigs(
   } = buildContext
   // Add esm mark and interop helper if esm export is detected
   const useEsModuleMark = hasEsmExport(exportPaths, tsCompilerOptions)
-  const absoluteOutputFile = resolve(cwd, options.file!)
+  const absoluteOutputFile = resolve(cwd, bundleConfig.file!)
   const name = filePathWithoutExtension(absoluteOutputFile)
   const dtsFile = resolve(
     cwd,
     dts
-      ? options.file!
-      : exportCondition.export.types ?? getExportFileTypePath(options.file!),
+      ? bundleConfig.file!
+      : exportCondition.export.types ??
+          getExportFileTypePath(bundleConfig.file!),
   )
   const typesDir = dirname(dtsFile)
   const jsDir = dirname(absoluteOutputFile!)
@@ -433,7 +459,15 @@ function buildOutputConfigs(
     Object.values(entries).map((entry) => entry.source),
   )
 
-  return {
+  const inputOptions = await buildInputConfig(
+    entry,
+    bundleConfig,
+    exportCondition,
+    buildContext,
+    dts,
+  )
+
+  const outputOptions: OutputOptions = {
     name: pkg.name || name,
     dir: dts ? typesDir : jsDir,
     format,
@@ -442,7 +476,7 @@ function buildOutputConfigs(
     interop: 'auto',
     freeze: false,
     strict: false,
-    sourcemap: options.sourcemap,
+    sourcemap: bundleConfig.sourcemap,
     manualChunks: createSplitChunks(
       pluginContext.moduleDirectiveLayerMap,
       entryFiles,
@@ -453,6 +487,11 @@ function buildOutputConfigs(
     hoistTransitiveImports: false,
     entryFileNames: basename(outputFile),
   }
+
+  return {
+    input: inputOptions,
+    output: outputOptions,
+  }
 }
 
 export async function buildEntryConfig(
@@ -460,19 +499,19 @@ export async function buildEntryConfig(
   pluginContext: BuildContext,
   dts: boolean,
 ): Promise<BuncheeRollupConfig[]> {
-  const configs: Promise<BuncheeRollupConfig>[] = []
+  const configs: BuncheeRollupConfig[] = []
   const { entries } = pluginContext
 
   for (const exportCondition of Object.values(entries)) {
-    const rollupConfig = buildConfig(
+    const rollupConfigs = await buildConfig(
       bundleConfig,
       exportCondition,
       pluginContext,
       dts,
     )
-    configs.push(rollupConfig)
+    configs.push(...rollupConfigs)
   }
-  return await Promise.all(configs)
+  return configs
 }
 
 async function collectEntry(
@@ -488,15 +527,31 @@ async function collectEntry(
     entryExport: string
   },
 ): Promise<void> {
-  const { cwd, pkg, entries, entryPath, exportCondRef, entryExport } = options
+  const {
+    cwd,
+    pkg,
+    entries,
+    entryPath,
+    exportCondRef,
+    entryExport: originEntryExport,
+  } = options
+  let entryExport = originEntryExport
   let exportCondForType: FullExportCondition = { ...exportCondRef }
   // Special cases of export type, only pass down the exportPaths for the type
   if (suffixedExportConventions.has(exportType)) {
     exportCondForType = {
       [exportType]: exportCondRef[exportType],
     }
-    // Basic export type, pass down the exportPaths with erasing the special ones
+  } else if (
+    exportType[0] === '.' &&
+    suffixedExportConventions.has(exportType.slice(1))
+  ) {
+    // e.g. .development, .production that has both esm and cjs export
+    exportCondForType = exportCondRef
+    exportType = exportType.slice(1)
+    entryExport = entryExport.replace(exportType, '')
   } else {
+    // Basic export type, pass down the exportPaths with erasing the special ones
     for (const exportType of suffixedExportConventions) {
       delete exportCondForType[exportType]
     }
@@ -514,7 +569,7 @@ async function collectEntry(
 
   const exportCondition: ParsedExportCondition = {
     source,
-    name: entryExport,
+    name: originEntryExport,
     export: exportCondForType,
   }
 
@@ -595,6 +650,8 @@ export async function collectEntries(
         for (const exportCondType of suffixedExportConventions) {
           if (exportCond[exportCondType]) {
             await collectEntry(exportCondType, collectEntryOptions)
+          } else if (entryExport === '.' + exportCondType) {
+            await collectEntry(entryExport, collectEntryOptions)
           }
         }
       }
@@ -610,19 +667,11 @@ async function buildConfig(
   exportCondition: ParsedExportCondition,
   pluginContext: BuildContext,
   dts: boolean,
-): Promise<BuncheeRollupConfig> {
+): Promise<BuncheeRollupConfig[]> {
   const { file } = bundleConfig
-  const { pkg, cwd, tsOptions } = pluginContext
-  const useTypescript = Boolean(tsOptions.tsConfigPath)
-  const options = { ...bundleConfig, useTypescript }
+  const { pkg, cwd } = pluginContext
   const entry = exportCondition.source
-  const inputOptions = await buildInputConfig(
-    entry,
-    options,
-    pluginContext,
-    exportCondition,
-    dts,
-  )
+
   const outputExports = getExportsDistFilesOfCondition(
     pkg,
     exportCondition,
@@ -678,13 +727,14 @@ async function buildConfig(
     bundleOptions = Array.from(uniqTypes).map((typeFile) => {
       return {
         resolvedFile: typeFile,
-        format: 'es',
+        format: 'esm',
       }
     })
   }
 
-  const outputConfigs = bundleOptions.map((bundleOption) => {
-    return buildOutputConfigs(
+  const outputConfigs = bundleOptions.map(async (bundleOption) => {
+    return await buildOutputConfigs(
+      entry,
       {
         ...bundleConfig,
         file: bundleOption.resolvedFile,
@@ -696,9 +746,5 @@ async function buildConfig(
     )
   })
 
-  return {
-    input: inputOptions,
-    output: outputConfigs,
-    exportName: exportCondition.name || '.',
-  }
+  return Promise.all(outputConfigs)
 }
