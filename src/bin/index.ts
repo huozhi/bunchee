@@ -156,7 +156,7 @@ async function run(args: CliArgs) {
 
   // watching mode
   if (watch) {
-    logger.log(`Watching assets in ${cwd}...`)
+    logger.log(`Watching project ${cwd}...`)
     return
   }
 

@@ -10,6 +10,7 @@ import { watch as rollupWatch, rollup } from 'rollup'
 import fsp from 'fs/promises'
 import fs from 'fs'
 import { resolve } from 'path'
+import { performance } from 'perf_hooks'
 import pc from 'picocolors'
 import {
   buildEntryConfig,
@@ -127,7 +128,7 @@ async function bundle(
     }
 
     if (options.watch) {
-      return Promise.resolve(runWatch(rollupConfig))
+      return runWatch(rollupConfig)
     }
     return runBundle(rollupConfig)
   }
@@ -200,7 +201,8 @@ async function bundle(
       )
     : []
 
-  const result = await Promise.all(assetsJobs.concat(typesJobs))
+  const totalJobs = assetsJobs.concat(typesJobs)
+  const result = await Promise.all(totalJobs)
 
   if (result.length === 0) {
     logger.warn(
@@ -212,7 +214,10 @@ async function bundle(
 
   if (!options.watch) {
     logOutputState(sizeCollector)
+  } else {
+    logWatcherBuildTime(result as RollupWatcher[])
   }
+
   return result
 }
 
@@ -228,23 +233,42 @@ function runWatch({ input, output }: BuncheeRollupConfig): RollupWatcher {
   ]
   const watcher = rollupWatch(watchOptions)
 
-  watcher.on('event', (event) => {
-    switch (event.code) {
-      case 'ERROR': {
-        logError(event.error)
-        break
-      }
-      case 'START': {
-        break
-      }
-      case 'END': {
-        break
-      }
-      default:
-        return
-    }
-  })
   return watcher
+}
+
+function logWatcherBuildTime(result: RollupWatcher[]) {
+  let watcherCounter = 0
+  let startTime = 0
+
+  result.map((watcher) => {
+    function start() {
+      if (startTime === 0) startTime = performance.now()
+    }
+    function end() {
+      watcherCounter++
+      if (watcherCounter === result.length) {
+        logger.info(`Build in ${(performance.now() - startTime).toFixed(2)}ms`)
+      }
+    }
+    ;(watcher as RollupWatcher).on('event', (event) => {
+      switch (event.code) {
+        case 'ERROR': {
+          logError(event.error)
+          break
+        }
+        case 'START': {
+          start()
+          break
+        }
+        case 'END': {
+          end()
+          break
+        }
+        default:
+          break
+      }
+    })
+  })
 }
 
 async function removeOutputDir(output: OutputOptions) {
