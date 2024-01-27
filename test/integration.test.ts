@@ -924,6 +924,15 @@ const testCases: {
       expect(await existsFile(join(dir, './dist/index.d.ts'))).toBe(true)
     },
   },
+  {
+    name: 'edge-variable',
+    async expected(dir) {
+      assertFilesContent(dir, {
+        './dist/index.js': /typeof EdgeRuntime/,
+        './dist/index.edge.js': /typeof "edge-runtime"/,
+      })
+    },
+  },
 ]
 
 async function runBundle(
