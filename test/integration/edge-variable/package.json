@@ -1,0 +1,7 @@
+{
+  "type": "module",
+  "exports": {
+    "edge-light": "./dist/index.edge.js",
+    "import": "./dist/index.js"
+  }
+}

@@ -64,7 +64,7 @@ const swcMinifyOptions = {
 } as const
 
 // return { 'process.env.<key>': '<value>' }
-function getBuildEnv(
+function getDefinedInlineVariables(
   envs: string[],
   parsedExportCondition: ParsedExportCondition,
 ): Record<string, string> {
@@ -92,6 +92,10 @@ function getBuildEnv(
     envVars['process.env.NODE_ENV'] = JSON.stringify('development')
   } else if (exportConditionNames.has('production')) {
     envVars['process.env.NODE_ENV'] = JSON.stringify('production')
+  }
+
+  if (exportConditionNames.has('edge-light')) {
+    envVars['EdgeRuntime'] = JSON.stringify('edge-runtime')
   }
 
   return envVars
@@ -144,7 +148,10 @@ async function buildInputConfig(
     }
   }
 
-  const envValues = getBuildEnv(bundleConfig.env || [], exportCondition)
+  const inlineDefinedValues = getDefinedInlineVariables(
+    bundleConfig.env || [],
+    exportCondition,
+  )
 
   const { useTypeScript } = buildContext
   const { runtime, target: jscTarget, minify: shouldMinify } = bundleConfig
@@ -257,7 +264,7 @@ async function buildInputConfig(
           preserveDirectives(),
           prependDirectives(),
           replace({
-            values: envValues,
+            values: inlineDefinedValues,
             preventAssignment: true,
           }),
           nodeResolve({
