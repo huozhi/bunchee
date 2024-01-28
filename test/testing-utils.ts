@@ -77,16 +77,21 @@ export async function deleteFile(f: string) {
 export function createTest<T>({
   run,
 }: {
-  run: (args?: string[], env?: NodeJS.ProcessEnv) => Promise<T>
+  run: (
+    args: string[],
+    options?: { env?: NodeJS.ProcessEnv; abortTimeout?: number },
+  ) => Promise<T>
 }) {
   return async function ({
     directory,
     args = [],
     env,
+    abortTimeout,
   }: {
     directory: string
     args?: string[]
     env?: NodeJS.ProcessEnv
+    abortTimeout?: number
   }): Promise<
     T & {
       distDir: string
@@ -105,7 +110,7 @@ export function createTest<T>({
       distFile = path.join(fixturesDir, args[outputIndex + 1])
     }
 
-    const result = await run(args, env)
+    const result = await run(args, { env, abortTimeout })
 
     return {
       ...result,

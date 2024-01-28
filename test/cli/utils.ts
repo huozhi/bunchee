@@ -47,9 +47,7 @@ export async function executeBunchee(
 }
 
 export const createCliTest = createTest<ExcuteBuncheeResult>({
-  run(args, env) {
-    return executeBunchee(args, env)
-  },
+  run: async (args, options) => await executeBunchee(args, options),
 })
 
 export async function removeDirectory(tempDirPath: string) {
