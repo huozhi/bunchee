@@ -73,3 +73,44 @@ export async function deleteFile(f: string) {
     await fsp.unlink(f)
   }
 }
+
+export function createTest<T>({
+  run,
+}: {
+  run: (args?: string[], env?: NodeJS.ProcessEnv) => Promise<T>
+}) {
+  return async function ({
+    directory,
+    args = [],
+    env,
+  }: {
+    directory: string
+    args?: string[]
+    env?: NodeJS.ProcessEnv
+  }): Promise<
+    T & {
+      distDir: string
+      distFile: string
+    }
+  > {
+    const fixturesDir = path.join(directory, './fixtures')
+    const distDir = path.join(fixturesDir, './dist')
+    let distFile = ''
+
+    if (!args.includes('--cwd')) {
+      args.push('--cwd', fixturesDir)
+    }
+    const outputIndex = args.indexOf('-o')
+    if (outputIndex !== -1) {
+      distFile = path.join(fixturesDir, args[outputIndex + 1])
+    }
+
+    const result = await run(args, env)
+
+    return {
+      ...result,
+      distDir,
+      distFile,
+    }
+  }
+}
