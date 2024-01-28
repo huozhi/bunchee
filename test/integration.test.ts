@@ -918,7 +918,15 @@ const testCases: {
   },
   {
     name: 'ts-composite',
-    dir: 'monorepo/packages/package',
+    dir: 'monorepo-composite/packages/a',
+    async expected(dir) {
+      expect(await existsFile(join(dir, './dist/index.js'))).toBe(true)
+      expect(await existsFile(join(dir, './dist/index.d.ts'))).toBe(true)
+    },
+  },
+  {
+    name: 'ts-composite-without-incremental',
+    dir: 'monorepo-composite-no-incremental/packages/a',
     async expected(dir) {
       expect(await existsFile(join(dir, './dist/index.js'))).toBe(true)
       expect(await existsFile(join(dir, './dist/index.d.ts'))).toBe(true)
