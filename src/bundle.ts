@@ -11,7 +11,6 @@ import fsp from 'fs/promises'
 import fs from 'fs'
 import { resolve } from 'path'
 import { performance } from 'perf_hooks'
-import pc from 'picocolors'
 import {
   buildEntryConfig,
   collectEntries,
@@ -35,9 +34,12 @@ import {
   getPackageType,
 } from './exports'
 import type { BuildContext } from './types'
-import { TypescriptOptions, resolveTsConfig } from './typescript'
+import {
+  TypescriptOptions,
+  resolveTsConfig,
+  writeDefaultTsconfig,
+} from './typescript'
 import { resolveWildcardExports } from './lib/wildcard'
-import { DEFAULT_TS_CONFIG } from './constants'
 
 function assignDefault(
   options: BundleConfig,
@@ -77,7 +79,7 @@ async function bundle(
   const hasBin = Boolean(pkg.bin)
   const isFromCli = Boolean(cliEntryPath)
 
-  let tsConfig = await resolveTsConfig(cwd)
+  let tsConfig = resolveTsConfig(cwd)
   let hasTsConfig = Boolean(tsConfig?.tsConfigPath)
   const defaultTsOptions: TypescriptOptions = {
     tsConfigPath: tsConfig?.tsConfigPath,
@@ -162,16 +164,7 @@ async function bundle(
   if (hasTypeScriptFiles && !hasTsConfig) {
     const tsConfigPath = resolve(cwd, 'tsconfig.json')
     defaultTsOptions.tsConfigPath = tsConfigPath
-    await fsp.writeFile(
-      tsConfigPath,
-      JSON.stringify(DEFAULT_TS_CONFIG, null, 2),
-      'utf-8',
-    )
-    logger.log(
-      `Detected using TypeScript but tsconfig.json is missing, created a ${pc.blue(
-        'tsconfig.json',
-      )} for you.`,
-    )
+    await writeDefaultTsconfig(tsConfigPath)
     hasTsConfig = true
   }
 
