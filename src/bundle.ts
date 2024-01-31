@@ -242,11 +242,12 @@ function logWatcherBuildTime(result: RollupWatcher[]) {
 
   result.map((watcher) => {
     function start() {
-      if (startTime === 0) startTime = performance.now()
+      if (watcherCounter === 0) startTime = performance.now()
+      watcherCounter++
     }
     function end() {
-      watcherCounter++
-      if (watcherCounter === result.length) {
+      watcherCounter--
+      if (watcherCounter === 0) {
         logger.info(`Build in ${(performance.now() - startTime).toFixed(2)}ms`)
       }
     }
