@@ -8,7 +8,7 @@ import { DEFAULT_TS_CONFIG } from './constants'
 import { logger } from './logger'
 
 export type TypescriptOptions = {
-  tsConfigPath?: string
+  tsConfigPath: string | undefined
   tsCompilerOptions: CompilerOptions
 }
 
