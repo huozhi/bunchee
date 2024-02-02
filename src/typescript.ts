@@ -13,29 +13,26 @@ export type TypescriptOptions = {
 }
 
 let hasLoggedTsWarning = false
-const resolveTypescript = memoize<(cwd: string) => typeof import('typescript')>(
-  (cwd) => {
-    let ts
-    const m = new Module('', undefined)
-    m.paths = (Module as any)._nodeModulePaths(cwd)
-    try {
-      ts = m.require('typescript')
-    } catch (e) {
-      console.error(e)
-      if (!hasLoggedTsWarning) {
-        hasLoggedTsWarning = true
-        exit(
-          'Could not load TypeScript compiler. Try to install `typescript` as dev dependency',
-        )
-      }
+function resolveTypescriptHandler(cwd: string): typeof import('typescript') {
+  let ts
+  const m = new Module('', undefined)
+  m.paths = (Module as any)._nodeModulePaths(cwd)
+  try {
+    ts = m.require('typescript')
+  } catch (e) {
+    console.error(e)
+    if (!hasLoggedTsWarning) {
+      hasLoggedTsWarning = true
+      exit(
+        'Could not load TypeScript compiler. Try to install `typescript` as dev dependency',
+      )
     }
-    return ts
-  },
-)
+  }
+  return ts
+}
+const resolveTypescript = memoize(resolveTypescriptHandler)
 
-export const resolveTsConfig = memoize<
-  (cwd: string) => null | TypescriptOptions
->((cwd) => {
+function resolveTsConfigHandler(cwd: string): null | TypescriptOptions {
   let tsCompilerOptions: CompilerOptions = {}
   let tsConfigPath: string | undefined
   tsConfigPath = resolve(cwd, 'tsconfig.json')
@@ -55,7 +52,9 @@ export const resolveTsConfig = memoize<
     tsCompilerOptions,
     tsConfigPath,
   }
-})
+}
+
+export const resolveTsConfig = memoize(resolveTsConfigHandler)
 
 export async function convertCompilerOptions(cwd: string, json: any) {
   const ts = resolveTypescript(cwd)
