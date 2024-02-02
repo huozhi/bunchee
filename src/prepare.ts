@@ -1,7 +1,6 @@
 import fs from 'fs'
 import fsp from 'fs/promises'
 import path from 'path'
-import pc from 'picocolors'
 import { SRC, availableExtensions, dtsExtensionsMap } from './constants'
 import { logger } from './logger'
 import {
@@ -11,7 +10,8 @@ import {
   isTypescriptFile,
 } from './utils'
 import { relativify } from './lib/format'
-import { DEFAULT_TS_CONFIG, DIST } from './constants'
+import { DIST } from './constants'
+import { writeDefaultTsconfig } from './typescript'
 
 // Output with posix style in package.json
 function getDistPath(...subPaths: string[]) {
@@ -171,10 +171,9 @@ export async function prepare(cwd: string): Promise<void> {
   pkgJson.files = files
 
   let isUsingTs = false
-
   // Collect bins and exports entries
   const { bins, exportsEntries } = await collectSourceEntries(sourceFolder)
-  const tsconfigPath = path.join(cwd, 'tsconfig.json')
+  const tsConfigPath = path.join(cwd, 'tsconfig.json')
 
   const sourceFiles: string[] = [...exportsEntries.values()].concat([
     ...bins.values(),
@@ -184,17 +183,8 @@ export async function prepare(cwd: string): Promise<void> {
   )
   if (hasTypeScriptFiles) {
     isUsingTs = true
-    if (!fs.existsSync(tsconfigPath)) {
-      await fsp.writeFile(
-        tsconfigPath,
-        JSON.stringify(DEFAULT_TS_CONFIG, null, 2),
-        'utf-8',
-      )
-      logger.log(
-        `Detected using TypeScript but tsconfig.json is missing, created a ${pc.blue(
-          'tsconfig.json',
-        )} for you.`,
-      )
+    if (!fs.existsSync(tsConfigPath)) {
+      await writeDefaultTsconfig(tsConfigPath)
     }
   }
 
