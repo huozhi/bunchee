@@ -194,6 +194,7 @@ async function buildInputConfig(
     : bundleConfig.format
 
   const commonPlugins = [
+    json(),
     sizePlugin,
     aliasEntries({
       entry,
@@ -281,7 +282,6 @@ async function buildInputConfig(
           commonjs({
             exclude: bundleConfig.external || null,
           }),
-          json(),
         ]
   ).filter(isNotNull<Plugin>)
 
