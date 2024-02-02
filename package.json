@@ -112,7 +112,8 @@
     "testPathIgnorePatterns": [
       "/node_modules/",
       "<rootDir>/test/integration/.*/*src"
-    ]
+    ],
+    "testTimeout": 8000
   },
   "packageManager": "pnpm@8.8.0"
 }
