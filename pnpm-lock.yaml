@@ -38,6 +38,9 @@ dependencies:
   clean-css:
     specifier: ^5.3.3
     version: 5.3.3
+  magic-string:
+    specifier: ^0.30.6
+    version: 0.30.6
   pretty-bytes:
     specifier: ^5.6.0
     version: 5.6.0
@@ -1065,7 +1068,7 @@ packages:
       estree-walker: 2.0.2
       glob: 8.1.0
       is-reference: 1.2.1
-      magic-string: 0.30.3
+      magic-string: 0.30.6
       rollup: 4.9.4
     dev: false
 
@@ -1078,7 +1081,7 @@ packages:
       rollup:
         optional: true
     dependencies:
-      magic-string: 0.30.3
+      magic-string: 0.30.6
       rollup: 4.9.4
     dev: false
 
@@ -1123,7 +1126,7 @@ packages:
         optional: true
     dependencies:
       '@rollup/pluginutils': 5.1.0(rollup@4.9.4)
-      magic-string: 0.30.3
+      magic-string: 0.30.6
       rollup: 4.9.4
     dev: false
 
@@ -2858,15 +2861,8 @@ packages:
       yallist: 4.0.0
     dev: true
 
-  /magic-string@0.30.3:
-    resolution: {integrity: sha512-B7xGbll2fG/VjP+SWg4sX3JynwIU0mjoTc6MPpKNuIvftk6u6vqhDnk1R80b8C2GBR6ywqy+1DcKBrevBg+bmw==}
-    engines: {node: '>=12'}
-    dependencies:
-      '@jridgewell/sourcemap-codec': 1.4.15
-    dev: false
-
-  /magic-string@0.30.5:
-    resolution: {integrity: sha512-7xlpfBaQaP/T6Vh8MO/EqXSW5En6INHEvEXQiuff7Gku0PWjU3uf6w/j9o7O+SpB5fOAkrI5HeoNgwjEO0pFsA==}
+  /magic-string@0.30.6:
+    resolution: {integrity: sha512-n62qCLbPjNjyo+owKtveQxZFZTBm+Ms6YoGD23Wew6Vw337PElFNifQpknPruVRQV57kVShPnLGo9vWxVhpPvA==}
     engines: {node: '>=12'}
     dependencies:
       '@jridgewell/sourcemap-codec': 1.4.15
@@ -3188,7 +3184,7 @@ packages:
       rollup: ^3.29.4 || ^4
       typescript: ^4.5 || ^5.0
     dependencies:
-      magic-string: 0.30.5
+      magic-string: 0.30.6
       rollup: 4.9.4
       typescript: 5.3.2
     optionalDependencies:
@@ -3215,7 +3211,7 @@ packages:
     peerDependencies:
       rollup: ^2.0.0 || ^3.0.0 || ^4.0.0
     dependencies:
-      magic-string: 0.30.5
+      magic-string: 0.30.6
       rollup: 4.9.4
     dev: false
 
