@@ -167,3 +167,20 @@ export const baseNameWithoutExtension = (filename: string): string =>
 
 export const isTestFile = (filename: string): boolean =>
   /\.(test|spec)$/.test(baseNameWithoutExtension(filename))
+
+export const memoize = <T extends (...args: any[]) => any>(
+  fn: T,
+  resolver?: (...args: Parameters<T>) => string, // if you need specify a cache key
+) => {
+  const cache = new Map<string, ReturnType<T>>()
+  return ((...args: Parameters<T>) => {
+    const key = resolver ? resolver(...args) : JSON.stringify({ args })
+    const existing = cache.get(key)
+    if (existing !== undefined) {
+      return existing
+    }
+    const result = fn(...args)
+    cache.set(key, result)
+    return result
+  }) as T
+}
