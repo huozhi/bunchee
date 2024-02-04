@@ -1,5 +1,3 @@
-// @ts-expect-error @rollup/plugin-esm-shim has this export but missing in the types
-import { provideCJSSyntax } from '@rollup/plugin-esm-shim'
 import { availableESExtensionsRegex } from '../constants'
 import { Plugin, ProgramNode, AstNode } from 'rollup'
 import { extname } from 'path'
