@@ -24,8 +24,8 @@ import commonjs from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 import replace from '@rollup/plugin-replace'
-import esmShim from '@rollup/plugin-esm-shim'
 import preserveDirectives from 'rollup-preserve-directives'
+import { esmShim } from './plugins/esm-shim'
 import { inlineCss } from './plugins/inline-css'
 import { rawContent } from './plugins/raw-plugin'
 import { aliasEntries } from './plugins/alias-plugin'
@@ -260,7 +260,6 @@ async function buildInputConfig(
           ...commonPlugins,
           inlineCss({ exclude: /node_modules/ }),
           rawContent({ exclude: /node_modules/ }),
-          esmShim(),
           preserveDirectives(),
           prependDirectives(),
           replace({
@@ -271,6 +270,7 @@ async function buildInputConfig(
             preferBuiltins: runtime === 'node',
             extensions: nodeResolveExtensions,
           }),
+          bundleConfig.format === 'esm' && esmShim(),
           wasm(),
           swc({
             include: availableESExtensionsRegex,
@@ -279,6 +279,7 @@ async function buildInputConfig(
             tsconfig: tsConfigPath ?? false,
             ...swcOptions,
           }),
+
           commonjs({
             exclude: bundleConfig.external || null,
           }),

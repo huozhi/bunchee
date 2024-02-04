@@ -447,31 +447,22 @@ const testCases: {
   },
   {
     name: 'esm-shims',
-    args: [],
     async expected(dir) {
-      const shimsCode = [
-        'const __filename = cjsUrl.fileURLToPath(import.meta.url)',
-        'const __dirname = cjsPath.dirname(__filename)',
-        'const require = cjsModule.createRequire(import.meta.url)',
-      ]
-      const esmOutput = await fsp.readFile(
-        join(dir, './dist/index.mjs'),
-        'utf-8',
-      )
-      const cjsOutput = await fsp.readFile(
-        join(dir, './dist/index.cjs'),
-        'utf-8',
-      )
-      expect(shimsCode.every((code) => esmOutput.includes(code))).toBe(true)
-      expect(shimsCode.map((code) => cjsOutput.includes(code))).toEqual([
-        false,
-        false,
-        false,
-      ])
-      // for import.meta.url, should use pathToFileURL + URL polyfill
-      expect(cjsOutput).toContain('pathToFileURL')
-      expect(cjsOutput).toContain('new URL')
-      expect(cjsOutput).not.toContain('import.meta.url')
+      const requirePolyfill =
+        'const require = __node_cjsModule.createRequire(import.meta.url)'
+      const filenamePolyfill =
+        'const __filename = __node_cjsUrl.fileURLToPath(import.meta.url)'
+      const dirnamePolyfill =
+        'const __dirname = __node_cjsPath.dirname(__filename)'
+
+      await assertFilesContent(dir, {
+        './dist/require.mjs': requirePolyfill,
+        './dist/filename.mjs': filenamePolyfill,
+        './dist/dirname.mjs': dirnamePolyfill,
+        './dist/require.js': /require\(/,
+        './dist/filename.js': /__filename/,
+        './dist/dirname.js': /__dirname/,
+      })
     },
   },
   {

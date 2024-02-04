@@ -1,8 +1,16 @@
 {
   "exports": {
-    ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+    "./require": {
+      "import": "./dist/require.mjs",
+      "require": "./dist/require.js"
+    },
+    "./dirname": {
+      "import": "./dist/dirname.mjs",
+      "require": "./dist/dirname.js"
+    },
+    "./filename": {
+      "import": "./dist/filename.mjs",
+      "require": "./dist/filename.js"
     }
   }
 }
