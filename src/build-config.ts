@@ -17,7 +17,7 @@ import type {
 } from 'rollup'
 import { convertCompilerOptions, type TypescriptOptions } from './typescript'
 
-import path, { resolve, dirname, join, basename, format } from 'path'
+import path, { resolve, dirname, join, basename } from 'path'
 import { wasm } from '@rollup/plugin-wasm'
 import { swc } from 'rollup-plugin-swc3'
 import commonjs from '@rollup/plugin-commonjs'
