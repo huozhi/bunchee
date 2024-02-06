@@ -83,13 +83,13 @@ export function lint(pkg: PackageMetadata) {
       }
     }
   } else {
+    // Validate CJS package
     if (main && path.extname(main) === '.mjs') {
       state.badMainExtension = true
     }
-    // Validate CJS package
     if (exports) {
       if (typeof exports === 'string') {
-        if (!hasCjsExtension(exports)) {
+        if (path.extname(exports) === '.mjs') {
           state.badMainExport = true
         }
       }
@@ -127,9 +127,15 @@ export function lint(pkg: PackageMetadata) {
     )
   }
   if (state.badMainExport) {
-    logger.warn(
-      'Cannot export `exports` field with .cjs extension in ESM package, only .mjs and .js extensions are allowed',
-    )
+    if (isESM) {
+      logger.warn(
+        'Cannot export `exports` field with .cjs extension in ESM package, only .mjs and .js extensions are allowed',
+      )
+    } else {
+      logger.warn(
+        'Cannot export `exports` field with .mjs extension in CJS package, only .js and .cjs extensions are allowed',
+      )
+    }
   }
 
   if (state.invalidExportsFieldType) {

@@ -45,7 +45,6 @@ const testCases: {
   },
   {
     name: 'externals',
-    args: ['index.js', '-o', './dist/index.js'],
     async expected(dir) {
       const distFile = join(dir, './dist/index.js')
       const content = await fsp.readFile(distFile, { encoding: 'utf-8' })
@@ -55,7 +54,6 @@ const testCases: {
   },
   {
     name: 'duplicate-entry',
-    args: [],
     async expected(dir, { stdout }) {
       const distFiles = [
         'dist/index.js',
@@ -72,7 +70,6 @@ const testCases: {
   },
   {
     name: 'ts-error',
-    args: ['index.ts', '-o', './dist/index.js'],
     async expected(dir, { stdout, stderr }) {
       const distFile = join(dir, './dist/index.js')
       expect(stderr).toMatch(/Could not load TypeScript compiler/)
@@ -89,8 +86,7 @@ const testCases: {
     },
   },
   {
-    name: 'no-ts-require-for-js',
-    args: ['index.js', '-o', './dist/index.js'],
+    name: 'js-only',
     async expected(dir) {
       const distFile = join(dir, './dist/index.js')
       expect(await existsFile(distFile)).toBe(true)
@@ -98,7 +94,6 @@ const testCases: {
   },
   {
     name: 'entry-index-index',
-    args: [],
     async expected(dir) {
       await assertFilesContent(dir, {
         './dist/index.js': /'index'/,
@@ -108,7 +103,6 @@ const testCases: {
   },
   {
     name: 'pkg-exports',
-    args: ['index.js'],
     async expected(dir) {
       const distFiles = [
         'dist/index.cjs',
@@ -240,8 +234,7 @@ const testCases: {
   },
   {
     name: 'single-entry',
-    args: [],
-    async expected(dir, { stdout }) {
+    async expected(dir, { stdout, stderr }) {
       const distFiles = [
         join(dir, './dist/index.js'),
         join(dir, './dist/index.d.ts'),
@@ -259,6 +252,8 @@ const testCases: {
       const log = `\
       dist/index.d.ts
       dist/index.js`
+
+      expect(stderr).not.toContain('Cannot export `exports` field with')
 
       const rawStdout = stripANSIColor(stdout)
       log.split('\n').forEach((line: string) => {
