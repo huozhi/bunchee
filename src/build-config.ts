@@ -230,6 +230,9 @@ async function buildInputConfig(
         checkJs: false,
         declarationMap: false,
         skipLibCheck: true,
+        // preserveSymlinks should always be set to false to avoid issues with
+        // resolving types from <reference> from node_modules
+        preserveSymlinks: false,
         target: 'ESNext',
         ...(!tsCompilerOptions.jsx
           ? {
