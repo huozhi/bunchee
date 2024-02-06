@@ -314,5 +314,52 @@ describe('lib exports', () => {
         { file: 'index.production.js', format: 'cjs' },
       ])
     })
+
+    it('should handle nested dev and prod special exports', () => {
+      const pkg = {
+        "exports": {
+          ".": {
+            "import": {
+              "types": "./dist/index.d.mts",
+              "development": "./dist/index.development.mjs",
+              "production": "./dist/index.production.mjs",
+              "default": "./dist/index.mjs"
+            },
+            "require": {
+              "types": "./dist/index.d.ts",
+              "production": "./dist/index.production.js",
+              "development": "./dist/index.development.js",
+              "default": "./dist/index.js"
+            },
+            "default": "./dist/index.js"
+          },
+          "./react": {
+            "import": {
+              "types": "./dist/react.d.mts",
+              "development": "./dist/react.development.mjs",
+              "production": "./dist/react.production.mjs",
+              "default": "./dist/react.mjs"
+            },
+            "require": {
+              "types": "./dist/react.d.ts",
+              "production": "./dist/react.production.js",
+              "development": "./dist/react.development.js",
+              "default": "./dist/react.js"
+            },
+            "default": "./dist/react.js"
+          }
+        },
+      }
+
+      console.log(getExportPaths(pkg))
+      // expect(getExportConditionDistHelper(pkg, '.development')).toEqual([
+      //   { file: 'index.development.mjs', format: 'esm' },
+      //   { file: 'index.development.js', format: 'cjs' },
+      // ])
+      // expect(getExportConditionDistHelper(pkg, '.react.development')).toEqual([
+      //   { file: 'react.development.mjs', format: 'esm' },
+      //   { file: 'react.development.js', format: 'cjs' },
+      // ])
+    })
   })
 })

@@ -84,6 +84,15 @@ function findExport(
   packageType: 'commonjs' | 'module',
   currentPath: string,
 ): void {
+  if (exportPath === 'development') {
+    console.trace(
+      'find export',
+      'exportPath',
+      exportPath,
+      'currentPath',
+      currentPath,
+    )
+  }
   // Skip `types` field, it cannot be the entry point
   if (exportPath === 'types') return
   if (isExportLike(exportCondition)) {
@@ -165,7 +174,6 @@ function findExport(
             )
           }
         }
-      } else {
       }
       const defaultPath =
         typeof exportCondition[subpath] === 'object'
