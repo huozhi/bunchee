@@ -187,8 +187,10 @@ async function buildInputConfig(
 
   // common plugins for both dts and ts assets that need to be processed
 
+  // If it's a .d.ts file under non-ESM package or .d.cts file, use cjs types alias.
   const aliasFormat = dts
-    ? bundleConfig.file?.endsWith('.d.cts')
+    ? bundleConfig.file?.endsWith('.d.cts') ||
+      (bundleConfig.file?.endsWith('.d.ts') && !isESModulePackage(pkg.type))
       ? 'cjs'
       : 'esm'
     : bundleConfig.format
