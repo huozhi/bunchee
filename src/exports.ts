@@ -58,6 +58,10 @@ function joinRelativePath(...segments: string[]) {
   return result
 }
 
+function concatExportName(first: string, second: string) {
+  return (first.endsWith('.') ? first.slice(0, -1) : first) + '.' + second
+}
+
 const getFirstExportPath = (
   fullExportCondition: ExportCondition | FullExportCondition,
 ): string => {
@@ -73,7 +77,7 @@ const getFirstExportPath = (
   return fullExportCondition as string
 }
 
-const joinExportAndCondition = (exportPath: string, condition: string) => {
+const appendExportCondition = (exportPath: string, condition: string) => {
   return (exportPath === '.' ? '' : exportPath) + '.' + condition
 }
 
@@ -84,20 +88,8 @@ function findExport(
   packageType: 'commonjs' | 'module',
   currentPath: string,
 ): void {
-  if (exportPath === 'development') {
-  }
-  // Skip `types` field, it cannot be the entry point
   if (exportPath === 'types') return
   if (isExportLike(exportCondition)) {
-    console.log(
-      'export like',
-      exportCondition,
-      '\nfind export',
-      'exportPath',
-      exportPath,
-      'currentPath',
-      currentPath,
-    )
     const fullExportCondition = constructFullExportCondition(
       exportCondition,
       packageType,
@@ -112,7 +104,7 @@ function findExport(
       const exportJsBundlePath = getFirstExportPath(fullExportCondition)
 
       if (suffixedExportConventions.has(exportPath)) {
-        const specialPath = joinExportAndCondition(currentPath, exportPath)
+        const specialPath = appendExportCondition(currentPath, exportPath)
         paths[specialPath] = {
           ...paths[specialPath],
           ...(exportCondition as FullExportCondition),
@@ -133,6 +125,7 @@ function findExport(
     if (subpath.startsWith('.')) {
       // subpath is actual export path, ./a, ./b, ...
       const nestedExportPath = joinRelativePath(currentPath, subpath)
+
       const nestedExportCondition = exportCondition[subpath]
       findExport(
         nestedExportPath,
@@ -160,21 +153,24 @@ function findExport(
         const conditionSpecialTypes = Object.keys(
           exportCondition[exportType],
         ).filter((key) => suffixedExportConventions.has(key))
-        if (conditionSpecialTypes.length > 0) {
-          for (const conditionSpecialType of conditionSpecialTypes) {
-            const nestedExportConditionPath = {
-              [exportType]: (exportCondition[exportType] as any)[
-                conditionSpecialType
-              ],
-            }
-            findExport(
-              currentPath + ',' + conditionSpecialType,
-              nestedExportConditionPath,
-              paths,
-              packageType,
-              currentPath,
-            )
+        for (const conditionSpecialType of conditionSpecialTypes) {
+          // e.g. import.development
+          const composedKey = concatExportName(exportType, conditionSpecialType)
+
+          const nestedExportConditionPath = {
+            [composedKey]: (exportCondition[exportType] as any)[
+              conditionSpecialType
+            ],
           }
+
+          const nestedExportPath = joinRelativePath(currentPath, exportPath)
+          findExport(
+            exportPath,
+            nestedExportConditionPath,
+            paths,
+            packageType,
+            nestedExportPath,
+          )
         }
       }
       const defaultPath =
@@ -182,12 +178,14 @@ function findExport(
           ? (exportCondition[subpath] as any).default
           : exportCondition[subpath]
       const nestedExportCondition = { [exportType]: defaultPath }
+
+      const nestedExportPath = joinRelativePath(currentPath, exportPath)
       findExport(
         exportPath,
         nestedExportCondition,
         paths,
         packageType,
-        currentPath,
+        nestedExportPath,
       )
     }
   })
@@ -237,10 +235,11 @@ function findExport(
  * Output
  * {
  *   ".": {
- *     "import,development": "./dev.js",
- *     "import,production": "./prod.js"
+ *     "import.development": "./dev.js",
+ *     "import.production": "./prod.js"
  *  },
- *  "./sub,import": "./sub.js"
+ *  "./sub" {
+ *    import": "./sub.js"
  * }
  *
  *
@@ -420,6 +419,9 @@ export function getExportsDistFilesOfCondition(
   cwd: string,
 ): { format: OutputOptions['format']; file: string }[] {
   const dist: { format: OutputOptions['format']; file: string }[] = []
+  if (!parsedExportCondition.export) {
+    console.log('parsedExportCondition.export is empty', parsedExportCondition)
+  }
   const exportConditionNames = Object.keys(parsedExportCondition.export)
   const uniqueFiles = new Set<string>()
   for (const exportCondition of exportConditionNames) {

@@ -239,6 +239,19 @@ describe('lib exports', () => {
         ...item,
         file: path.basename(item.file),
       }))
+
+      // return exportsDist
+      //   .map((item) => ({
+      //     ...item,
+      //     file: path.basename(item.file),
+      //   }))
+      //   .sort((a, b) => {
+      //     if (a.file.length === b.file.length) {
+      //       a.file.localeCompare(b.file)
+      //     }
+      //     return a.file.length - b.file.length
+      //   })
+
     }
 
     it('should dedupe the same path import and module if they are the same path', () => {
@@ -302,20 +315,16 @@ describe('lib exports', () => {
       }
 
       expect(getExportConditionDistHelper(pkg, '.')).toEqual([
-        { file: 'index.mjs', format: 'esm' },
         { file: 'index.js', format: 'cjs' },
-      ])
-      expect(getExportConditionDistHelper(pkg, '.development')).toEqual([
-        { file: 'index.development.mjs', format: 'esm' },
-        { file: 'index.development.js', format: 'cjs' },
-      ])
-      expect(getExportConditionDistHelper(pkg, '.production')).toEqual([
-        { file: 'index.production.mjs', format: 'esm' },
+        { file: 'index.mjs', format: 'esm' },
         { file: 'index.production.js', format: 'cjs' },
+        { file: 'index.production.mjs', format: 'esm' },
+        { file: 'index.development.js', format: 'cjs' },
+        { file: 'index.development.mjs', format: 'esm' },
       ])
     })
 
-    it.only('should handle nested dev and prod special exports', () => {
+    it('should handle nested dev and prod special exports', () => {
       const pkg = {
         "exports": {
           ".": {
@@ -348,16 +357,23 @@ describe('lib exports', () => {
           }
         },
       }
-
-      console.log(getExportPaths(pkg))
-      expect(getExportConditionDistHelper(pkg, '.development')).toEqual([
-        { file: 'index.development.mjs', format: 'esm' },
-        { file: 'index.development.js', format: 'cjs' },
-      ])
-      expect(getExportConditionDistHelper(pkg, '.react.development')).toEqual([
-        { file: 'react.development.mjs', format: 'esm' },
-        { file: 'react.development.js', format: 'cjs' },
-      ])
+      const parsedExportCondition = getExportPaths(pkg)
+      expect(parsedExportCondition['.']).toMatchObject({
+        import: './dist/index.mjs',
+        'import.development': './dist/index.development.mjs',
+        'import.production': './dist/index.production.mjs',
+        require: './dist/index.js',
+        'require.production': './dist/index.production.js',
+        'require.development': './dist/index.development.js'
+      })
+      expect(parsedExportCondition['./react']).toMatchObject({
+        import: './dist/react.mjs', 
+        'import.development': './dist/react.development.mjs',
+        'import.production': './dist/react.production.mjs',
+        require: './dist/react.js',
+        'require.production': './dist/react.production.js',
+        'require.development': './dist/react.development.js'
+      })
     })
   })
 })
