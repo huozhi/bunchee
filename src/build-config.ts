@@ -17,7 +17,7 @@ import type {
 } from 'rollup'
 import { convertCompilerOptions, type TypescriptOptions } from './typescript'
 
-import path, { resolve, dirname, join, basename } from 'path'
+import path, { resolve, dirname, join, basename, extname } from 'path'
 import { wasm } from '@rollup/plugin-wasm'
 import { swc } from 'rollup-plugin-swc3'
 import commonjs from '@rollup/plugin-commonjs'
@@ -447,6 +447,7 @@ async function buildOutputConfigs(
   // Add esm mark and interop helper if esm export is detected
   const useEsModuleMark = hasEsmExport(exportPaths, tsCompilerOptions)
   const absoluteOutputFile = resolve(cwd, bundleConfig.file!)
+  const outputFileExtension = extname(absoluteOutputFile)
   const name = filePathWithoutExtension(absoluteOutputFile)
   const dtsFile = resolve(
     cwd,
@@ -484,7 +485,11 @@ async function buildOutputConfigs(
       pluginContext.moduleDirectiveLayerMap,
       entryFiles,
     ),
-    chunkFileNames: '[name]-[hash].js',
+    chunkFileNames() {
+      const ext =
+        format === 'cjs' && outputFileExtension === '.cjs' ? 'cjs' : 'js'
+      return '[name]-[hash].' + ext
+    },
     // By default in rollup, when creating multiple chunks, transitive imports of entry chunks
     // will be added as empty imports to the entry chunks. Disable to avoid imports hoist outside of boundaries
     hoistTransitiveImports: false,

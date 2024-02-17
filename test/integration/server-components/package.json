@@ -1,5 +1,6 @@
 {
   "name": "server-components",
+  "type": "module",
   "exports": {
     ".": {
       "import": "./dist/index.js",
