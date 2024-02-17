@@ -10,8 +10,9 @@ type ExcuteBuncheeResult = {
 }
 
 export async function executeBunchee(
-  args: string[] = [],
-  options: { env?: NodeJS.ProcessEnv; abortTimeout?: number } = {},
+  args: string[],
+  options: { env?: NodeJS.ProcessEnv },
+  processOptions?: { abortTimeout?: number },
 ): Promise<ExcuteBuncheeResult> {
   debug.log(`Command: bunchee ${args.join(' ')}`)
 
@@ -32,11 +33,12 @@ export async function executeBunchee(
   ps.stdout?.on('data', (chunk) => (stdout += chunk.toString()))
   ps.stderr?.on('data', (chunk) => (stderr += chunk.toString()))
 
-  if (typeof options.abortTimeout === 'number') {
+  if (typeof processOptions?.abortTimeout === 'number') {
     setTimeout(() => {
       ps.kill('SIGTERM')
-    }, options.abortTimeout)
+    }, processOptions.abortTimeout)
   }
+
   const code = (await new Promise((resolve) => {
     ps.on('close', resolve)
   })) as number
@@ -46,9 +48,31 @@ export async function executeBunchee(
   return { code, stdout, stderr }
 }
 
-export const createCliTest = createTest<ExcuteBuncheeResult>({
-  run: async (args, options) => await executeBunchee(args, options),
-})
+export async function createCliTest(
+  {
+    args,
+    options,
+    abortTimeout,
+    directory,
+  }: {
+    args?: string[]
+    options?: { env?: NodeJS.ProcessEnv }
+    abortTimeout?: number
+    directory: string
+  },
+  testFn: Parameters<typeof createTest<ExcuteBuncheeResult>>[1],
+): Promise<void> {
+  await createTest<ExcuteBuncheeResult>(
+    {
+      directory,
+      args: args ?? [],
+      options: options ?? {},
+      abortTimeout,
+      run: executeBunchee,
+    },
+    testFn,
+  )
+}
 
 export async function removeDirectory(tempDirPath: string) {
   debug.log(`Clean up ${tempDirPath}`)
