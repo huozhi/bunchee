@@ -1,6 +1,7 @@
 import fs from 'fs'
 import fsp from 'fs/promises'
 import path from 'path'
+import { removeDirectory } from './cli/utils'
 
 export function stripANSIColor(str: string) {
   return str.replace(
@@ -74,48 +75,50 @@ export async function deleteFile(f: string) {
   }
 }
 
-export function createTest<T>({
-  run,
-}: {
-  run: (
-    args: string[],
-    options?: { env?: NodeJS.ProcessEnv; abortTimeout?: number },
-  ) => Promise<T>
-}) {
-  return async function ({
+type CreateTestResultExtra = {
+  distDir: string
+  distFile: string
+}
+export async function createTest<T>(
+  {
+    args,
+    options,
     directory,
-    args = [],
-    env,
     abortTimeout,
+    run,
   }: {
+    args: string[]
+    options: { env?: NodeJS.ProcessEnv }
     directory: string
-    args?: string[]
-    env?: NodeJS.ProcessEnv
     abortTimeout?: number
-  }): Promise<
-    T & {
-      distDir: string
-      distFile: string
-    }
-  > {
-    const fixturesDir = path.join(directory, './fixtures')
-    const distDir = path.join(fixturesDir, './dist')
-    let distFile = ''
+    run: (
+      args: string[],
+      options: { env?: NodeJS.ProcessEnv },
+      processOptions?: { abortTimeout?: number },
+    ) => Promise<T>
+  },
+  testFn: (context: T & CreateTestResultExtra) => void,
+) {
+  const fixturesDir = path.join(directory, './fixtures')
+  const distDir = path.join(fixturesDir, './dist')
+  let distFile = ''
 
-    if (!args.includes('--cwd')) {
-      args.push('--cwd', fixturesDir)
-    }
-    const outputIndex = args.indexOf('-o')
-    if (outputIndex !== -1) {
-      distFile = path.join(fixturesDir, args[outputIndex + 1])
-    }
+  if (!args.includes('--cwd')) {
+    args.push('--cwd', fixturesDir)
+  }
+  const outputIndex = args.indexOf('-o')
+  if (outputIndex !== -1) {
+    distFile = path.join(fixturesDir, args[outputIndex + 1])
+  }
 
-    const result = await run(args, { env, abortTimeout })
-
-    return {
+  const result = await run(args, options, { abortTimeout })
+  try {
+    await testFn({
       ...result,
       distDir,
       distFile,
-    }
+    })
+  } finally {
+    await removeDirectory(distDir)
   }
 }
