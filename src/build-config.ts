@@ -524,6 +524,16 @@ export async function buildEntryConfig(
   return configs
 }
 
+// else if (
+//   exportType[0] === '.' &&
+//   suffixedExportConventions.has(exportType.slice(1))
+// ) {
+//   // e.g. .development, .production that has both esm and cjs export
+//   exportCondForType = exportCondRef
+//   exportType = exportType.slice(1)
+//   entryExport = entryExport.replace(exportType, '')
+// }
+
 async function collectEntry(
   // export type, e.g. react-server, edge-light those special cases required suffix
   exportType: string,
@@ -552,14 +562,6 @@ async function collectEntry(
     exportCondForType = {
       [exportType]: exportCondRef[exportType],
     }
-  } else if (
-    exportType[0] === '.' &&
-    suffixedExportConventions.has(exportType.slice(1))
-  ) {
-    // e.g. .development, .production that has both esm and cjs export
-    exportCondForType = exportCondRef
-    exportType = exportType.slice(1)
-    entryExport = entryExport.replace(exportType, '')
   } else {
     // Basic export type, pass down the exportPaths with erasing the special ones
     for (const exportType of suffixedExportConventions) {
@@ -660,8 +662,6 @@ export async function collectEntries(
         for (const exportCondType of suffixedExportConventions) {
           if (exportCond[exportCondType]) {
             await collectEntry(exportCondType, collectEntryOptions)
-          } else if (entryExport === '.' + exportCondType) {
-            await collectEntry(entryExport, collectEntryOptions)
           }
         }
       }
@@ -669,6 +669,7 @@ export async function collectEntries(
   )
 
   await Promise.all(collectEntriesPromises)
+  console.log('entries', entries)
   return entries
 }
 
