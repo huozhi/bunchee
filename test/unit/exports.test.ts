@@ -315,7 +315,7 @@ describe('lib exports', () => {
       ])
     })
 
-    it('should handle nested dev and prod special exports', () => {
+    it.only('should handle nested dev and prod special exports', () => {
       const pkg = {
         "exports": {
           ".": {
@@ -331,7 +331,6 @@ describe('lib exports', () => {
               "development": "./dist/index.development.js",
               "default": "./dist/index.js"
             },
-            "default": "./dist/index.js"
           },
           "./react": {
             "import": {
@@ -346,20 +345,19 @@ describe('lib exports', () => {
               "development": "./dist/react.development.js",
               "default": "./dist/react.js"
             },
-            "default": "./dist/react.js"
           }
         },
       }
 
       console.log(getExportPaths(pkg))
-      // expect(getExportConditionDistHelper(pkg, '.development')).toEqual([
-      //   { file: 'index.development.mjs', format: 'esm' },
-      //   { file: 'index.development.js', format: 'cjs' },
-      // ])
-      // expect(getExportConditionDistHelper(pkg, '.react.development')).toEqual([
-      //   { file: 'react.development.mjs', format: 'esm' },
-      //   { file: 'react.development.js', format: 'cjs' },
-      // ])
+      expect(getExportConditionDistHelper(pkg, '.development')).toEqual([
+        { file: 'index.development.mjs', format: 'esm' },
+        { file: 'index.development.js', format: 'cjs' },
+      ])
+      expect(getExportConditionDistHelper(pkg, '.react.development')).toEqual([
+        { file: 'react.development.mjs', format: 'esm' },
+        { file: 'react.development.js', format: 'cjs' },
+      ])
     })
   })
 })

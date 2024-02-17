@@ -85,17 +85,19 @@ function findExport(
   currentPath: string,
 ): void {
   if (exportPath === 'development') {
-    console.trace(
-      'find export',
+  }
+  // Skip `types` field, it cannot be the entry point
+  if (exportPath === 'types') return
+  if (isExportLike(exportCondition)) {
+    console.log(
+      'export like',
+      exportCondition,
+      '\nfind export',
       'exportPath',
       exportPath,
       'currentPath',
       currentPath,
     )
-  }
-  // Skip `types` field, it cannot be the entry point
-  if (exportPath === 'types') return
-  if (isExportLike(exportCondition)) {
     const fullExportCondition = constructFullExportCondition(
       exportCondition,
       packageType,
@@ -166,7 +168,7 @@ function findExport(
               ],
             }
             findExport(
-              conditionSpecialType,
+              currentPath + ',' + conditionSpecialType,
               nestedExportConditionPath,
               paths,
               packageType,
@@ -194,7 +196,9 @@ function findExport(
 /**
  *
  * Convert package.exports field to paths mapping
- * Example
+ * Output a map
+ *
+ * Example 1.
  *
  * Input:
  * {
@@ -214,6 +218,31 @@ function findExport(
  *     "types": "./sub.d.ts",
  *   }
  * }
+ *
+ * Example 2.
+ *
+ * Input
+ * {
+ *   ".": {
+ *     "import,": {
+ *       "development": "./dev.js",
+ *       "production": "./prod.js"
+ *     }
+ *   },
+ *   "./sub": {
+ *     "import": "./sub.js"
+ *   }
+ * }
+ *
+ * Output
+ * {
+ *   ".": {
+ *     "import,development": "./dev.js",
+ *     "import,production": "./prod.js"
+ *  },
+ *  "./sub,import": "./sub.js"
+ * }
+ *
  *
  */
 function parseExport(
