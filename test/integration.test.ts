@@ -1,6 +1,6 @@
 import fsp from 'fs/promises'
 import { execSync, fork } from 'child_process'
-import { resolve, join } from 'path'
+import { resolve, join, extname } from 'path'
 import {
   stripANSIColor,
   existsFile,
@@ -501,7 +501,11 @@ const testCases: {
         const content = await fsp.readFile(join(dir, 'dist', f), 'utf-8')
         expect(content).toContain('use client')
       })
-      expect(clientClientChunkFiles.length).toBe(2) // cjs and esm
+      // cjs and esm, check the extension and files amount
+      expect(clientClientChunkFiles.map((f) => extname(f)).sort()).toEqual([
+        '.cjs',
+        '.js',
+      ])
 
       // asset is only being imported to ui, no split
       const assetClientChunkFiles = distFiles.filter((f) =>
@@ -518,7 +522,11 @@ const testCases: {
         expect(content).toContain('use server')
         expect(content).not.toContain('use client')
       })
-      expect(serverChunkFiles.length).toBe(2) // cjs and esm
+      // cjs and esm, check the extension and files amount
+      expect(serverChunkFiles.map((f) => extname(f)).sort()).toEqual([
+        '.cjs',
+        '.js',
+      ])
 
       // For single entry ./ui, client is bundled into client
       const uiEsm = await fsp.readFile(join(dir, 'dist/ui.js'), 'utf-8')
