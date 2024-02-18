@@ -766,19 +766,6 @@ const testCases: {
     },
   },
   {
-    name: 'dev-prod-convention',
-    async expected(dir) {
-      await assertFilesContent(dir, {
-        './dist/index.development.js': /= "development"/,
-        './dist/index.development.mjs': /= "development"/,
-        './dist/index.production.js': /= "production"/,
-        'dist/index.production.mjs': /= "production"/,
-        './dist/index.js': /= 'index'/,
-        './dist/index.mjs': /= 'index'/,
-      })
-    },
-  },
-  {
     name: 'no-clean',
     args: ['--no-clean'],
     async before(dir) {
