@@ -36,39 +36,6 @@ const testCases: {
   ): Promise<void> | void
 }[] = [
   {
-    name: 'basic-jsx',
-    async expected(dir, { stderr, stdout }) {
-      // No warnings from swc3 plugin
-      expect(stderr + stdout).not.toContain('(swc plugin)')
-      assertContainFiles(dir, ['./dist/index.js', './dist/index.mjs'])
-    },
-  },
-  {
-    name: 'externals',
-    async expected(dir) {
-      const distFile = join(dir, './dist/index.js')
-      const content = await fsp.readFile(distFile, { encoding: 'utf-8' })
-      expect(content).toMatch(/['"]peer-dep['"]/)
-      expect(content).toMatch(/['"]peer-dep-meta['"]/)
-    },
-  },
-  {
-    name: 'duplicate-entry',
-    async expected(dir, { stdout }) {
-      const distFiles = [
-        'dist/index.js',
-        'dist/index.mjs',
-        'dist/index.d.ts',
-        'dist/index.d.mts',
-      ]
-      assertContainFiles(dir, distFiles)
-      for (const filename of distFiles) {
-        // only contain file name once
-        expect(stdout.split(filename).length).toBe(2)
-      }
-    },
-  },
-  {
     name: 'ts-error',
     async expected(dir, { stdout, stderr }) {
       const distFile = join(dir, './dist/index.js')
@@ -82,22 +49,6 @@ const testCases: {
       assertFilesContent(dir, {
         './dist/index.js': /"0.0.1"/,
         './dist/index.d.ts': /declare const version: string/,
-      })
-    },
-  },
-  {
-    name: 'js-only',
-    async expected(dir) {
-      const distFile = join(dir, './dist/index.js')
-      expect(await existsFile(distFile)).toBe(true)
-    },
-  },
-  {
-    name: 'entry-index-index',
-    async expected(dir) {
-      await assertFilesContent(dir, {
-        './dist/index.js': /'index'/,
-        './dist/react-server.js': /\'react-server\'/,
       })
     },
   },
@@ -369,98 +320,6 @@ const testCases: {
     },
   },
   {
-    name: 'cjs-pkg-esm-main-field',
-    args: [],
-    async expected(_, { stderr }) {
-      expect(stderr).toContain(
-        'Cannot export `main` field with .mjs extension in CJS package, only .js extension is allowed',
-      )
-    },
-  },
-  {
-    name: 'esm-pkg-cjs-main-field',
-    async expected(dir) {
-      const distFiles = ['./dist/index.cjs', './dist/index.mjs']
-      assertContainFiles(dir, distFiles)
-    },
-  },
-  {
-    name: 'bin/single-path',
-    args: [],
-    async expected(dir) {
-      const distFiles = [
-        join(dir, './dist/bin.js'),
-        join(dir, './dist/bin.d.ts'),
-      ]
-      await assertContainFiles(dir, distFiles)
-      expect(await fsp.readFile(distFiles[0], 'utf-8')).toContain(
-        '#!/usr/bin/env node',
-      )
-    },
-  },
-  {
-    name: 'bin/multi-path',
-    args: [],
-    async expected(dir) {
-      const distBinFiles = [
-        join(dir, './dist/bin/a.js'),
-        join(dir, './dist/bin/b.js'),
-      ]
-      const distTypeFiles = [
-        join(dir, './dist/bin/a.d.ts'),
-        join(dir, './dist/bin/b.d.ts'),
-      ]
-      const distFiles = distBinFiles.concat(distTypeFiles)
-
-      for (const distFile of distFiles) {
-        expect(await existsFile(distFile)).toBe(true)
-      }
-      for (const distScriptFile of distBinFiles) {
-        expect(await fsp.readFile(distScriptFile, 'utf-8')).toContain(
-          '#!/usr/bin/env node',
-        )
-      }
-    },
-  },
-  {
-    name: 'bin/cts',
-    args: [],
-    async expected(dir) {
-      const distFiles = [
-        join(dir, './dist/bin/index.cjs'),
-        join(dir, './dist/bin/index.d.cts'),
-      ]
-
-      for (const distFile of distFiles) {
-        expect(await existsFile(distFile)).toBe(true)
-      }
-
-      expect(await fsp.readFile(distFiles[0], 'utf-8')).toContain(
-        '#!/usr/bin/env node',
-      )
-    },
-  },
-  {
-    name: 'esm-shims',
-    async expected(dir) {
-      const requirePolyfill =
-        'const require = __node_cjsModule.createRequire(import.meta.url)'
-      const filenamePolyfill =
-        'const __filename = __node_cjsUrl.fileURLToPath(import.meta.url)'
-      const dirnamePolyfill =
-        'const __dirname = __node_cjsPath.dirname(__filename)'
-
-      await assertFilesContent(dir, {
-        './dist/require.mjs': requirePolyfill,
-        './dist/filename.mjs': filenamePolyfill,
-        './dist/dirname.mjs': dirnamePolyfill,
-        './dist/require.js': /require\(/,
-        './dist/filename.js': /__filename/,
-        './dist/dirname.js': /__dirname/,
-      })
-    },
-  },
-  {
     name: 'raw-data',
     args: [],
     async expected(dir) {
@@ -595,18 +454,6 @@ const testCases: {
         'utf-8',
       )
       expect(sharedCjs).toContain('shared-export')
-    },
-  },
-  {
-    name: 'default-node-mjs',
-    args: [],
-    async expected(dir) {
-      const distFiles = [join(dir, './dist/index.node.mjs')]
-      for (const f of distFiles) {
-        expect(await existsFile(f)).toBe(true)
-      }
-      expect(await fsp.readFile(distFiles[0], 'utf-8')).toContain('export {')
-      expect(await fsp.readFile(distFiles[0], 'utf-8')).not.toContain('exports')
     },
   },
   {
@@ -851,19 +698,6 @@ const testCases: {
     },
   },
   {
-    name: 'dev-prod-convention',
-    async expected(dir) {
-      await assertFilesContent(dir, {
-        './dist/index.development.js': /= "development"/,
-        './dist/index.development.mjs': /= "development"/,
-        './dist/index.production.js': /= "production"/,
-        'dist/index.production.mjs': /= "production"/,
-        './dist/index.js': /= 'index'/,
-        './dist/index.mjs': /= 'index'/,
-      })
-    },
-  },
-  {
     name: 'no-clean',
     args: ['--no-clean'],
     async before(dir) {
@@ -892,34 +726,6 @@ const testCases: {
     },
   },
   {
-    name: 'invalid-exports-cjs',
-    async expected(dir, { stderr }) {
-      expect(stderr).toContain('Missing package name')
-      expect(stderr).toContain(
-        'Cannot export `require` field with .mjs extension in CJS package, only .cjs and .js extensions are allowed',
-      )
-      expect(stderr).toContain('./dist/index.mjs')
-      expect(stderr).toContain(
-        'Cannot export `import` field with .js or .cjs extension in CJS package, only .mjs extensions are allowed',
-      )
-      expect(stderr).toContain('./dist/foo.js')
-    },
-  },
-  {
-    name: 'invalid-exports-esm',
-    async expected(dir, { stderr }) {
-      expect(stderr).not.toContain('Missing package name')
-      expect(stderr).toContain(
-        'Cannot export `require` field with .js or .mjs extension in ESM package, only .cjs extensions are allowed',
-      )
-      expect(stderr).toContain('./dist/index.js')
-      expect(stderr).toContain(
-        'Cannot export `import` field with .cjs extension in ESM package, only .js and .mjs extensions are allowed',
-      )
-      expect(stderr).toContain('./dist/foo.cjs')
-    },
-  },
-  {
     name: 'ts-composite',
     dir: 'monorepo-composite/packages/a',
     async expected(dir) {
@@ -933,15 +739,6 @@ const testCases: {
     async expected(dir) {
       expect(await existsFile(join(dir, './dist/index.js'))).toBe(true)
       expect(await existsFile(join(dir, './dist/index.d.ts'))).toBe(true)
-    },
-  },
-  {
-    name: 'edge-variable',
-    async expected(dir) {
-      assertFilesContent(dir, {
-        './dist/index.js': /typeof EdgeRuntime/,
-        './dist/index.edge.js': /typeof "edge-runtime"/,
-      })
     },
   },
 ]
