@@ -235,12 +235,10 @@ describe('lib exports', () => {
       // Get only basename to skip path.resolve result for `file` property
       const apiResult = getExportsDistFilesOfCondition(pkg, parsedExport, '')
 
-      return apiResult.map(
-        (item) => ({
-          ...item,
-          file: path.basename(item.file),
-        }),
-      )
+      return apiResult.map((item) => ({
+        ...item,
+        file: path.basename(item.file),
+      }))
     }
 
     it('should dedupe the same path import and module if they are the same path', () => {

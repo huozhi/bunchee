@@ -4,7 +4,4 @@ import { type Shared } from '../shared'
 export const name = 'server.index'
 export const main = true
 
-export {
-  Client,
-  Shared,
-}
+export { Client, Shared }
