@@ -8,10 +8,10 @@ describe('integration', () => {
         directory: __dirname,
         filesToRemove: ['tsconfig.json'],
       },
-      async () => {
+      async ({ distDir }) => {
         const distFiles = [
-          `${__dirname}/fixtures/dist/bin/index.cjs`,
-          `${__dirname}/fixtures/dist/bin/index.d.cts`,
+          `${distDir}/bin/index.cjs`,
+          `${distDir}/bin/index.d.cts`,
         ]
 
         for (const distFile of distFiles) {
