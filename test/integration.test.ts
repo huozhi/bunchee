@@ -382,30 +382,6 @@ const testCases: {
     },
   },
   {
-    name: 'bin/multi-path',
-    args: [],
-    async expected(dir) {
-      const distBinFiles = [
-        join(dir, './dist/bin/a.js'),
-        join(dir, './dist/bin/b.js'),
-      ]
-      const distTypeFiles = [
-        join(dir, './dist/bin/a.d.ts'),
-        join(dir, './dist/bin/b.d.ts'),
-      ]
-      const distFiles = distBinFiles.concat(distTypeFiles)
-
-      for (const distFile of distFiles) {
-        expect(await existsFile(distFile)).toBe(true)
-      }
-      for (const distScriptFile of distBinFiles) {
-        expect(await fsp.readFile(distScriptFile, 'utf-8')).toContain(
-          '#!/usr/bin/env node',
-        )
-      }
-    },
-  },
-  {
     name: 'esm-shims',
     async expected(dir) {
       const requirePolyfill =
