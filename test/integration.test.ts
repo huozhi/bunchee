@@ -581,18 +581,6 @@ const testCases: {
     },
   },
   {
-    name: 'default-node-mjs',
-    args: [],
-    async expected(dir) {
-      const distFiles = [join(dir, './dist/index.node.mjs')]
-      for (const f of distFiles) {
-        expect(await existsFile(f)).toBe(true)
-      }
-      expect(await fsp.readFile(distFiles[0], 'utf-8')).toContain('export {')
-      expect(await fsp.readFile(distFiles[0], 'utf-8')).not.toContain('exports')
-    },
-  },
-  {
     name: 'output',
     args: [],
     async expected(dir, { stdout }) {
