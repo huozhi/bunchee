@@ -1,9 +1,5 @@
 import { readFile } from 'fs/promises'
-import { createIntegrationTest, existsFile, deleteFile } from '../../utils'
-
-afterEach(async () => {
-  await deleteFile(`${__dirname}/fixtures/tsconfig.json`)
-})
+import { createIntegrationTest, existsFile } from '../../utils'
 
 describe('integration bin/multi-path', () => {
   it('should work with bin as multi path', async () => {
