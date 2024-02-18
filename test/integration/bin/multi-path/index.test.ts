@@ -7,6 +7,7 @@ describe('integration', () => {
     await createIntegrationTest(
       {
         directory: __dirname,
+        filesToRemove: ['tsconfig.json'],
       },
       async ({ distDir }) => {
         const distBinFiles = [`${distDir}/bin/a.js`, `${distDir}/bin/b.js`]

@@ -6,6 +6,7 @@ describe('integration', () => {
     await createIntegrationTest(
       {
         directory: __dirname,
+        filesToRemove: [`tsconfig.json`],
       },
       async ({ fixturesDir }) => {
         await assertFilesContent(fixturesDir, {
