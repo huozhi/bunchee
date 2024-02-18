@@ -1,6 +1,5 @@
 dist/
-test/fixtures/
-test/integration/
-test/unit/
+test/compile/
+test/**/fixtures/
 
 pnpm-lock.yaml
