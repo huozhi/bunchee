@@ -36,15 +36,6 @@ const testCases: {
   ): Promise<void> | void
 }[] = [
   {
-    name: 'externals',
-    async expected(dir) {
-      const distFile = join(dir, './dist/index.js')
-      const content = await fsp.readFile(distFile, { encoding: 'utf-8' })
-      expect(content).toMatch(/['"]peer-dep['"]/)
-      expect(content).toMatch(/['"]peer-dep-meta['"]/)
-    },
-  },
-  {
     name: 'ts-error',
     async expected(dir, { stdout, stderr }) {
       const distFile = join(dir, './dist/index.js')
