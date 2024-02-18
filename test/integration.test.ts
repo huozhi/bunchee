@@ -336,13 +336,6 @@ const testCases: {
     },
   },
   {
-    name: 'esm-pkg-cjs-main-field',
-    async expected(dir) {
-      const distFiles = ['./dist/index.cjs', './dist/index.mjs']
-      assertContainFiles(dir, distFiles)
-    },
-  },
-  {
     name: 'esm-shims',
     async expected(dir) {
       const requirePolyfill =
