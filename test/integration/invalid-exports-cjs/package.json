@@ -6,5 +6,5 @@
     "./foo": {
       "import": "./dist/foo.js"
     }
-  } 
+  }
 }

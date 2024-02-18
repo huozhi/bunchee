@@ -3,4 +3,3 @@ function index(): string {
 }
 
 export default index
-

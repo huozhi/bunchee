@@ -39,16 +39,12 @@ export async function assertFilesContent(
   dir: string,
   contentsRegex: Record<string, RegExp | string>,
 ) {
-  const distFiles = Object.keys(contentsRegex)
-  for (const relativeFile of distFiles) {
-    const file = path.join(dir, relativeFile)
-    expect({
-      [file]: (await existsFile(file)) ? 'existed' : 'missing',
-    }).toMatchObject({ [file]: 'existed' })
-  }
-
   const promises = Object.entries(contentsRegex).map(async ([file, regex]) => {
-    const content = await fsp.readFile(path.join(dir, file), {
+    const filePath = path.join(dir, file)
+    expect({
+      [filePath]: (await existsFile(filePath)) ? 'existed' : 'missing',
+    }).toMatchObject({ [filePath]: 'existed' })
+    const content = await fsp.readFile(filePath, {
       encoding: 'utf-8',
     })
     if (regex instanceof RegExp) {

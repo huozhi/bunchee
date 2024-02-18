@@ -140,7 +140,6 @@ const testCases: {
   },
   {
     name: 'multi-entries',
-    args: [],
     async expected(dir, { stdout }) {
       const contentsRegex = {
         './dist/index.js': /'index'/,
@@ -149,9 +148,10 @@ const testCases: {
         './dist/server/edge.mjs': /'server.edge-light'/,
         './dist/server/react-server.mjs': /'server.react-server'/,
         // types
-        './dist/server/index.d.ts': `export { Client } from '../client/index.mjs';\nexport { Shared } from '../shared/index.mjs';`,
+        './dist/server/index.d.ts': `export { Client } from '../client/index.cjs';\nexport { Shared } from '../shared/index.cjs';`,
         './dist/client/index.d.mts': `export { Shared } from '../shared/index.mjs'`,
         './dist/client/index.d.cts': `export { Shared } from '../shared/index.cjs'`,
+        './dist/client/index.d.ts': `export { Shared } from '../shared/index.cjs'`,
       }
 
       await assertFilesContent(dir, contentsRegex)

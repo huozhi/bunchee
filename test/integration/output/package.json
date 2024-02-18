@@ -8,6 +8,6 @@
       "import": "./dist/index.js",
       "react-server": "./dist/index.react-server.js"
     },
-    "./foo": "./dist/foo.js"    
+    "./foo": "./dist/foo.js"
   }
 }

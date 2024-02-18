@@ -5,6 +5,4 @@ export default function client(c: string) {
 }
 
 export type Client = string
-export {
-  Shared
-}
+export { Shared }

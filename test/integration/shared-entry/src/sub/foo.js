@@ -1,1 +1,1 @@
-export { shared as foo } from "../shared"
+export { shared as foo } from '../shared'
