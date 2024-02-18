@@ -8,15 +8,9 @@ describe('integration', () => {
       {
         directory: __dirname,
       },
-      async () => {
-        const distBinFiles = [
-          `${__dirname}/fixtures/dist/bin/a.js`,
-          `${__dirname}/fixtures/dist/bin/b.js`,
-        ]
-        const distTypeFiles = [
-          `${__dirname}/fixtures/dist/bin/a.d.ts`,
-          `${__dirname}/fixtures/dist/bin/b.d.ts`,
-        ]
+      async ({ distDir }) => {
+        const distBinFiles = [`${distDir}/bin/a.js`, `${distDir}/bin/b.js`]
+        const distTypeFiles = [`${distDir}/bin/a.d.ts`, `${distDir}/bin/b.d.ts`]
         const distFiles = distBinFiles.concat(distTypeFiles)
 
         for (const distFile of distFiles) {

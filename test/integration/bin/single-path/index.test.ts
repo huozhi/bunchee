@@ -8,11 +8,8 @@ describe('integration', () => {
       {
         directory: __dirname,
       },
-      async () => {
-        const distFiles = [
-          `${__dirname}/fixtures/dist/bin.js`,
-          `${__dirname}/fixtures/dist/bin.d.ts`,
-        ]
+      async ({ distDir }) => {
+        const distFiles = [`${distDir}/bin.js`, `${distDir}/bin.d.ts`]
         await assertContainFiles(__dirname, distFiles)
         expect(await readFile(distFiles[0], 'utf-8')).toContain(
           '#!/usr/bin/env node',

@@ -80,6 +80,7 @@ export async function deleteFile(f: string) {
 type CreateTestResultExtra = {
   distDir: string
   distFile: string
+  fixturesDir: string
 }
 export async function createTest<T>(
   {
@@ -117,6 +118,7 @@ export async function createTest<T>(
   try {
     await testFn({
       ...result,
+      fixturesDir,
       distDir,
       distFile,
     })

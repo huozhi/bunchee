@@ -8,8 +8,8 @@ describe('integration', () => {
       {
         directory: __dirname,
       },
-      async () => {
-        const distFiles = [`${__dirname}/fixtures/dist/index.node.mjs`]
+      async ({ distDir }) => {
+        const distFiles = [`${distDir}/index.node.mjs`]
 
         for (const f of distFiles) {
           expect(await existsFile(f)).toBe(true)

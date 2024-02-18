@@ -7,12 +7,9 @@ describe('integration', () => {
       {
         directory: __dirname,
       },
-      ({ stderr, stdout }) => {
+      ({ fixturesDir, stderr, stdout }) => {
         expect(stderr + stdout).not.toContain('(swc plugin)')
-        assertContainFiles(`${__dirname}/fixtures`, [
-          './dist/index.js',
-          './dist/index.mjs',
-        ])
+        assertContainFiles(fixturesDir, ['./dist/index.js', './dist/index.mjs'])
       },
     )
   })
