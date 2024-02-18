@@ -1,7 +1,8 @@
+import cp from 'child_process'
 import fs from 'fs'
 import fsp from 'fs/promises'
 import path from 'path'
-import { removeDirectory } from './cli/utils'
+import * as debug from './utils/debug'
 
 export function stripANSIColor(str: string) {
   return str.replace(
@@ -57,6 +58,11 @@ export async function assertFilesContent(
     }
   })
   await Promise.all(promises)
+}
+
+export async function removeDirectory(tempDirPath: string) {
+  debug.log(`Clean up ${tempDirPath}`)
+  await fsp.rm(tempDirPath, { recursive: true, force: true })
 }
 
 // bundle.min.js => .min.js
@@ -121,4 +127,49 @@ export async function createTest<T>(
   } finally {
     await removeDirectory(distDir)
   }
+}
+
+export type ExcuteBuncheeResult = {
+  code: number
+  stdout: string
+  stderr: string
+}
+
+export async function executeBunchee(
+  args: string[],
+  options: { env?: NodeJS.ProcessEnv },
+  processOptions?: { abortTimeout?: number },
+): Promise<ExcuteBuncheeResult> {
+  debug.log(`Command: bunchee ${args.join(' ')}`)
+
+  const assetPath = process.env.POST_BUILD
+    ? '/../dist/bin/cli.js'
+    : '/../src/bin/index.ts'
+
+  const ps = cp.fork(
+    `${require.resolve('tsx/cli')}`,
+    [__dirname + assetPath].concat(args),
+    {
+      stdio: 'pipe',
+      env: options.env,
+    },
+  )
+  let stderr = ''
+  let stdout = ''
+  ps.stdout?.on('data', (chunk) => (stdout += chunk.toString()))
+  ps.stderr?.on('data', (chunk) => (stderr += chunk.toString()))
+
+  if (typeof processOptions?.abortTimeout === 'number') {
+    setTimeout(() => {
+      ps.kill('SIGTERM')
+    }, processOptions.abortTimeout)
+  }
+
+  const code = (await new Promise((resolve) => {
+    ps.on('close', resolve)
+  })) as number
+  if (stdout) console.log(stdout)
+  if (stderr) console.error(stderr)
+
+  return { code, stdout, stderr }
 }
