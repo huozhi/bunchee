@@ -1,11 +1,10 @@
-import { createIntegrationTest, assertFilesContent } from '../utils'
+import { createIntegrationTest, assertFilesContent, deleteFile } from '../utils'
 
 describe('integration', () => {
   test(`dev-prod-convention`, async () => {
     await createIntegrationTest(
       {
         directory: __dirname,
-        filesToRemove: [`tsconfig.json`],
       },
       async ({ distDir }) => {
         await assertFilesContent(distDir, {
@@ -16,6 +15,8 @@ describe('integration', () => {
           'index.js': /= 'index'/,
           'index.mjs': /= 'index'/,
         })
+
+        await deleteFile(`${__dirname}/fixtures/tsconfig.json`)
       },
     )
   })

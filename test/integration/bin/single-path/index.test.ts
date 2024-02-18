@@ -1,12 +1,15 @@
 import { readFile } from 'fs/promises'
-import { createIntegrationTest, assertContainFiles } from '../../utils'
+import {
+  createIntegrationTest,
+  assertContainFiles,
+  deleteFile,
+} from '../../utils'
 
 describe('integration', () => {
   test(`bin/single-path`, async () => {
     await createIntegrationTest(
       {
         directory: __dirname,
-        filesToRemove: ['tsconfig.json'],
       },
       async ({ distDir }) => {
         const distFiles = [`${distDir}/bin.js`, `${distDir}/bin.d.ts`]
@@ -14,6 +17,8 @@ describe('integration', () => {
         expect(await readFile(distFiles[0], 'utf-8')).toContain(
           '#!/usr/bin/env node',
         )
+
+        await deleteFile(`${__dirname}/fixtures/tsconfig.json`)
       },
     )
   })

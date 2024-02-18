@@ -87,14 +87,12 @@ export async function createTest<T>(
     options,
     directory,
     abortTimeout,
-    filesToRemove,
     run,
   }: {
     args: string[]
     options: { env?: NodeJS.ProcessEnv }
     directory: string
     abortTimeout?: number
-    filesToRemove?: string[]
     run: (
       args: string[],
       options: { env?: NodeJS.ProcessEnv },
@@ -124,14 +122,6 @@ export async function createTest<T>(
     })
   } finally {
     await removeDirectory(distDir)
-
-    // Additional files to remove inside the fixtures directory
-    // e.g. tsconfig.json
-    if (filesToRemove) {
-      for (const file of filesToRemove) {
-        await deleteFile(`${fixturesDir}/${file}`)
-      }
-    }
   }
 }
 

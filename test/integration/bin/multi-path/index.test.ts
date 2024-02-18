@@ -1,12 +1,11 @@
 import { readFile } from 'fs/promises'
-import { createIntegrationTest, existsFile } from '../../utils'
+import { createIntegrationTest, existsFile, deleteFile } from '../../utils'
 
 describe('integration', () => {
   test(`bin/multi-path`, async () => {
     await createIntegrationTest(
       {
         directory: __dirname,
-        filesToRemove: ['tsconfig.json'],
       },
       async ({ distDir }) => {
         const distBinFiles = [`${distDir}/bin/a.js`, `${distDir}/bin/b.js`]
@@ -21,6 +20,8 @@ describe('integration', () => {
             '#!/usr/bin/env node',
           )
         }
+
+        await deleteFile(`${__dirname}/fixtures/tsconfig.json`)
       },
     )
   })

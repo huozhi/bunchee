@@ -1,12 +1,11 @@
 import { readFile } from 'fs/promises'
-import { createIntegrationTest, existsFile } from '../../utils'
+import { createIntegrationTest, deleteFile, existsFile } from '../../utils'
 
 describe('integration', () => {
   test(`bin/cts`, async () => {
     await createIntegrationTest(
       {
         directory: __dirname,
-        filesToRemove: ['tsconfig.json'],
       },
       async ({ distDir }) => {
         const distFiles = [
@@ -21,6 +20,8 @@ describe('integration', () => {
         expect(await readFile(distFiles[0], 'utf-8')).toContain(
           '#!/usr/bin/env node',
         )
+
+        await deleteFile(`${__dirname}/fixtures/tsconfig.json`)
       },
     )
   })
