@@ -1,6 +1,10 @@
 import { readFile } from 'fs/promises'
 import { createIntegrationTest, existsFile, deleteFile } from '../../utils'
 
+afterEach(async () => {
+  await deleteFile(`${__dirname}/fixtures/tsconfig.json`)
+})
+
 describe('integration', () => {
   test(`bin/multi-path`, async () => {
     await createIntegrationTest(
@@ -20,8 +24,6 @@ describe('integration', () => {
             '#!/usr/bin/env node',
           )
         }
-
-        await deleteFile(`${__dirname}/fixtures/tsconfig.json`)
       },
     )
   })

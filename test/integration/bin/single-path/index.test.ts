@@ -5,6 +5,10 @@ import {
   deleteFile,
 } from '../../utils'
 
+afterEach(async () => {
+  await deleteFile(`${__dirname}/fixtures/tsconfig.json`)
+})
+
 describe('integration', () => {
   test(`bin/single-path`, async () => {
     await createIntegrationTest(
@@ -17,8 +21,6 @@ describe('integration', () => {
         expect(await readFile(distFiles[0], 'utf-8')).toContain(
           '#!/usr/bin/env node',
         )
-
-        await deleteFile(`${__dirname}/fixtures/tsconfig.json`)
       },
     )
   })
