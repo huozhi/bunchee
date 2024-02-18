@@ -1,7 +1,7 @@
 import { createIntegrationTest, assertFilesContent } from '../utils'
 
 describe('integration dev-prod-convention', () => {
-  it('should work on environment conventions', async () => {
+  it('should work on optimize conventions dev and prod', async () => {
     await createIntegrationTest(
       {
         directory: __dirname,
