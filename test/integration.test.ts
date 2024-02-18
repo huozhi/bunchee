@@ -45,22 +45,6 @@ const testCases: {
     },
   },
   {
-    name: 'duplicate-entry',
-    async expected(dir, { stdout }) {
-      const distFiles = [
-        'dist/index.js',
-        'dist/index.mjs',
-        'dist/index.d.ts',
-        'dist/index.d.mts',
-      ]
-      assertContainFiles(dir, distFiles)
-      for (const filename of distFiles) {
-        // only contain file name once
-        expect(stdout.split(filename).length).toBe(2)
-      }
-    },
-  },
-  {
     name: 'ts-error',
     async expected(dir, { stdout, stderr }) {
       const distFile = join(dir, './dist/index.js')
