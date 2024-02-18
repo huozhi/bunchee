@@ -1,5 +1,4 @@
-import { createIntegrationTest } from '../utils'
-import { existsFile } from '../../testing-utils'
+import { createIntegrationTest, existsFile } from '../utils'
 
 describe('integration', () => {
   test(`js-only`, async () => {

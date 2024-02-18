@@ -1,6 +1,5 @@
 import { readFile } from 'fs/promises'
-import { createIntegrationTest } from '../../utils'
-import { assertContainFiles } from '../../../testing-utils'
+import { createIntegrationTest, assertContainFiles } from '../../utils'
 
 describe('integration', () => {
   test(`bin/single-path`, async () => {

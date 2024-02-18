@@ -1,5 +1,4 @@
-import { createIntegrationTest } from '../utils'
-import { assertContainFiles } from '../../testing-utils'
+import { createIntegrationTest, assertContainFiles } from '../utils'
 
 describe('integration', () => {
   test(`basic-jsx`, async () => {

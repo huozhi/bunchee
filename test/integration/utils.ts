@@ -1,6 +1,7 @@
 import type { ExcuteBuncheeResult } from '../testing-utils'
 import { createTest, executeBunchee } from '../testing-utils'
 
+export * from '../testing-utils'
 export async function createIntegrationTest(
   {
     args,

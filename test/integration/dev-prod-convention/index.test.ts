@@ -1,5 +1,4 @@
-import { createIntegrationTest } from '../utils'
-import { assertFilesContent } from '../../testing-utils'
+import { createIntegrationTest, assertFilesContent } from '../utils'
 
 describe('integration', () => {
   test(`dev-prod-convention`, async () => {

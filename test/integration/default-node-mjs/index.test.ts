@@ -1,6 +1,5 @@
 import { readFile } from 'fs/promises'
-import { createIntegrationTest } from '../utils'
-import { existsFile } from '../../testing-utils'
+import { createIntegrationTest, existsFile } from '../utils'
 
 describe('integration', () => {
   test(`default-node-mjs`, async () => {
