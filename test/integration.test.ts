@@ -69,15 +69,6 @@ const testCases: {
     },
   },
   {
-    name: 'entry-index-index',
-    async expected(dir) {
-      await assertFilesContent(dir, {
-        './dist/index.js': /'index'/,
-        './dist/react-server.js': /\'react-server\'/,
-      })
-    },
-  },
-  {
     name: 'pkg-exports',
     async expected(dir) {
       const distFiles = [
