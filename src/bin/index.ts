@@ -31,6 +31,7 @@ Options:
   --cwd <cwd>            specify current working directory
   --sourcemap            enable sourcemap generation, default: false
   --dts                  determine if need to generate types, default: false
+  --no-dts               force not to generate types, default: false
 `
 
 function help() {
@@ -51,6 +52,7 @@ function parseCliArgs(argv: string[]) {
     {
       '--cwd': String,
       '--dts': Boolean,
+      '--no-dts': Boolean,
       '--output': String,
       '--format': String,
       '--watch': Boolean,
@@ -88,6 +90,7 @@ function parseCliArgs(argv: string[]) {
     sourcemap: !!args['--sourcemap'],
     cwd: args['--cwd'],
     dts: args['--dts'],
+    noDts: args['--no-dts'],
     help: args['--help'],
     version: args['--version'],
     runtime: args['--runtime'],
@@ -110,6 +113,7 @@ async function run(args: CliArgs) {
     target,
     runtime,
     dts,
+    noDts,
     env,
     clean,
   } = args
@@ -117,6 +121,7 @@ async function run(args: CliArgs) {
   const file = args.file ? path.resolve(cwd, args.file) : undefined
   const bundleConfig: BundleConfig = {
     dts,
+    noDts,
     file,
     format,
     cwd,

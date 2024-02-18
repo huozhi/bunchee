@@ -188,11 +188,12 @@ async function bundle(
     bundleOrWatch(rollupConfig),
   )
 
-  const typesJobs = hasTsConfig
-    ? (await buildEntryConfig(options, buildContext, true)).map(
-        (rollupConfig) => bundleOrWatch(rollupConfig),
-      )
-    : []
+  const typesJobs =
+    hasTsConfig && !options.noDts
+      ? (await buildEntryConfig(options, buildContext, true)).map(
+          (rollupConfig) => bundleOrWatch(rollupConfig),
+        )
+      : []
 
   const totalJobs = assetsJobs.concat(typesJobs)
   const result = await Promise.all(totalJobs)
