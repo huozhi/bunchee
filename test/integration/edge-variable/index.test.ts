@@ -6,10 +6,10 @@ describe('integration', () => {
       {
         directory: __dirname,
       },
-      async ({ fixturesDir }) => {
-        assertFilesContent(fixturesDir, {
-          './dist/index.js': /typeof EdgeRuntime/,
-          './dist/index.edge.js': /typeof "edge-runtime"/,
+      async ({ distDir }) => {
+        assertFilesContent(distDir, {
+          'index.js': /typeof EdgeRuntime/,
+          'index.edge.js': /typeof "edge-runtime"/,
         })
       },
     )

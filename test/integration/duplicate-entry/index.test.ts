@@ -6,14 +6,9 @@ describe('integration', () => {
       {
         directory: __dirname,
       },
-      async ({ fixturesDir, stdout }) => {
-        const distFiles = [
-          'dist/index.js',
-          'dist/index.mjs',
-          'dist/index.d.ts',
-          'dist/index.d.mts',
-        ]
-        assertContainFiles(fixturesDir, distFiles)
+      async ({ distDir, stdout }) => {
+        const distFiles = ['index.js', 'index.mjs', 'index.d.ts', 'index.d.mts']
+        assertContainFiles(distDir, distFiles)
         for (const filename of distFiles) {
           // only contain file name once
           expect(stdout.split(filename).length).toBe(2)

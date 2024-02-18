@@ -7,14 +7,14 @@ describe('integration', () => {
         directory: __dirname,
         filesToRemove: [`tsconfig.json`],
       },
-      async ({ fixturesDir }) => {
-        await assertFilesContent(fixturesDir, {
-          './dist/index.development.js': /= "development"/,
-          './dist/index.development.mjs': /= "development"/,
-          './dist/index.production.js': /= "production"/,
-          'dist/index.production.mjs': /= "production"/,
-          './dist/index.js': /= 'index'/,
-          './dist/index.mjs': /= 'index'/,
+      async ({ distDir }) => {
+        await assertFilesContent(distDir, {
+          'index.development.js': /= "development"/,
+          'index.development.mjs': /= "development"/,
+          'index.production.js': /= "production"/,
+          'index.production.mjs': /= "production"/,
+          'index.js': /= 'index'/,
+          'index.mjs': /= 'index'/,
         })
       },
     )

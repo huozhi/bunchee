@@ -6,10 +6,10 @@ describe('integration', () => {
       {
         directory: __dirname,
       },
-      async ({ fixturesDir }) => {
-        await assertFilesContent(fixturesDir, {
-          './dist/index.js': /'index'/,
-          './dist/react-server.js': /\'react-server\'/,
+      async ({ distDir }) => {
+        await assertFilesContent(distDir, {
+          'index.js': /'index'/,
+          'react-server.js': /\'react-server\'/,
         })
       },
     )

@@ -6,7 +6,7 @@ describe('integration', () => {
       {
         directory: __dirname,
       },
-      async ({ fixturesDir }) => {
+      async ({ distDir }) => {
         const requirePolyfill =
           'const require = __node_cjsModule.createRequire(import.meta.url)'
         const filenamePolyfill =
@@ -14,13 +14,13 @@ describe('integration', () => {
         const dirnamePolyfill =
           'const __dirname = __node_cjsPath.dirname(__filename)'
 
-        await assertFilesContent(fixturesDir, {
-          './dist/require.mjs': requirePolyfill,
-          './dist/filename.mjs': filenamePolyfill,
-          './dist/dirname.mjs': dirnamePolyfill,
-          './dist/require.js': /require\(/,
-          './dist/filename.js': /__filename/,
-          './dist/dirname.js': /__dirname/,
+        await assertFilesContent(distDir, {
+          'require.mjs': requirePolyfill,
+          'filename.mjs': filenamePolyfill,
+          'dirname.mjs': dirnamePolyfill,
+          'require.js': /require\(/,
+          'filename.js': /__filename/,
+          'dirname.js': /__dirname/,
         })
       },
     )

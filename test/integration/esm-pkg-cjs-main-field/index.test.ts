@@ -6,9 +6,9 @@ describe('integration', () => {
       {
         directory: __dirname,
       },
-      async ({ fixturesDir }) => {
-        const distFiles = ['./dist/index.cjs', './dist/index.mjs']
-        assertContainFiles(fixturesDir, distFiles)
+      async ({ distDir }) => {
+        const distFiles = ['index.cjs', 'index.mjs']
+        assertContainFiles(distDir, distFiles)
       },
     )
   })
