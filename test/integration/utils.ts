@@ -6,11 +6,13 @@ export async function createIntegrationTest(
     args,
     options,
     abortTimeout,
+    filesToRemove,
     directory,
   }: {
     args?: string[]
     options?: { env?: NodeJS.ProcessEnv }
     abortTimeout?: number
+    filesToRemove?: string[]
     directory: string
   },
   testFn: Parameters<typeof createTest<ExcuteBuncheeResult>>[1],
@@ -21,6 +23,7 @@ export async function createIntegrationTest(
       args: args ?? [],
       options: options ?? {},
       abortTimeout,
+      filesToRemove,
       run: executeBunchee,
     },
     testFn,
