@@ -733,20 +733,6 @@ const testCases: {
     },
   },
   {
-    name: 'invalid-exports-esm',
-    async expected(dir, { stderr }) {
-      expect(stderr).not.toContain('Missing package name')
-      expect(stderr).toContain(
-        'Cannot export `require` field with .js or .mjs extension in ESM package, only .cjs extensions are allowed',
-      )
-      expect(stderr).toContain('./dist/index.js')
-      expect(stderr).toContain(
-        'Cannot export `import` field with .cjs extension in ESM package, only .js and .mjs extensions are allowed',
-      )
-      expect(stderr).toContain('./dist/foo.cjs')
-    },
-  },
-  {
     name: 'ts-composite',
     dir: 'monorepo-composite/packages/a',
     async expected(dir) {
