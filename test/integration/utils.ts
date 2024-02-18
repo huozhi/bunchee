@@ -1,7 +1,8 @@
+import type { ExcuteBuncheeResult } from '../testing-utils'
 import {
+  assertContainFiles,
   createTest,
   executeBunchee,
-  type ExcuteBuncheeResult,
 } from '../testing-utils'
 
 export async function createIntegrationTest(
@@ -28,4 +29,12 @@ export async function createIntegrationTest(
     },
     testFn,
   )
+}
+
+export function assertFixturesContainFiles(
+  directory: string,
+  files: string[],
+): void {
+  const fixturesDir = `${directory}/fixtures`
+  assertContainFiles(fixturesDir, files)
 }
