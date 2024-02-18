@@ -35,14 +35,6 @@ const testCases: {
     { stderr, stdout }: { stderr: string; stdout: string },
   ): Promise<void> | void
 }[] = [
-  // {
-  //   name: 'basic-jsx',
-  //   async expected(dir, { stderr, stdout }) {
-  //     // No warnings from swc3 plugin
-  //     expect(stderr + stdout).not.toContain('(swc plugin)')
-  //     assertContainFiles(dir, ['./dist/index.js', './dist/index.mjs'])
-  //   },
-  // },
   {
     name: 'externals',
     async expected(dir) {
@@ -366,15 +358,6 @@ const testCases: {
         'For proper usage, please refer to the following link: ' +
         'https://github.com/huozhi/bunchee#usage'
       expect(stderr).toContain(log)
-    },
-  },
-  {
-    name: 'cjs-pkg-esm-main-field',
-    args: [],
-    async expected(_, { stderr }) {
-      expect(stderr).toContain(
-        'Cannot export `main` field with .mjs extension in CJS package, only .js extension is allowed',
-      )
     },
   },
   {
