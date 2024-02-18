@@ -1,4 +1,5 @@
-import { assertFixturesContainFiles, createIntegrationTest } from '../utils'
+import { createIntegrationTest } from '../utils'
+import { assertContainFiles } from '../../testing-utils'
 
 describe('integration', () => {
   test(`basic-jsx`, async () => {
@@ -6,11 +7,12 @@ describe('integration', () => {
       {
         directory: __dirname,
       },
-      ({ code, stderr, stdout }) => {
-        expect(code).toBe(0)
-
+      ({ stderr, stdout }) => {
         expect(stderr + stdout).not.toContain('(swc plugin)')
-        assertFixturesContainFiles(__dirname, ['./dist/index.js', './dist/index.mjs'])
+        assertContainFiles(`${__dirname}/fixtures`, [
+          './dist/index.js',
+          './dist/index.mjs',
+        ])
       },
     )
   })

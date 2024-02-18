@@ -1,10 +1,5 @@
 import type { ExcuteBuncheeResult } from '../testing-utils'
-import {
-  assertContainFiles,
-  assertFilesContent,
-  createTest,
-  executeBunchee,
-} from '../testing-utils'
+import { createTest, executeBunchee } from '../testing-utils'
 
 export async function createIntegrationTest(
   {
@@ -30,20 +25,4 @@ export async function createIntegrationTest(
     },
     testFn,
   )
-}
-
-export function assertFixturesContainFiles(
-  directory: string,
-  files: string[],
-): void {
-  const fixturesDir = `${directory}/fixtures`
-  assertContainFiles(fixturesDir, files)
-}
-
-export function assertFixturesFilesContent(
-  directory: string,
-  contentsRegex: Record<string, RegExp | string>,
-): void {
-  const fixturesDir = `${directory}/fixtures`
-  assertFilesContent(fixturesDir, contentsRegex)
 }

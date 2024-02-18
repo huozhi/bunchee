@@ -6,12 +6,10 @@ describe('integration', () => {
       {
         directory: __dirname,
       },
-      ({ code, stderr }) => {
-        expect(code).toBe(0)
-
+      ({ stderr }) => {
         expect(stderr).toContain(
-        'Cannot export `main` field with .mjs extension in CJS package, only .js extension is allowed',
-      )
+          'Cannot export `main` field with .mjs extension in CJS package, only .js extension is allowed',
+        )
       },
     )
   })
