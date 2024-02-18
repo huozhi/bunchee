@@ -1,16 +1,8 @@
 import { readFile } from 'fs/promises'
-import {
-  createIntegrationTest,
-  assertContainFiles,
-  deleteFile,
-} from '../../utils'
+import { createIntegrationTest, assertContainFiles } from '../../utils'
 
-afterEach(async () => {
-  await deleteFile(`${__dirname}/fixtures/tsconfig.json`)
-})
-
-describe('integration', () => {
-  test(`bin/single-path`, async () => {
+describe('integration bin/single-path', () => {
+  it('should work with bin as single path', async () => {
     await createIntegrationTest(
       {
         directory: __dirname,

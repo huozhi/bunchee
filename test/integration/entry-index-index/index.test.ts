@@ -1,7 +1,7 @@
 import { createIntegrationTest, assertFilesContent } from '../utils'
 
-describe('integration', () => {
-  test(`entry-index-index`, async () => {
+describe('integration entry-index-index', () => {
+  it('should work with index file inside index directory', async () => {
     await createIntegrationTest(
       {
         directory: __dirname,

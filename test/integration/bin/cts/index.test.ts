@@ -1,12 +1,8 @@
 import { readFile } from 'fs/promises'
-import { createIntegrationTest, deleteFile, existsFile } from '../../utils'
+import { createIntegrationTest, existsFile } from '../../utils'
 
-afterEach(async () => {
-  await deleteFile(`${__dirname}/fixtures/tsconfig.json`)
-})
-
-describe('integration', () => {
-  test(`bin/cts`, async () => {
+describe('integration bin/cts', () => {
+  it('should work with bin as .cts extension', async () => {
     await createIntegrationTest(
       {
         directory: __dirname,

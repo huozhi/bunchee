@@ -1,7 +1,7 @@
 import { createIntegrationTest, assertContainFiles } from '../utils'
 
-describe('integration', () => {
-  test(`basic-jsx`, async () => {
+describe('integration basic-jsx', () => {
+  it('should work with basic JSX format', async () => {
     await createIntegrationTest(
       {
         directory: __dirname,

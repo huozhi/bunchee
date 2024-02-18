@@ -1,11 +1,7 @@
-import { createIntegrationTest, assertFilesContent, deleteFile } from '../utils'
+import { createIntegrationTest, assertFilesContent } from '../utils'
 
-afterEach(async () => {
-  await deleteFile(`${__dirname}/fixtures/tsconfig.json`)
-})
-
-describe('integration', () => {
-  test(`dev-prod-convention`, async () => {
+describe('integration dev-prod-convention', () => {
+  it('should work on optimize conventions dev and prod', async () => {
     await createIntegrationTest(
       {
         directory: __dirname,

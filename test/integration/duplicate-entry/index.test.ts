@@ -1,7 +1,7 @@
 import { createIntegrationTest, assertContainFiles } from '../utils'
 
-describe('integration', () => {
-  test(`duplicate-entry`, async () => {
+describe('integration duplicate-entry', () => {
+  it('should deduplicate entries', async () => {
     await createIntegrationTest(
       {
         directory: __dirname,
