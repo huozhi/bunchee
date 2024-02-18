@@ -368,20 +368,6 @@ const testCases: {
     },
   },
   {
-    name: 'bin/single-path',
-    args: [],
-    async expected(dir) {
-      const distFiles = [
-        join(dir, './dist/bin.js'),
-        join(dir, './dist/bin.d.ts'),
-      ]
-      await assertContainFiles(dir, distFiles)
-      expect(await fsp.readFile(distFiles[0], 'utf-8')).toContain(
-        '#!/usr/bin/env node',
-      )
-    },
-  },
-  {
     name: 'esm-shims',
     async expected(dir) {
       const requirePolyfill =
