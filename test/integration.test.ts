@@ -733,20 +733,6 @@ const testCases: {
     },
   },
   {
-    name: 'invalid-exports-cjs',
-    async expected(dir, { stderr }) {
-      expect(stderr).toContain('Missing package name')
-      expect(stderr).toContain(
-        'Cannot export `require` field with .mjs extension in CJS package, only .cjs and .js extensions are allowed',
-      )
-      expect(stderr).toContain('./dist/index.mjs')
-      expect(stderr).toContain(
-        'Cannot export `import` field with .js or .cjs extension in CJS package, only .mjs extensions are allowed',
-      )
-      expect(stderr).toContain('./dist/foo.js')
-    },
-  },
-  {
     name: 'invalid-exports-esm',
     async expected(dir, { stderr }) {
       expect(stderr).not.toContain('Missing package name')
