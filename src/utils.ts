@@ -8,6 +8,7 @@ import {
   availableExtensions,
   SRC,
   tsExtensions,
+  optimizeConventions,
 } from './constants'
 import { logger } from './logger'
 
@@ -112,7 +113,6 @@ export async function getSourcePathFromExportPath(
   exportPath: string,
   exportType: string,
 ): Promise<string | undefined> {
-  console.log('getSourcePathFromExportPath', exportPath, exportType)
   for (const ext of availableExtensions) {
     // ignore package.json
     if (exportPath === '/package.json') return
@@ -125,6 +125,16 @@ export async function getSourcePathFromExportPath(
         cwd,
         exportPath,
         exportType,
+        ext,
+      )
+      if (filename) return filename
+    }
+    const [, optimizeType] = exportType.split('.')
+    if (optimizeConventions.has(optimizeType)) {
+      const filename = await findSourceEntryFile(
+        cwd,
+        exportPath,
+        optimizeType,
         ext,
       )
       if (filename) return filename

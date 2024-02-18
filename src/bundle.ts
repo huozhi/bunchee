@@ -32,6 +32,7 @@ import {
   getExportFileTypePath,
   getExportPaths,
   getPackageType,
+  parseExports,
 } from './exports'
 import type { BuildContext } from './types'
 import {
@@ -51,7 +52,7 @@ function assignDefault(
   }
 }
 
-function hasMultiEntryExport(exportPaths: ExportPaths): boolean {
+function hasMultiEntryExport(exportPaths: object): boolean {
   const exportKeys = Object.keys(exportPaths).filter(
     (key) => key !== './package.json',
   )
@@ -75,7 +76,9 @@ async function bundle(
   const packageType = getPackageType(pkg)
 
   const exportPaths = getExportPaths(pkg, resolvedWildcardExports)
-  const isMultiEntries = hasMultiEntryExport(exportPaths) // exportPathsLength > 1
+  const parsedExportsInfo = parseExports(pkg.exports ?? {}, pkg.type)
+  console.log(parsedExportsInfo)
+  const isMultiEntries = hasMultiEntryExport(parsedExportsInfo)
   const hasBin = Boolean(pkg.bin)
   const isFromCli = Boolean(cliEntryPath)
 
@@ -110,13 +113,13 @@ async function bundle(
         typesEntryPath = getExportFileTypePath(mainEntryPath)
       }
 
-      exportPaths['.'] = constructDefaultExportCondition(
-        {
-          main: mainEntryPath,
-          types: typesEntryPath,
-        },
-        packageType,
-      )
+      // exportPaths['.'] = constructDefaultExportCondition(
+      //   {
+      //     main: mainEntryPath,
+      //     types: typesEntryPath,
+      //   },
+      //   packageType,
+      // )
     }
   }
 

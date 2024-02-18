@@ -7,7 +7,11 @@ import type {
   ParsedExportCondition,
 } from './types'
 import { baseNameWithoutExtension, hasCjsExtension } from './utils'
-import { dtsExtensionsMap, suffixedExportConventions } from './constants'
+import {
+  dtsExtensionsMap,
+  optimizeConventions,
+  suffixedExportConventions,
+} from './constants'
 import { OutputOptions } from 'rollup'
 
 export function getPackageTypings(pkg: PackageMetadata) {
@@ -81,6 +85,11 @@ const appendExportCondition = (exportPath: string, condition: string) => {
   return (exportPath === '.' ? '' : exportPath) + '.' + condition
 }
 
+const specialExportTypes = new Set([
+  ...suffixedExportConventions,
+  ...optimizeConventions,
+])
+
 function findExport(
   exportPath: string,
   exportCondition: ExportCondition,
@@ -103,7 +112,7 @@ function findExport(
     } else {
       const exportJsBundlePath = getFirstExportPath(fullExportCondition)
 
-      if (suffixedExportConventions.has(exportPath)) {
+      if (specialExportTypes.has(exportPath)) {
         const specialPath = appendExportCondition(currentPath, exportPath)
         paths[specialPath] = {
           ...paths[specialPath],
@@ -152,7 +161,7 @@ function findExport(
         // Find special export type, such as import: { development: './dev.js', production: './prod.js' }
         const conditionSpecialTypes = Object.keys(
           exportCondition[exportType],
-        ).filter((key) => suffixedExportConventions.has(key))
+        ).filter((key) => specialExportTypes.has(key))
         for (const conditionSpecialType of conditionSpecialTypes) {
           // e.g. import.development
           const composedKey = concatExportName(exportType, conditionSpecialType)
@@ -369,6 +378,93 @@ export function getExportPaths(
   return pathsMap
 }
 
+export type ParsedExportsInfo = Map<string, [string, string][]>
+
+function collectExportPath(
+  exportValue: ExportCondition,
+  currentPath: string,
+  exportTypes: Set<string>,
+  exportToDist: ParsedExportsInfo,
+) {
+  // End of searching, export value is file path.
+  if (typeof exportValue === 'string') {
+    // exportTypes.add('require')
+    // childExports.add('default')
+    const exportInfo = exportToDist.get(currentPath)
+    if (!exportInfo) {
+      const outputConditionPair: [string, string] = [
+        exportValue,
+        Array.from(exportTypes).join('.'),
+      ]
+      exportToDist.set(currentPath, [outputConditionPair])
+    } else {
+      exportInfo.push([exportValue, Array.from(exportTypes).join('.')])
+    }
+    return
+  }
+
+  const exportKeys = Object.keys(exportValue)
+  for (const exportKey of exportKeys) {
+    const childExports = new Set(exportTypes)
+    // Normalize child export value to a map
+    const childExportValue = exportValue[exportKey]
+    // Visit export path: ./subpath, ./subpath2, ...
+    if (exportKey.startsWith('.')) {
+      const childPath = joinRelativePath(currentPath, exportKey)
+      collectExportPath(childExportValue, childPath, childExports, exportToDist)
+    } else {
+      // Visit export type: import, require, ...
+      childExports.add(exportKey)
+      collectExportPath(
+        childExportValue,
+        currentPath,
+        childExports,
+        exportToDist,
+      )
+    }
+  }
+}
+
+export function parseExports(
+  exportsField: ExportCondition,
+  _moduleType: 'commonjs' | 'module' | undefined,
+): ParsedExportsInfo {
+  /* exportToDist: {
+   *  filePath: [outputPath, exportType][]
+   *  { [string]: [string, string][] }
+   * }
+   *
+   * map from export path to output path and export conditions
+   */
+  const exportToDist: ParsedExportsInfo = new Map()
+  let currentPath = '.'
+
+  if (typeof exportsField === 'string') {
+    // const exportTypes: Set<string> = new Set()
+    // exportTypes.add(
+    //   'default'
+    //   // moduleType === 'module' ? 'import' : 'require'
+    // )
+    const outputConditionPair: [string, string] = [exportsField, 'default']
+    return new Map([['.', [outputConditionPair]]])
+  }
+  // keys means unknown if they're relative path or export type
+  const exportConditionKeys = Object.keys(exportsField)
+
+  for (const exportKey of exportConditionKeys) {
+    const exportValue = exportsField[exportKey]
+    const exportTypes: Set<string> = new Set()
+    const isExportPath = exportKey.startsWith('.')
+    const childPath = isExportPath
+      ? joinRelativePath(currentPath, exportKey)
+      : currentPath
+
+    collectExportPath(exportValue, childPath, exportTypes, exportToDist)
+  }
+
+  return exportToDist
+}
+
 export function getPackageType(pkg: PackageMetadata): PackageType {
   return pkg.type || 'commonjs'
 }
@@ -419,9 +515,6 @@ export function getExportsDistFilesOfCondition(
   cwd: string,
 ): { format: OutputOptions['format']; file: string }[] {
   const dist: { format: OutputOptions['format']; file: string }[] = []
-  if (!parsedExportCondition.export) {
-    console.log('parsedExportCondition.export is empty', parsedExportCondition)
-  }
   const exportConditionNames = Object.keys(parsedExportCondition.export)
   const uniqueFiles = new Set<string>()
   for (const exportCondition of exportConditionNames) {

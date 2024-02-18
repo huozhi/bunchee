@@ -20,9 +20,8 @@ export const suffixedExportConventions = new Set([
   'react-server',
   'react-native',
   'edge-light',
-  'development',
-  'production',
 ])
+export const optimizeConventions = new Set(['development', 'production'])
 export const availableESExtensionsRegex = /\.(m|c)?[jt]sx?$/
 export const dtsExtensionRegex = /\.d\.(m|c)?ts$/
 

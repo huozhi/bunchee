@@ -49,9 +49,11 @@ import {
   availableESExtensionsRegex,
   nodeResolveExtensions,
   disabledWarnings,
+  optimizeConventions,
 } from './constants'
 import { logger } from './logger'
 import { BuildContext } from './types'
+import { collectBinaries } from './entries'
 
 const swcMinifyOptions = {
   compress: true,
@@ -558,15 +560,47 @@ async function collectEntry(
   let entryExport = originEntryExport
   let exportCondForType: FullExportCondition = { ...exportCondRef }
   // Special cases of export type, only pass down the exportPaths for the type
+  const exportTypes = Object.keys(exportCondForType)
   if (suffixedExportConventions.has(exportType)) {
     exportCondForType = {
       [exportType]: exportCondRef[exportType],
     }
   } else {
-    // Basic export type, pass down the exportPaths with erasing the special ones
-    for (const exportType of suffixedExportConventions) {
-      delete exportCondForType[exportType]
+    let hasOptimizeType = false
+    for (const exportType of exportTypes) {
+      const [, optimizedType] = exportType.split('.')
+      if (optimizeConventions.has(optimizedType)) {
+        hasOptimizeType = true
+        // delete exportCondForType[exportType]
+        exportCondForType = {
+          [exportType]: exportCondRef[exportType],
+        }
+      }
     }
+
+    if (!hasOptimizeType) {
+      // Basic export type, pass down the exportPaths with erasing the special ones
+      for (const exportType of suffixedExportConventions) {
+        delete exportCondForType[exportType]
+      }
+      exportCondForType = {
+        [exportType]: exportCondRef[exportType],
+      }
+    }
+  }
+
+  const parsedName = originEntryExport
+  const parsedExportType = exportCondForType
+
+  const nameWithExportPath = pkg.name
+    ? path.join(pkg.name, parsedName)
+    : parsedName
+  const needsDelimiter = !nameWithExportPath.endsWith('.') && exportType
+  const entryImportPath =
+    nameWithExportPath + (needsDelimiter ? '.' : '') + exportType
+
+  if (entryImportPath in entries) {
+    return
   }
 
   let source: string | undefined = entryPath
@@ -581,16 +615,9 @@ async function collectEntry(
 
   const exportCondition: ParsedExportCondition = {
     source,
-    name: originEntryExport,
-    export: exportCondForType,
+    name: parsedName,
+    export: parsedExportType,
   }
-
-  const nameWithExportPath = pkg.name
-    ? path.join(pkg.name, exportCondition.name)
-    : exportCondition.name
-  const needsDelimiter = !nameWithExportPath.endsWith('.') && exportType
-  const entryImportPath =
-    nameWithExportPath + (needsDelimiter ? '.' : '') + exportType
 
   entries[entryImportPath] = exportCondition
 }
@@ -608,43 +635,7 @@ export async function collectEntries(
 ): Promise<Entries> {
   const entries: Entries = {}
 
-  const binaryExports = pkg.bin
-
-  if (binaryExports) {
-    // binDistPaths: [ [ 'bin1', './dist/bin1.js'], [ 'bin2', './dist/bin2.js'] ]
-    const binPairs =
-      typeof binaryExports === 'string'
-        ? [['bin', binaryExports]]
-        : Object.keys(binaryExports).map((key) => [
-            join('bin', key),
-            binaryExports[key],
-          ])
-
-    const binExportPaths = binPairs.reduce((acc, [binName, binDistPath]) => {
-      const exportType = getExportTypeFromFile(binDistPath, pkg.type)
-
-      acc[binName] = {
-        [exportType]: binDistPath,
-      }
-      return acc
-    }, {} as ExportPaths)
-
-    for (const [binName] of binPairs) {
-      const source = await getSourcePathFromExportPath(cwd, binName, '$binary')
-
-      if (!source) {
-        logger.warn(`Cannot find source file for ${binName}`)
-        continue
-      }
-
-      const binEntryPath = await resolveSourceFile(cwd, source)
-      entries[binName] = {
-        source: binEntryPath,
-        name: binName,
-        export: binExportPaths[binName],
-      }
-    }
-  }
+  await collectBinaries(entries, pkg, cwd)
 
   const collectEntriesPromises = Object.keys(exportPaths).map(
     async (entryExport) => {
@@ -664,12 +655,16 @@ export async function collectEntries(
             await collectEntry(exportCondType, collectEntryOptions)
           }
         }
+        for (const key of Object.keys(exportCond)) {
+          if (optimizeConventions.has(key.split('.')[1])) {
+            await collectEntry(key, collectEntryOptions)
+          }
+        }
       }
     },
   )
 
   await Promise.all(collectEntriesPromises)
-  console.log('entries', entries)
   return entries
 }
 
