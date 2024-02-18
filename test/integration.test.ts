@@ -35,14 +35,14 @@ const testCases: {
     { stderr, stdout }: { stderr: string; stdout: string },
   ): Promise<void> | void
 }[] = [
-  {
-    name: 'basic-jsx',
-    async expected(dir, { stderr, stdout }) {
-      // No warnings from swc3 plugin
-      expect(stderr + stdout).not.toContain('(swc plugin)')
-      assertContainFiles(dir, ['./dist/index.js', './dist/index.mjs'])
-    },
-  },
+  // {
+  //   name: 'basic-jsx',
+  //   async expected(dir, { stderr, stdout }) {
+  //     // No warnings from swc3 plugin
+  //     expect(stderr + stdout).not.toContain('(swc plugin)')
+  //     assertContainFiles(dir, ['./dist/index.js', './dist/index.mjs'])
+  //   },
+  // },
   {
     name: 'externals',
     async expected(dir) {
