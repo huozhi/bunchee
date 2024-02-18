@@ -4,8 +4,8 @@ afterEach(async () => {
   await deleteFile(`${__dirname}/fixtures/tsconfig.json`)
 })
 
-describe('integration', () => {
-  test(`dev-prod-convention`, async () => {
+describe('integration dev-prod-convention', () => {
+  it('should work on environment conventions', async () => {
     await createIntegrationTest(
       {
         directory: __dirname,

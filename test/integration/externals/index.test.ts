@@ -1,8 +1,8 @@
 import { readFile } from 'fs/promises'
 import { createIntegrationTest } from '../utils'
 
-describe('integration', () => {
-  test(`externals`, async () => {
+describe('integration externals', () => {
+  it('should work on externals', async () => {
     await createIntegrationTest(
       {
         directory: __dirname,

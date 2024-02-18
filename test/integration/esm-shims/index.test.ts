@@ -1,7 +1,7 @@
 import { createIntegrationTest, assertFilesContent } from '../utils'
 
-describe('integration', () => {
-  test(`esm-shims`, async () => {
+describe('integration esm-shims', () => {
+  it('should work on ESM shims', async () => {
     await createIntegrationTest(
       {
         directory: __dirname,

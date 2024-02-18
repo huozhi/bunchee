@@ -5,8 +5,8 @@ afterEach(async () => {
   await deleteFile(`${__dirname}/fixtures/tsconfig.json`)
 })
 
-describe('integration', () => {
-  test(`bin/cts`, async () => {
+describe('integration bin/cts', () => {
+  it('should work with bin as .cts extension', async () => {
     await createIntegrationTest(
       {
         directory: __dirname,

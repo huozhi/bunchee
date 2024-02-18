@@ -1,7 +1,7 @@
 import { createIntegrationTest, assertFilesContent } from '../utils'
 
-describe('integration', () => {
-  test(`edge-variable`, async () => {
+describe('integration edge-variable', () => {
+  it('should work on .edge convention', async () => {
     await createIntegrationTest(
       {
         directory: __dirname,

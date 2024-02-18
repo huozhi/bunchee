@@ -1,7 +1,7 @@
 import { createIntegrationTest, existsFile } from '../utils'
 
-describe('integration', () => {
-  test(`js-only`, async () => {
+describe('integration js-only', () => {
+  it('should work on JS only', async () => {
     await createIntegrationTest(
       {
         directory: __dirname,
