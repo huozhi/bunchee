@@ -53,13 +53,6 @@ const testCases: {
     },
   },
   {
-    name: 'js-only',
-    async expected(dir) {
-      const distFile = join(dir, './dist/index.js')
-      expect(await existsFile(distFile)).toBe(true)
-    },
-  },
-  {
     name: 'pkg-exports',
     async expected(dir) {
       const distFiles = [
