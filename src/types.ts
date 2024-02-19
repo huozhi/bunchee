@@ -39,7 +39,6 @@ type BundleConfig = {
   external?: string[] | null
   env?: string[]
   dts?: boolean
-  noDts?: boolean
   runtime?: string
   pkg?: PackageMetadata
   clean?: boolean

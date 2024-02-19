@@ -120,8 +120,7 @@ async function run(args: CliArgs) {
   const cwd = args.cwd || process.cwd()
   const file = args.file ? path.resolve(cwd, args.file) : undefined
   const bundleConfig: BundleConfig = {
-    dts,
-    noDts,
+    dts: dts === true ? true : noDts === true ? false : undefined,
     file,
     format,
     cwd,

@@ -189,7 +189,7 @@ async function bundle(
   )
 
   const typesJobs =
-    hasTsConfig && !options.noDts
+    hasTsConfig && options.dts !== false
       ? (await buildEntryConfig(options, buildContext, true)).map(
           (rollupConfig) => bundleOrWatch(rollupConfig),
         )
