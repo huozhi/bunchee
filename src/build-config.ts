@@ -536,7 +536,7 @@ export async function buildEntryConfig(
 //   entryExport = entryExport.replace(exportType, '')
 // }
 
-async function collectEntry(
+export async function collectEntry(
   // export type, e.g. react-server, edge-light those special cases required suffix
   exportType: string,
   options: {

@@ -12,6 +12,7 @@ import {
 import { relativify } from './lib/format'
 import { DIST } from './constants'
 import { writeDefaultTsconfig } from './typescript'
+import { collectSourceEntries } from './entries'
 
 // Output with posix style in package.json
 function getDistPath(...subPaths: string[]) {
@@ -55,68 +56,6 @@ function createExportCondition(
   return {
     import: getDistPath(`${exportName}.mjs`),
     require: getDistPath(`${exportName}.${cjsExtension}`),
-  }
-}
-
-async function collectSourceEntries(sourceFolderPath: string) {
-  const bins = new Map<string, string>()
-  const exportsEntries = new Map<string, string>()
-  const entryFileDirentList = await fsp.readdir(sourceFolderPath, {
-    withFileTypes: true,
-  })
-  for (const dirent of entryFileDirentList) {
-    if (dirent.isDirectory()) {
-      if (dirent.name === 'bin') {
-        const binDirentList = await fsp.readdir(
-          path.join(sourceFolderPath, dirent.name),
-          {
-            withFileTypes: true,
-          },
-        )
-        for (const binDirent of binDirentList) {
-          if (binDirent.isFile()) {
-            const binFileAbsolutePath = path.join(
-              sourceFolderPath,
-              dirent.name,
-              binDirent.name,
-            )
-            const binName = baseNameWithoutExtension(binDirent.name)
-            if (fs.existsSync(binFileAbsolutePath)) {
-              bins.set(binName, binDirent.name)
-            }
-          }
-        }
-      } else {
-        // Search folder/<index>.<ext> convention entries
-        for (const extension of availableExtensions) {
-          const indexFile = path.join(dirent.name, `index.${extension}`)
-          if (fs.existsSync(indexFile) && !isTestFile(indexFile)) {
-            exportsEntries.set(dirent.name, indexFile)
-            break
-          }
-        }
-      }
-    } else if (dirent.isFile()) {
-      const isAvailableExtension = availableExtensions.has(
-        path.extname(dirent.name).slice(1),
-      )
-      if (isAvailableExtension) {
-        const baseName = baseNameWithoutExtension(dirent.name)
-        const isBinFile = baseName === 'bin'
-        if (isBinFile) {
-          bins.set('.', dirent.name)
-        } else {
-          if (hasAvailableExtension(dirent.name) && !isTestFile(dirent.name)) {
-            exportsEntries.set(baseName, dirent.name)
-          }
-        }
-      }
-    }
-  }
-
-  return {
-    bins,
-    exportsEntries,
   }
 }
 

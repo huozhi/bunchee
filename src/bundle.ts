@@ -113,6 +113,13 @@ async function bundle(
         typesEntryPath = getExportFileTypePath(mainEntryPath)
       }
 
+      parsedExportsInfo.set(
+        '.',
+        [
+          [mainEntryPath, 'default'],
+          Boolean(typesEntryPath) && [typesEntryPath, 'types'],
+        ].filter(Boolean) as [string, string][],
+      )
       // exportPaths['.'] = constructDefaultExportCondition(
       //   {
       //     main: mainEntryPath,
@@ -160,7 +167,7 @@ async function bundle(
     }
   }
 
-  const entries = await collectEntries(pkg, cliEntryPath, exportPaths, cwd)
+  // const entries = await collectEntries(pkg, cliEntryPath, exportPaths, cwd)
   const hasTypeScriptFiles = Object.values(entries).some((entry) =>
     isTypescriptFile(entry.source),
   )
