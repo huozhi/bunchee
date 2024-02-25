@@ -1,6 +1,6 @@
 import fs from 'fs'
 import fsp from 'fs/promises'
-import path, { join } from 'path'
+import path, { join, posix } from 'path'
 import { getExportTypeFromFile, type ParsedExportsInfo } from './exports'
 import { PackageMetadata, type Entries, ExportPaths } from './types'
 import { logger } from './logger'
@@ -15,6 +15,7 @@ import {
 } from './utils'
 import {
   availableExtensions,
+  BINARY_TAG,
   SRC,
   suffixedExportConventions,
 } from './constants'
@@ -42,7 +43,7 @@ export async function collectEntriesFromParsedExports(
   const entries: Entries = {}
   // Find source files
   const { bins, exportsEntries } = await collectSourceEntries(join(cwd, SRC))
-  console.log('bins', bins, 'exportsEntries', exportsEntries)
+  console.log('exportsEntries', exportsEntries)
   // Traverse source files and try to match the entries
   // Find exports from parsed exports info
 
@@ -78,18 +79,19 @@ export async function collectEntriesFromParsedExports(
       continue
     }
 
-    for (const [outputPath, exportType] of outputExports) {
+    for (const [outputPath, exportType_] of outputExports) {
+      const exportType = exportType_ || 'default'
       entries[exportPath] = {
         source: sourceFile,
         name: exportPath,
         export: {
-          [exportType || 'default']: outputPath,
+          [exportType]: outputPath,
         },
       }
     }
   }
 
-  console.log('entries', entries)
+  // console.log('entries', entries)
 
   return entries
 }
@@ -121,7 +123,7 @@ export async function collectBinaries(
     }, {} as ExportPaths)
 
     for (const [binName] of binPairs) {
-      const source = await getSourcePathFromExportPath(cwd, binName, '$binary')
+      const source = await getSourcePathFromExportPath(cwd, binName, BINARY_TAG)
 
       if (!source) {
         logger.warn(`Cannot find source file for ${binName}`)
@@ -162,11 +164,7 @@ export async function collectSourceEntries(sourceFolderPath: string) {
             )
             const binName = sourceFilenameToExportPath(binDirent.name)
             if (fs.existsSync(binFileAbsolutePath)) {
-              bins.set(
-                binName,
-                binFileAbsolutePath,
-                // binDirent.name
-              )
+              bins.set(posix.join(BINARY_TAG, binName), binFileAbsolutePath)
             }
           }
         }
@@ -199,7 +197,7 @@ export async function collectSourceEntries(sourceFolderPath: string) {
         const isBinFile = baseName === 'bin'
         const fullPath = path.join(sourceFolderPath, dirent.name)
         if (isBinFile) {
-          bins.set('.', fullPath)
+          bins.set(BINARY_TAG, fullPath)
         } else {
           if (hasAvailableExtension(dirent.name) && !isTestFile(dirent.name)) {
             const exportPaths = exportsEntries.get(baseName) || []

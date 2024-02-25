@@ -1,4 +1,4 @@
-import { join, resolve, dirname, extname } from 'path'
+import { posix, join, resolve, dirname, extname } from 'path'
 import type {
   PackageMetadata,
   ExportCondition,
@@ -12,6 +12,7 @@ import {
   joinRelativePath,
 } from './utils'
 import {
+  BINARY_TAG,
   dtsExtensionsMap,
   optimizeConventions,
   suffixedExportConventions,
@@ -423,44 +424,80 @@ function collectExportPath(
   }
 }
 
+/**
+ * parseExports - parse package.exports field
+ *
+ * map from export path to output path and export conditions
+ */
 export function parseExports(
-  exportsField: ExportCondition,
-  _moduleType: 'commonjs' | 'module' | undefined,
+  pkg: PackageMetadata,
+  // exportsField: ExportCondition,
+  // _moduleType: 'commonjs' | 'module' | undefined,
 ): ParsedExportsInfo {
-  /* exportToDist: {
-   *  filePath: [outputPath, exportType][]
-   *  { [string]: [string, string][] }
-   * }
-   *
-   * map from export path to output path and export conditions
-   */
+  const exportsField = pkg.exports ?? {}
+  const bins = pkg.bin ?? {}
   const exportToDist: ParsedExportsInfo = new Map()
   let currentPath = '.'
 
   if (typeof exportsField === 'string') {
-    // const exportTypes: Set<string> = new Set()
-    // exportTypes.add(
-    //   'default'
-    //   // moduleType === 'module' ? 'import' : 'require'
-    // )
     const outputConditionPair: [string, string] = [exportsField, 'default']
-    return new Map([['.', [outputConditionPair]]])
+    exportToDist.set(currentPath, [outputConditionPair])
+  } else {
+    // keys means unknown if they're relative path or export type
+    const exportConditionKeys = Object.keys(exportsField)
+
+    for (const exportKey of exportConditionKeys) {
+      const exportValue = exportsField[exportKey]
+      const exportTypes: Set<string> = new Set()
+      const isExportPath = exportKey.startsWith('.')
+      const childPath = isExportPath
+        ? joinRelativePath(currentPath, exportKey)
+        : currentPath
+
+      collectExportPath(exportValue, childPath, exportTypes, exportToDist)
+    }
   }
-  // keys means unknown if they're relative path or export type
-  const exportConditionKeys = Object.keys(exportsField)
 
-  for (const exportKey of exportConditionKeys) {
-    const exportValue = exportsField[exportKey]
-    const exportTypes: Set<string> = new Set()
-    const isExportPath = exportKey.startsWith('.')
-    const childPath = isExportPath
-      ? joinRelativePath(currentPath, exportKey)
-      : currentPath
-
-    collectExportPath(exportValue, childPath, exportTypes, exportToDist)
+  if (typeof bins === 'string') {
+    const outputConditionPair: [string, string] = [bins, 'default']
+    exportToDist.set(BINARY_TAG, [outputConditionPair])
+  } else {
+    for (const binName of Object.keys(bins)) {
+      const binDistPath = bins[binName]
+      const exportType = getExportTypeFromFile(binDistPath, pkg.type)
+      const exportPath = posix.join(BINARY_TAG, binName)
+      const outputConditionPair: [string, string] = [binDistPath, exportType]
+      exportToDist.set(exportPath, [outputConditionPair])
+    }
   }
-
   return exportToDist
+}
+
+function parseBinaries(pkg: PackageMetadata) {
+  const binExports = pkg.bin
+
+  if (binExports) {
+    const binPairs =
+      typeof binExports === 'string'
+        ? [['bin', binExports]]
+        : Object.keys(binExports).map((key) => [
+            join('bin', key),
+            binExports[key],
+          ])
+
+    const binExportPaths = binPairs.reduce((acc, [binName, binDistPath]) => {
+      const exportType = getExportTypeFromFile(binDistPath, pkg.type)
+      const exportPath = join('bin', binName)
+      return {
+        ...acc,
+        [exportPath]: {
+          [exportType]: binDistPath,
+        },
+      }
+    }, {})
+
+    return binExportPaths
+  }
 }
 
 export function getPackageType(pkg: PackageMetadata): PackageType {

@@ -77,8 +77,8 @@ async function bundle(
   const packageType = getPackageType(pkg)
 
   const exportPaths = getExportPaths(pkg, resolvedWildcardExports)
-  const parsedExportsInfo = parseExports(pkg.exports ?? {}, pkg.type)
-  console.log('parsedExportsInfo', parsedExportsInfo)
+  const parsedExportsInfo = parseExports(pkg)
+  // console.log('parsedExportsInfo', parsedExportsInfo)
   const isMultiEntries = hasMultiEntryExport(parsedExportsInfo)
   const hasBin = Boolean(pkg.bin)
   const isFromCli = Boolean(cliEntryPath)

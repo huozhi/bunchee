@@ -51,3 +51,5 @@ export const DEFAULT_TS_CONFIG = {
     moduleResolution: 'bundler',
   },
 }
+
+export const BINARY_TAG = '$binary'

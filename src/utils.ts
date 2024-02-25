@@ -9,6 +9,7 @@ import {
   SRC,
   tsExtensions,
   optimizeConventions,
+  BINARY_TAG,
 } from './constants'
 import { logger } from './logger'
 
@@ -120,7 +121,10 @@ export async function getSourcePathFromExportPath(
 
     // Find convention-based source file for specific export types
     // $binary represents `pkg.bin`
-    if (suffixedExportConventions.has(exportType) && exportType !== '$binary') {
+    if (
+      suffixedExportConventions.has(exportType) &&
+      exportType !== BINARY_TAG
+    ) {
       const filename = await findSourceEntryFile(
         cwd,
         exportPath,
