@@ -52,19 +52,26 @@ export async function collectEntriesFromParsedExports(
       continue
     }
 
-    for (const [outputPath, exportType] of outputExports) {
+    for (const [outputPath, exportType_] of outputExports) {
+      const exportType = exportType_ || 'default'
       for (const sourceFile of sourceFiles) {
-        entries[exportPath] = {
-          source: sourceFile,
-          name: exportPath,
-          export: {
-            [exportType]: outputPath,
-          },
+        if (!entries[exportPath]) {
+          entries[exportPath] = {
+            source: sourceFile,
+            name: exportPath,
+            export: {
+              [exportType]: outputPath,
+            },
+          }
+        } else {
+          const exportMap = entries[exportPath].export
+          exportMap[exportType] = outputPath
         }
       }
     }
   }
 
+  // Handling binaries
   for (const [exportPath, sourceFile] of bins) {
     const outputExports = parsedExportsInfo.get(exportPath)
     if (!outputExports) {
@@ -76,7 +83,7 @@ export async function collectEntriesFromParsedExports(
         source: sourceFile,
         name: exportPath,
         export: {
-          [exportType]: outputPath,
+          [exportType || 'default']: outputPath,
         },
       }
     }
