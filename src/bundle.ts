@@ -41,6 +41,7 @@ import {
   writeDefaultTsconfig,
 } from './typescript'
 import { resolveWildcardExports } from './lib/wildcard'
+import { collectEntriesFromParsedExports } from './entries'
 
 function assignDefault(
   options: BundleConfig,
@@ -77,7 +78,7 @@ async function bundle(
 
   const exportPaths = getExportPaths(pkg, resolvedWildcardExports)
   const parsedExportsInfo = parseExports(pkg.exports ?? {}, pkg.type)
-  console.log(parsedExportsInfo)
+  console.log('parsedExportsInfo', parsedExportsInfo)
   const isMultiEntries = hasMultiEntryExport(parsedExportsInfo)
   const hasBin = Boolean(pkg.bin)
   const isFromCli = Boolean(cliEntryPath)
@@ -168,6 +169,11 @@ async function bundle(
   }
 
   // const entries = await collectEntries(pkg, cliEntryPath, exportPaths, cwd)
+  const entries = await collectEntriesFromParsedExports(
+    pkg,
+    cwd,
+    parsedExportsInfo,
+  )
   const hasTypeScriptFiles = Object.values(entries).some((entry) =>
     isTypescriptFile(entry.source),
   )

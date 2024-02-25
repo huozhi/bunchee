@@ -6,7 +6,11 @@ import type {
   PackageType,
   ParsedExportCondition,
 } from './types'
-import { baseNameWithoutExtension, hasCjsExtension } from './utils'
+import {
+  baseNameWithoutExtension,
+  hasCjsExtension,
+  joinRelativePath,
+} from './utils'
 import {
   dtsExtensionsMap,
   optimizeConventions,
@@ -51,15 +55,6 @@ function constructFullExportCondition(
   }
 
   return fullExportCond
-}
-
-function joinRelativePath(...segments: string[]) {
-  let result = join(...segments)
-  // If the first segment starts with '.', ensure the result does too.
-  if (segments[0] === '.' && !result.startsWith('.')) {
-    result = './' + result
-  }
-  return result
 }
 
 function concatExportName(first: string, second: string) {
@@ -378,6 +373,9 @@ export function getExportPaths(
   return pathsMap
 }
 
+/**
+ * export path: -> [ output path, export type ]
+ */
 export type ParsedExportsInfo = Map<string, [string, string][]>
 
 function collectExportPath(

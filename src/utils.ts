@@ -195,3 +195,12 @@ export const memoize = <T extends (...args: any[]) => any>(
     return result
   }) as T
 }
+
+export function joinRelativePath(...segments: string[]) {
+  let result = path.join(...segments)
+  // If the first segment starts with '.', ensure the result does too.
+  if (segments[0] === '.' && !result.startsWith('.')) {
+    result = './' + result
+  }
+  return result
+}

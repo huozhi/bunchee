@@ -114,9 +114,16 @@ export async function prepare(cwd: string): Promise<void> {
   const { bins, exportsEntries } = await collectSourceEntries(sourceFolder)
   const tsConfigPath = path.join(cwd, 'tsconfig.json')
 
-  const sourceFiles: string[] = [...exportsEntries.values()].concat([
-    ...bins.values(),
-  ])
+  const exportsSourceFiles = [...exportsEntries.values()].reduce(
+    (acc, sourceFiles) => {
+      sourceFiles.forEach((sourceFile) => acc.add(sourceFile))
+      return acc
+    },
+    new Set<string>(),
+  )
+  const sourceFiles: string[] = [...exportsSourceFiles, ...bins.values()].map(
+    (absoluteFilePath) => baseNameWithoutExtension(absoluteFilePath),
+  )
   const hasTypeScriptFiles = sourceFiles.some((filename) =>
     isTypescriptFile(filename),
   )
@@ -186,15 +193,17 @@ export async function prepare(cwd: string): Promise<void> {
     }
 
     const pkgExports: Record<string, any> = {}
-    for (const [exportName, sourceFile] of exportsEntries.entries()) {
-      const [key, value] = createExportConditionPair(
-        exportName,
-        sourceFile,
-        pkgJson.type,
-      )
-      pkgExports[key] = {
-        ...value,
-        ...pkgExports[key],
+    for (const [exportName, sourceFiles] of exportsEntries.entries()) {
+      for (const sourceFile of sourceFiles) {
+        const [key, value] = createExportConditionPair(
+          exportName,
+          sourceFile,
+          pkgJson.type,
+        )
+        pkgExports[key] = {
+          ...value,
+          ...pkgExports[key],
+        }
       }
     }
 
