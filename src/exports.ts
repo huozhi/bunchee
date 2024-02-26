@@ -473,33 +473,6 @@ export function parseExports(
   return exportToDist
 }
 
-function parseBinaries(pkg: PackageMetadata) {
-  const binExports = pkg.bin
-
-  if (binExports) {
-    const binPairs =
-      typeof binExports === 'string'
-        ? [['bin', binExports]]
-        : Object.keys(binExports).map((key) => [
-            join('bin', key),
-            binExports[key],
-          ])
-
-    const binExportPaths = binPairs.reduce((acc, [binName, binDistPath]) => {
-      const exportType = getExportTypeFromFile(binDistPath, pkg.type)
-      const exportPath = join('bin', binName)
-      return {
-        ...acc,
-        [exportPath]: {
-          [exportType]: binDistPath,
-        },
-      }
-    }, {})
-
-    return binExportPaths
-  }
-}
-
 export function getPackageType(pkg: PackageMetadata): PackageType {
   return pkg.type || 'commonjs'
 }

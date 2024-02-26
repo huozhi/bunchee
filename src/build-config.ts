@@ -443,13 +443,13 @@ async function buildOutputConfigs(
   const {
     entries,
     pkg,
-    exportPaths,
+    // exportPaths,
     cwd,
     tsOptions: { tsCompilerOptions },
     pluginContext,
   } = buildContext
   // Add esm mark and interop helper if esm export is detected
-  const useEsModuleMark = hasEsmExport(exportPaths, tsCompilerOptions)
+  const useEsModuleMark = tsCompilerOptions?.esModuleInterop // hasEsmExport(exportPaths, tsCompilerOptions)
   const absoluteOutputFile = resolve(cwd, bundleConfig.file!)
   const outputFileExtension = extname(absoluteOutputFile)
   const name = filePathWithoutExtension(absoluteOutputFile)
@@ -627,6 +627,8 @@ export async function collectEntry(
  *
  * return { <pkg>/<export>: { input: InputOptions, output: OutputOptions[] }
  */
+
+/*
 export async function collectEntries(
   pkg: PackageMetadata,
   entryPath: string,
@@ -667,6 +669,7 @@ export async function collectEntries(
   await Promise.all(collectEntriesPromises)
   return entries
 }
+*/
 
 async function buildConfig(
   bundleConfig: BundleConfig,

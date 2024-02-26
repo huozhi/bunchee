@@ -13,7 +13,7 @@ import { resolve } from 'path'
 import { performance } from 'perf_hooks'
 import {
   buildEntryConfig,
-  collectEntries,
+  // collectEntries,
   getReversedAlias,
 } from './build-config'
 import {
@@ -28,10 +28,10 @@ import {
   isTypescriptFile,
 } from './utils'
 import {
-  constructDefaultExportCondition,
+  // constructDefaultExportCondition,
   getExportFileTypePath,
   getExportPaths,
-  getPackageType,
+  // getPackageType,
   parseExports,
 } from './exports'
 import type { BuildContext } from './types'
@@ -74,7 +74,7 @@ async function bundle(
 
   const pkg = await getPackageMeta(cwd)
   const resolvedWildcardExports = await resolveWildcardExports(pkg.exports, cwd)
-  const packageType = getPackageType(pkg)
+  // const packageType = getPackageType(pkg)
 
   const exportPaths = getExportPaths(pkg, resolvedWildcardExports)
   const parsedExportsInfo = parseExports(pkg)
@@ -189,7 +189,7 @@ async function bundle(
   const buildContext: BuildContext = {
     entries,
     pkg,
-    exportPaths,
+    // exportPaths,
     cwd,
     tsOptions: defaultTsOptions,
     useTypeScript: hasTsConfig,

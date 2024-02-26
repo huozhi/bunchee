@@ -32,6 +32,7 @@ function sourceFilenameToExportPath(filename: string) {
       break
     }
   }
+  exportPath = exportPath === 'index' ? '.' : exportPath
   return relativify(exportPath)
 }
 
@@ -43,7 +44,6 @@ export async function collectEntriesFromParsedExports(
   const entries: Entries = {}
   // Find source files
   const { bins, exportsEntries } = await collectSourceEntries(join(cwd, SRC))
-  console.log('exportsEntries', exportsEntries)
   // Traverse source files and try to match the entries
   // Find exports from parsed exports info
 
@@ -90,8 +90,6 @@ export async function collectEntriesFromParsedExports(
       }
     }
   }
-
-  // console.log('entries', entries)
 
   return entries
 }
