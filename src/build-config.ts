@@ -5,7 +5,7 @@ import type {
   BundleOptions,
   BundleConfig,
   ParsedExportCondition,
-  ExportPaths,
+  // ExportPaths,
   FullExportCondition,
 } from './types'
 import type {
@@ -15,7 +15,10 @@ import type {
   OutputOptions,
   Plugin,
 } from 'rollup'
-import { convertCompilerOptions, type TypescriptOptions } from './typescript'
+import {
+  convertCompilerOptions,
+  // type TypescriptOptions
+} from './typescript'
 
 import path, { resolve, dirname, join, basename, extname } from 'path'
 import { wasm } from '@rollup/plugin-wasm'
@@ -31,10 +34,10 @@ import { rawContent } from './plugins/raw-plugin'
 import { aliasEntries } from './plugins/alias-plugin'
 import { prependDirectives } from './plugins/prepend-directives'
 import {
-  getExportPaths,
+  // getExportPaths,
   getExportsDistFilesOfCondition,
-  isEsmExportName,
-  getExportTypeFromFile,
+  // isEsmExportName,
+  // getExportTypeFromFile,
   getExportFileTypePath,
   isESModulePackage,
 } from './exports'
@@ -51,9 +54,9 @@ import {
   disabledWarnings,
   optimizeConventions,
 } from './constants'
-import { logger } from './logger'
+// import { logger } from './logger'
 import { BuildContext } from './types'
-import { collectBinaries } from './entries'
+// import { collectBinaries } from './entries'
 
 const swcMinifyOptions = {
   compress: true,
@@ -319,26 +322,26 @@ async function buildInputConfig(
   }
 }
 
-function hasEsmExport(
-  exportPaths: ReturnType<typeof getExportPaths>,
-  tsCompilerOptions: TypescriptOptions['tsCompilerOptions'],
-) {
-  let hasEsm = false
-  for (const key in exportPaths) {
-    const exportInfo = exportPaths[key]
-    const exportInfoEntries = Object.entries(exportInfo)
+// function hasEsmExport(
+//   exportPaths: ReturnType<typeof getExportPaths>,
+//   tsCompilerOptions: TypescriptOptions['tsCompilerOptions'],
+// ) {
+//   let hasEsm = false
+//   for (const key in exportPaths) {
+//     const exportInfo = exportPaths[key]
+//     const exportInfoEntries = Object.entries(exportInfo)
 
-    if (
-      exportInfoEntries.some(([exportType, file]) =>
-        isEsmExportName(exportType, file),
-      )
-    ) {
-      hasEsm = true
-      break
-    }
-  }
-  return Boolean(hasEsm || tsCompilerOptions?.esModuleInterop)
-}
+//     if (
+//       exportInfoEntries.some(([exportType, file]) =>
+//         isEsmExportName(exportType, file),
+//       )
+//     ) {
+//       hasEsm = true
+//       break
+//     }
+//   }
+//   return Boolean(hasEsm || tsCompilerOptions?.esModuleInterop)
+// }
 
 function getModuleLater(moduleMeta: CustomPluginOptions) {
   const directives = (

@@ -6,11 +6,11 @@ import { PackageMetadata, type Entries, ExportPaths } from './types'
 import { logger } from './logger'
 import {
   baseNameWithoutExtension,
-  findSourceEntryFile,
+  // findSourceEntryFile,
   getSourcePathFromExportPath,
   hasAvailableExtension,
   isTestFile,
-  joinRelativePath,
+  // joinRelativePath,
   resolveSourceFile,
 } from './utils'
 import {

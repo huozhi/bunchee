@@ -1,12 +1,16 @@
 import fs from 'fs'
 import fsp from 'fs/promises'
 import path from 'path'
-import { SRC, availableExtensions, dtsExtensionsMap } from './constants'
+import {
+  SRC,
+  // availableExtensions,
+  dtsExtensionsMap,
+} from './constants'
 import { logger } from './logger'
 import {
   baseNameWithoutExtension,
-  hasAvailableExtension,
-  isTestFile,
+  // hasAvailableExtension,
+  // isTestFile,
   isTypescriptFile,
 } from './utils'
 import { relativify } from './lib/format'
