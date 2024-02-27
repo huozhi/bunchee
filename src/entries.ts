@@ -141,6 +141,12 @@ export async function collectBinaries(
 export async function collectSourceEntries(sourceFolderPath: string) {
   const bins = new Map<string, string>()
   const exportsEntries = new Map<string, string[]>()
+  if (!fs.existsSync(sourceFolderPath)) {
+    return {
+      bins,
+      exportsEntries,
+    }
+  }
   const entryFileDirentList = await fsp.readdir(sourceFolderPath, {
     withFileTypes: true,
   })
@@ -192,7 +198,7 @@ export async function collectSourceEntries(sourceFolderPath: string) {
       )
       if (isAvailableExtension) {
         const baseName = sourceFilenameToExportPath(dirent.name)
-        const isBinFile = baseName === 'bin'
+        const isBinFile = baseName === './bin'
         const fullPath = path.join(sourceFolderPath, dirent.name)
         if (isBinFile) {
           bins.set(BINARY_TAG, fullPath)
