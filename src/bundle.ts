@@ -82,7 +82,6 @@ async function bundle(
 
   // const exportPaths = getExportPaths(pkg, resolvedWildcardExports)
   const parsedExportsInfo = parseExports(pkg)
-  // console.log('parsedExportsInfo', parsedExportsInfo)
   const isMultiEntries = hasMultiEntryExport(parsedExportsInfo)
   const hasBin = Boolean(pkg.bin)
   const isFromCli = Boolean(cliEntryPath)
@@ -106,22 +105,22 @@ async function bundle(
 
   // Handle CLI input
   if (cliEntryPath) {
-    let mainEntryPath: string | undefined
+    let mainExportPath: string | undefined
     let typesEntryPath: string | undefined
     // with -o option
     if (options.file) {
-      mainEntryPath = options.file
+      mainExportPath = options.file
     }
 
-    if (mainEntryPath) {
+    if (mainExportPath) {
       if (options.dts) {
-        typesEntryPath = getExportFileTypePath(mainEntryPath)
+        typesEntryPath = getExportFileTypePath(mainExportPath)
       }
 
       parsedExportsInfo.set(
         '.',
         [
-          [mainEntryPath, 'default'],
+          [mainExportPath, 'default'],
           Boolean(typesEntryPath) && [typesEntryPath, 'types'],
         ].filter(Boolean) as [string, string][],
       )
@@ -177,6 +176,7 @@ async function bundle(
     pkg,
     cwd,
     parsedExportsInfo,
+    cliEntryPath,
   )
   const hasTypeScriptFiles = Object.values(entries).some((entry) =>
     isTypescriptFile(entry.source),

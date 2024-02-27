@@ -40,8 +40,20 @@ export async function collectEntriesFromParsedExports(
   pkg: PackageMetadata,
   cwd: string,
   parsedExportsInfo: ParsedExportsInfo,
+  sourceFile: string | undefined,
 ): Promise<Entries> {
   const entries: Entries = {}
+  if (sourceFile) {
+    const defaultExport = parsedExportsInfo.get('.')![0]
+    entries['.'] = {
+      source: sourceFile,
+      name: '.',
+      export: {
+        default: defaultExport[0],
+      },
+    }
+  }
+
   // Find source files
   const { bins, exportsEntries } = await collectSourceEntries(join(cwd, SRC))
   // Traverse source files and try to match the entries
