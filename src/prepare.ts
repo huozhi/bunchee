@@ -10,7 +10,7 @@ import {
 } from './constants'
 import { logger } from './logger'
 import {
-  baseNameWithoutExtension,
+  // baseNameWithoutExtension,
   // hasAvailableExtension,
   // isTestFile,
   isTypescriptFile,
