@@ -2,7 +2,12 @@ import fs from 'fs'
 import fsp from 'fs/promises'
 import path, { join, posix } from 'path'
 import { getExportTypeFromFile, type ParsedExportsInfo } from './exports'
-import { PackageMetadata, type Entries, ExportPaths } from './types'
+import {
+  PackageMetadata,
+  type Entries,
+  ExportPaths,
+  FullExportCondition,
+} from './types'
 import { logger } from './logger'
 import {
   baseNameWithoutExtension,
@@ -17,22 +22,25 @@ import {
   availableExtensions,
   BINARY_TAG,
   SRC,
-  suffixedExportConventions,
+  runtimeExportConventions,
+  specialExportConventions,
 } from './constants'
 import { relativify } from './lib/format'
 
 // shared.ts -> ./shared
 // shared.<export condition>.ts -> ./shared
+// index.ts -> ./index
+// index.development.ts -> ./index.development
 function sourceFilenameToExportPath(filename: string) {
   const baseName = baseNameWithoutExtension(filename)
   let exportPath = baseName
-  for (const specialExportType of suffixedExportConventions) {
+  for (const specialExportType of runtimeExportConventions) {
     if (exportPath.endsWith('.' + specialExportType)) {
       exportPath = exportPath.slice(0, -1 - specialExportType.length)
       break
     }
   }
-  exportPath = exportPath === 'index' ? '.' : exportPath
+
   return relativify(exportPath)
 }
 
@@ -58,27 +66,31 @@ export async function collectEntriesFromParsedExports(
   const { bins, exportsEntries } = await collectSourceEntries(join(cwd, SRC))
   // Traverse source files and try to match the entries
   // Find exports from parsed exports info
-  for (const [exportPath, sourceFiles] of exportsEntries) {
-    const outputExports = parsedExportsInfo.get(exportPath)
+  // exportPath can be: '.', './index.development', etc.
+  for (const [exportPath, sourceFilesMap] of exportsEntries) {
+    const normalizedExportPath = normalizeExportPath(exportPath)
+    const matchedExportType = getExportTypeFromExportPath(exportPath)
+    const outputExports = parsedExportsInfo.get(normalizedExportPath)
     if (!outputExports) {
       continue
     }
 
-    for (const [outputPath, exportType] of outputExports) {
-      for (const sourceFile of sourceFiles) {
-        if (!entries[exportPath]) {
-          entries[exportPath] = {
-            source: sourceFile,
-            name: exportPath,
-            export: {
-              [exportType]: outputPath,
-            },
-          }
-        } else {
-          const exportMap = entries[exportPath].export
-          exportMap[exportType] = outputPath
-        }
-      }
+    const sourceFile = sourceFilesMap[matchedExportType]
+
+    const matchedOutputExports =
+      matchedExportType === 'default'
+        ? outputExports
+        : outputExports.filter(([_outputPath, composedExportType]) => {
+            return composedExportType.split('.').includes(matchedExportType)
+          })
+
+    entries[exportPath] = {
+      source: sourceFile,
+      name: normalizedExportPath,
+      export: matchedOutputExports.reduce((acc, [outputPath, exportType]) => {
+        acc[exportType] = outputPath
+        return acc
+      }, {} as FullExportCondition),
     }
   }
 
@@ -100,6 +112,7 @@ export async function collectEntriesFromParsedExports(
     }
   }
 
+  console.log('entries:', entries)
   return entries
 }
 
@@ -147,9 +160,32 @@ export async function collectBinaries(
   }
 }
 
+// ./index -> default
+// ./index.development -> development
+// ./index.react-server -> react-server
+function getExportTypeFromExportPath(exportPath: string): string {
+  const exportTypes = exportPath.split('.')
+  const exportType =
+    exportTypes.find((value) => specialExportConventions.has(value)) ||
+    'default'
+  return exportType
+}
+
+// ./index -> .
+// ./index.development -> .
+// ./index.react-server -> .
+// ./shared -> ./shared
+function normalizeExportPath(exportPath: string): string {
+  const baseName = baseNameWithoutExtension(exportPath)
+  if (baseName === 'index') {
+    return '.'
+  }
+  return exportPath
+}
+
 export async function collectSourceEntries(sourceFolderPath: string) {
   const bins = new Map<string, string>()
-  const exportsEntries = new Map<string, string[]>()
+  const exportsEntries = new Map<string, Record<string, string>>()
   if (!fs.existsSync(sourceFolderPath)) {
     return {
       bins,
@@ -175,9 +211,12 @@ export async function collectSourceEntries(sourceFolderPath: string) {
               dirent.name,
               binDirent.name,
             )
-            const binName = sourceFilenameToExportPath(binDirent.name)
+            const binExportPath = sourceFilenameToExportPath(binDirent.name)
             if (fs.existsSync(binFileAbsolutePath)) {
-              bins.set(posix.join(BINARY_TAG, binName), binFileAbsolutePath)
+              bins.set(
+                posix.join(BINARY_TAG, binExportPath),
+                binFileAbsolutePath,
+              )
             }
           }
         }
@@ -194,9 +233,10 @@ export async function collectSourceEntries(sourceFolderPath: string) {
             !isTestFile(indexAbsoluteFile)
           ) {
             const exportPath = sourceFilenameToExportPath(dirent.name)
-            const sourceFiles = exportsEntries.get(exportPath) || []
-            sourceFiles.push(indexAbsoluteFile)
-            exportsEntries.set(exportPath, sourceFiles)
+            const sourceFilesMap = exportsEntries.get(exportPath) || {}
+            const exportType = getExportTypeFromExportPath(exportPath)
+            sourceFilesMap[exportType] = indexAbsoluteFile
+            exportsEntries.set(exportPath, sourceFilesMap)
             break
           }
         }
@@ -206,16 +246,17 @@ export async function collectSourceEntries(sourceFolderPath: string) {
         path.extname(dirent.name).slice(1),
       )
       if (isAvailableExtension) {
-        const baseName = sourceFilenameToExportPath(dirent.name)
-        const isBinFile = baseName === './bin'
+        const exportPath = sourceFilenameToExportPath(dirent.name)
+        const isBinFile = exportPath === './bin'
         const fullPath = path.join(sourceFolderPath, dirent.name)
         if (isBinFile) {
           bins.set(BINARY_TAG, fullPath)
         } else {
           if (hasAvailableExtension(dirent.name) && !isTestFile(dirent.name)) {
-            const exportPaths = exportsEntries.get(baseName) || []
-            exportPaths.push(fullPath)
-            exportsEntries.set(baseName, exportPaths)
+            const sourceFilesMap = exportsEntries.get(exportPath) || {}
+            const exportType = getExportTypeFromExportPath(exportPath)
+            sourceFilesMap[exportType] = fullPath
+            exportsEntries.set(exportPath, sourceFilesMap)
           }
         }
       }

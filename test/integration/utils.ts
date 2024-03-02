@@ -1,7 +1,6 @@
 import {
   createTest,
   executeBunchee,
-  deleteFile,
   type ExcuteBuncheeResult,
 } from '../testing-utils'
 

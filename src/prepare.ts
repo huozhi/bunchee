@@ -131,7 +131,7 @@ export async function prepare(cwd: string): Promise<void> {
 
   const exportsSourceFiles = [...exportsEntries.values()].reduce(
     (acc, sourceFiles) => {
-      sourceFiles.forEach((sourceFile) => acc.add(sourceFile))
+      Object.values(sourceFiles).forEach((sourceFile) => acc.add(sourceFile))
       return acc
     },
     new Set<string>(),
@@ -198,7 +198,7 @@ export async function prepare(cwd: string): Promise<void> {
         (exportName) => normalizeBaseNameToExportName(exportName).length,
       ),
     )
-    for (const [exportName, exportFiles] of exportsEntries.entries()) {
+    for (const [exportName, sourceFilesMap] of exportsEntries.entries()) {
       const spaces = ' '.repeat(
         Math.max(
           maxLengthOfExportName -
@@ -206,7 +206,7 @@ export async function prepare(cwd: string): Promise<void> {
           0,
         ),
       )
-      for (const exportFile of exportFiles) {
+      for (const exportFile of Object.values(sourceFilesMap)) {
         logger.log(
           `  ${normalizeBaseNameToExportName(
             exportName,
@@ -216,8 +216,8 @@ export async function prepare(cwd: string): Promise<void> {
     }
 
     const pkgExports: Record<string, any> = {}
-    for (const [exportName, sourceFiles] of exportsEntries.entries()) {
-      for (const sourceFile of sourceFiles) {
+    for (const [exportName, sourceFilesMap] of exportsEntries.entries()) {
+      for (const sourceFile of Object.values(sourceFilesMap)) {
         const [key, value] = createExportConditionPair(
           exportName,
           sourceFile,

@@ -166,7 +166,6 @@ async function bundle(
     }
   }
 
-  // const entries = await collectEntries(pkg, cliEntryPath, exportPaths, cwd)
   const entries = await collectEntriesFromParsedExports(
     pkg,
     cwd,

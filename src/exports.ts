@@ -15,7 +15,7 @@ import {
   BINARY_TAG,
   dtsExtensionsMap,
   optimizeConventions,
-  suffixedExportConventions,
+  runtimeExportConventions,
 } from './constants'
 import { OutputOptions } from 'rollup'
 
@@ -82,7 +82,7 @@ const appendExportCondition = (exportPath: string, condition: string) => {
 }
 
 const specialExportTypes = new Set([
-  ...suffixedExportConventions,
+  ...runtimeExportConventions,
   ...optimizeConventions,
 ])
 
@@ -550,12 +550,17 @@ export function isCjsExportName(
   )
 }
 
+export type ExportOutput = {
+  format: OutputOptions['format']
+  file: string
+  exportCondition: string
+}
 export function getExportsDistFilesOfCondition(
   pkg: PackageMetadata,
   parsedExportCondition: ParsedExportCondition,
   cwd: string,
-): { format: OutputOptions['format']; file: string }[] {
-  const dist: { format: OutputOptions['format']; file: string }[] = []
+): ExportOutput[] {
+  const dist: ExportOutput[] = []
   const exportConditionNames = Object.keys(parsedExportCondition.export)
   const uniqueFiles = new Set<string>()
   for (const exportCondition of exportConditionNames) {
@@ -578,7 +583,7 @@ export function getExportsDistFilesOfCondition(
       continue
     }
     uniqueFiles.add(distFile)
-    dist.push({ format, file: distFile })
+    dist.push({ format, file: distFile, exportCondition })
   }
 
   return dist
