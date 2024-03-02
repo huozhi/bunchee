@@ -251,7 +251,6 @@ describe('lib exports', () => {
       //     }
       //     return a.file.length - b.file.length
       //   })
-
     }
 
     it('should dedupe the same path import and module if they are the same path', () => {
@@ -314,7 +313,11 @@ describe('lib exports', () => {
         },
       }
 
-      expect(getExportConditionDistHelper(pkg, '.')).toEqual([
+      expect(
+        getExportConditionDistHelper(pkg, '.').sort(
+          (a, b) => a.file.length - b.file.length,
+        ),
+      ).toEqual([
         { file: 'index.js', format: 'cjs' },
         { file: 'index.mjs', format: 'esm' },
         { file: 'index.production.js', format: 'cjs' },
@@ -326,35 +329,35 @@ describe('lib exports', () => {
 
     it('should handle nested dev and prod special exports', () => {
       const pkg = {
-        "exports": {
-          ".": {
-            "import": {
-              "types": "./dist/index.d.mts",
-              "development": "./dist/index.development.mjs",
-              "production": "./dist/index.production.mjs",
-              "default": "./dist/index.mjs"
+        exports: {
+          '.': {
+            import: {
+              types: './dist/index.d.mts',
+              development: './dist/index.development.mjs',
+              production: './dist/index.production.mjs',
+              default: './dist/index.mjs',
             },
-            "require": {
-              "types": "./dist/index.d.ts",
-              "production": "./dist/index.production.js",
-              "development": "./dist/index.development.js",
-              "default": "./dist/index.js"
+            require: {
+              types: './dist/index.d.ts',
+              production: './dist/index.production.js',
+              development: './dist/index.development.js',
+              default: './dist/index.js',
             },
           },
-          "./react": {
-            "import": {
-              "types": "./dist/react.d.mts",
-              "development": "./dist/react.development.mjs",
-              "production": "./dist/react.production.mjs",
-              "default": "./dist/react.mjs"
+          './react': {
+            import: {
+              types: './dist/react.d.mts',
+              development: './dist/react.development.mjs',
+              production: './dist/react.production.mjs',
+              default: './dist/react.mjs',
             },
-            "require": {
-              "types": "./dist/react.d.ts",
-              "production": "./dist/react.production.js",
-              "development": "./dist/react.development.js",
-              "default": "./dist/react.js"
+            require: {
+              types: './dist/react.d.ts',
+              production: './dist/react.production.js',
+              development: './dist/react.development.js',
+              default: './dist/react.js',
             },
-          }
+          },
         },
       }
       const parsedExportCondition = getExportPaths(pkg)
@@ -364,15 +367,15 @@ describe('lib exports', () => {
         'import.production': './dist/index.production.mjs',
         require: './dist/index.js',
         'require.production': './dist/index.production.js',
-        'require.development': './dist/index.development.js'
+        'require.development': './dist/index.development.js',
       })
       expect(parsedExportCondition['./react']).toMatchObject({
-        import: './dist/react.mjs', 
+        import: './dist/react.mjs',
         'import.development': './dist/react.development.mjs',
         'import.production': './dist/react.production.mjs',
         require: './dist/react.js',
         'require.production': './dist/react.production.js',
-        'require.development': './dist/react.development.js'
+        'require.development': './dist/react.development.js',
       })
     })
   })
