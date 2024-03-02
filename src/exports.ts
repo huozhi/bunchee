@@ -393,7 +393,7 @@ function collectExportPath(
     if (!exportInfo) {
       const outputConditionPair: [string, string] = [
         exportValue,
-        Array.from(exportTypes).join('.'),
+        Array.from(exportTypes).join('.') || 'default',
       ]
       exportToDist.set(currentPath, [outputConditionPair])
     } else {
@@ -437,6 +437,8 @@ export function parseExports(
   const exportsField = pkg.exports ?? {}
   const bins = pkg.bin ?? {}
   const exportToDist: ParsedExportsInfo = new Map()
+  const isEsmPkg = isESModulePackage(pkg.type)
+  const defaultCondition = isEsmPkg ? 'import' : 'require'
 
   if (pkg.main) {
     const mainExportPath = pkg.main
@@ -444,7 +446,7 @@ export function parseExports(
     exportToDist.set(
       '.',
       [
-        [mainExportPath, 'default'],
+        [mainExportPath, defaultCondition],
         Boolean(typesEntryPath) && [typesEntryPath, 'types'],
       ].filter(Boolean) as [string, string][],
     )
@@ -453,7 +455,10 @@ export function parseExports(
   let currentPath = '.'
 
   if (typeof exportsField === 'string') {
-    const outputConditionPair: [string, string] = [exportsField, 'default']
+    const outputConditionPair: [string, string] = [
+      exportsField,
+      defaultCondition,
+    ]
     exportToDist.set(currentPath, [outputConditionPair])
   } else {
     // keys means unknown if they're relative path or export type
@@ -472,7 +477,7 @@ export function parseExports(
   }
 
   if (typeof bins === 'string') {
-    const outputConditionPair: [string, string] = [bins, 'default']
+    const outputConditionPair: [string, string] = [bins, defaultCondition]
     exportToDist.set(BINARY_TAG, [outputConditionPair])
   } else {
     for (const binName of Object.keys(bins)) {
@@ -483,6 +488,7 @@ export function parseExports(
       exportToDist.set(exportPath, [outputConditionPair])
     }
   }
+
   return exportToDist
 }
 

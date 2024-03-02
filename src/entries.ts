@@ -64,8 +64,7 @@ export async function collectEntriesFromParsedExports(
       continue
     }
 
-    for (const [outputPath, exportType_] of outputExports) {
-      const exportType = exportType_ || 'default'
+    for (const [outputPath, exportType] of outputExports) {
       for (const sourceFile of sourceFiles) {
         if (!entries[exportPath]) {
           entries[exportPath] = {
@@ -90,8 +89,7 @@ export async function collectEntriesFromParsedExports(
       continue
     }
 
-    for (const [outputPath, exportType_] of outputExports) {
-      const exportType = exportType_ || 'default'
+    for (const [outputPath, exportType] of outputExports) {
       entries[exportPath] = {
         source: sourceFile,
         name: exportPath,
