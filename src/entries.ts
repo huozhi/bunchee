@@ -91,9 +91,8 @@ export async function collectEntriesFromParsedExports(
               // For `default` case, exclude all the special export types,
               // since they should only work with specific export conditions.
               const types = composed.split('.')
-              if (types.some((type) => specialExportConventions.has(type)))
-                return false
-              return types.includes(matchedExportType)
+              // If there's any special export type, filter it out
+              return !types.some((type) => specialExportConventions.has(type))
             })
           : outputExports.filter(([_outputPath, composed]) => {
               return composed.split('.').includes(matchedExportType)
