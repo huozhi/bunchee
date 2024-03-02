@@ -12,6 +12,7 @@ import {
   BINARY_TAG,
 } from './constants'
 import { logger } from './logger'
+import { isESModulePackage } from './exports'
 
 export function exit(err: string | Error) {
   logger.error(err)
@@ -172,6 +173,17 @@ export const hasAvailableExtension = (filename: string): boolean =>
 
 export const hasCjsExtension = (filename: string): boolean =>
   path.extname(filename) === '.cjs'
+
+export const getMainFieldExportType = (pkg: PackageMetadata) => {
+  const isEsmPkg = isESModulePackage(pkg.type)
+  const mainExportType =
+    isEsmPkg && pkg.main
+      ? hasCjsExtension(pkg.main)
+        ? 'require'
+        : 'import'
+      : 'require'
+  return mainExportType
+}
 
 // TODO: add unit test
 export const baseNameWithoutExtension = (filename: string): string =>

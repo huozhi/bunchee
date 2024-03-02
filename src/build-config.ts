@@ -699,16 +699,6 @@ async function buildConfig(
   }
 
   const outputConfigs = bundleOptions.map(async (bundleOption) => {
-    // TODO: find source file
-    // console.log('entry', entry, 'source', exportCondition.source)
-    const exportTypes = bundleOption.exportCondition.split('.')
-    const specialExportType = exportTypes.find((type) =>
-      runtimeExportConventions.has(type),
-    )
-    let sourceFile = entry
-    if (specialExportType) {
-    }
-
     const targetExportCondition = {
       ...exportCondition,
       export: {

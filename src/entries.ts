@@ -67,30 +67,41 @@ export async function collectEntriesFromParsedExports(
   // Traverse source files and try to match the entries
   // Find exports from parsed exports info
   // exportPath can be: '.', './index.development', etc.
+  // console.log('exportsEntries', exportsEntries, 'parsedExportsInfo', parsedExportsInfo)
   for (const [exportPath, sourceFilesMap] of exportsEntries) {
     const normalizedExportPath = normalizeExportPath(exportPath)
-    const matchedExportType = getExportTypeFromExportPath(exportPath)
     const outputExports = parsedExportsInfo.get(normalizedExportPath)
     if (!outputExports) {
       continue
     }
 
-    const sourceFile = sourceFilesMap[matchedExportType]
+    const exportMap: Record<string, string> = {}
 
-    const matchedOutputExports =
-      matchedExportType === 'default'
-        ? outputExports
-        : outputExports.filter(([_outputPath, composedExportType]) => {
-            return composedExportType.split('.').includes(matchedExportType)
-          })
+    for (const [outputPath, composedExportType] of outputExports) {
+      const matchedExportType =
+        getSpecialExportTypeFromExportPath(composedExportType)
+      // const exportType = getExportTypeFromExportPath(composedExportType)
 
-    entries[exportPath] = {
-      source: sourceFile,
-      name: normalizedExportPath,
-      export: matchedOutputExports.reduce((acc, [outputPath, exportType]) => {
-        acc[exportType] = outputPath
-        return acc
-      }, {} as FullExportCondition),
+      // export type can be: default, development, react-server, etc.
+      const sourceFile = sourceFilesMap[matchedExportType]
+
+      const matchedOutputExports =
+        matchedExportType === 'default'
+          ? outputExports
+          : outputExports.filter(([_outputPath, composed]) => {
+              return composed.split('.').includes(matchedExportType)
+            })
+
+      if (!entries[exportPath]) {
+        entries[exportPath] = {
+          source: sourceFile,
+          name: normalizedExportPath,
+          export: exportMap,
+        }
+      }
+      matchedOutputExports.forEach(([outputPath, exportType]) => {
+        exportMap[exportType] = outputPath
+      })
     }
   }
 
@@ -112,7 +123,7 @@ export async function collectEntriesFromParsedExports(
     }
   }
 
-  console.log('entries:', entries)
+  // console.log('entries:', entries)
   return entries
 }
 
@@ -160,14 +171,32 @@ export async function collectBinaries(
   }
 }
 
-// ./index -> default
+function getSpecialExportTypeFromExportPath(
+  composedExportType: string,
+): string {
+  const exportTypes = composedExportType.split('.')
+  for (const exportType of exportTypes) {
+    if (specialExportConventions.has(exportType)) {
+      return exportType
+    }
+  }
+  return 'default'
+}
+
+// ./index -> import|require|default
 // ./index.development -> development
 // ./index.react-server -> react-server
 function getExportTypeFromExportPath(exportPath: string): string {
-  const exportTypes = exportPath.split('.')
-  const exportType =
-    exportTypes.find((value) => specialExportConventions.has(value)) ||
-    'default'
+  const exportTypes = new Set(exportPath.split('.'))
+  let exportType = 'default'
+  exportTypes.forEach((value) => {
+    if (specialExportConventions.has(value)) {
+      exportType = value
+    } else if (value === 'import' || value === 'require') {
+      exportType = value
+    }
+  })
+
   return exportType
 }
 

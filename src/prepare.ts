@@ -190,7 +190,6 @@ export async function prepare(cwd: string): Promise<void> {
     }
   }
 
-  // console.log('exportsEntries', exportsEntries)
   if (exportsEntries.size > 0) {
     logger.log('Discovered exports entries:')
     const maxLengthOfExportName = Math.max(
@@ -230,19 +229,15 @@ export async function prepare(cwd: string): Promise<void> {
       }
     }
 
-    // console.log('pkgExports', pkgExports, 'exportsEntries', exportsEntries, 'isUsingTs', isUsingTs, 'pkgJson.type', pkgJson.type)
-
     // Configure node10 module resolution
     if (exportsEntries.has('.')) {
       const isESM = pkgJson.type === 'module'
       const mainExport = pkgExports['.']
       const mainCondition = isESM ? 'import' : 'require'
-      // console.log('mainExport[mainCondition]', mainExport[mainCondition])
       pkgJson.main = isUsingTs
         ? mainExport[mainCondition].default
         : mainExport[mainCondition]
 
-      // console.log('pkgJson.main', pkgJson.main)
       pkgJson.module = isUsingTs ? mainExport.import.default : mainExport.import
 
       if (isUsingTs) {

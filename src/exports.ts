@@ -8,7 +8,8 @@ import type {
 } from './types'
 import {
   baseNameWithoutExtension,
-  hasCjsExtension,
+  getMainFieldExportType,
+  // hasCjsExtension,
   joinRelativePath,
 } from './utils'
 import {
@@ -337,11 +338,7 @@ export function getExportPaths(
   // main export '.' from main/module/typings
   let mainExportCondition
   if (pkg.main) {
-    const mainExportType = isEsmPackage
-      ? hasCjsExtension(pkg.main!)
-        ? 'require'
-        : 'import'
-      : 'require'
+    const mainExportType = getMainFieldExportType(pkg)
     mainExportCondition = { [mainExportType]: pkg.main }
   }
   const defaultMainExport = constructFullExportCondition(
@@ -489,15 +486,17 @@ export function parseExports(pkg: PackageMetadata): ParsedExportsInfo {
     }
   }
 
-  if (pkg.main) {
+  if (pkg.main || pkg.module) {
     const mainExportPath = pkg.main
+    const moduleExportPath = pkg.module
     const typesEntryPath = pkg.types
     const existingExportInfo = exportToDist.get('.')
     exportToDist.set(
       '.',
       [
         ...(existingExportInfo || []),
-        [mainExportPath, defaultCondition],
+        [mainExportPath, getMainFieldExportType(pkg)],
+        Boolean(moduleExportPath) && [moduleExportPath, 'import'],
         Boolean(typesEntryPath) && [typesEntryPath, 'types'],
       ].filter(Boolean) as [string, string][],
     )
