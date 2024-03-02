@@ -697,7 +697,7 @@ async function buildConfig(
       : 'cjs'
     outputExports.push({
       format: defaultFormat,
-      file: join(cwd, 'dist/index.js'),
+      file: join(cwd, 'dist/index.js'.replace('/', path.sep)),
     })
   }
   let bundleOptions: {

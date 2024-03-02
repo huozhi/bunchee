@@ -58,7 +58,6 @@ export async function collectEntriesFromParsedExports(
   const { bins, exportsEntries } = await collectSourceEntries(join(cwd, SRC))
   // Traverse source files and try to match the entries
   // Find exports from parsed exports info
-
   for (const [exportPath, sourceFiles] of exportsEntries) {
     const outputExports = parsedExportsInfo.get(exportPath)
     if (!outputExports) {

@@ -84,6 +84,8 @@ async function bundle(
   const parsedExportsInfo = parseExports(pkg)
   const isMultiEntries = hasMultiEntryExport(parsedExportsInfo)
   const hasBin = Boolean(pkg.bin)
+  // Original input file path, client path might change later
+  const inputFile = cliEntryPath
   const isFromCli = Boolean(cliEntryPath)
 
   let tsConfig = resolveTsConfig(cwd)
@@ -104,9 +106,9 @@ async function bundle(
   }
 
   // Handle CLI input
-  if (cliEntryPath) {
-    let mainExportPath: string | undefined
-    let typesEntryPath: string | undefined
+  let mainExportPath: string | undefined
+  let typesEntryPath: string | undefined
+  if (isFromCli) {
     // with -o option
     if (options.file) {
       mainExportPath = options.file
@@ -124,13 +126,6 @@ async function bundle(
           Boolean(typesEntryPath) && [typesEntryPath, 'types'],
         ].filter(Boolean) as [string, string][],
       )
-      // exportPaths['.'] = constructDefaultExportCondition(
-      //   {
-      //     main: mainEntryPath,
-      //     types: typesEntryPath,
-      //   },
-      //   packageType,
-      // )
     }
   }
 
@@ -176,7 +171,7 @@ async function bundle(
     pkg,
     cwd,
     parsedExportsInfo,
-    cliEntryPath,
+    inputFile,
   )
   const hasTypeScriptFiles = Object.values(entries).some((entry) =>
     isTypescriptFile(entry.source),
@@ -193,7 +188,6 @@ async function bundle(
   const buildContext: BuildContext = {
     entries,
     pkg,
-    // exportPaths,
     cwd,
     tsOptions: defaultTsOptions,
     useTypeScript: hasTsConfig,
@@ -203,6 +197,7 @@ async function bundle(
       entriesAlias,
     },
   }
+
   const buildConfigs = await buildEntryConfig(options, buildContext, false)
   const assetsJobs = buildConfigs.map((rollupConfig) =>
     bundleOrWatch(rollupConfig),

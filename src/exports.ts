@@ -437,6 +437,19 @@ export function parseExports(
   const exportsField = pkg.exports ?? {}
   const bins = pkg.bin ?? {}
   const exportToDist: ParsedExportsInfo = new Map()
+
+  if (pkg.main) {
+    const mainExportPath = pkg.main
+    const typesEntryPath = pkg.types
+    exportToDist.set(
+      '.',
+      [
+        [mainExportPath, 'default'],
+        Boolean(typesEntryPath) && [typesEntryPath, 'types'],
+      ].filter(Boolean) as [string, string][],
+    )
+  }
+
   let currentPath = '.'
 
   if (typeof exportsField === 'string') {
