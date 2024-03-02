@@ -6,7 +6,7 @@ import {
   PackageMetadata,
   type Entries,
   ExportPaths,
-  FullExportCondition,
+  // FullExportCondition,
 } from './types'
 import { logger } from './logger'
 import {
@@ -35,10 +35,10 @@ function sourceFilenameToExportPath(filename: string) {
   const baseName = baseNameWithoutExtension(filename)
   let exportPath = baseName
   for (const specialExportType of runtimeExportConventions) {
-    if (exportPath.endsWith('.' + specialExportType)) {
-      exportPath = exportPath.slice(0, -1 - specialExportType.length)
-      break
-    }
+    // if (exportPath.endsWith('.' + specialExportType)) {
+    //   exportPath = exportPath.slice(0, -1 - specialExportType.length)
+    //   break
+    // }
   }
 
   return relativify(exportPath)
@@ -67,7 +67,6 @@ export async function collectEntriesFromParsedExports(
   // Traverse source files and try to match the entries
   // Find exports from parsed exports info
   // exportPath can be: '.', './index.development', etc.
-  // console.log('exportsEntries', exportsEntries, 'parsedExportsInfo', parsedExportsInfo)
   for (const [exportPath, sourceFilesMap] of exportsEntries) {
     const normalizedExportPath = normalizeExportPath(exportPath)
     const outputExports = parsedExportsInfo.get(normalizedExportPath)
@@ -75,19 +74,27 @@ export async function collectEntriesFromParsedExports(
       continue
     }
 
-    const exportMap: Record<string, string> = {}
-
-    for (const [outputPath, composedExportType] of outputExports) {
+    for (const [, composedExportType] of outputExports) {
+      const exportMap: Record<string, string> = {}
       const matchedExportType =
         getSpecialExportTypeFromExportPath(composedExportType)
-      // const exportType = getExportTypeFromExportPath(composedExportType)
 
       // export type can be: default, development, react-server, etc.
       const sourceFile = sourceFilesMap[matchedExportType]
+      if (!sourceFile) {
+        continue
+      }
 
       const matchedOutputExports =
         matchedExportType === 'default'
-          ? outputExports
+          ? outputExports.filter(([_outputPath, composed]) => {
+              // For `default` case, exclude all the special export types,
+              // since they should only work with specific export conditions.
+              const types = composed.split('.')
+              if (types.some((type) => specialExportConventions.has(type)))
+                return false
+              return types.includes(matchedExportType)
+            })
           : outputExports.filter(([_outputPath, composed]) => {
               return composed.split('.').includes(matchedExportType)
             })
@@ -99,6 +106,7 @@ export async function collectEntriesFromParsedExports(
           export: exportMap,
         }
       }
+
       matchedOutputExports.forEach(([outputPath, exportType]) => {
         exportMap[exportType] = outputPath
       })
@@ -123,7 +131,6 @@ export async function collectEntriesFromParsedExports(
     }
   }
 
-  // console.log('entries:', entries)
   return entries
 }
 
@@ -171,7 +178,7 @@ export async function collectBinaries(
   }
 }
 
-function getSpecialExportTypeFromExportPath(
+export function getSpecialExportTypeFromExportPath(
   composedExportType: string,
 ): string {
   const exportTypes = composedExportType.split('.')
@@ -204,7 +211,7 @@ function getExportTypeFromExportPath(exportPath: string): string {
 // ./index.development -> .
 // ./index.react-server -> .
 // ./shared -> ./shared
-function normalizeExportPath(exportPath: string): string {
+export function normalizeExportPath(exportPath: string): string {
   const baseName = baseNameWithoutExtension(exportPath)
   if (baseName === 'index') {
     return '.'

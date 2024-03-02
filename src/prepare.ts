@@ -32,7 +32,7 @@ function stripeBinaryTag(exportName: string) {
 
 const normalizeBaseNameToExportName = (name: string) => {
   const baseName = stripeBinaryTag(name)
-  return /^index(\.|$)/.test(baseName) ? '.' : relativify(baseName)
+  return /^\.\/index(\.|$)/.test(baseName) ? '.' : relativify(baseName)
 }
 
 function createExportCondition(
@@ -230,7 +230,7 @@ export async function prepare(cwd: string): Promise<void> {
     }
 
     // Configure node10 module resolution
-    if (exportsEntries.has('.')) {
+    if (exportsEntries.has('./index')) {
       const isESM = pkgJson.type === 'module'
       const mainExport = pkgExports['.']
       const mainCondition = isESM ? 'import' : 'require'

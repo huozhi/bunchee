@@ -183,7 +183,7 @@ async function bundle(
   }
 
   const sizeCollector = createOutputState({ entries })
-  const entriesAlias = getReversedAlias(entries)
+  const entriesAlias = getReversedAlias({ entries, name: pkg.name })
   const buildContext: BuildContext = {
     entries,
     pkg,

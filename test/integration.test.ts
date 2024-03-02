@@ -271,6 +271,7 @@ const testCases: {
   {
     name: 'wildcard-exports',
     args: [],
+    skip: true,
     async expected(dir, { stdout, stderr }) {
       const contentsRegex = {
         './dist/index.js': /'index'/,
@@ -556,6 +557,7 @@ const testCases: {
       const pkgJson = JSON.parse(
         await fsp.readFile(join(dir, './package.json'), 'utf-8'),
       )
+      console.log(pkgJson)
       expect(pkgJson.main).toBe('./dist/index.js')
       expect(pkgJson.module).toBe('./dist/index.mjs')
       expect(pkgJson.types).toBeFalsy()

@@ -1,3 +1,4 @@
+import { normalize, posix } from 'path'
 import type {
   Entries,
   PackageMetadata,
@@ -58,6 +59,10 @@ import {
 // import { logger } from './logger'
 import { BuildContext } from './types'
 import { getDefinedInlineVariables } from './env'
+import {
+  getSpecialExportTypeFromExportPath,
+  normalizeExportPath,
+} from './entries'
 // import { collectBinaries } from './entries'
 
 const swcMinifyOptions = {
@@ -75,12 +80,24 @@ const swcMinifyOptions = {
  *   <absolute source path>: <pkg>/<export>
  * }
  */
-export function getReversedAlias(entries: Entries) {
+export function getReversedAlias({
+  entries,
+  name,
+}: {
+  entries: Entries
+  name: string | undefined
+}) {
   const alias: Record<string, string> = {}
-  for (const [entryImportPath, exportCondition] of Object.entries(entries)) {
-    const exportType = entryImportPath.split('.')[1] // e.g. index.react-server, pick react-server
-    if (!exportType) {
-      alias[exportCondition.source] = entryImportPath
+  for (const [entryExportPath, exportCondition] of Object.entries(entries)) {
+    const normalizedExportPath = normalizeExportPath(entryExportPath)
+    // entryExportPath format: ./index, ./shared, etc.
+    const specialExportType =
+      getSpecialExportTypeFromExportPath(entryExportPath)
+    if (specialExportType === 'default') {
+      alias[exportCondition.source] = posix.join(
+        name || '',
+        normalizedExportPath,
+      )
     }
   }
   return alias
@@ -112,7 +129,9 @@ async function buildInputConfig(
   for (const [exportImportPath, exportCondition] of Object.entries(entries)) {
     const entryFilePath = exportCondition.source
     if (entryFilePath !== entry) {
-      externals.push(exportImportPath)
+      externals.push(
+        posix.join(pkg.name || '', normalizeExportPath(exportImportPath)),
+      )
       externals.push(entryFilePath)
     }
   }

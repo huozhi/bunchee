@@ -48,14 +48,7 @@ export async function assertFilesContent(
       const content = await fsp.readFile(filePath, {
         encoding: 'utf-8',
       })
-      console.log(
-        'file',
-        filePath,
-        'content',
-        content,
-        'regexOrString',
-        regexOrString,
-      )
+
       if (regexOrString instanceof RegExp) {
         expect(content).toMatch(regexOrString)
       } else {
