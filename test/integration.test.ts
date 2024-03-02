@@ -53,7 +53,7 @@ const testCases: {
     },
   },
   {
-    name: 'pkg-exports',
+    name: 'pkg-exports-js',
     async expected(dir) {
       const distFiles = [
         'dist/index.cjs',

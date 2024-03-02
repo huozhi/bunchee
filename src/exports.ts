@@ -381,41 +381,51 @@ export type ParsedExportsInfo = Map<string, [string, string][]>
 
 function collectExportPath(
   exportValue: ExportCondition,
+  exportKey: string,
   currentPath: string,
   exportTypes: Set<string>,
   exportToDist: ParsedExportsInfo,
 ) {
   // End of searching, export value is file path.
+  // <export key>: <export value> (string)
   if (typeof exportValue === 'string') {
-    // exportTypes.add('require')
-    // childExports.add('default')
+    exportTypes.add(exportKey)
     const exportInfo = exportToDist.get(currentPath)
+    const exportCondition = Array.from(exportTypes).join('.')
     if (!exportInfo) {
       const outputConditionPair: [string, string] = [
         exportValue,
-        Array.from(exportTypes).join('.') || 'default',
+        exportCondition,
       ]
       exportToDist.set(currentPath, [outputConditionPair])
     } else {
-      exportInfo.push([exportValue, Array.from(exportTypes).join('.')])
+      exportInfo.push([exportValue, exportCondition])
     }
     return
   }
 
   const exportKeys = Object.keys(exportValue)
   for (const exportKey of exportKeys) {
+    // Clone the set to avoid modifying the parent set
     const childExports = new Set(exportTypes)
     // Normalize child export value to a map
     const childExportValue = exportValue[exportKey]
     // Visit export path: ./subpath, ./subpath2, ...
     if (exportKey.startsWith('.')) {
       const childPath = joinRelativePath(currentPath, exportKey)
-      collectExportPath(childExportValue, childPath, childExports, exportToDist)
+      collectExportPath(
+        childExportValue,
+        exportKey,
+        childPath,
+        childExports,
+        exportToDist,
+      )
     } else {
       // Visit export type: import, require, ...
       childExports.add(exportKey)
       collectExportPath(
         childExportValue,
+        exportKey,
         currentPath,
         childExports,
         exportToDist,
@@ -425,32 +435,16 @@ function collectExportPath(
 }
 
 /**
- * parseExports - parse package.exports field
+ * parseExports - parse package.exports field and other fields like main,module to a map
  *
  * map from export path to output path and export conditions
  */
-export function parseExports(
-  pkg: PackageMetadata,
-  // exportsField: ExportCondition,
-  // _moduleType: 'commonjs' | 'module' | undefined,
-): ParsedExportsInfo {
+export function parseExports(pkg: PackageMetadata): ParsedExportsInfo {
   const exportsField = pkg.exports ?? {}
   const bins = pkg.bin ?? {}
   const exportToDist: ParsedExportsInfo = new Map()
   const isEsmPkg = isESModulePackage(pkg.type)
   const defaultCondition = isEsmPkg ? 'import' : 'require'
-
-  if (pkg.main) {
-    const mainExportPath = pkg.main
-    const typesEntryPath = pkg.types
-    exportToDist.set(
-      '.',
-      [
-        [mainExportPath, defaultCondition],
-        Boolean(typesEntryPath) && [typesEntryPath, 'types'],
-      ].filter(Boolean) as [string, string][],
-    )
-  }
 
   let currentPath = '.'
 
@@ -472,7 +466,13 @@ export function parseExports(
         ? joinRelativePath(currentPath, exportKey)
         : currentPath
 
-      collectExportPath(exportValue, childPath, exportTypes, exportToDist)
+      collectExportPath(
+        exportValue,
+        exportKey,
+        childPath,
+        exportTypes,
+        exportToDist,
+      )
     }
   }
 
@@ -487,6 +487,20 @@ export function parseExports(
       const outputConditionPair: [string, string] = [binDistPath, exportType]
       exportToDist.set(exportPath, [outputConditionPair])
     }
+  }
+
+  if (pkg.main) {
+    const mainExportPath = pkg.main
+    const typesEntryPath = pkg.types
+    const existingExportInfo = exportToDist.get('.')
+    exportToDist.set(
+      '.',
+      [
+        ...(existingExportInfo || []),
+        [mainExportPath, defaultCondition],
+        Boolean(typesEntryPath) && [typesEntryPath, 'types'],
+      ].filter(Boolean) as [string, string][],
+    )
   }
 
   return exportToDist
