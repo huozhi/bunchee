@@ -420,8 +420,16 @@ const testCases: {
       */
 
       const lines = stripANSIColor(stdout).split('\n')
-      const [tableHeads, cliLine, indexLine, indexReactServerLine, fooLine] =
-        lines
+      const [tableHeads, ...restLines] = lines
+      const cliLine = restLines.find((line) => line.includes('cli'))!
+      const indexLine = restLines.find(
+        (line) => line.includes('. ') && !line.includes('react-server'),
+      )!
+      const indexReactServerLine = restLines.find((line) =>
+        line.includes('. (react-server)'),
+      )!
+      const fooLine = restLines.find((line) => line.includes('./foo'))!
+
       expect(tableHeads).toContain('Exports')
       expect(tableHeads).toContain('File')
       expect(tableHeads).toContain('Size')
