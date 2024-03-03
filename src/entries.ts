@@ -185,6 +185,15 @@ export async function collectBinaries(
   }
 }
 
+// ./index -> import|require|default
+// ./index.development -> development
+// ./index.react-server -> react-server
+function getExportTypeFromExportPath(exportPath: string): string {
+  // Skip the first two segments: `.` and `index`
+  const exportTypes = exportPath.split('.').slice(2)
+  return getExportTypeFromExportTypes(exportTypes)
+}
+
 export function getSpecialExportTypeFromExportPath(
   composedExportType: string,
 ): string {
@@ -195,19 +204,6 @@ export function getSpecialExportTypeFromExportPath(
     }
   }
   return 'default'
-}
-
-// ./index -> import|require|default
-// ./index.development -> development
-// ./index.react-server -> react-server
-function getExportTypeFromExportPath(exportPath: string): string {
-  // Skip the first two segments: `.` and `index`
-  const exportTypes = exportPath.split('.').slice(2)
-  return getExportTypeFromExportTypes(exportTypes)
-}
-
-function getExportTypeFromComposedExportType(type: string): string {
-  return getExportTypeFromExportTypes(type.split('.'))
 }
 
 function getExportTypeFromExportTypes(types: string[]): string {

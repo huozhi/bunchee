@@ -1,4 +1,4 @@
-import { normalize, posix } from 'path'
+import { posix } from 'path'
 import type {
   Entries,
   PackageMetadata,
