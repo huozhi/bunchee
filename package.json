@@ -10,7 +10,7 @@
     "test:update": "TEST_UPDATE_SNAPSHOT=1 pnpm test",
     "test:post": "POST_BUILD=1 pnpm jest test/compile.test.ts test/integration.test.ts",
     "clean": "rm -rf ./dist",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p test/tsconfig.json --noEmit",
     "prepublishOnly": "pnpm clean && pnpm build && chmod +x ./dist/bin/cli.js && pnpm test",
     "build": "tsx ./src/bin/index.ts --runtime node",
     "format": "prettier --write .",

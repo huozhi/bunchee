@@ -1,9 +1,9 @@
 // Import from generated files instead of using tsconfig alias
-import { bundle, type CliArgs } from 'bunchee'
+import { bundle, type BundleConfig } from 'bunchee'
 
 describe('types', () => {
   it('should be able to import the node API and use correct typings', async () => {
-    const options: CliArgs = {
+    const options: BundleConfig = {
       dts: false,
       watch: false,
       minify: false,
