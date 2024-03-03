@@ -5,21 +5,13 @@ import type {
   RollupBuild,
   RollupOutput,
 } from 'rollup'
-import type {
-  BuncheeRollupConfig,
-  BundleConfig,
-  // ExportPaths
-} from './types'
+import type { BuncheeRollupConfig, BundleConfig } from './types'
 import { watch as rollupWatch, rollup } from 'rollup'
 import fsp from 'fs/promises'
 import fs from 'fs'
 import { resolve } from 'path'
 import { performance } from 'perf_hooks'
-import {
-  buildEntryConfig,
-  // collectEntries,
-  getReversedAlias,
-} from './build-config'
+import { buildEntryConfig, getReversedAlias } from './build-config'
 import {
   createOutputState,
   logOutputState,
@@ -31,20 +23,13 @@ import {
   removeDir,
   isTypescriptFile,
 } from './utils'
-import {
-  // constructDefaultExportCondition,
-  getExportFileTypePath,
-  // getExportPaths,
-  // getPackageType,
-  parseExports,
-} from './exports'
+import { getExportFileTypePath, parseExports } from './exports'
 import type { BuildContext } from './types'
 import {
   TypescriptOptions,
   resolveTsConfig,
   writeDefaultTsconfig,
 } from './typescript'
-// import { resolveWildcardExports } from './lib/wildcard'
 import { collectEntriesFromParsedExports } from './entries'
 
 function assignDefault(
@@ -77,10 +62,6 @@ async function bundle(
   assignDefault(options, 'target', 'es2015')
 
   const pkg = await getPackageMeta(cwd)
-  // const resolvedWildcardExports = await resolveWildcardExports(pkg.exports, cwd)
-  // const packageType = getPackageType(pkg)
-
-  // const exportPaths = getExportPaths(pkg, resolvedWildcardExports)
   const parsedExportsInfo = parseExports(pkg)
   const isMultiEntries = hasMultiEntryExport(parsedExportsInfo)
   const hasBin = Boolean(pkg.bin)

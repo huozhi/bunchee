@@ -2,20 +2,13 @@ import fs from 'fs'
 import fsp from 'fs/promises'
 import path, { join, posix } from 'path'
 import { getExportTypeFromFile, type ParsedExportsInfo } from './exports'
-import {
-  PackageMetadata,
-  type Entries,
-  ExportPaths,
-  // FullExportCondition,
-} from './types'
+import { PackageMetadata, type Entries, ExportPaths } from './types'
 import { logger } from './logger'
 import {
   baseNameWithoutExtension,
-  // findSourceEntryFile,
   getSourcePathFromExportPath,
   hasAvailableExtension,
   isTestFile,
-  // joinRelativePath,
   resolveSourceFile,
 } from './utils'
 import {

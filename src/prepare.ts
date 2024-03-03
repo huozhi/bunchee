@@ -1,20 +1,9 @@
 import fs from 'fs'
 import fsp from 'fs/promises'
 import path, { posix } from 'path'
-import {
-  BINARY_TAG,
-  // BINARY_TAG,
-  SRC,
-  // availableExtensions,
-  dtsExtensionsMap,
-} from './constants'
+import { BINARY_TAG, SRC, dtsExtensionsMap } from './constants'
 import { logger } from './logger'
-import {
-  // baseNameWithoutExtension,
-  // hasAvailableExtension,
-  // isTestFile,
-  isTypescriptFile,
-} from './utils'
+import { isTypescriptFile } from './utils'
 import { relativify } from './lib/format'
 import { DIST } from './constants'
 import { writeDefaultTsconfig } from './typescript'
