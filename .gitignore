@@ -6,3 +6,4 @@ dist
 yalc.lock
 test/**/*.js.map
 .DS_Store
+test/**/tsconfig.json

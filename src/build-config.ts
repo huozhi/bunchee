@@ -253,7 +253,6 @@ async function buildInputConfig(
             tsconfig: tsConfigPath ?? false,
             ...swcOptions,
           }),
-
           commonjs({
             exclude: bundleConfig.external || null,
           }),

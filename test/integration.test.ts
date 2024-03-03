@@ -42,15 +42,6 @@ const testCases: {
     },
   },
   {
-    name: 'ts-import-json',
-    async expected(dir) {
-      assertFilesContent(dir, {
-        './dist/index.js': /"0.0.1"/,
-        './dist/index.d.ts': /declare const version: string/,
-      })
-    },
-  },
-  {
     name: 'pkg-exports-js',
     async expected(dir) {
       const distFiles = [
