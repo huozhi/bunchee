@@ -236,7 +236,7 @@ describe('lib exports', () => {
       const apiResult = getExportsDistFilesOfCondition(pkg, parsedExport, '')
 
       return apiResult.map((item) => ({
-        ...item,
+        format: item.format,
         file: path.basename(item.file),
       }))
 
