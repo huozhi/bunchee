@@ -1,8 +1,8 @@
 import path from 'path'
-import { getExportPaths, isESModulePackage } from './exports'
+import { parseExports } from './exports'
 import { logger } from './logger'
 import { PackageMetadata } from './types'
-import { hasCjsExtension } from './utils'
+import { hasCjsExtension, isESModulePackage } from './utils'
 
 type BadExportItem = {
   value: boolean
@@ -12,7 +12,7 @@ type BadExportItem = {
 export function lint(pkg: PackageMetadata) {
   const { name, main, exports } = pkg
   const isESM = isESModulePackage(pkg.type)
-  const exportPaths = getExportPaths(pkg)
+  const parsedExports = parseExports(pkg)
 
   if (!name) {
     logger.warn('Missing package name')
@@ -59,15 +59,17 @@ export function lint(pkg: PackageMetadata) {
       if (typeof exports !== 'object') {
         state.invalidExportsFieldType = true
       } else {
-        Object.keys(exportPaths).forEach((key) => {
-          const exportConditions = exportPaths[key]
-          if (typeof exportConditions === 'object') {
-            const requirePath =
-              // @ts-ignore TODO: fix the type
-              exportConditions.require?.default ?? exportConditions.require
-            const importPath =
-              // @ts-ignore TODO: fix the type
-              exportConditions.import?.default ?? exportConditions.import
+        parsedExports.forEach((outputPairs) => {
+          for (const [outputPath, composedExportType] of outputPairs) {
+            const exportTypes = new Set(composedExportType.split('.'))
+            let requirePath: string = ''
+            let importPath: string = ''
+            if (exportTypes.has('require')) {
+              requirePath = outputPath
+            }
+            if (exportTypes.has('import')) {
+              importPath = outputPath
+            }
             const requireExt = requirePath && path.extname(requirePath)
             const importExt = importPath && path.extname(importPath)
             if (requireExt === '.mjs' || requireExt === '.js') {
@@ -96,15 +98,17 @@ export function lint(pkg: PackageMetadata) {
       if (typeof exports !== 'object') {
         state.invalidExportsFieldType = true
       } else {
-        Object.keys(exportPaths).forEach((key) => {
-          const exportConditions = exportPaths[key]
-          if (typeof exportConditions === 'object') {
-            const requirePath =
-              // @ts-ignore TODO: fix the type
-              exportConditions.require?.default ?? exportConditions.require
-            const importPath =
-              // @ts-ignore TODO: fix the type
-              exportConditions.import?.default ?? exportConditions.import
+        parsedExports.forEach((outputPairs) => {
+          for (const [outputPath, composedExportType] of outputPairs) {
+            const exportTypes = new Set(composedExportType.split('.'))
+            let requirePath: string = ''
+            let importPath: string = ''
+            if (exportTypes.has('require')) {
+              requirePath = outputPath
+            }
+            if (exportTypes.has('import')) {
+              importPath = outputPath
+            }
             const requireExt = requirePath && path.extname(requirePath)
             const importExt = importPath && path.extname(importPath)
             if (requireExt === '.mjs') {

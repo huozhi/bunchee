@@ -1,25 +1,27 @@
 import fs from 'fs'
 import fsp from 'fs/promises'
-import path from 'path'
-import { SRC, availableExtensions, dtsExtensionsMap } from './constants'
+import path, { posix } from 'path'
+import { BINARY_TAG, SRC, dtsExtensionsMap } from './constants'
 import { logger } from './logger'
-import {
-  baseNameWithoutExtension,
-  hasAvailableExtension,
-  isTestFile,
-  isTypescriptFile,
-} from './utils'
+import { isTypescriptFile } from './utils'
 import { relativify } from './lib/format'
 import { DIST } from './constants'
 import { writeDefaultTsconfig } from './typescript'
+import { collectSourceEntries } from './entries'
 
 // Output with posix style in package.json
 function getDistPath(...subPaths: string[]) {
-  return `./${DIST}/${subPaths.join('/')}`
+  return relativify(posix.join(DIST, ...subPaths))
 }
 
-const normalizeBaseNameToExportName = (baseName: string) => {
-  return /^index(\.|$)/.test(baseName) ? '.' : relativify(baseName)
+function stripeBinaryTag(exportName: string) {
+  // Add \ to decode leading $
+  return exportName.replace(/\$binary\//, '')
+}
+
+const normalizeBaseNameToExportName = (name: string) => {
+  const baseName = stripeBinaryTag(name)
+  return /^\.\/index(\.|$)/.test(baseName) ? '.' : relativify(baseName)
 }
 
 function createExportCondition(
@@ -33,6 +35,9 @@ function createExportCondition(
   if (moduleType === 'module') {
     cjsExtension = 'cjs'
     esmExtension = 'js'
+  }
+  if (exportName === '.') {
+    exportName = 'index'
   }
   if (isTsSourceFile) {
     return {
@@ -55,68 +60,6 @@ function createExportCondition(
   return {
     import: getDistPath(`${exportName}.mjs`),
     require: getDistPath(`${exportName}.${cjsExtension}`),
-  }
-}
-
-async function collectSourceEntries(sourceFolderPath: string) {
-  const bins = new Map<string, string>()
-  const exportsEntries = new Map<string, string>()
-  const entryFileDirentList = await fsp.readdir(sourceFolderPath, {
-    withFileTypes: true,
-  })
-  for (const dirent of entryFileDirentList) {
-    if (dirent.isDirectory()) {
-      if (dirent.name === 'bin') {
-        const binDirentList = await fsp.readdir(
-          path.join(sourceFolderPath, dirent.name),
-          {
-            withFileTypes: true,
-          },
-        )
-        for (const binDirent of binDirentList) {
-          if (binDirent.isFile()) {
-            const binFileAbsolutePath = path.join(
-              sourceFolderPath,
-              dirent.name,
-              binDirent.name,
-            )
-            const binName = baseNameWithoutExtension(binDirent.name)
-            if (fs.existsSync(binFileAbsolutePath)) {
-              bins.set(binName, binDirent.name)
-            }
-          }
-        }
-      } else {
-        // Search folder/<index>.<ext> convention entries
-        for (const extension of availableExtensions) {
-          const indexFile = path.join(dirent.name, `index.${extension}`)
-          if (fs.existsSync(indexFile) && !isTestFile(indexFile)) {
-            exportsEntries.set(dirent.name, indexFile)
-            break
-          }
-        }
-      }
-    } else if (dirent.isFile()) {
-      const isAvailableExtension = availableExtensions.has(
-        path.extname(dirent.name).slice(1),
-      )
-      if (isAvailableExtension) {
-        const baseName = baseNameWithoutExtension(dirent.name)
-        const isBinFile = baseName === 'bin'
-        if (isBinFile) {
-          bins.set('.', dirent.name)
-        } else {
-          if (hasAvailableExtension(dirent.name) && !isTestFile(dirent.name)) {
-            exportsEntries.set(baseName, dirent.name)
-          }
-        }
-      }
-    }
-  }
-
-  return {
-    bins,
-    exportsEntries,
   }
 }
 
@@ -175,10 +118,18 @@ export async function prepare(cwd: string): Promise<void> {
   const { bins, exportsEntries } = await collectSourceEntries(sourceFolder)
   const tsConfigPath = path.join(cwd, 'tsconfig.json')
 
-  const sourceFiles: string[] = [...exportsEntries.values()].concat([
+  const exportsSourceFiles = [...exportsEntries.values()].reduce(
+    (acc, sourceFiles) => {
+      Object.values(sourceFiles).forEach((sourceFile) => acc.add(sourceFile))
+      return acc
+    },
+    new Set<string>(),
+  )
+  const allSourceFiles: string[] = [
+    ...exportsSourceFiles,
     ...bins.values(),
-  ])
-  const hasTypeScriptFiles = sourceFiles.some((filename) =>
+  ].map((absoluteFilePath) => absoluteFilePath)
+  const hasTypeScriptFiles = allSourceFiles.some((filename) =>
     isTypescriptFile(filename),
   )
   if (hasTypeScriptFiles) {
@@ -208,14 +159,18 @@ export async function prepare(cwd: string): Promise<void> {
         ),
       )
       logger.log(
-        `  ${normalizeBaseNameToExportName(binName)}${spaces}: ${binFile}`,
+        `  ${normalizeBaseNameToExportName(binName)}${spaces}: ${path.basename(
+          binFile,
+        )}`,
       )
     }
-    if (bins.size === 1 && bins.has('.')) {
+
+    if (bins.size === 1 && bins.has(BINARY_TAG)) {
       pkgJson.bin = getDistPath('bin', 'index.js')
     } else {
       pkgJson.bin = {}
-      for (const [binName] of bins.entries()) {
+      for (const [binOriginName] of bins.entries()) {
+        const binName = stripeBinaryTag(binOriginName)
         pkgJson.bin[binName === '.' ? pkgJson.name : binName] = getDistPath(
           'bin',
           binName + '.js',
@@ -231,7 +186,7 @@ export async function prepare(cwd: string): Promise<void> {
         (exportName) => normalizeBaseNameToExportName(exportName).length,
       ),
     )
-    for (const [exportName, exportFile] of exportsEntries.entries()) {
+    for (const [exportName, sourceFilesMap] of exportsEntries.entries()) {
       const spaces = ' '.repeat(
         Math.max(
           maxLengthOfExportName -
@@ -239,35 +194,39 @@ export async function prepare(cwd: string): Promise<void> {
           0,
         ),
       )
-      logger.log(
-        `  ${normalizeBaseNameToExportName(
-          exportName,
-        )}${spaces}: ${exportFile}`,
-      )
+      for (const exportFile of Object.values(sourceFilesMap)) {
+        logger.log(
+          `  ${normalizeBaseNameToExportName(
+            exportName,
+          )}${spaces}: ${path.basename(exportFile)}`,
+        )
+      }
     }
 
     const pkgExports: Record<string, any> = {}
-    for (const [exportName, sourceFile] of exportsEntries.entries()) {
-      const [key, value] = createExportConditionPair(
-        exportName,
-        sourceFile,
-        pkgJson.type,
-      )
-      pkgExports[key] = {
-        ...value,
-        ...pkgExports[key],
+    for (const [exportName, sourceFilesMap] of exportsEntries.entries()) {
+      for (const sourceFile of Object.values(sourceFilesMap)) {
+        const [key, value] = createExportConditionPair(
+          exportName,
+          sourceFile,
+          pkgJson.type,
+        )
+        pkgExports[key] = {
+          ...value,
+          ...pkgExports[key],
+        }
       }
     }
 
     // Configure node10 module resolution
-    if (exportsEntries.has('index')) {
+    if (exportsEntries.has('./index')) {
       const isESM = pkgJson.type === 'module'
       const mainExport = pkgExports['.']
       const mainCondition = isESM ? 'import' : 'require'
-
       pkgJson.main = isUsingTs
         ? mainExport[mainCondition].default
         : mainExport[mainCondition]
+
       pkgJson.module = isUsingTs ? mainExport.import.default : mainExport.import
 
       if (isUsingTs) {

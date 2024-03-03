@@ -4,10 +4,12 @@ import path from 'path'
 import { rimraf } from 'rimraf'
 import { PackageMetadata } from './types'
 import {
-  suffixedExportConventions,
+  runtimeExportConventions,
   availableExtensions,
   SRC,
   tsExtensions,
+  optimizeConventions,
+  BINARY_TAG,
 } from './constants'
 import { logger } from './logger'
 
@@ -119,11 +121,21 @@ export async function getSourcePathFromExportPath(
 
     // Find convention-based source file for specific export types
     // $binary represents `pkg.bin`
-    if (suffixedExportConventions.has(exportType) && exportType !== '$binary') {
+    if (runtimeExportConventions.has(exportType) && exportType !== BINARY_TAG) {
       const filename = await findSourceEntryFile(
         cwd,
         exportPath,
         exportType,
+        ext,
+      )
+      if (filename) return filename
+    }
+    const [, optimizeType] = exportType.split('.')
+    if (optimizeConventions.has(optimizeType)) {
+      const filename = await findSourceEntryFile(
+        cwd,
+        exportPath,
+        optimizeType,
         ext,
       )
       if (filename) return filename
@@ -161,6 +173,17 @@ export const hasAvailableExtension = (filename: string): boolean =>
 export const hasCjsExtension = (filename: string): boolean =>
   path.extname(filename) === '.cjs'
 
+export const getMainFieldExportType = (pkg: PackageMetadata) => {
+  const isEsmPkg = isESModulePackage(pkg.type)
+  const mainExportType =
+    isEsmPkg && pkg.main
+      ? hasCjsExtension(pkg.main)
+        ? 'require'
+        : 'import'
+      : 'require'
+  return mainExportType
+}
+
 // TODO: add unit test
 export const baseNameWithoutExtension = (filename: string): string =>
   path.basename(filename, path.extname(filename))
@@ -183,4 +206,17 @@ export const memoize = <T extends (...args: any[]) => any>(
     cache.set(key, result)
     return result
   }) as T
+}
+
+export function joinRelativePath(...segments: string[]) {
+  let result = path.join(...segments)
+  // If the first segment starts with '.', ensure the result does too.
+  if (segments[0] === '.' && !result.startsWith('.')) {
+    result = './' + result
+  }
+  return result
+}
+
+export function isESModulePackage(packageType: string | undefined) {
+  return packageType === 'module'
 }

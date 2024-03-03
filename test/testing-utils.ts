@@ -39,20 +39,23 @@ export async function assertFilesContent(
   dir: string,
   contentsRegex: Record<string, RegExp | string>,
 ) {
-  const promises = Object.entries(contentsRegex).map(async ([file, regex]) => {
-    const filePath = path.join(dir, file)
-    expect({
-      [filePath]: (await existsFile(filePath)) ? 'existed' : 'missing',
-    }).toMatchObject({ [filePath]: 'existed' })
-    const content = await fsp.readFile(filePath, {
-      encoding: 'utf-8',
-    })
-    if (regex instanceof RegExp) {
-      expect(content).toMatch(regex)
-    } else {
-      expect(content).toContain(regex)
-    }
-  })
+  const promises = Object.entries(contentsRegex).map(
+    async ([file, regexOrString]) => {
+      const filePath = path.join(dir, file)
+      expect({
+        [filePath]: (await existsFile(filePath)) ? 'existed' : 'missing',
+      }).toMatchObject({ [filePath]: 'existed' })
+      const content = await fsp.readFile(filePath, {
+        encoding: 'utf-8',
+      })
+
+      if (regexOrString instanceof RegExp) {
+        expect(content).toMatch(regexOrString)
+      } else {
+        expect(content).toContain(regexOrString)
+      }
+    },
+  )
   await Promise.all(promises)
 }
 
@@ -121,7 +124,9 @@ export async function createTest<T>(
       distFile,
     })
   } finally {
-    await removeDirectory(distDir)
+    if (!process.env.TEST_NOT_CLEANUP) {
+      await removeDirectory(distDir)
+    }
   }
 }
 

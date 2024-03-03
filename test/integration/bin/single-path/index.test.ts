@@ -1,5 +1,8 @@
-import { readFile } from 'fs/promises'
-import { createIntegrationTest, assertContainFiles } from '../../utils'
+import {
+  createIntegrationTest,
+  assertContainFiles,
+  assertFilesContent,
+} from '../../utils'
 
 describe('integration bin/single-path', () => {
   it('should work with bin as single path', async () => {
@@ -8,11 +11,11 @@ describe('integration bin/single-path', () => {
         directory: __dirname,
       },
       async ({ distDir }) => {
-        const distFiles = [`${distDir}/bin.js`, `${distDir}/bin.d.ts`]
-        await assertContainFiles(__dirname, distFiles)
-        expect(await readFile(distFiles[0], 'utf-8')).toContain(
-          '#!/usr/bin/env node',
-        )
+        const distFiles = ['bin.js', 'bin.d.ts']
+        await assertContainFiles(distDir, distFiles)
+        await assertFilesContent(distDir, {
+          'bin.js': /console.log\('Hello, world!'\)/,
+        })
       },
     )
   })
