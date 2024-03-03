@@ -1,7 +1,5 @@
 import { createCliTest } from '../utils'
 
-jest.setTimeout(50000)
-
 describe('cli', () => {
   it(`cli output-in-watch should work properly`, async () => {
     await createCliTest(

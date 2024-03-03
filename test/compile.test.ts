@@ -5,8 +5,6 @@ import { existsFile, fullExtension } from './testing-utils'
 const assetPath = process.env.POST_BUILD ? '..' : '../src/index.ts'
 const bundle = require(assetPath).bundle
 
-jest.setTimeout(10 * 60 * 1000)
-
 const baseUnitTestDir = resolve(__dirname, 'compile')
 const unitTestDirs = fs.readdirSync(baseUnitTestDir)
 

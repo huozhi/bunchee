@@ -11,8 +11,6 @@ import {
 } from './testing-utils'
 import * as debug from './utils/debug'
 
-jest.setTimeout(10 * 60 * 1000)
-
 const integrationTestDir = resolve(__dirname, 'integration')
 const getPath = (filepath: string) => join(integrationTestDir, filepath)
 
@@ -77,7 +75,7 @@ const testCases: {
   },
   {
     name: 'pkg-exports-default',
-    args: ['index.js'],
+    args: [],
     async expected(dir) {
       const distFiles = [
         join(dir, './dist/index.cjs'),

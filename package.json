@@ -98,6 +98,7 @@
     "*.{ts,tsx,js,jsx,md,json,yml}": "prettier --write"
   },
   "jest": {
+    "testTimeout": "60000",
     "moduleDirectories": [
       "node_modules"
     ],
