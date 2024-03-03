@@ -77,7 +77,6 @@ type CliArgs = {
   env?: string
   external?: string
   dts?: boolean
-  noDts?: boolean
   runtime?: string
   prepare?: boolean
   clean?: boolean

@@ -30,8 +30,8 @@ Options:
   --env <env>            inlined process env variables, separate by comma. default: NODE_ENV
   --cwd <cwd>            specify current working directory
   --sourcemap            enable sourcemap generation, default: false
-  --dts                  determine if need to generate types, default: false
-  --no-dts               force not to generate types, default: false
+  --dts                  determine if need to generate types, default: undefined
+  --no-dts               do not generate types, default: undefined
 `
 
 function help() {
@@ -89,8 +89,7 @@ function parseCliArgs(argv: string[]) {
     minify: args['--minify'],
     sourcemap: !!args['--sourcemap'],
     cwd: args['--cwd'],
-    dts: args['--dts'],
-    noDts: args['--no-dts'],
+    dts: args['--no-dts'] ? false : args['--dts'],
     help: args['--help'],
     version: args['--version'],
     runtime: args['--runtime'],
@@ -113,14 +112,13 @@ async function run(args: CliArgs) {
     target,
     runtime,
     dts,
-    noDts,
     env,
     clean,
   } = args
   const cwd = args.cwd || process.cwd()
   const file = args.file ? path.resolve(cwd, args.file) : undefined
   const bundleConfig: BundleConfig = {
-    dts: dts === true ? true : noDts === true ? false : undefined,
+    dts: typeof dts === 'boolean' ? dts : undefined,
     file,
     format,
     cwd,
