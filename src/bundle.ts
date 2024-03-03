@@ -5,17 +5,13 @@ import type {
   RollupBuild,
   RollupOutput,
 } from 'rollup'
-import type { BuncheeRollupConfig, BundleConfig, ExportPaths } from './types'
+import type { BuncheeRollupConfig, BundleConfig } from './types'
 import { watch as rollupWatch, rollup } from 'rollup'
 import fsp from 'fs/promises'
 import fs from 'fs'
 import { resolve } from 'path'
 import { performance } from 'perf_hooks'
-import {
-  buildEntryConfig,
-  collectEntries,
-  getReversedAlias,
-} from './build-config'
+import { buildEntryConfig, getReversedAlias } from './build-config'
 import {
   createOutputState,
   logOutputState,
@@ -27,19 +23,14 @@ import {
   removeDir,
   isTypescriptFile,
 } from './utils'
-import {
-  constructDefaultExportCondition,
-  getExportFileTypePath,
-  getExportPaths,
-  getPackageType,
-} from './exports'
+import { getExportFileTypePath, parseExports } from './exports'
 import type { BuildContext } from './types'
 import {
   TypescriptOptions,
   resolveTsConfig,
   writeDefaultTsconfig,
 } from './typescript'
-import { resolveWildcardExports } from './lib/wildcard'
+import { collectEntriesFromParsedExports } from './entries'
 
 function assignDefault(
   options: BundleConfig,
@@ -51,7 +42,7 @@ function assignDefault(
   }
 }
 
-function hasMultiEntryExport(exportPaths: ExportPaths): boolean {
+function hasMultiEntryExport(exportPaths: object): boolean {
   const exportKeys = Object.keys(exportPaths).filter(
     (key) => key !== './package.json',
   )
@@ -71,12 +62,11 @@ async function bundle(
   assignDefault(options, 'target', 'es2015')
 
   const pkg = await getPackageMeta(cwd)
-  const resolvedWildcardExports = await resolveWildcardExports(pkg.exports, cwd)
-  const packageType = getPackageType(pkg)
-
-  const exportPaths = getExportPaths(pkg, resolvedWildcardExports)
-  const isMultiEntries = hasMultiEntryExport(exportPaths) // exportPathsLength > 1
+  const parsedExportsInfo = parseExports(pkg)
+  const isMultiEntries = hasMultiEntryExport(parsedExportsInfo)
   const hasBin = Boolean(pkg.bin)
+  // Original input file path, client path might change later
+  const inputFile = cliEntryPath
   const isFromCli = Boolean(cliEntryPath)
 
   let tsConfig = resolveTsConfig(cwd)
@@ -97,25 +87,25 @@ async function bundle(
   }
 
   // Handle CLI input
-  if (cliEntryPath) {
-    let mainEntryPath: string | undefined
-    let typesEntryPath: string | undefined
+  let mainExportPath: string | undefined
+  let typesEntryPath: string | undefined
+  if (isFromCli) {
     // with -o option
     if (options.file) {
-      mainEntryPath = options.file
+      mainExportPath = options.file
     }
 
-    if (mainEntryPath) {
+    if (mainExportPath) {
       if (options.dts) {
-        typesEntryPath = getExportFileTypePath(mainEntryPath)
+        typesEntryPath = getExportFileTypePath(mainExportPath)
       }
 
-      exportPaths['.'] = constructDefaultExportCondition(
-        {
-          main: mainEntryPath,
-          types: typesEntryPath,
-        },
-        packageType,
+      parsedExportsInfo.set(
+        '.',
+        [
+          [mainExportPath, 'default'],
+          Boolean(typesEntryPath) && [typesEntryPath, 'types'],
+        ].filter(Boolean) as [string, string][],
       )
     }
   }
@@ -157,7 +147,12 @@ async function bundle(
     }
   }
 
-  const entries = await collectEntries(pkg, cliEntryPath, exportPaths, cwd)
+  const entries = await collectEntriesFromParsedExports(
+    pkg,
+    cwd,
+    parsedExportsInfo,
+    inputFile,
+  )
   const hasTypeScriptFiles = Object.values(entries).some((entry) =>
     isTypescriptFile(entry.source),
   )
@@ -169,11 +164,10 @@ async function bundle(
   }
 
   const sizeCollector = createOutputState({ entries })
-  const entriesAlias = getReversedAlias(entries)
+  const entriesAlias = getReversedAlias({ entries, name: pkg.name })
   const buildContext: BuildContext = {
     entries,
     pkg,
-    exportPaths,
     cwd,
     tsOptions: defaultTsOptions,
     useTypeScript: hasTsConfig,
@@ -183,6 +177,7 @@ async function bundle(
       entriesAlias,
     },
   }
+
   const buildConfigs = await buildEntryConfig(options, buildContext, false)
   const assetsJobs = buildConfigs.map((rollupConfig) =>
     bundleOrWatch(rollupConfig),

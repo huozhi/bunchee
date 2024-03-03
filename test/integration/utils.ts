@@ -4,7 +4,8 @@ import {
   type ExcuteBuncheeResult,
 } from '../testing-utils'
 
-export async function createCliTest(
+export * from '../testing-utils'
+export async function createIntegrationTest(
   {
     args,
     options,

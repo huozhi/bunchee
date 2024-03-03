@@ -1,12 +1,10 @@
+import { posix } from 'path'
 import type {
   Entries,
-  PackageMetadata,
   BuncheeRollupConfig,
   BundleOptions,
   BundleConfig,
   ParsedExportCondition,
-  ExportPaths,
-  FullExportCondition,
 } from './types'
 import type {
   CustomPluginOptions,
@@ -15,7 +13,7 @@ import type {
   OutputOptions,
   Plugin,
 } from 'rollup'
-import { convertCompilerOptions, type TypescriptOptions } from './typescript'
+import { convertCompilerOptions } from './typescript'
 
 import path, { resolve, dirname, join, basename, extname } from 'path'
 import { wasm } from '@rollup/plugin-wasm'
@@ -31,27 +29,22 @@ import { rawContent } from './plugins/raw-plugin'
 import { aliasEntries } from './plugins/alias-plugin'
 import { prependDirectives } from './plugins/prepend-directives'
 import {
-  getExportPaths,
   getExportsDistFilesOfCondition,
-  isEsmExportName,
-  getExportTypeFromFile,
   getExportFileTypePath,
-  isESModulePackage,
+  ExportOutput,
 } from './exports'
+import { isESModulePackage, isNotNull, filePathWithoutExtension } from './utils'
 import {
-  isNotNull,
-  getSourcePathFromExportPath,
-  resolveSourceFile,
-  filePathWithoutExtension,
-} from './utils'
-import {
-  suffixedExportConventions,
   availableESExtensionsRegex,
   nodeResolveExtensions,
   disabledWarnings,
 } from './constants'
-import { logger } from './logger'
 import { BuildContext } from './types'
+import { getDefinedInlineVariables } from './env'
+import {
+  getSpecialExportTypeFromExportPath,
+  normalizeExportPath,
+} from './entries'
 
 const swcMinifyOptions = {
   compress: true,
@@ -63,55 +56,29 @@ const swcMinifyOptions = {
   },
 } as const
 
-// return { 'process.env.<key>': '<value>' }
-function getDefinedInlineVariables(
-  envs: string[],
-  parsedExportCondition: ParsedExportCondition,
-): Record<string, string> {
-  if (!envs.includes('NODE_ENV')) {
-    envs.push('NODE_ENV')
-  }
-  const envVars = envs.reduce((acc: Record<string, string>, key) => {
-    const value = process.env[key]
-    if (typeof value !== 'undefined') {
-      acc['process.env.' + key] = JSON.stringify(value)
-    }
-    return acc
-  }, {})
-
-  // handle .development, .production
-  const condName = parsedExportCondition.name.startsWith('.')
-    ? parsedExportCondition.name.slice(1)
-    : parsedExportCondition.name
-
-  const exportConditionNames = new Set(
-    Object.keys(parsedExportCondition.export).concat(condName),
-  )
-  // For development and production convention, we override the NODE_ENV value
-  if (exportConditionNames.has('development')) {
-    envVars['process.env.NODE_ENV'] = JSON.stringify('development')
-  } else if (exportConditionNames.has('production')) {
-    envVars['process.env.NODE_ENV'] = JSON.stringify('production')
-  }
-
-  if (exportConditionNames.has('edge-light')) {
-    envVars['EdgeRuntime'] = JSON.stringify('edge-runtime')
-  }
-
-  return envVars
-}
-
 /**
  * return {
  *   <absolute source path>: <pkg>/<export>
  * }
  */
-export function getReversedAlias(entries: Entries) {
+export function getReversedAlias({
+  entries,
+  name,
+}: {
+  entries: Entries
+  name: string | undefined
+}) {
   const alias: Record<string, string> = {}
-  for (const [entryImportPath, exportCondition] of Object.entries(entries)) {
-    const exportType = entryImportPath.split('.')[1] // e.g. index.react-server, pick react-server
-    if (!exportType) {
-      alias[exportCondition.source] = entryImportPath
+  for (const [entryExportPath, exportCondition] of Object.entries(entries)) {
+    const normalizedExportPath = normalizeExportPath(entryExportPath)
+    // entryExportPath format: ./index, ./shared, etc.
+    const specialExportType =
+      getSpecialExportTypeFromExportPath(entryExportPath)
+    if (specialExportType === 'default') {
+      alias[exportCondition.source] = posix.join(
+        name || '',
+        normalizedExportPath,
+      )
     }
   }
   return alias
@@ -143,7 +110,9 @@ async function buildInputConfig(
   for (const [exportImportPath, exportCondition] of Object.entries(entries)) {
     const entryFilePath = exportCondition.source
     if (entryFilePath !== entry) {
-      externals.push(exportImportPath)
+      externals.push(
+        posix.join(pkg.name || '', normalizeExportPath(exportImportPath)),
+      )
       externals.push(entryFilePath)
     }
   }
@@ -317,27 +286,6 @@ async function buildInputConfig(
   }
 }
 
-function hasEsmExport(
-  exportPaths: ReturnType<typeof getExportPaths>,
-  tsCompilerOptions: TypescriptOptions['tsCompilerOptions'],
-) {
-  let hasEsm = false
-  for (const key in exportPaths) {
-    const exportInfo = exportPaths[key]
-    const exportInfoEntries = Object.entries(exportInfo)
-
-    if (
-      exportInfoEntries.some(([exportType, file]) =>
-        isEsmExportName(exportType, file),
-      )
-    ) {
-      hasEsm = true
-      break
-    }
-  }
-  return Boolean(hasEsm || tsCompilerOptions?.esModuleInterop)
-}
-
 function getModuleLater(moduleMeta: CustomPluginOptions) {
   const directives = (
     moduleMeta.preserveDirectives || { directives: [] }
@@ -441,13 +389,13 @@ async function buildOutputConfigs(
   const {
     entries,
     pkg,
-    exportPaths,
+    // exportPaths,
     cwd,
     tsOptions: { tsCompilerOptions },
     pluginContext,
   } = buildContext
   // Add esm mark and interop helper if esm export is detected
-  const useEsModuleMark = hasEsmExport(exportPaths, tsCompilerOptions)
+  const useEsModuleMark = tsCompilerOptions?.esModuleInterop // hasEsmExport(exportPaths, tsCompilerOptions)
   const absoluteOutputFile = resolve(cwd, bundleConfig.file!)
   const outputFileExtension = extname(absoluteOutputFile)
   const name = filePathWithoutExtension(absoluteOutputFile)
@@ -524,154 +472,6 @@ export async function buildEntryConfig(
   return configs
 }
 
-async function collectEntry(
-  // export type, e.g. react-server, edge-light those special cases required suffix
-  exportType: string,
-  options: {
-    cwd: string
-    pkg: PackageMetadata
-    entries: Entries
-    entryPath: string
-    exportCondRef: FullExportCondition
-    // export name, e.g. ./<export-path> in exports field of package.json
-    entryExport: string
-  },
-): Promise<void> {
-  const {
-    cwd,
-    pkg,
-    entries,
-    entryPath,
-    exportCondRef,
-    entryExport: originEntryExport,
-  } = options
-  let entryExport = originEntryExport
-  let exportCondForType: FullExportCondition = { ...exportCondRef }
-  // Special cases of export type, only pass down the exportPaths for the type
-  if (suffixedExportConventions.has(exportType)) {
-    exportCondForType = {
-      [exportType]: exportCondRef[exportType],
-    }
-  } else if (
-    exportType[0] === '.' &&
-    suffixedExportConventions.has(exportType.slice(1))
-  ) {
-    // e.g. .development, .production that has both esm and cjs export
-    exportCondForType = exportCondRef
-    exportType = exportType.slice(1)
-    entryExport = entryExport.replace(exportType, '')
-  } else {
-    // Basic export type, pass down the exportPaths with erasing the special ones
-    for (const exportType of suffixedExportConventions) {
-      delete exportCondForType[exportType]
-    }
-  }
-
-  let source: string | undefined = entryPath
-  if (source) {
-    source = resolveSourceFile(cwd!, source)
-  } else {
-    source = await getSourcePathFromExportPath(cwd, entryExport, exportType)
-  }
-  if (!source) {
-    return
-  }
-
-  const exportCondition: ParsedExportCondition = {
-    source,
-    name: originEntryExport,
-    export: exportCondForType,
-  }
-
-  const nameWithExportPath = pkg.name
-    ? path.join(pkg.name, exportCondition.name)
-    : exportCondition.name
-  const needsDelimiter = !nameWithExportPath.endsWith('.') && exportType
-  const entryImportPath =
-    nameWithExportPath + (needsDelimiter ? '.' : '') + exportType
-
-  entries[entryImportPath] = exportCondition
-}
-
-/*
- * build configs for each entry from package exports
- *
- * return { <pkg>/<export>: { input: InputOptions, output: OutputOptions[] }
- */
-export async function collectEntries(
-  pkg: PackageMetadata,
-  entryPath: string,
-  exportPaths: ExportPaths,
-  cwd: string,
-): Promise<Entries> {
-  const entries: Entries = {}
-
-  const binaryExports = pkg.bin
-
-  if (binaryExports) {
-    // binDistPaths: [ [ 'bin1', './dist/bin1.js'], [ 'bin2', './dist/bin2.js'] ]
-    const binPairs =
-      typeof binaryExports === 'string'
-        ? [['bin', binaryExports]]
-        : Object.keys(binaryExports).map((key) => [
-            join('bin', key),
-            binaryExports[key],
-          ])
-
-    const binExportPaths = binPairs.reduce((acc, [binName, binDistPath]) => {
-      const exportType = getExportTypeFromFile(binDistPath, pkg.type)
-
-      acc[binName] = {
-        [exportType]: binDistPath,
-      }
-      return acc
-    }, {} as ExportPaths)
-
-    for (const [binName] of binPairs) {
-      const source = await getSourcePathFromExportPath(cwd, binName, '$binary')
-
-      if (!source) {
-        logger.warn(`Cannot find source file for ${binName}`)
-        continue
-      }
-
-      const binEntryPath = await resolveSourceFile(cwd, source)
-      entries[binName] = {
-        source: binEntryPath,
-        name: binName,
-        export: binExportPaths[binName],
-      }
-    }
-  }
-
-  const collectEntriesPromises = Object.keys(exportPaths).map(
-    async (entryExport) => {
-      const exportCond = exportPaths[entryExport]
-      const collectEntryOptions = {
-        cwd,
-        pkg,
-        entries,
-        entryPath,
-        exportCondRef: exportCond,
-        entryExport,
-      }
-      if (entryExport.startsWith('.')) {
-        await collectEntry('', collectEntryOptions)
-        for (const exportCondType of suffixedExportConventions) {
-          if (exportCond[exportCondType]) {
-            await collectEntry(exportCondType, collectEntryOptions)
-          } else if (entryExport === '.' + exportCondType) {
-            await collectEntry(entryExport, collectEntryOptions)
-          }
-        }
-      }
-    },
-  )
-
-  await Promise.all(collectEntriesPromises)
-  return entries
-}
-
 async function buildConfig(
   bundleConfig: BundleConfig,
   exportCondition: ParsedExportCondition,
@@ -690,35 +490,34 @@ async function buildConfig(
 
   // If there's nothing found, give a default output
   if (outputExports.length === 0 && !pkg.bin) {
-    const defaultFormat: OutputOptions['format'] = isESModulePackage(pkg.type)
-      ? 'esm'
-      : 'cjs'
+    const isEsmPkg = isESModulePackage(pkg.type)
+    const defaultFormat: OutputOptions['format'] = isEsmPkg ? 'esm' : 'cjs'
     outputExports.push({
       format: defaultFormat,
-      file: join(cwd, 'dist/index.js'),
+      file: join(cwd, 'dist/index.js'.replace('/', path.sep)),
+      exportCondition: 'default',
     })
   }
-  let bundleOptions: {
-    format: OutputOptions['format']
-    resolvedFile: string
-  }[] = []
+  let bundleOptions: ExportOutput[] = []
 
   // multi outputs with specified format
 
   // CLI output option is always prioritized
   if (file) {
-    const fallbackFormat = outputExports[0]?.format
+    const fallbackExport = outputExports[0]
     bundleOptions = [
       {
-        resolvedFile: resolve(cwd, file),
-        format: bundleConfig.format || fallbackFormat,
+        file: resolve(cwd, file),
+        format: bundleConfig.format || fallbackExport.format,
+        exportCondition: fallbackExport.exportCondition,
       },
     ]
   } else {
     bundleOptions = outputExports.map((exportDist) => {
       return {
-        resolvedFile: resolve(cwd, exportDist.file),
+        file: resolve(cwd, exportDist.file),
         format: exportDist.format,
+        exportCondition: exportDist.exportCondition,
       }
     })
   }
@@ -730,27 +529,37 @@ async function buildConfig(
       if (exportCondition.export.types) {
         uniqTypes.add(resolve(cwd, exportCondition.export.types))
       }
-      const typeForExtension = getExportFileTypePath(bundleOption.resolvedFile)
+      const typeForExtension = getExportFileTypePath(bundleOption.file)
       uniqTypes.add(typeForExtension)
     })
 
     bundleOptions = Array.from(uniqTypes).map((typeFile) => {
       return {
-        resolvedFile: typeFile,
+        file: typeFile,
         format: 'esm',
+        exportCondition: 'types',
       }
     })
   }
 
   const outputConfigs = bundleOptions.map(async (bundleOption) => {
+    const targetExportCondition = {
+      ...exportCondition,
+      export: {
+        [bundleOption.exportCondition]:
+          bundleOption.exportCondition === 'types'
+            ? bundleOption.file
+            : exportCondition.export[bundleOption.exportCondition],
+      },
+    }
     return await buildOutputConfigs(
       entry,
       {
         ...bundleConfig,
-        file: bundleOption.resolvedFile,
+        file: bundleOption.file,
         format: bundleOption.format,
       },
-      exportCondition,
+      targetExportCondition,
       pluginContext,
       dts,
     )

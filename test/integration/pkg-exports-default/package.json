@@ -3,5 +3,8 @@
   "exports": {
     "default": "./dist/index.mjs",
     "node": "./dist/index.cjs"
+  },
+  "dependencies": {
+    "my-mod": "*"
   }
 }

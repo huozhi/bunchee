@@ -1,0 +1,29 @@
+{
+  "name": "dev-prod-nested-convention",
+  "exports": {
+    ".": {
+      "import": {
+        "development": "./dist/index.development.mjs",
+        "production": "./dist/index.production.mjs",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "production": "./dist/index.production.js",
+        "development": "./dist/index.development.js",
+        "default": "./dist/index.js"
+      }
+    },
+    "./core": {
+      "import": {
+        "development": "./dist/core.development.mjs",
+        "production": "./dist/core.production.mjs",
+        "default": "./dist/core.mjs"
+      },
+      "require": {
+        "production": "./dist/core.production.js",
+        "development": "./dist/core.development.js",
+        "default": "./dist/core.js"
+      }
+    }
+  }
+}

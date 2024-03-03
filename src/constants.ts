@@ -16,12 +16,15 @@ export const nodeResolveExtensions = [
   '.node',
   '.jsx',
 ]
-export const suffixedExportConventions = new Set([
+export const runtimeExportConventions = new Set([
   'react-server',
   'react-native',
   'edge-light',
-  'development',
-  'production',
+])
+export const optimizeConventions = new Set(['development', 'production'])
+export const specialExportConventions = new Set([
+  ...runtimeExportConventions,
+  ...optimizeConventions,
 ])
 export const availableESExtensionsRegex = /\.(m|c)?[jt]sx?$/
 export const dtsExtensionRegex = /\.d\.(m|c)?ts$/
@@ -52,3 +55,5 @@ export const DEFAULT_TS_CONFIG = {
     moduleResolution: 'bundler',
   },
 }
+
+export const BINARY_TAG = '$binary'

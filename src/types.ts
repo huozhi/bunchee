@@ -98,7 +98,6 @@ type Entries = Record<string, ParsedExportCondition>
 type BuildContext = {
   entries: Entries
   pkg: PackageMetadata
-  exportPaths: Record<string, FullExportCondition>
   cwd: string
   tsOptions: TypescriptOptions
   useTypeScript: boolean
