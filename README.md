@@ -339,61 +339,6 @@ This will match the export name `"react-server"` and `"edge-light"` then use the
 
 Then you can use `bunchee` to build the development bundle and production bundle automatically.
 
-### Wildcard Exports
-
-Bunchee implements the Node.js feature of using the asterisk `*` as a wildcard to match the exportable entry files.
-
-For example:
-
-```json
-{
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./*": {
-      "import": "./dist/*.mjs",
-      "require": "./dist/*.cjs"
-    }
-  }
-}
-```
-
-The asterisk `*` will be replaced with your entry files, such as:
-
-```
-- my-lib/
-  |- src/
-    |- foo/
-      |- index.ts
-    |- bar.ts
-    |- index.ts
-  |- package.json
-```
-
-This will match the export names `"foo"` and `"bar"` and will be treated as the new entries as they matched the `./*` wildcard in `my-lib` folder.
-
-```json
-{
-  "exports": {
-    ".": {
-      "import": "./dist/index.js"
-    },
-    "./foo": {
-      "import": "./dist/foo/index.mjs",
-      "require": "./dist/foo/index.cjs"
-    },
-    "./bar": {
-      "import": "./dist/bar.mjs",
-      "require": "./dist/bar.cjs"
-    }
-  }
-}
-```
-
-> Note: Wildcard Exports currently only supports the exports key `"./*"`, which will match all the available entries.
-
 ### CSS
 
 `bunchee` has basic CSS support for pure CSS file imports. It will be bundled into js bundle and insert the style tag into the document head when the bundle is loaded by browser.

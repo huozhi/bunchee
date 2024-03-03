@@ -258,47 +258,6 @@ const testCases: {
     },
   },
   {
-    name: 'wildcard-exports',
-    args: [],
-    skip: true,
-    async expected(dir, { stdout, stderr }) {
-      const contentsRegex = {
-        './dist/index.js': /'index'/,
-        './dist/layout/index.js': /'layout'/,
-        './dist/server/edge.mjs': /'server.edge-light'/,
-        './dist/server/react-server.mjs': /'server.react-server'/,
-      }
-
-      await assertFilesContent(dir, contentsRegex)
-
-      const log = `\
-      dist/button.d.ts
-      dist/server/index.d.ts
-      dist/server/index.d.mts
-      dist/index.d.ts
-      dist/layout/index.d.ts
-      dist/server/react-server.d.mts
-      dist/lite.d.ts
-      dist/server/edge.d.mts
-      dist/input.d.ts
-      dist/input.js
-      dist/lite.js
-      dist/button.js
-      dist/index.js
-      dist/server/react-server.mjs
-      dist/layout/index.js
-      dist/server/index.mjs
-      dist/server/edge.mjs
-      `
-
-      const rawStdout = stripANSIColor(stdout)
-      getChunkFileNamesFromLog(log).forEach((chunk: string) => {
-        expect(rawStdout).toContain(chunk)
-      })
-      expect(stderr).toContain('is experimental')
-    },
-  },
-  {
     name: 'no-entry',
     args: [],
     async expected(_dir, { stderr }) {
