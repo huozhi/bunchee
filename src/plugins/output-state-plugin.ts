@@ -3,8 +3,12 @@ import path from 'path'
 import prettyBytes from 'pretty-bytes'
 import pc from 'picocolors'
 import { type Entries } from '../types'
-import { relativify } from '../lib/format'
 import { logger } from '../logger'
+import { BINARY_TAG } from '../constants'
+import {
+  getSpecialExportTypeFromExportPath,
+  normalizeExportPath,
+} from '../entries'
 
 type Pair = [string, string, number]
 type SizeStats = Map<string, Pair[]>
@@ -79,7 +83,7 @@ function createOutputState({ entries }: { entries: Entries }): {
 }
 
 function isBin(filename: string) {
-  return filename === 'bin' || filename.startsWith('bin/')
+  return filename === BINARY_TAG || filename.startsWith(BINARY_TAG + '/')
 }
 
 function isTypeFile(filename: string) {
@@ -94,25 +98,17 @@ function normalizeExportName(exportName: string): string {
   const isBinary = isBin(exportName)
   let result = exportName
 
-  const isSubpathExport = exportName.includes('/')
-  const isSpecialExport = exportName.includes('.')
   if (isBinary) {
-    result = (exportName.replace(/bin(\/|$)/, '') || '.') + ' (bin)'
-  } else if (isSubpathExport || isSpecialExport) {
-    const subExportName: string | undefined =
-      exportName.split('/')[1] || exportName
-    if (subExportName.includes('.') && subExportName !== '.') {
-      const [originExportName, specialCondition] = subExportName.split('.')
-      result =
-        (isSubpathExport ? relativify(originExportName) : '.') +
-        ' (' +
-        specialCondition +
-        ')'
-    } else {
-      result = isSubpathExport ? relativify(subExportName) : '.'
-    }
+    result =
+      (exportName.replace(new RegExp(`^\\${BINARY_TAG}\\/?`), '') || '.') +
+      ' (bin)'
   } else {
-    result = '.'
+    const normalizedExportPath = normalizeExportPath(exportName)
+    const specialConditionName = getSpecialExportTypeFromExportPath(exportName)
+
+    result =
+      normalizedExportPath +
+      (specialConditionName !== 'default' ? ` (${specialConditionName})` : '')
   }
   return result
 }
@@ -171,6 +167,7 @@ function logOutputState(sizeCollector: ReturnType<typeof createOutputState>) {
       .forEach((item: Pair, index) => {
         const [filename, , size] = item
         const normalizedExportName = normalizeExportName(exportName)
+
         const prefix =
           index === 0
             ? normalizedExportName
