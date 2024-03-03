@@ -148,7 +148,6 @@ async function bundle(
   }
 
   const entries = await collectEntriesFromParsedExports(
-    pkg,
     cwd,
     parsedExportsInfo,
     inputFile,

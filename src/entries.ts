@@ -32,7 +32,6 @@ function sourceFilenameToExportPath(filename: string) {
 }
 
 export async function collectEntriesFromParsedExports(
-  pkg: PackageMetadata,
   cwd: string,
   parsedExportsInfo: ParsedExportsInfo,
   sourceFile: string | undefined,
