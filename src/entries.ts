@@ -34,12 +34,6 @@ import { relativify } from './lib/format'
 function sourceFilenameToExportPath(filename: string) {
   const baseName = baseNameWithoutExtension(filename)
   let exportPath = baseName
-  for (const specialExportType of runtimeExportConventions) {
-    // if (exportPath.endsWith('.' + specialExportType)) {
-    //   exportPath = exportPath.slice(0, -1 - specialExportType.length)
-    //   break
-    // }
-  }
 
   return relativify(exportPath)
 }
@@ -64,51 +58,64 @@ export async function collectEntriesFromParsedExports(
 
   // Find source files
   const { bins, exportsEntries } = await collectSourceEntries(join(cwd, SRC))
+
+  // A mapping between each export path and its related special export conditions,
+  // excluding the 'default' export condition.
+  // { '.' => Set('development') }
+  const pathSpecialConditionsMap: Record<string, Set<string>> = {}
+  for (const [exportPath] of exportsEntries) {
+    const normalizedExportPath = normalizeExportPath(exportPath)
+    if (!pathSpecialConditionsMap[normalizedExportPath]) {
+      pathSpecialConditionsMap[normalizedExportPath] = new Set()
+    }
+
+    const exportType = getExportTypeFromExportPath(exportPath)
+    if (exportType !== 'default') {
+      pathSpecialConditionsMap[normalizedExportPath].add(exportType)
+    }
+  }
+
   // Traverse source files and try to match the entries
   // Find exports from parsed exports info
-  // exportPath can be: '.', './index.development', etc.
-  for (const [exportPath, sourceFilesMap] of exportsEntries) {
-    const normalizedExportPath = normalizeExportPath(exportPath)
+  // entryExportPath can be: '.', './index.development', './shared.edge-light', etc.
+  for (const [entryExportPath, sourceFilesMap] of exportsEntries) {
+    const normalizedExportPath = normalizeExportPath(entryExportPath)
+    const entryExportPathType = getExportTypeFromExportPath(entryExportPath)
     const outputExports = parsedExportsInfo.get(normalizedExportPath)
+
     if (!outputExports) {
       continue
     }
 
-    for (const [, composedExportType] of outputExports) {
-      const exportMap: Record<string, string> = {}
+    for (const [outputPath, composedExportType] of outputExports) {
       const matchedExportType =
         getSpecialExportTypeFromExportPath(composedExportType)
 
       // export type can be: default, development, react-server, etc.
-      const sourceFile = sourceFilesMap[matchedExportType]
+      const sourceFile =
+        sourceFilesMap[matchedExportType] || sourceFilesMap.default
       if (!sourceFile) {
         continue
       }
 
-      const matchedOutputExports =
-        matchedExportType === 'default'
-          ? outputExports.filter(([_outputPath, composed]) => {
-              // For `default` case, exclude all the special export types,
-              // since they should only work with specific export conditions.
-              const types = composed.split('.')
-              // If there's any special export type, filter it out
-              return !types.some((type) => specialExportConventions.has(type))
-            })
-          : outputExports.filter(([_outputPath, composed]) => {
-              return composed.split('.').includes(matchedExportType)
-            })
-
-      if (!entries[exportPath]) {
-        entries[exportPath] = {
+      if (!entries[entryExportPath]) {
+        entries[entryExportPath] = {
           source: sourceFile,
           name: normalizedExportPath,
-          export: exportMap,
+          export: {},
         }
       }
 
-      matchedOutputExports.forEach(([outputPath, exportType]) => {
-        exportMap[exportType] = outputPath
-      })
+      const exportMap = entries[entryExportPath].export
+      if (
+        entryExportPathType === 'default' &&
+        matchedExportType !== 'default' &&
+        pathSpecialConditionsMap[normalizedExportPath].size > 0
+      ) {
+        continue
+      }
+
+      exportMap[composedExportType] = outputPath
     }
   }
 
@@ -194,16 +201,24 @@ export function getSpecialExportTypeFromExportPath(
 // ./index.development -> development
 // ./index.react-server -> react-server
 function getExportTypeFromExportPath(exportPath: string): string {
-  const exportTypes = new Set(exportPath.split('.'))
+  // Skip the first two segments: `.` and `index`
+  const exportTypes = exportPath.split('.').slice(2)
+  return getExportTypeFromExportTypes(exportTypes)
+}
+
+function getExportTypeFromComposedExportType(type: string): string {
+  return getExportTypeFromExportTypes(type.split('.'))
+}
+
+function getExportTypeFromExportTypes(types: string[]): string {
   let exportType = 'default'
-  exportTypes.forEach((value) => {
+  new Set(types).forEach((value) => {
     if (specialExportConventions.has(value)) {
       exportType = value
     } else if (value === 'import' || value === 'require') {
       exportType = value
     }
   })
-
   return exportType
 }
 
@@ -211,18 +226,22 @@ function getExportTypeFromExportPath(exportPath: string): string {
 // ./index.development -> .
 // ./index.react-server -> .
 // ./shared -> ./shared
+// ./shared.development -> ./shared
 // $binary -> $binary
 // $binary/index -> $binary
 // $binary/foo -> $binary/foo
 export function normalizeExportPath(exportPath: string): string {
-  if (exportPath === `${BINARY_TAG}/index`) {
-    exportPath = BINARY_TAG
+  if (exportPath.startsWith(BINARY_TAG)) {
+    if (exportPath === `${BINARY_TAG}/index`) {
+      exportPath = BINARY_TAG
+    }
+    return exportPath
   }
-  const baseName = baseNameWithoutExtension(exportPath)
-  if (baseName === 'index') {
+  const baseName = exportPath.split('.').slice(0, 2).join('.')
+  if (baseName === './index') {
     return '.'
   }
-  return exportPath
+  return baseName
 }
 
 export async function collectSourceEntries(sourceFolderPath: string) {
@@ -263,13 +282,30 @@ export async function collectSourceEntries(sourceFolderPath: string) {
           }
         }
       } else {
-        // Search folder/<index>.<ext> convention entries
+        // Search folder/index.<ext> convention entries
         for (const extension of availableExtensions) {
           const indexAbsoluteFile = path.join(
             dirent.path,
             dirent.name,
             `index.${extension}`,
           )
+          // Search folder/index.<special type>.<ext> convention entries
+          for (const specialExportType of runtimeExportConventions) {
+            const indexSpecialAbsoluteFile = path.join(
+              dirent.path,
+              dirent.name,
+              `index.${specialExportType}.${extension}`,
+            )
+            if (fs.existsSync(indexSpecialAbsoluteFile)) {
+              // Add special export path
+              // { ./<export path>.<special cond>: { <special cond>: 'index.<special cond>.<ext>' } }
+              const exportPath = sourceFilenameToExportPath(dirent.name)
+              const specialExportPath = exportPath + '.' + specialExportType
+              const sourceFilesMap = exportsEntries.get(specialExportPath) || {}
+              sourceFilesMap[specialExportType] = indexSpecialAbsoluteFile
+              exportsEntries.set(specialExportPath, sourceFilesMap)
+            }
+          }
           if (
             fs.existsSync(indexAbsoluteFile) &&
             !isTestFile(indexAbsoluteFile)

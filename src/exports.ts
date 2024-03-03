@@ -386,7 +386,7 @@ function collectExportPath(
   // End of searching, export value is file path.
   // <export key>: <export value> (string)
   if (typeof exportValue === 'string') {
-    exportTypes.add(exportKey)
+    exportTypes.add(exportKey.startsWith('./') ? 'default' : exportKey)
     const exportInfo = exportToDist.get(currentPath)
     const exportCondition = Array.from(exportTypes).join('.')
     if (!exportInfo) {
