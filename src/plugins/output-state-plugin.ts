@@ -10,8 +10,9 @@ import {
   normalizeExportPath,
 } from '../entries'
 
-type Pair = [string, string, number]
-type SizeStats = Map<string, Pair[]>
+// [filename, sourceFileName, size]
+type FileState = [string, string, number]
+type SizeStats = Map<string, FileState[]>
 export type OutputState = ReturnType<typeof createOutputState>
 
 // Example: @foo/bar -> bar
@@ -22,6 +23,7 @@ function createOutputState({ entries }: { entries: Entries }): {
   getSizeStats(): SizeStats
 } {
   const sizeStats: SizeStats = new Map()
+  const uniqFiles = new Set<string>()
 
   function addSize({
     fileName,
@@ -38,8 +40,11 @@ function createOutputState({ entries }: { entries: Entries }): {
       sizeStats.set(exportPath, [])
     }
     const distFilesStats = sizeStats.get(exportPath)
-    if (distFilesStats) {
-      distFilesStats.push([fileName, sourceFileName, size])
+    if (!uniqFiles.has(fileName)) {
+      uniqFiles.add(fileName)
+      if (distFilesStats) {
+        distFilesStats.push([fileName, sourceFileName, size])
+      }
     }
   }
 
@@ -164,7 +169,7 @@ function logOutputState(sizeCollector: ReturnType<typeof createOutputState>) {
         }
         return 0
       })
-      .forEach((item: Pair, index) => {
+      .forEach((item: FileState, index) => {
         const [filename, , size] = item
         const normalizedExportName = normalizeExportName(exportName)
 
