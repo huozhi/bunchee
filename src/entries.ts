@@ -114,7 +114,8 @@ export async function collectEntriesFromParsedExports(
 
   // Handling binaries
   for (const [exportPath, sourceFile] of bins) {
-    const outputExports = parsedExportsInfo.get(exportPath)
+    const normalizedExportPath = normalizeExportPath(exportPath)
+    const outputExports = parsedExportsInfo.get(normalizedExportPath)
     if (!outputExports) {
       continue
     }
@@ -210,7 +211,13 @@ function getExportTypeFromExportPath(exportPath: string): string {
 // ./index.development -> .
 // ./index.react-server -> .
 // ./shared -> ./shared
+// $binary -> $binary
+// $binary/index -> $binary
+// $binary/foo -> $binary/foo
 export function normalizeExportPath(exportPath: string): string {
+  if (exportPath === `${BINARY_TAG}/index`) {
+    exportPath = BINARY_TAG
+  }
   const baseName = baseNameWithoutExtension(exportPath)
   if (baseName === 'index') {
     return '.'
