@@ -555,7 +555,6 @@ const testCases: {
       const pkgJson = JSON.parse(
         await fsp.readFile(join(dir, './package.json'), 'utf-8'),
       )
-      console.log(pkgJson)
       expect(pkgJson.main).toBe('./dist/index.js')
       expect(pkgJson.module).toBe('./dist/index.mjs')
       expect(pkgJson.types).toBeFalsy()
