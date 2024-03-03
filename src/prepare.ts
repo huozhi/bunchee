@@ -7,7 +7,11 @@ import { isTypescriptFile } from './utils'
 import { relativify } from './lib/format'
 import { DIST } from './constants'
 import { writeDefaultTsconfig } from './typescript'
-import { collectSourceEntries } from './entries'
+import {
+  collectSourceEntries,
+  getSpecialExportTypeFromExportPath,
+  normalizeExportPath,
+} from './entries'
 
 // Output with posix style in package.json
 function getDistPath(...subPaths: string[]) {
@@ -70,22 +74,28 @@ function createExportConditionPair(
 ) {
   // <exportName>.<specialCondition>
   let specialCondition: Record<string, string> | undefined
-  let exportCondName: string
-  if (exportName.indexOf('.') > 0) {
-    const [originExportName, specialConditionName] = exportName.split('.')
+  const specialConditionName = getSpecialExportTypeFromExportPath(exportName)
+  const normalizedExportPath = normalizeExportPath(exportName)
+  if (specialConditionName !== 'default') {
+    // e.g.
+    // ./index.develop -> index
+    // ./foo.react-server -> foo
+    const fileBaseName = exportName
+      .split('.')
+      .slice(0, 2)
+      .join('.')
+      .replace('./', '')
     specialCondition = {
       [specialConditionName]: getDistPath(
         'es',
-        `${originExportName}-${specialConditionName}.mjs`,
+        `${fileBaseName}-${specialConditionName}.mjs`,
       ),
     }
-    exportCondName = normalizeBaseNameToExportName(originExportName)
-    return [exportCondName, specialCondition] as const
+    return [normalizedExportPath, specialCondition] as const
   }
-  exportCondName = normalizeBaseNameToExportName(exportName)
-  const exportCond = createExportCondition(exportName, sourceFile, moduleType)
 
-  return [exportCondName, exportCond] as const
+  const exportCond = createExportCondition(exportName, sourceFile, moduleType)
+  return [normalizedExportPath, exportCond] as const
 }
 
 export async function prepare(cwd: string): Promise<void> {
