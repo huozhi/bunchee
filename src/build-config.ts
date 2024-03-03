@@ -47,7 +47,9 @@ import {
 } from './entries'
 
 const swcMinifyOptions = {
-  compress: true,
+  compress: {
+    directives: false,
+  },
   format: {
     comments: 'some',
   },
