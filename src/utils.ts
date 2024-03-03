@@ -12,7 +12,6 @@ import {
   BINARY_TAG,
 } from './constants'
 import { logger } from './logger'
-import { isESModulePackage } from './exports'
 
 export function exit(err: string | Error) {
   logger.error(err)
@@ -216,4 +215,8 @@ export function joinRelativePath(...segments: string[]) {
     result = './' + result
   }
   return result
+}
+
+export function isESModulePackage(packageType: string | undefined) {
+  return packageType === 'module'
 }

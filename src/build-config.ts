@@ -1,12 +1,10 @@
 import { posix } from 'path'
 import type {
   Entries,
-  PackageMetadata,
   BuncheeRollupConfig,
   BundleOptions,
   BundleConfig,
   ParsedExportCondition,
-  FullExportCondition,
 } from './types'
 import type {
   CustomPluginOptions,
@@ -33,21 +31,13 @@ import { prependDirectives } from './plugins/prepend-directives'
 import {
   getExportsDistFilesOfCondition,
   getExportFileTypePath,
-  isESModulePackage,
   ExportOutput,
 } from './exports'
+import { isESModulePackage, isNotNull, filePathWithoutExtension } from './utils'
 import {
-  isNotNull,
-  getSourcePathFromExportPath,
-  resolveSourceFile,
-  filePathWithoutExtension,
-} from './utils'
-import {
-  runtimeExportConventions,
   availableESExtensionsRegex,
   nodeResolveExtensions,
   disabledWarnings,
-  optimizeConventions,
 } from './constants'
 import { BuildContext } from './types'
 import { getDefinedInlineVariables } from './env'
@@ -481,141 +471,6 @@ export async function buildEntryConfig(
   }
   return configs
 }
-
-export async function collectEntry(
-  // export type, e.g. react-server, edge-light those special cases required suffix
-  exportType: string,
-  options: {
-    cwd: string
-    pkg: PackageMetadata
-    entries: Entries
-    entryPath: string
-    exportCondRef: FullExportCondition
-    // export name, e.g. ./<export-path> in exports field of package.json
-    entryExport: string
-  },
-): Promise<void> {
-  const {
-    cwd,
-    pkg,
-    entries,
-    entryPath,
-    exportCondRef,
-    entryExport: originEntryExport,
-  } = options
-  let entryExport = originEntryExport
-  let exportCondForType: FullExportCondition = { ...exportCondRef }
-  // Special cases of export type, only pass down the exportPaths for the type
-  const exportTypes = Object.keys(exportCondForType)
-  if (runtimeExportConventions.has(exportType)) {
-    exportCondForType = {
-      [exportType]: exportCondRef[exportType],
-    }
-  } else {
-    let hasOptimizeType = false
-    for (const exportType of exportTypes) {
-      const [, optimizedType] = exportType.split('.')
-      if (optimizeConventions.has(optimizedType)) {
-        hasOptimizeType = true
-        // delete exportCondForType[exportType]
-        exportCondForType = {
-          [exportType]: exportCondRef[exportType],
-        }
-      }
-    }
-
-    if (!hasOptimizeType) {
-      // Basic export type, pass down the exportPaths with erasing the special ones
-      for (const exportType of runtimeExportConventions) {
-        delete exportCondForType[exportType]
-      }
-      exportCondForType = {
-        [exportType]: exportCondRef[exportType],
-      }
-    }
-  }
-
-  const parsedName = originEntryExport
-  const parsedExportType = exportCondForType
-
-  const nameWithExportPath = pkg.name
-    ? path.join(pkg.name, parsedName)
-    : parsedName
-  const needsDelimiter = !nameWithExportPath.endsWith('.') && exportType
-  const entryImportPath =
-    nameWithExportPath + (needsDelimiter ? '.' : '') + exportType
-
-  if (entryImportPath in entries) {
-    return
-  }
-
-  let source: string | undefined = entryPath
-  if (source) {
-    source = resolveSourceFile(cwd!, source)
-  } else {
-    source = await getSourcePathFromExportPath(cwd, entryExport, exportType)
-  }
-  if (!source) {
-    return
-  }
-
-  const exportCondition: ParsedExportCondition = {
-    source,
-    name: parsedName,
-    export: parsedExportType,
-  }
-
-  entries[entryImportPath] = exportCondition
-}
-
-/*
- * build configs for each entry from package exports
- *
- * return { <pkg>/<export>: { input: InputOptions, output: OutputOptions[] }
- */
-
-/*
-export async function collectEntries(
-  pkg: PackageMetadata,
-  entryPath: string,
-  exportPaths: ExportPaths,
-  cwd: string,
-): Promise<Entries> {
-  const entries: Entries = {}
-
-  await collectBinaries(entries, pkg, cwd)
-
-  const collectEntriesPromises = Object.keys(exportPaths).map(
-    async (entryExport) => {
-      const exportCond = exportPaths[entryExport]
-      const collectEntryOptions = {
-        cwd,
-        pkg,
-        entries,
-        entryPath,
-        exportCondRef: exportCond,
-        entryExport,
-      }
-      if (entryExport.startsWith('.')) {
-        await collectEntry('', collectEntryOptions)
-        for (const exportCondType of suffixedExportConventions) {
-          if (exportCond[exportCondType]) {
-            await collectEntry(exportCondType, collectEntryOptions)
-          }
-        }
-        for (const key of Object.keys(exportCond)) {
-          if (optimizeConventions.has(key.split('.')[1])) {
-            await collectEntry(key, collectEntryOptions)
-          }
-        }
-      }
-    },
-  )
-
-  await Promise.all(collectEntriesPromises)
-  return entries
-}
-*/
 
 async function buildConfig(
   bundleConfig: BundleConfig,
