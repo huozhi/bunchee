@@ -44,7 +44,7 @@ mkdir src && touch ./src/index.ts
 
 ```sh
 # Use bunchee to prepare package.json configuration
-npx bunchee --prepare
+npm exec bunchee --prepare
 # "If you're using other package manager such as pnpm"
 # pnpm bunchee --prepare
 
