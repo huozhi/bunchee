@@ -502,19 +502,21 @@ async function buildConfig(
   let bundleOptions: ExportOutput[] = []
 
   if (file) {
-    const fallbackExport = outputExports[0]
+    const absoluteFile = resolve(cwd, file)
+    const absoluteTypeFile = getExportFileTypePath(absoluteFile)
     if (dts) {
       bundleOptions = [
         {
-          file: resolve(cwd, file),
+          file: absoluteTypeFile,
           format: 'esm',
           exportCondition: 'types',
         },
       ]
     } else {
+      const fallbackExport = outputExports[0]
       bundleOptions = [
         {
-          file: resolve(cwd, file),
+          file: absoluteFile,
           format: bundleConfig.format || fallbackExport.format,
           exportCondition: fallbackExport.exportCondition,
         },
