@@ -5,7 +5,6 @@ import {
   stripANSIColor,
   existsFile,
   assertFilesContent,
-  getChunkFileNamesFromLog,
   assertContainFiles,
   deleteFile,
 } from './testing-utils'
