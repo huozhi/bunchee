@@ -60,9 +60,10 @@ function collectExportPath(
   // End of searching, export value is file path.
   // <export key>: <export value> (string)
   if (typeof exportValue === 'string') {
-    exportTypes.add(exportKey.startsWith('./') ? 'default' : exportKey)
+    const composedTypes = new Set(exportTypes)
+    composedTypes.add(exportKey.startsWith('.') ? 'default' : exportKey)
     const exportInfo = exportToDist.get(currentPath)
-    const exportCondition = Array.from(exportTypes).join('.')
+    const exportCondition = Array.from(composedTypes).join('.')
     if (!exportInfo) {
       const outputConditionPair: [string, string] = [
         exportValue,
@@ -137,6 +138,10 @@ export function parseExports(pkg: PackageMetadata): ParsedExportsInfo {
         ? joinRelativePath(currentPath, exportKey)
         : currentPath
 
+      if (!isExportPath) {
+        exportTypes.add(exportKey)
+      }
+
       collectExportPath(
         exportValue,
         exportKey,
@@ -160,7 +165,8 @@ export function parseExports(pkg: PackageMetadata): ParsedExportsInfo {
     }
   }
 
-  if (pkg.main || pkg.module) {
+  // Handle package.json global exports fields
+  if (pkg.main || pkg.module || pkg.types) {
     const mainExportPath = pkg.main
     const moduleExportPath = pkg.module
     const typesEntryPath = pkg.types
@@ -169,7 +175,10 @@ export function parseExports(pkg: PackageMetadata): ParsedExportsInfo {
       '.',
       [
         ...(existingExportInfo || []),
-        [mainExportPath, getMainFieldExportType(pkg)],
+        Boolean(mainExportPath) && [
+          mainExportPath,
+          getMainFieldExportType(pkg),
+        ],
         Boolean(moduleExportPath) && [moduleExportPath, 'import'],
         Boolean(typesEntryPath) && [typesEntryPath, 'types'],
       ].filter(Boolean) as [string, string][],
@@ -215,6 +224,10 @@ export function isCjsExportName(
   )
 }
 
+export function getFileExportType(composedTypes: string) {
+  return composedTypes.split('.').pop() as string
+}
+
 export type ExportOutput = {
   format: OutputOptions['format']
   file: string
@@ -224,12 +237,19 @@ export function getExportsDistFilesOfCondition(
   pkg: PackageMetadata,
   parsedExportCondition: ParsedExportCondition,
   cwd: string,
+  dts: boolean,
 ): ExportOutput[] {
   const dist: ExportOutput[] = []
   const exportConditionNames = Object.keys(parsedExportCondition.export)
   const uniqueFiles = new Set<string>()
   for (const exportCondition of exportConditionNames) {
-    if (exportCondition === 'types') {
+    const exportType = getFileExportType(exportCondition)
+    // Filter out non-types field when generating types jobs
+    if (dts && exportType !== 'types') {
+      continue
+    }
+    // Filter out types field when generating asset jobs
+    if (!dts && exportType === 'types') {
       continue
     }
     const filePath = parsedExportCondition.export[exportCondition]

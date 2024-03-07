@@ -460,7 +460,6 @@ export async function buildEntryConfig(
 ): Promise<BuncheeRollupConfig[]> {
   const configs: BuncheeRollupConfig[] = []
   const { entries } = pluginContext
-
   for (const exportCondition of Object.values(entries)) {
     const rollupConfigs = await buildConfig(
       bundleConfig,
@@ -487,6 +486,7 @@ async function buildConfig(
     pkg,
     exportCondition,
     cwd,
+    dts,
   )
 
   // If there's nothing found, give a default output
@@ -501,46 +501,53 @@ async function buildConfig(
   }
   let bundleOptions: ExportOutput[] = []
 
-  // multi outputs with specified format
-
-  // CLI output option is always prioritized
   if (file) {
-    const fallbackExport = outputExports[0]
-    bundleOptions = [
-      {
-        file: resolve(cwd, file),
-        format: bundleConfig.format || fallbackExport.format,
-        exportCondition: fallbackExport.exportCondition,
-      },
-    ]
+    const absoluteFile = resolve(cwd, file)
+    const absoluteTypeFile = getExportFileTypePath(absoluteFile)
+    if (dts) {
+      bundleOptions = [
+        {
+          file: absoluteTypeFile,
+          format: 'esm',
+          exportCondition: 'types',
+        },
+      ]
+    } else {
+      const fallbackExport = outputExports[0]
+      bundleOptions = [
+        {
+          file: absoluteFile,
+          format: bundleConfig.format || fallbackExport.format,
+          exportCondition: fallbackExport.exportCondition,
+        },
+      ]
+    }
   } else {
-    bundleOptions = outputExports.map((exportDist) => {
-      return {
-        file: resolve(cwd, exportDist.file),
-        format: exportDist.format,
-        exportCondition: exportDist.exportCondition,
-      }
-    })
-  }
-  if (dts) {
-    // types could have duplicates, dedupe them
-    // e.g. { types, import, .. } use the same `types` condition with all conditions
-    const uniqTypes = new Set<string>()
-    bundleOptions.forEach((bundleOption) => {
-      if (exportCondition.export.types) {
-        uniqTypes.add(resolve(cwd, exportCondition.export.types))
-      }
-      const typeForExtension = getExportFileTypePath(bundleOption.file)
-      uniqTypes.add(typeForExtension)
-    })
+    // CLI output option is always prioritized
+    if (dts) {
+      // types could have duplicates, dedupe them
+      // e.g. { types, import, .. } use the same `types` condition with all conditions
+      const uniqTypes = new Set<string>()
+      outputExports.forEach((exportDist) => {
+        uniqTypes.add(resolve(cwd, exportDist.file))
+      })
 
-    bundleOptions = Array.from(uniqTypes).map((typeFile) => {
-      return {
-        file: typeFile,
-        format: 'esm',
-        exportCondition: 'types',
-      }
-    })
+      bundleOptions = Array.from(uniqTypes).map((typeFile) => {
+        return {
+          file: typeFile,
+          format: 'esm',
+          exportCondition: 'types',
+        }
+      })
+    } else {
+      bundleOptions = outputExports.map((exportDist) => {
+        return {
+          file: resolve(cwd, exportDist.file),
+          format: exportDist.format,
+          exportCondition: exportDist.exportCondition,
+        }
+      })
+    }
   }
 
   const outputConfigs = bundleOptions.map(async (bundleOption) => {

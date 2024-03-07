@@ -118,10 +118,6 @@ function normalizeExportName(exportName: string): string {
   return result
 }
 
-function getExportNameWithoutExportCondition(exportName: string): string {
-  return exportName.includes('.') ? exportName.split('.')[0] : exportName
-}
-
 function logOutputState(sizeCollector: ReturnType<typeof createOutputState>) {
   const stats = sizeCollector.getSizeStats()
 
@@ -135,9 +131,7 @@ function logOutputState(sizeCollector: ReturnType<typeof createOutputState>) {
     .map(([filename]) => filename.length)
   const maxFilenameLength = Math.max(...allFileNameLengths)
   const statsArray = [...stats.entries()].sort(([a], [b]) => {
-    const comp =
-      getExportNameWithoutExportCondition(a).length -
-      getExportNameWithoutExportCondition(b).length
+    const comp = normalizeExportPath(a).length - normalizeExportPath(b).length
     return comp === 0 ? a.localeCompare(b) : comp
   })
 

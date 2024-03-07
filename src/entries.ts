@@ -74,7 +74,6 @@ export async function collectEntriesFromParsedExports(
     const normalizedExportPath = normalizeExportPath(entryExportPath)
     const entryExportPathType = getExportTypeFromExportPath(entryExportPath)
     const outputExports = parsedExportsInfo.get(normalizedExportPath)
-
     if (!outputExports) {
       continue
     }
@@ -203,7 +202,7 @@ function getExportTypeFromExportTypes(types: string[]): string {
   new Set(types).forEach((value) => {
     if (specialExportConventions.has(value)) {
       exportType = value
-    } else if (value === 'import' || value === 'require') {
+    } else if (value === 'import' || value === 'require' || value === 'types') {
       exportType = value
     }
   })
