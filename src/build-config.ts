@@ -501,12 +501,17 @@ async function buildConfig(
   }
   let bundleOptions: ExportOutput[] = []
 
-  // multi outputs with specified format
-
-  // CLI output option is always prioritized
-  if (!dts) {
-    if (file) {
-      const fallbackExport = outputExports[0]
+  if (file) {
+    const fallbackExport = outputExports[0]
+    if (dts) {
+      bundleOptions = [
+        {
+          file: resolve(cwd, file),
+          format: 'esm',
+          exportCondition: 'types',
+        },
+      ]
+    } else {
       bundleOptions = [
         {
           file: resolve(cwd, file),
@@ -514,6 +519,24 @@ async function buildConfig(
           exportCondition: fallbackExport.exportCondition,
         },
       ]
+    }
+  } else {
+    // CLI output option is always prioritized
+    if (dts) {
+      // types could have duplicates, dedupe them
+      // e.g. { types, import, .. } use the same `types` condition with all conditions
+      const uniqTypes = new Set<string>()
+      outputExports.forEach((exportDist) => {
+        uniqTypes.add(resolve(cwd, exportDist.file))
+      })
+
+      bundleOptions = Array.from(uniqTypes).map((typeFile) => {
+        return {
+          file: typeFile,
+          format: 'esm',
+          exportCondition: 'types',
+        }
+      })
     } else {
       bundleOptions = outputExports.map((exportDist) => {
         return {
@@ -523,21 +546,6 @@ async function buildConfig(
         }
       })
     }
-  } else {
-    // types could have duplicates, dedupe them
-    // e.g. { types, import, .. } use the same `types` condition with all conditions
-    const uniqTypes = new Set<string>()
-    outputExports.forEach((exportDist) => {
-      uniqTypes.add(resolve(cwd, exportDist.file))
-    })
-
-    bundleOptions = Array.from(uniqTypes).map((typeFile) => {
-      return {
-        file: typeFile,
-        format: 'esm',
-        exportCondition: 'types',
-      }
-    })
   }
 
   const outputConfigs = bundleOptions.map(async (bundleOption) => {
