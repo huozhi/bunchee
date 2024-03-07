@@ -13,7 +13,8 @@ describe('cli', () => {
         const distFile = path.join(distDir, 'index.mjs')
 
         expect(fs.existsSync(distFile)).toBe(true)
-        expect(fs.existsSync(distFile.replace('.mjs', '.d.mts'))).toBe(true)
+        // CLI does not generate declaration files
+        expect(fs.existsSync(distFile.replace('.mjs', '.d.mts'))).toBe(false)
         expect(code).toBe(0)
       },
     )

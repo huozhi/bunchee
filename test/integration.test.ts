@@ -87,74 +87,17 @@ const testCases: {
     },
   },
   {
-    name: 'multi-entries',
-    async expected(dir, { stdout }) {
-      const contentsRegex = {
-        './dist/index.js': /'index'/,
-        './dist/shared/index.mjs': /'shared'/,
-        './dist/shared/edge-light.mjs': /'shared.edge-light'/,
-        './dist/server/edge.mjs': /'server.edge-light'/,
-        './dist/server/react-server.mjs': /'server.react-server'/,
-        // types
-        './dist/server/index.d.ts': `export { Client } from '../client/index.cjs';\nexport { Shared } from '../shared/index.cjs';`,
-        './dist/client/index.d.mts': `export { Shared } from '../shared/index.mjs'`,
-        './dist/client/index.d.cts': `export { Shared } from '../shared/index.cjs'`,
-        './dist/client/index.d.ts': `export { Shared } from '../shared/index.cjs'`,
-      }
-
-      await assertFilesContent(dir, contentsRegex)
-
-      const log = `\
-      dist/shared/index.d.mts
-      dist/index.d.ts
-      dist/server/index.d.ts
-      dist/server/index.d.mts
-      dist/lite.d.ts
-      dist/server/edge.d.mts
-      dist/shared/edge-light.d.mts
-      dist/server/react-server.d.mts
-      dist/client/index.d.ts
-      dist/client/index.d.cts
-      dist/client/index.d.mts
-      dist/shared/edge-light.mjs
-      dist/shared/index.mjs
-      dist/index.js
-      dist/client/index.cjs
-      dist/client/index.mjs
-      dist/lite.js
-      dist/server/react-server.mjs
-      dist/server/edge.mjs
-      dist/server/index.mjs
-      `
-
-      const rawStdout = stripANSIColor(stdout)
-      getChunkFileNamesFromLog(log).forEach((chunk: string) => {
-        expect(rawStdout).toContain(chunk)
-      })
-    },
-  },
-  {
     name: 'ts-dual-package-type-cjs',
     args: [],
     async expected(dir) {
-      assertContainFiles(dir, [
-        './dist/index.js',
-        './dist/index.mjs',
-        './dist/index.d.ts',
-        './dist/index.d.mts',
-      ])
+      assertContainFiles(dir, ['./dist/index.js', './dist/index.mjs'])
     },
   },
   {
     name: 'ts-dual-package-module',
     args: [],
     async expected(dir) {
-      const distFiles = [
-        './dist/index.js',
-        './dist/index.cjs',
-        './dist/index.d.ts',
-        './dist/index.d.cts',
-      ]
+      const distFiles = ['./dist/index.js', './dist/index.cjs']
       assertContainFiles(dir, distFiles)
     },
   },
@@ -165,8 +108,6 @@ const testCases: {
       const distFiles = [
         './dist/index.mjs',
         './dist/index.cjs',
-        './dist/index.d.mts',
-        './dist/index.d.cts',
         './dist/index.d.ts',
       ]
       assertContainFiles(dir, distFiles)

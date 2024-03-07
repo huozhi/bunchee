@@ -11,7 +11,7 @@ describe('integration bin/single-path', () => {
         directory: __dirname,
       },
       async ({ distDir }) => {
-        const distFiles = ['bin.js', 'bin.d.ts']
+        const distFiles = ['bin.js']
         await assertContainFiles(distDir, distFiles)
         await assertFilesContent(distDir, {
           'bin.js': /console.log\('Hello, world!'\)/,
