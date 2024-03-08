@@ -1,0 +1,14 @@
+{
+  "name": "shared-module",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "default": "./dist/index.cjs"
+    },
+    "./another": {
+      "import": "./dist/another.js",
+      "default": "./dist/another.cjs"
+    }
+  }
+}

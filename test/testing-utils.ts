@@ -35,12 +35,14 @@ export function assertContainFiles(dir: string, filePaths: string[]) {
   expect(results).toEqual(filePaths)
 }
 
+type FunctionCondition = (content: string) => Boolean
+
 export async function assertFilesContent(
   dir: string,
-  contentsRegex: Record<string, RegExp | string>,
+  conditionMap: Record<string, RegExp | string | FunctionCondition>,
 ) {
-  const promises = Object.entries(contentsRegex).map(
-    async ([file, regexOrString]) => {
+  const promises = Object.entries(conditionMap).map(
+    async ([file, condition]) => {
       const filePath = path.join(dir, file)
       expect({
         [filePath]: (await existsFile(filePath)) ? 'existed' : 'missing',
@@ -49,10 +51,12 @@ export async function assertFilesContent(
         encoding: 'utf-8',
       })
 
-      if (regexOrString instanceof RegExp) {
-        expect(content).toMatch(regexOrString)
-      } else {
-        expect(content).toContain(regexOrString)
+      if (condition instanceof RegExp) {
+        expect(content).toMatch(condition)
+      } else if (typeof condition === 'string') {
+        expect(content).toContain(condition)
+      } else if (typeof condition === 'function') {
+        expect(condition(content)).toBe(true)
       }
     },
   )
