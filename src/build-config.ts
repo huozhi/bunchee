@@ -38,6 +38,7 @@ import {
   availableESExtensionsRegex,
   nodeResolveExtensions,
   disabledWarnings,
+  availableExtensions,
 } from './constants'
 import { BuildContext } from './types'
 import { getDefinedInlineVariables } from './env'
@@ -298,6 +299,17 @@ function getModuleLater(moduleMeta: CustomPluginOptions) {
   return moduleLayer
 }
 
+function getCustomModuleLayer(moduleId: string): string | undefined {
+  const segments = path.basename(moduleId).split('.')
+  if (segments.length >= 2) {
+    const [layer, ext] = segments.slice(-2)
+    if (availableExtensions.has(ext) && layer.length > 0) {
+      return layer
+    }
+  }
+  return undefined
+}
+
 // dependencyGraphMap: Map<subModuleId, Set<entryParentId>>
 function createSplitChunks(
   dependencyGraphMap: Map<string, Set<[string, string]>>,
@@ -332,6 +344,16 @@ function createSplitChunks(
           }
           dependencyGraphMap.get(subId)!.add([id, moduleLayer])
         }
+      }
+    }
+
+    if (!isEntry) {
+      const cachedCustomModuleLayer = splitChunksGroupMap.get(id)
+      if (cachedCustomModuleLayer) return cachedCustomModuleLayer
+      const customModuleLayer = getCustomModuleLayer(id)
+      if (customModuleLayer) {
+        splitChunksGroupMap.set(id, customModuleLayer)
+        return customModuleLayer
       }
     }
 
