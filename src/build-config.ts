@@ -302,8 +302,10 @@ function getModuleLater(moduleMeta: CustomPluginOptions) {
 function getCustomModuleLayer(moduleId: string): string | undefined {
   const segments = path.basename(moduleId).split('.')
   if (segments.length >= 2) {
-    const [layer, ext] = segments.slice(-2)
-    if (availableExtensions.has(ext) && layer.length > 0) {
+    const [layerSegment, ext] = segments.slice(-2)
+    const match = layerSegment.match(/^(\w+)-runtime$/)
+    const layer = match && match[1]
+    if (availableExtensions.has(ext) && layer && layer.length > 0) {
       return layer
     }
   }
