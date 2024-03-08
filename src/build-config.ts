@@ -278,7 +278,7 @@ async function buildInputConfig(
       // If the circular dependency warning is from node_modules, ignore it
       if (
         code === 'CIRCULAR_DEPENDENCY' &&
-        /Circular dependency: node_modules/.test(warning.message)
+        /Circular dependency:(\s|\S)*node_modules/.test(warning.message)
       ) {
         return
       }
