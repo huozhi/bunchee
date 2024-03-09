@@ -108,7 +108,7 @@ export async function createTest<T>(
   },
   testFn: (context: T & CreateTestResultExtra) => void,
 ) {
-  const fixturesDir = path.join(directory, './fixtures')
+  const fixturesDir = directory
   const distDir = path.join(fixturesDir, './dist')
   let distFile = ''
 
