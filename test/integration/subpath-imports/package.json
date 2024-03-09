@@ -1,0 +1,7 @@
+{
+  "name": "subpath-imports",
+  "imports": {
+    "#dep": "./src/lib/polyfill.js"
+  },
+  "exports": "./dist/index.js"
+}
