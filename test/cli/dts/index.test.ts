@@ -7,13 +7,13 @@ describe('cli', () => {
     await createCliTest(
       {
         directory: __dirname,
-        args: ['./base.ts', '-o', 'dist/base.js'],
+        args: ['./input.ts', '-o', 'dist/output.js'],
       },
       ({ code, distFile }) => {
         const typeFile = distFile.replace('.js', '.d.ts')
 
-        expect(path.basename(distFile)).toBe('base.js')
-        expect(path.basename(typeFile)).toBe('base.d.ts')
+        expect(path.basename(distFile)).toBe('output.js')
+        expect(path.basename(typeFile)).toBe('output.d.ts')
         expect(fs.existsSync(distFile)).toBe(true)
         expect(fs.existsSync(typeFile)).toBe(true)
         expect(code).toBe(0)
