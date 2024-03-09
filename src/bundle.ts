@@ -177,9 +177,8 @@ async function bundle(
     },
   }
 
-  const buildConfigs = await buildEntryConfig(options, buildContext, false)
-  const assetsJobs = buildConfigs.map((rollupConfig) =>
-    bundleOrWatch(rollupConfig),
+  const assetsJobs = (await buildEntryConfig(options, buildContext, false)).map(
+    (rollupConfig) => bundleOrWatch(rollupConfig),
   )
 
   const typesJobs =

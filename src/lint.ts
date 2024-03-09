@@ -55,8 +55,7 @@ export function lint(pkg: PackageMetadata) {
         if (hasCjsExtension(exports)) {
           state.badMainExport = true
         }
-      }
-      if (typeof exports !== 'object') {
+      } else if (typeof exports !== 'object') {
         state.invalidExportsFieldType = true
       } else {
         parsedExports.forEach((outputPairs) => {
@@ -94,8 +93,7 @@ export function lint(pkg: PackageMetadata) {
         if (path.extname(exports) === '.mjs') {
           state.badMainExport = true
         }
-      }
-      if (typeof exports !== 'object') {
+      } else if (typeof exports !== 'object') {
         state.invalidExportsFieldType = true
       } else {
         parsedExports.forEach((outputPairs) => {
