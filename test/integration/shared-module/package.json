@@ -3,6 +3,7 @@
   "type": "module",
   "exports": {
     ".": {
+      "react-server": "./dist/index.react-server.js",
       "import": "./dist/index.js",
       "default": "./dist/index.cjs"
     },
@@ -10,5 +11,8 @@
       "import": "./dist/another.js",
       "default": "./dist/another.cjs"
     }
+  },
+  "dependencies": {
+    "react": "*"
   }
 }
