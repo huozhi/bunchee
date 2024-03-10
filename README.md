@@ -14,7 +14,7 @@
   </a>
 </p>
 
-Bunchee makes bundling your library into one file effortless, with zero configuration required. It is built on top of Rollup and SWC ⚡️, allowing you to focus on writing code and generating multiple module types (CommonJS, ESModules) simultaneously.
+**bunchee** is a zero configuration bundler makes bundling JS/tS library effortless. It's built on top of Rollup and SWC ⚡️, allowing you to focus on writing code and generating multiple bundles (CommonJS or ESModule) at the same time.
 It uses the standard exports configuration in `package.json` as the only source of truth, and uses entry file conventions to match your exports and build them into bundles.
 
 ## Quick Start
@@ -251,6 +251,63 @@ Then when the library is integrated to an app such as Next.js, app bundler can t
 
 If you're using `"use client"` or `"use server"` in entry file, then it will be preserved on top and the dist file of that entry will become a client component.
 If you're using `"use client"` or `"use server"` in a file that used as a dependency for an entry, then that file containing directives be split into a separate chunk and hoist the directives to the top of the chunk.
+
+### Shared Modules
+
+There're always cases that you need to share code among bundles but they don't have to be a separate entry or exports. You want to have them bundled into a shared chunk and then use them in different bundles. You can use shared module convention `[name].[layer]-runtime.[ext]` to create shared modules bundles.
+
+<details>
+  <summary>Shared Utils Example</summary>
+
+```js
+// src/util.shared-runtime.js
+export function sharedUtil() {
+  /* ... */
+}
+```
+
+Then you can use them in different entry files:
+
+```js
+// src/index.js
+import { sharedUtil } from './util.shared-runtime'
+```
+
+```js
+// src/lite.js
+import { sharedUtil } from './util.shared-runtime'
+```
+
+`bunchee` will bundle the shared module into a separate **layer** which matches the file name convention, in the above case it's "shared", and that bundle will be referenced by the different entry bundles.
+
+</details>
+
+With multiple runtime bundles, such as having `default` and `react-server` together. They could have the modules that need to be shared and kept as only one instance among different runtime bundles. You can use the shared module convention to create shared modules bundles for different runtime bundles.
+
+<details>
+  <summary>Shared Runtime Module Example</summary>
+
+```js
+'use client'
+// src/app-context.shared-runtime.js
+export const AppContext = React.createContext(null)
+```
+
+Then you can use them in different entry files:
+
+```js
+// src/index.js
+import { AppContext } from './app-context.shared-runtime'
+```
+
+```js
+// src/index.react-server.js
+import { AppContext } from './app-context.shared-runtime'
+```
+
+`app-context.shared-runtime` will be bundled into a separate chunk that only has one instance and be shared among different runtime bundles.
+
+</details>
 
 ### CLI
 

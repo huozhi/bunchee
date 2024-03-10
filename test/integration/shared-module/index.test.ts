@@ -9,43 +9,47 @@ describe('integration shared-module', () => {
       },
       async ({ distDir }) => {
         const files = await fsp.readdir(distDir)
-        const sharedModuleFiles = files.filter((file) =>
-          file.startsWith('shared-'),
+        const sharedUtilModuleFiles = files.filter((file) =>
+          file.startsWith('util'),
         )
         const entryModuleFiles = files.filter(
-          (file) => !file.startsWith('shared-'),
+          (file) => !file.includes('shared-'),
+        )
+        const appContextSharedFiles = files.filter((file) =>
+          file.startsWith('app-context-shared-'),
         )
 
-        expect(sharedModuleFiles).toHaveLength(2)
-        expect(entryModuleFiles).toHaveLength(4)
+        expect(sharedUtilModuleFiles).toHaveLength(2)
+        expect(entryModuleFiles).toHaveLength(5)
+
+        const indexFileMatcher = (content: string) => {
+          return (
+            !content.includes('common:shared') && content.includes('sharedApi')
+          )
+        }
+
+        const anotherFileMatcher = (content: string) => {
+          return (
+            !content.includes('common:shared') &&
+            content.includes('anotherSharedApi')
+          )
+        }
+
+        const appContextSharedFileMatcher = (content: string) => {
+          return (
+            content.includes('use client') && content.includes('createContext')
+          )
+        }
 
         await assertFilesContent(distDir, {
-          [sharedModuleFiles[0]]: /'common:shared'/,
-          [sharedModuleFiles[1]]: /'common:shared'/,
-          ['index.js']: (content) => {
-            return (
-              !content.includes('common:shared') &&
-              content.includes('sharedApi')
-            )
-          },
-          ['index.cjs']: (content) => {
-            return (
-              !content.includes('common:shared') &&
-              content.includes('sharedApi')
-            )
-          },
-          ['another.js']: (content) => {
-            return (
-              !content.includes('common:shared') &&
-              content.includes('anotherSharedApi')
-            )
-          },
-          ['another.cjs']: (content) => {
-            return (
-              !content.includes('common:shared') &&
-              content.includes('anotherSharedApi')
-            )
-          },
+          [sharedUtilModuleFiles[0]]: /'common:shared'/,
+          [sharedUtilModuleFiles[1]]: /'common:shared'/,
+          ['index.js']: indexFileMatcher,
+          ['index.cjs']: indexFileMatcher,
+          ['another.js']: anotherFileMatcher,
+          ['another.cjs']: anotherFileMatcher,
+          [appContextSharedFiles[0]]: appContextSharedFileMatcher,
+          [appContextSharedFiles[1]]: appContextSharedFileMatcher,
         })
       },
     )
