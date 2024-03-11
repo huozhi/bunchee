@@ -150,17 +150,16 @@ export async function executeBunchee(
   debug.log(`Command: bunchee ${args.join(' ')}`)
 
   const assetPath = process.env.POST_BUILD
-    ? '/../dist/bin/cli.js'
-    : '/../src/bin/index.ts'
+    ? '../dist/bin/cli.js'
+    : '../src/bin/index.ts'
 
-  const ps = fork(
-    `${require.resolve('tsx/cli')}`,
-    [__dirname + assetPath].concat(args),
-    {
-      stdio: 'pipe',
-      env: options.env,
+  const ps = fork(path.resolve(__dirname, assetPath), args, {
+    stdio: 'pipe',
+    env: {
+      ...options.env,
+      SWC_NODE_IGNORE_DYNAMIC: 'true',
     },
-  )
+  })
   let stderr = ''
   let stdout = ''
   ps.stdout?.on('data', (chunk) => (stdout += chunk.toString()))

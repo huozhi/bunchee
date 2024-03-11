@@ -1,6 +1,6 @@
 import fsp from 'fs/promises'
 import { execSync, fork } from 'child_process'
-import { resolve, join, extname } from 'path'
+import path, { resolve, join, extname } from 'path'
 import {
   stripANSIColor,
   existsFile,
@@ -492,15 +492,15 @@ async function runBundle(
   args_: string[],
 ): Promise<{ code: number | null; stdout: string; stderr: string }> {
   const assetPath = process.env.POST_BUILD
-    ? '/../dist/bin/cli.js'
-    : '/../src/bin/index.ts'
+    ? '../dist/bin/cli.js'
+    : '../src/bin/index.ts'
 
   const args = (args_ || []).concat(['--cwd', dir])
-  const ps = fork(
-    `${require.resolve('tsx/cli')}`,
-    [__dirname + assetPath].concat(args),
-    { stdio: 'pipe' },
-  )
+
+  const ps = fork(path.resolve(__dirname, assetPath), args, {
+    stdio: 'pipe',
+    env: { SWC_NODE_IGNORE_DYNAMIC: 'true' },
+  })
   let stderr = '',
     stdout = ''
   ps.stdout?.on('data', (chunk) => (stdout += chunk.toString()))
