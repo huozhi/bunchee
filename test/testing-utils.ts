@@ -2,7 +2,7 @@ import fs from 'fs'
 import fsp from 'fs/promises'
 import path from 'path'
 import * as debug from './utils/debug'
-import { spawn } from 'child_process'
+import { fork } from 'child_process'
 
 export function stripANSIColor(str: string) {
   return str.replace(
@@ -153,16 +153,11 @@ export async function executeBunchee(
     ? '../dist/bin/cli.js'
     : '../src/bin/index.ts'
 
-  const ps = spawn(
-    process.execPath,
-    ['-r', '@swc-node/register', path.resolve(__dirname, assetPath)].concat(
-      args,
-    ),
-    {
-      stdio: 'pipe',
-      env: { SWC_NODE_IGNORE_DYNAMIC: 'true', ...options.env, ...process.env },
-    },
-  )
+  const ps = fork(path.resolve(__dirname, assetPath), args, {
+    execArgv: ['-r', '@swc-node/register'],
+    stdio: 'pipe',
+    env: { SWC_NODE_IGNORE_DYNAMIC: 'true', ...options.env, ...process.env },
+  })
   let stderr = ''
   let stdout = ''
   ps.stdout?.on('data', (chunk) => (stdout += chunk.toString()))

@@ -1,5 +1,5 @@
 import fsp from 'fs/promises'
-import { execSync, spawn } from 'child_process'
+import { execSync, fork } from 'child_process'
 import path, { resolve, join, extname } from 'path'
 import {
   stripANSIColor,
@@ -349,14 +349,14 @@ const testCases: {
     args: [],
     async expected(dir, { stdout }) {
       /*
-      output:
-
-      Exports          File                        Size
-      cli (bin)        dist/cli.js                 103 B
-      .                dist/index.js               42 B
-      . (react-server) dist/index.react-server.js  55 B
-      ./foo            dist/foo.js                 103 B
-      */
+        output:
+  
+        Exports          File                        Size
+        cli (bin)        dist/cli.js                 103 B
+        .                dist/index.js               42 B
+        . (react-server) dist/index.react-server.js  55 B
+        ./foo            dist/foo.js                 103 B
+        */
 
       const lines = stripANSIColor(stdout).split('\n')
       const [tableHeads, ...restLines] = lines
@@ -417,11 +417,11 @@ const testCases: {
     args: [],
     async expected(dir, { stdout, stderr }) {
       /*
-      output:
-
-      Exports File          Size
-      .       dist/index.js 30 B
-      */
+        output:
+  
+        Exports File          Size
+        .       dist/index.js 30 B
+        */
       const [tableHeads, indexLine] = stripANSIColor(stdout).split('\n')
       expect(tableHeads).toContain('Exports')
       expect(tableHeads).toContain('File')
@@ -497,13 +497,11 @@ async function runBundle(
 
   const args = (args_ || []).concat(['--cwd', dir])
 
-  const ps = spawn(
-    process.execPath,
-    ['-r', '@swc-node/register', path.resolve(__dirname, assetPath)].concat(
-      args,
-    ),
-    { stdio: 'pipe', env: { SWC_NODE_IGNORE_DYNAMIC: 'true', ...process.env } },
-  )
+  const ps = fork(path.resolve(__dirname, assetPath), args, {
+    execArgv: ['-r', '@swc-node/register'],
+    stdio: 'pipe',
+    env: { SWC_NODE_IGNORE_DYNAMIC: 'true', ...process.env },
+  })
   let stderr = '',
     stdout = ''
   ps.stdout?.on('data', (chunk) => (stdout += chunk.toString()))
