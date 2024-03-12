@@ -1,5 +1,5 @@
 import fsp from 'fs/promises'
-import { execSync, fork } from 'child_process'
+import { execSync, spawn } from 'child_process'
 import path, { resolve, join, extname } from 'path'
 import {
   stripANSIColor,
@@ -497,10 +497,13 @@ async function runBundle(
 
   const args = (args_ || []).concat(['--cwd', dir])
 
-  const ps = fork(path.resolve(__dirname, assetPath), args, {
-    stdio: 'pipe',
-    env: { SWC_NODE_IGNORE_DYNAMIC: 'true' },
-  })
+  const ps = spawn(
+    process.execPath,
+    ['-r', '@swc-node/register', path.resolve(__dirname, assetPath)].concat(
+      args,
+    ),
+    { stdio: 'pipe', env: { SWC_NODE_IGNORE_DYNAMIC: 'true', ...process.env } },
+  )
   let stderr = '',
     stdout = ''
   ps.stdout?.on('data', (chunk) => (stdout += chunk.toString()))
