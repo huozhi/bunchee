@@ -492,6 +492,11 @@ const testCases: {
     async expected(dir) {
       expect(await existsFile(join(dir, './dist/index.js'))).toBe(true)
       expect(await existsFile(join(dir, './dist/index.d.ts'))).toBe(true)
+
+      // Should not reference using local path since `tsconfig.build.json` doesn't have
+      // path overrides
+      const content = await fsp.readFile(join(dir, './dist/index.js'), 'utf-8')
+      expect(content).toContain("export { bundle } from 'bunchee';")
     },
   },
 ]

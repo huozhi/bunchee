@@ -1,5 +1,9 @@
 {
   "name": "tsconfig-override",
+  "type": "module",
   "types": "./dist/index.d.ts",
-  "exports": "./dist/index.js"
+  "exports": "./dist/index.js",
+  "peerDependencies": {
+    "bunchee": "*"
+  }
 }
