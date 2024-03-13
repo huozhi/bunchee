@@ -3,7 +3,7 @@ import { join } from 'path'
 import { createIntegrationTest } from '../utils'
 
 describe('integration tsconfig-override', () => {
-  it('should use esnext output in build without override', async () => {
+  it('should use es5 output in build without override', async () => {
     await createIntegrationTest(
       {
         directory: __dirname,
@@ -13,11 +13,12 @@ describe('integration tsconfig-override', () => {
           join(dir, './dist/index.js'),
           'utf-8',
         )
-        expect(content).toContain("var index = (()=>'index');")
+        expect(content).toContain('function A')
+        expect(content).not.toContain('class A')
       },
     )
   })
-  it('should use es5 output in build', async () => {
+  it('should use es8 output in build', async () => {
     await createIntegrationTest(
       {
         directory: __dirname,
@@ -28,7 +29,8 @@ describe('integration tsconfig-override', () => {
           join(dir, './dist/index.js'),
           'utf-8',
         )
-        expect(content).toContain('export { index as default };')
+        expect(content).not.toContain('function A')
+        expect(content).toContain('class A')
       },
     )
   })
