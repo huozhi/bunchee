@@ -32,6 +32,7 @@ Options:
   --sourcemap            enable sourcemap generation, default: false
   --dts                  determine if need to generate types, default: undefined
   --no-dts               do not generate types, default: undefined
+  --tsconfig             path to tsconfig file, default: tsconfig.json
 `
 
 function help() {
@@ -67,6 +68,7 @@ function parseCliArgs(argv: string[]) {
       '--no-external': Boolean,
       '--no-clean': Boolean,
       '--prepare': Boolean,
+      '--tsconfig': String,
 
       '-h': '--help',
       '-v': '--version',
@@ -98,6 +100,7 @@ function parseCliArgs(argv: string[]) {
     clean: !args['--no-clean'],
     env: args['--env'],
     prepare: !!args['--prepare'],
+    tsconfig: args['--tsconfig'],
   }
   return parsedArgs
 }
@@ -114,6 +117,7 @@ async function run(args: CliArgs) {
     dts,
     env,
     clean,
+    tsconfig,
   } = args
   const cwd = args.cwd || process.cwd()
   const file = args.file ? path.resolve(cwd, args.file) : undefined
@@ -130,6 +134,7 @@ async function run(args: CliArgs) {
     sourcemap: sourcemap === false ? false : true,
     env: env?.split(',') || [],
     clean,
+    tsconfig,
   }
   if (args.version) {
     return logger.log(version)
