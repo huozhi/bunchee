@@ -485,6 +485,15 @@ const testCases: {
       expect(await existsFile(join(dir, './dist/index.d.ts'))).toBe(true)
     },
   },
+  {
+    name: 'tsconfig-override',
+    dir: 'tsconfig-override',
+    args: ['--tsconfig', 'tsconfig.build.json'],
+    async expected(dir) {
+      expect(await existsFile(join(dir, './dist/index.js'))).toBe(true)
+      expect(await existsFile(join(dir, './dist/index.d.ts'))).toBe(true)
+    },
+  },
 ]
 
 async function runBundle(

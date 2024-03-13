@@ -69,7 +69,7 @@ async function bundle(
   const inputFile = cliEntryPath
   const isFromCli = Boolean(cliEntryPath)
 
-  let tsConfig = resolveTsConfig(cwd)
+  let tsConfig = resolveTsConfig(cwd, options.tsconfig)
   let hasTsConfig = Boolean(tsConfig?.tsConfigPath)
   const defaultTsOptions: TypescriptOptions = {
     tsConfigPath: tsConfig?.tsConfigPath,

@@ -42,6 +42,7 @@ type BundleConfig = {
   runtime?: string
   pkg?: PackageMetadata
   clean?: boolean
+  tsconfig?: string
 }
 
 type PackageMetadata = {
@@ -80,6 +81,7 @@ type CliArgs = {
   runtime?: string
   prepare?: boolean
   clean?: boolean
+  tsconfig?: string
 }
 
 type BundleOptions = BundleConfig

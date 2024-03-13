@@ -32,10 +32,13 @@ function resolveTypescriptHandler(cwd: string): typeof import('typescript') {
 }
 const resolveTypescript = memoize(resolveTypescriptHandler)
 
-function resolveTsConfigHandler(cwd: string): null | TypescriptOptions {
+function resolveTsConfigHandler(
+  cwd: string,
+  tsconfig = 'tsconfig.json',
+): null | TypescriptOptions {
   let tsCompilerOptions: CompilerOptions = {}
   let tsConfigPath: string | undefined
-  tsConfigPath = resolve(cwd, 'tsconfig.json')
+  tsConfigPath = resolve(cwd, tsconfig)
   if (fileExists(tsConfigPath)) {
     const ts = resolveTypescript(cwd)
     const basePath = tsConfigPath ? dirname(tsConfigPath) : cwd

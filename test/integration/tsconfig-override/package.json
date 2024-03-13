@@ -1,0 +1,5 @@
+{
+  "name": "tsconfig-override",
+  "types": "./dist/index.d.ts",
+  "exports": "./dist/index.js"
+}
