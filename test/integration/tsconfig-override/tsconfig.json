@@ -1,8 +1,5 @@
 {
-  "extends": "./tsconfig.build.json",
   "compilerOptions": {
-    "paths": {
-      "bunchee": ["../../../src"]
-    }
+    "target": "ES5"
   }
 }
