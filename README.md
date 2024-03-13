@@ -326,6 +326,7 @@ import { AppContext } from './app-context.shared-runtime'
 - Minify (`-m`): Compress output.
 - Watch (`-w`): Watch for source file changes.
 - No Clean(`--no-clean`): Do not clean the dist folder before building. (default: `false`)
+- TSConfig (`--tsconfig <path>`): Specify the path to the TypeScript configuration file. (default: `tsconfig.json`)
 
 ```sh
 cd <project-root-dir>
@@ -458,6 +459,7 @@ await bundle(path.resolve('./src/index.ts'), {
   runtime: 'nodejs', // 'browser' | 'nodejs'
   cwd: process.cwd(), // string
   clean: true, // boolean
+  tsconfig: 'tsconfig.json', // string
 })
 ```
 
