@@ -12,7 +12,8 @@
     "clean": "rm -rf ./dist",
     "typecheck": "tsc --noEmit && tsc -p test/tsconfig.json --noEmit",
     "prepublishOnly": "pnpm clean && pnpm build && chmod +x ./dist/bin/cli.js && pnpm test",
-    "build": "SWC_NODE_IGNORE_DYNAMIC=true node -r @swc-node/register ./src/bin/index.ts --runtime node",
+    "tsx": "node -r @swc-node/register",
+    "build": "node -r @swc-node/register ./src/bin/index.ts --runtime node",
     "format": "prettier --write .",
     "prepare": "husky install"
   },
