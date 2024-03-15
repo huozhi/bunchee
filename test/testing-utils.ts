@@ -137,7 +137,8 @@ export async function createTest<T>(
 }
 
 export type ExcuteBuncheeResult = {
-  code: number
+  code: number | null
+  signal: NodeJS.Signals | null
   stdout: string
   stderr: string
 }
@@ -169,11 +170,13 @@ export async function executeBunchee(
     }, processOptions.abortTimeout)
   }
 
-  const code = (await new Promise((resolve) => {
-    ps.on('close', resolve)
-  })) as number
+  const [code, signal] = await new Promise<
+    [number | null, NodeJS.Signals | null]
+  >((resolve) => {
+    ps.on('close', (code, signal) => resolve([code, signal]))
+  })
   if (stdout) console.log(stdout)
   if (stderr) console.error(stderr)
 
-  return { code, stdout, stderr }
+  return { code, stdout, stderr, signal }
 }

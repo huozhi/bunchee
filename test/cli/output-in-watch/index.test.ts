@@ -8,12 +8,12 @@ describe('cli', () => {
         args: ['hello.js', '-w', '-o', 'dist/hello.bundle.js'],
         abortTimeout: 3000,
       },
-      ({ code, stdout }) => {
+      ({ signal, stdout }) => {
         const watchOutputRegex = /Build in \d+(.\d{2})ms/
         expect(stdout.includes('Watching project')).toBe(true)
         expect(watchOutputRegex.test(stdout)).toBe(true)
         expect(stdout.includes('Exports')).toBe(false)
-        expect(code).toBe(143) // SIGTERM exit code
+        expect(signal).toBe('SIGTERM') // SIGTERM exit code
       },
     )
   })
