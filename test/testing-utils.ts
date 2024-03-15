@@ -137,7 +137,8 @@ export async function createTest<T>(
 }
 
 export type ExcuteBuncheeResult = {
-  code: number
+  code: number | null
+  signal: NodeJS.Signals | null
   stdout: string
   stderr: string
 }
@@ -150,17 +151,14 @@ export async function executeBunchee(
   debug.log(`Command: bunchee ${args.join(' ')}`)
 
   const assetPath = process.env.POST_BUILD
-    ? '/../dist/bin/cli.js'
-    : '/../src/bin/index.ts'
+    ? '../dist/bin/cli.js'
+    : '../src/bin/index.ts'
 
-  const ps = fork(
-    `${require.resolve('tsx/cli')}`,
-    [__dirname + assetPath].concat(args),
-    {
-      stdio: 'pipe',
-      env: options.env,
-    },
-  )
+  const ps = fork(path.resolve(__dirname, assetPath), args, {
+    execArgv: ['-r', '@swc-node/register'],
+    stdio: 'pipe',
+    env: { SWC_NODE_IGNORE_DYNAMIC: 'true', ...options.env, ...process.env },
+  })
   let stderr = ''
   let stdout = ''
   ps.stdout?.on('data', (chunk) => (stdout += chunk.toString()))
@@ -172,11 +170,13 @@ export async function executeBunchee(
     }, processOptions.abortTimeout)
   }
 
-  const code = (await new Promise((resolve) => {
-    ps.on('close', resolve)
-  })) as number
+  const [code, signal] = await new Promise<
+    [number | null, NodeJS.Signals | null]
+  >((resolve) => {
+    ps.on('close', (code, signal) => resolve([code, signal]))
+  })
   if (stdout) console.log(stdout)
   if (stderr) console.error(stderr)
 
-  return { code, stdout, stderr }
+  return { code, stdout, stderr, signal }
 }

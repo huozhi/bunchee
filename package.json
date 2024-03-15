@@ -12,7 +12,7 @@
     "clean": "rm -rf ./dist",
     "typecheck": "tsc --noEmit && tsc -p test/tsconfig.json --noEmit",
     "prepublishOnly": "pnpm clean && pnpm build && chmod +x ./dist/bin/cli.js && pnpm test",
-    "build": "tsx ./src/bin/index.ts --runtime node",
+    "build": "SWC_NODE_IGNORE_DYNAMIC=true node -r @swc-node/register ./src/bin/index.ts --runtime node",
     "format": "prettier --write .",
     "prepare": "husky install"
   },
@@ -79,6 +79,7 @@
   },
   "devDependencies": {
     "@huozhi/testing-package": "1.0.0",
+    "@swc-node/register": "^1.9.0",
     "@swc/jest": "^0.2.31",
     "@swc/types": "^0.1.5",
     "@types/clean-css": "^4.2.11",
@@ -91,7 +92,6 @@
     "picocolors": "^1.0.0",
     "prettier": "^3.0.0",
     "react": "^18.2.0",
-    "tsx": "^4.6.2",
     "typescript": "^5.3.2"
   },
   "lint-staged": {
