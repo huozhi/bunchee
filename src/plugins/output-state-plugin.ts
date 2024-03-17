@@ -64,6 +64,9 @@ function createOutputState({ entries }: { entries: Entries }): {
             if (chunk.type !== 'chunk') {
               return
             }
+            if (!chunk.isEntry) {
+              return
+            }
             const size = chunk.code.length
             const sourceFileName = chunk.facadeModuleId || ''
             const exportPath = removeScope(
