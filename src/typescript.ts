@@ -13,7 +13,7 @@ export type TypescriptOptions = {
 }
 
 let hasLoggedTsWarning = false
-function resolveTypescriptHandler(cwd: string): typeof import('typescript') {
+function resolveTypescript(cwd: string): typeof import('typescript') {
   let ts
   const m = new Module('', undefined)
   m.paths = (Module as any)._nodeModulePaths(cwd)
@@ -30,7 +30,6 @@ function resolveTypescriptHandler(cwd: string): typeof import('typescript') {
   }
   return ts
 }
-const resolveTypescript = memoize(resolveTypescriptHandler)
 
 function resolveTsConfigHandler(
   cwd: string,
@@ -40,6 +39,7 @@ function resolveTsConfigHandler(
   let tsConfigPath: string | undefined
   tsConfigPath = resolve(cwd, tsconfig)
   if (fileExists(tsConfigPath)) {
+    // Use the original ts handler to avoid memory leak
     const ts = resolveTypescript(cwd)
     const basePath = tsConfigPath ? dirname(tsConfigPath) : cwd
     const tsconfigJSON = ts.readConfigFile(tsConfigPath, ts.sys.readFile).config
@@ -60,6 +60,7 @@ function resolveTsConfigHandler(
 export const resolveTsConfig = memoize(resolveTsConfigHandler)
 
 export async function convertCompilerOptions(cwd: string, json: any) {
+  // Use the original ts handler to avoid memory leak
   const ts = resolveTypescript(cwd)
   return ts.convertCompilerOptionsFromJson(json, './')
 }
