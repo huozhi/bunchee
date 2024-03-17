@@ -10,16 +10,27 @@ import {
 
 import { buildEntryConfig } from './build-config'
 import { BuildContext, BuncheeRollupConfig, BundleConfig } from './types'
-import { removeDir } from './utils'
+import { removeOutputDir } from './utils'
 import { logger } from './logger'
 
 export async function createAssetRollupJobs(
   options: BundleConfig,
   buildContext: BuildContext,
+  {
+    isFromCli,
+  }: {
+    isFromCli: boolean
+  },
 ) {
   const assetsJobs = (await buildEntryConfig(options, buildContext, false)).map(
-    (rollupConfig) =>
-      bundleOrWatch(options, rollupConfig, false, buildContext.cwd),
+    async (rollupConfig) => {
+      if (options.clean) {
+        if (!isFromCli) {
+          await removeOutputDir(rollupConfig.output, buildContext.cwd)
+        }
+      }
+      return await bundleOrWatch(options, rollupConfig)
+    },
   )
   const result = await Promise.all(assetsJobs)
   if (result.length === 0) {
@@ -37,8 +48,7 @@ export async function createTypesRollupJobs(
   buildContext: BuildContext,
 ) {
   const typesJobs = (await buildEntryConfig(options, buildContext, true)).map(
-    (rollupConfig) =>
-      bundleOrWatch(options, rollupConfig, false, buildContext.cwd),
+    (rollupConfig) => bundleOrWatch(options, rollupConfig),
   )
   return await Promise.all(typesJobs)
 }
@@ -46,24 +56,11 @@ export async function createTypesRollupJobs(
 async function bundleOrWatch(
   options: BundleConfig,
   rollupConfig: BuncheeRollupConfig,
-  isFromCli: boolean,
-  cwd: string,
 ): Promise<RollupWatcher | RollupOutput | void> {
-  if (options.clean) {
-    if (!isFromCli) {
-      await removeOutputDir(rollupConfig.output, cwd)
-    }
-  }
-
   if (options.watch) {
     return runWatch(rollupConfig)
   }
   return runBundle(rollupConfig)
-}
-
-async function removeOutputDir(output: OutputOptions, cwd: string) {
-  const dir = output.dir
-  if (dir && dir !== cwd) await removeDir(dir)
 }
 
 function runBundle({ input, output }: BuncheeRollupConfig) {

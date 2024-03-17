@@ -155,9 +155,14 @@ async function bundle(
     },
   }
 
-  const result = await createAssetRollupJobs(options, buildContext)
-
+  const rollupJobsOptions = { isFromCli }
   const shouldGenerateTypes = hasTsConfig && options.dts !== false
+
+  const result = await createAssetRollupJobs(
+    options,
+    buildContext,
+    rollupJobsOptions,
+  )
   if (shouldGenerateTypes) {
     await createTypesRollupJobs(options, buildContext)
   }

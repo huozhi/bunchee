@@ -12,6 +12,7 @@ import {
   BINARY_TAG,
 } from './constants'
 import { logger } from './logger'
+import { type OutputOptions } from 'rollup'
 
 export function exit(err: string | Error) {
   logger.error(err)
@@ -219,4 +220,9 @@ export function joinRelativePath(...segments: string[]) {
 
 export function isESModulePackage(packageType: string | undefined) {
   return packageType === 'module'
+}
+
+export async function removeOutputDir(output: OutputOptions, cwd: string) {
+  const dir = output.dir
+  if (dir && dir !== cwd) await removeDir(dir)
 }
