@@ -1,17 +1,10 @@
-import type {
-  RollupWatcher,
-  RollupWatchOptions,
-  OutputOptions,
-  RollupBuild,
-  RollupOutput,
-} from 'rollup'
-import type { BuncheeRollupConfig, BundleConfig } from './types'
-import { watch as rollupWatch, rollup } from 'rollup'
+import type { RollupWatcher } from 'rollup'
+import type { BundleConfig } from './types'
 import fsp from 'fs/promises'
 import fs from 'fs'
 import { resolve } from 'path'
 import { performance } from 'perf_hooks'
-import { buildEntryConfig, getReversedAlias } from './build-config'
+import { getReversedAlias } from './build-config'
 import {
   createOutputState,
   logOutputState,
@@ -20,7 +13,6 @@ import { logger } from './logger'
 import {
   getPackageMeta,
   getSourcePathFromExportPath,
-  removeDir,
   isTypescriptFile,
 } from './utils'
 import { getExportFileTypePath, parseExports } from './exports'
@@ -31,6 +23,7 @@ import {
   writeDefaultTsconfig,
 } from './typescript'
 import { collectEntriesFromParsedExports } from './entries'
+import { createAssetRollupJobs, createTypesRollupJobs } from './rollup-job'
 
 function assignDefault(
   options: BundleConfig,
@@ -110,21 +103,6 @@ async function bundle(
     }
   }
 
-  const bundleOrWatch = async (
-    rollupConfig: BuncheeRollupConfig,
-  ): Promise<RollupWatcher | RollupOutput | void> => {
-    if (options.clean) {
-      if (!isFromCli) {
-        await removeOutputDir(rollupConfig.output, cwd)
-      }
-    }
-
-    if (options.watch) {
-      return runWatch(rollupConfig)
-    }
-    return runBundle(rollupConfig)
-  }
-
   const hasSpecifiedEntryFile = cliEntryPath
     ? fs.existsSync(cliEntryPath) && (await fsp.stat(cliEntryPath)).isFile()
     : false
@@ -177,50 +155,20 @@ async function bundle(
     },
   }
 
-  const assetsJobs = (await buildEntryConfig(options, buildContext, false)).map(
-    (rollupConfig) => bundleOrWatch(rollupConfig),
-  )
+  const result = await createAssetRollupJobs(options, buildContext)
 
-  const typesJobs =
-    hasTsConfig && options.dts !== false
-      ? (await buildEntryConfig(options, buildContext, true)).map(
-          (rollupConfig) => bundleOrWatch(rollupConfig),
-        )
-      : []
-
-  const totalJobs = assetsJobs.concat(typesJobs)
-  const result = await Promise.all(totalJobs)
-
-  if (result.length === 0) {
-    logger.warn(
-      'The "src" directory does not contain any entry files. ' +
-        'For proper usage, please refer to the following link: ' +
-        'https://github.com/huozhi/bunchee#usage',
-    )
+  const shouldGenerateTypes = hasTsConfig && options.dts !== false
+  if (shouldGenerateTypes) {
+    await createTypesRollupJobs(options, buildContext)
   }
 
-  if (!options.watch) {
-    logOutputState(sizeCollector)
-  } else {
+  if (options.watch) {
     logWatcherBuildTime(result as RollupWatcher[])
+  } else {
+    logOutputState(sizeCollector)
   }
 
   return result
-}
-
-function runWatch({ input, output }: BuncheeRollupConfig): RollupWatcher {
-  const watchOptions: RollupWatchOptions[] = [
-    {
-      ...input,
-      output: output,
-      watch: {
-        exclude: ['node_modules/**'],
-      },
-    },
-  ]
-  const watcher = rollupWatch(watchOptions)
-
-  return watcher
 }
 
 function logWatcherBuildTime(result: RollupWatcher[]) {
@@ -259,32 +207,12 @@ function logWatcherBuildTime(result: RollupWatcher[]) {
   })
 }
 
-async function removeOutputDir(output: OutputOptions, cwd: string) {
-  const dir = output.dir
-  if (dir && dir !== cwd) await removeDir(dir)
-}
-
-function runBundle({ input, output }: BuncheeRollupConfig) {
-  return rollup(input).then((bundle: RollupBuild) => {
-    return bundle.write(output)
-  }, catchErrorHandler)
-}
-
 function logError(error: any) {
   if (!error) return
   // logging source code in format
   if (error.frame) {
     process.stderr.write(error.frame + '\n')
   }
-}
-
-function catchErrorHandler(error: any) {
-  if (!error) return
-  logError(error)
-  // filter out the rollup plugin error information such as loc/frame/code...
-  const err = new Error(error.message)
-  err.stack = error.stack
-  throw err
 }
 
 export default bundle
