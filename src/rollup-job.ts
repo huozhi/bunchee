@@ -1,5 +1,4 @@
 import {
-  OutputOptions,
   RollupBuild,
   RollupOutput,
   RollupWatchOptions,
