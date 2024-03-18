@@ -12,6 +12,7 @@ import {
   BINARY_TAG,
 } from './constants'
 import { logger } from './logger'
+import { type OutputOptions } from 'rollup'
 
 export function exit(err: string | Error) {
   logger.error(err)
@@ -44,19 +45,6 @@ export function isTypescriptFile(filename: string): boolean {
 
 export function fileExists(filePath: string) {
   return fs.existsSync(filePath)
-}
-
-export async function removeDir(dirPath: string) {
-  try {
-    const dirStat = await fsp.stat(dirPath)
-    if (dirStat.isDirectory()) {
-      await rimraf(dirPath)
-    }
-  } catch (err: any) {
-    if (err.code !== 'ENOENT') {
-      throw err
-    }
-  }
 }
 
 // . -> pkg name
@@ -219,4 +207,26 @@ export function joinRelativePath(...segments: string[]) {
 
 export function isESModulePackage(packageType: string | undefined) {
   return packageType === 'module'
+}
+
+async function removeDir(dirPath: string) {
+  try {
+    const dirStat = await fsp.stat(dirPath)
+    if (dirStat.isDirectory()) {
+      await rimraf(dirPath)
+    }
+  } catch (err: any) {
+    if (err.code !== 'ENOENT') {
+      throw err
+    }
+  }
+}
+
+const removedDirs = new Set<string>()
+export async function removeOutputDir(output: OutputOptions, cwd: string) {
+  const dir = output.dir
+  if (dir && dir !== cwd && !removedDirs.has(dir)) {
+    await removeDir(dir)
+    removedDirs.add(dir)
+  }
 }
