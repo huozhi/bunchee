@@ -155,25 +155,30 @@ async function bundle(
     },
   }
 
-  const rollupJobsOptions = { isFromCli }
-  const shouldGenerateTypes = hasTsConfig && options.dts !== false
+  const generateTypes = hasTsConfig && options.dts !== false
+  const rollupJobsOptions = { isFromCli, generateTypes }
 
-  const result = await createAssetRollupJobs(
+  const assetJobs = await createAssetRollupJobs(
     options,
     buildContext,
     rollupJobsOptions,
   )
-  if (shouldGenerateTypes) {
-    await createTypesRollupJobs(options, buildContext)
+
+  if (assetJobs.length === 0) {
+    logger.warn(
+      'The "src" directory does not contain any entry files. ' +
+        'For proper usage, please refer to the following link: ' +
+        'https://github.com/huozhi/bunchee#usage',
+    )
   }
 
   if (options.watch) {
-    logWatcherBuildTime(result as RollupWatcher[])
+    logWatcherBuildTime(assetJobs as RollupWatcher[])
   } else {
     logOutputState(sizeCollector)
   }
 
-  return result
+  return
 }
 
 function logWatcherBuildTime(result: RollupWatcher[]) {

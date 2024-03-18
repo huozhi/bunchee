@@ -17,29 +17,29 @@ export async function createAssetRollupJobs(
   buildContext: BuildContext,
   {
     isFromCli,
+    generateTypes,
   }: {
     isFromCli: boolean
+    generateTypes: boolean
   },
 ) {
-  const assetsJobs = (await buildEntryConfig(options, buildContext, false)).map(
-    async (rollupConfig) => {
-      if (options.clean) {
-        if (!isFromCli) {
-          await removeOutputDir(rollupConfig.output, buildContext.cwd)
-        }
-      }
-      return await bundleOrWatch(options, rollupConfig)
-    },
-  )
-  const result = await Promise.all(assetsJobs)
-  if (result.length === 0) {
-    logger.warn(
-      'The "src" directory does not contain any entry files. ' +
-        'For proper usage, please refer to the following link: ' +
-        'https://github.com/huozhi/bunchee#usage',
-    )
+  const assetsConfigs = await buildEntryConfig(options, buildContext, false)
+  const typesConfigs = generateTypes
+    ? await buildEntryConfig(options, buildContext, true)
+    : []
+  const allConfigs = assetsConfigs.concat(typesConfigs)
+
+  for (const config of allConfigs) {
+    if (options.clean && !isFromCli) {
+      await removeOutputDir(config.output, buildContext.cwd)
+    }
   }
-  return result
+
+  const rollupJobs = allConfigs.map((rollupConfig) =>
+    bundleOrWatch(options, rollupConfig),
+  )
+
+  return await Promise.all(rollupJobs)
 }
 
 export async function createTypesRollupJobs(
