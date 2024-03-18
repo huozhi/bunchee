@@ -23,7 +23,7 @@ import {
   writeDefaultTsconfig,
 } from './typescript'
 import { collectEntriesFromParsedExports } from './entries'
-import { createAssetRollupJobs, createTypesRollupJobs } from './rollup-job'
+import { createAssetRollupJobs } from './rollup-job'
 
 function assignDefault(
   options: BundleConfig,

@@ -42,16 +42,6 @@ export async function createAssetRollupJobs(
   return await Promise.all(rollupJobs)
 }
 
-export async function createTypesRollupJobs(
-  options: BundleConfig,
-  buildContext: BuildContext,
-) {
-  const typesJobs = (await buildEntryConfig(options, buildContext, true)).map(
-    (rollupConfig) => bundleOrWatch(options, rollupConfig),
-  )
-  return await Promise.all(typesJobs)
-}
-
 async function bundleOrWatch(
   options: BundleConfig,
   rollupConfig: BuncheeRollupConfig,
