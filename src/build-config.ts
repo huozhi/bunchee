@@ -33,7 +33,12 @@ import {
   getExportFileTypePath,
   ExportOutput,
 } from './exports'
-import { isESModulePackage, isNotNull, filePathWithoutExtension } from './utils'
+import {
+  isESModulePackage,
+  isNotNull,
+  filePathWithoutExtension,
+  memoize,
+} from './utils'
 import {
   availableESExtensionsRegex,
   nodeResolveExtensions,
@@ -58,6 +63,63 @@ const swcMinifyOptions = {
     toplevel: true,
   },
 } as const
+
+async function createDtsPlugin(
+  tsCompilerOptions: BuildContext['tsOptions']['tsCompilerOptions'],
+  tsConfigPath: string | undefined,
+  cwd: string,
+) {
+  const enableIncrementalWithoutBuildInfo =
+    tsCompilerOptions.incremental && !tsCompilerOptions.tsBuildInfoFile
+  const incrementalOptions = enableIncrementalWithoutBuildInfo
+    ? {
+        incremental: false,
+      }
+    : undefined
+  const compositeOptions = tsCompilerOptions.composite
+    ? {
+        composite: false,
+      }
+    : undefined
+
+  const { options: overrideResolvedTsOptions }: any =
+    await convertCompilerOptions(cwd, {
+      declaration: true,
+      noEmit: false,
+      noEmitOnError: true,
+      emitDeclarationOnly: true,
+      checkJs: false,
+      declarationMap: false,
+      skipLibCheck: true,
+      // preserveSymlinks should always be set to false to avoid issues with
+      // resolving types from <reference> from node_modules
+      preserveSymlinks: false,
+      target: 'ESNext',
+      ...(!tsCompilerOptions.jsx
+        ? {
+            jsx: 'react-jsx',
+          }
+        : undefined),
+      // error TS5074: Option '--incremental' can only be specified using tsconfig, emitting to single
+      // file or when option '--tsBuildInfoFile' is specified.
+      ...incrementalOptions,
+      // error TS6379: Composite projects may not disable incremental compilation.
+      ...compositeOptions,
+    })
+
+  const dtsPlugin = (
+    require('rollup-plugin-dts') as typeof import('rollup-plugin-dts')
+  ).default({
+    tsconfig: tsConfigPath,
+    compilerOptions: overrideResolvedTsOptions,
+  })
+
+  return dtsPlugin
+}
+
+// Avoid create multiple dts plugins instance and parsing the same tsconfig multi times,
+// This will avoid memory leak and performance issue.
+const createCachedDtsPlugin = memoize(createDtsPlugin, () => 'dts-plugin')
 
 /**
  * return {
@@ -182,51 +244,11 @@ async function buildInputConfig(
   const typesPlugins = [...commonPlugins, inlineCss({ skip: true })]
 
   if (useTypeScript) {
-    const enableIncrementalWithoutBuildInfo =
-      tsCompilerOptions.incremental && !tsCompilerOptions.tsBuildInfoFile
-    const incrementalOptions = enableIncrementalWithoutBuildInfo
-      ? {
-          incremental: false,
-        }
-      : undefined
-    const compositeOptions = tsCompilerOptions.composite
-      ? {
-          composite: false,
-        }
-      : undefined
-
-    const { options: overrideResolvedTsOptions }: any =
-      await convertCompilerOptions(cwd, {
-        declaration: true,
-        noEmit: false,
-        noEmitOnError: true,
-        emitDeclarationOnly: true,
-        checkJs: false,
-        declarationMap: false,
-        skipLibCheck: true,
-        // preserveSymlinks should always be set to false to avoid issues with
-        // resolving types from <reference> from node_modules
-        preserveSymlinks: false,
-        target: 'ESNext',
-        ...(!tsCompilerOptions.jsx
-          ? {
-              jsx: 'react-jsx',
-            }
-          : undefined),
-        // error TS5074: Option '--incremental' can only be specified using tsconfig, emitting to single
-        // file or when option '--tsBuildInfoFile' is specified.
-        ...incrementalOptions,
-        // error TS6379: Composite projects may not disable incremental compilation.
-        ...compositeOptions,
-      })
-
-    const dtsPlugin = (
-      require('rollup-plugin-dts') as typeof import('rollup-plugin-dts')
-    ).default({
-      tsconfig: tsConfigPath,
-      compilerOptions: overrideResolvedTsOptions,
-    })
-
+    const dtsPlugin = await createCachedDtsPlugin(
+      tsCompilerOptions,
+      tsConfigPath,
+      cwd,
+    )
     typesPlugins.push(dtsPlugin)
   }
 
