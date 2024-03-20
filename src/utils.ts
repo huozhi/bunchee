@@ -179,13 +179,19 @@ export const baseNameWithoutExtension = (filename: string): string =>
 export const isTestFile = (filename: string): boolean =>
   /\.(test|spec)$/.test(baseNameWithoutExtension(filename))
 
+type CacheKeyResolver = string | ((...args: any[]) => string)
+
 export const memoize = <T extends (...args: any[]) => any>(
   fn: T,
-  resolver?: (...args: Parameters<T>) => string, // if you need specify a cache key
+  cacheKey?: CacheKeyResolver, // if you need specify a cache key
 ) => {
   const cache = new Map<string, ReturnType<T>>()
   return ((...args: Parameters<T>) => {
-    const key = resolver ? resolver(...args) : JSON.stringify({ args })
+    const key = cacheKey
+      ? typeof cacheKey === 'function'
+        ? cacheKey(...args)
+        : cacheKey
+      : JSON.stringify({ args })
     const existing = cache.get(key)
     if (existing !== undefined) {
       return existing
@@ -195,6 +201,11 @@ export const memoize = <T extends (...args: any[]) => any>(
     return result
   }) as T
 }
+
+export const memoizeByKey =
+  <T extends (...args: any[]) => any>(fn: T) =>
+  (cacheKey: CacheKeyResolver) =>
+    memoize(fn, cacheKey)
 
 export function joinRelativePath(...segments: string[]) {
   let result = path.join(...segments)

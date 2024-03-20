@@ -37,7 +37,7 @@ import {
   isESModulePackage,
   isNotNull,
   filePathWithoutExtension,
-  memoize,
+  memoizeByKey,
 } from './utils'
 import {
   availableESExtensionsRegex,
@@ -119,7 +119,7 @@ async function createDtsPlugin(
 
 // Avoid create multiple dts plugins instance and parsing the same tsconfig multi times,
 // This will avoid memory leak and performance issue.
-const createCachedDtsPlugin = memoize(createDtsPlugin, () => 'dts-plugin')
+const memoizeDtsPluginByKey = memoizeByKey(createDtsPlugin)
 
 /**
  * return {
@@ -244,7 +244,12 @@ async function buildInputConfig(
   const typesPlugins = [...commonPlugins, inlineCss({ skip: true })]
 
   if (useTypeScript) {
-    const dtsPlugin = await createCachedDtsPlugin(
+    // Each process should be unique
+    // Each package build should be unique
+    // Composing above factors into a unique cache key to retrieve the memoized dts plugin with tsconfigs
+    const uniqueProcessId =
+      'dts-plugin:' + process.pid + (buildContext.pkg.name || '')
+    const dtsPlugin = await memoizeDtsPluginByKey(uniqueProcessId)(
       tsCompilerOptions,
       tsConfigPath,
       cwd,
