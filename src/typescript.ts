@@ -3,7 +3,8 @@ import { resolve, dirname } from 'path'
 import { promises as fsp } from 'fs'
 import { Module } from 'module'
 import pc from 'picocolors'
-import { exit, fileExists, memoize } from './utils'
+import { exit, fileExists } from './utils'
+import { memoizeByKey } from './lib/memoize'
 import { DEFAULT_TS_CONFIG } from './constants'
 import { logger } from './logger'
 
@@ -57,7 +58,9 @@ function resolveTsConfigHandler(
   }
 }
 
-export const resolveTsConfig = memoize(resolveTsConfigHandler)
+export const resolveTsConfig = memoizeByKey(resolveTsConfigHandler)(
+  'tsconfig.json' + process.pid,
+)
 
 export async function convertCompilerOptions(cwd: string, json: any) {
   // Use the original ts handler to avoid memory leak

@@ -33,12 +33,8 @@ import {
   getExportFileTypePath,
   ExportOutput,
 } from './exports'
-import {
-  isESModulePackage,
-  isNotNull,
-  filePathWithoutExtension,
-  memoizeByKey,
-} from './utils'
+import { isESModulePackage, isNotNull, filePathWithoutExtension } from './utils'
+import { memoizeByKey } from './lib/memoize'
 import {
   availableESExtensionsRegex,
   nodeResolveExtensions,

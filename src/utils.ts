@@ -178,34 +178,6 @@ export const baseNameWithoutExtension = (filename: string): string =>
 export const isTestFile = (filename: string): boolean =>
   /\.(test|spec)$/.test(baseNameWithoutExtension(filename))
 
-type CacheKeyResolver = string | ((...args: any[]) => string)
-
-export const memoize = <T extends (...args: any[]) => any>(
-  fn: T,
-  cacheKey?: CacheKeyResolver, // if you need specify a cache key
-) => {
-  const cache = new Map<string, ReturnType<T>>()
-  return ((...args: Parameters<T>) => {
-    const key = cacheKey
-      ? typeof cacheKey === 'function'
-        ? cacheKey(...args)
-        : cacheKey
-      : JSON.stringify({ args })
-    const existing = cache.get(key)
-    if (existing !== undefined) {
-      return existing
-    }
-    const result = fn(...args)
-    cache.set(key, result)
-    return result
-  }) as T
-}
-
-export const memoizeByKey =
-  <T extends (...args: any[]) => any>(fn: T) =>
-  (cacheKey: CacheKeyResolver) =>
-    memoize(fn, cacheKey)
-
 export function joinRelativePath(...segments: string[]) {
   let result = path.join(...segments)
   // If the first segment starts with '.', ensure the result does too.
