@@ -1,5 +1,5 @@
 {
-  "include": ["./src", "./*.ts", "./*.d.ts"],
+  "include": ["./src", "./*.ts", "./*.d.ts", "test/unit/memoize.test.ts"],
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "./dist",

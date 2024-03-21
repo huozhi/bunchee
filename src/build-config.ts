@@ -33,12 +33,8 @@ import {
   getExportFileTypePath,
   ExportOutput,
 } from './exports'
-import {
-  isESModulePackage,
-  isNotNull,
-  filePathWithoutExtension,
-  memoizeByKey,
-} from './utils'
+import { isESModulePackage, isNotNull, filePathWithoutExtension } from './utils'
+import { memoizeByKey } from './lib/memoize'
 import {
   availableESExtensionsRegex,
   nodeResolveExtensions,
@@ -247,8 +243,7 @@ async function buildInputConfig(
     // Each process should be unique
     // Each package build should be unique
     // Composing above factors into a unique cache key to retrieve the memoized dts plugin with tsconfigs
-    const uniqueProcessId =
-      'dts-plugin:' + process.pid + (buildContext.pkg.name || '')
+    const uniqueProcessId = 'dts-plugin:' + process.pid + tsConfigPath
     const dtsPlugin = await memoizeDtsPluginByKey(uniqueProcessId)(
       tsCompilerOptions,
       tsConfigPath,
