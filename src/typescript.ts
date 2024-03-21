@@ -58,9 +58,7 @@ function resolveTsConfigHandler(
   }
 }
 
-export const resolveTsConfig = memoizeByKey(resolveTsConfigHandler)(
-  'tsconfig.json' + process.pid,
-)
+export const resolveTsConfig = memoizeByKey(resolveTsConfigHandler)()
 
 export async function convertCompilerOptions(cwd: string, json: any) {
   // Use the original ts handler to avoid memory leak

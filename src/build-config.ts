@@ -244,7 +244,7 @@ async function buildInputConfig(
     // Each package build should be unique
     // Composing above factors into a unique cache key to retrieve the memoized dts plugin with tsconfigs
     const uniqueProcessId =
-      'dts-plugin:' + process.pid + (buildContext.pkg.name || '')
+      'dts-plugin:' + process.pid + tsConfigPath + (buildContext.pkg.name || '')
     const dtsPlugin = await memoizeDtsPluginByKey(uniqueProcessId)(
       tsCompilerOptions,
       tsConfigPath,
