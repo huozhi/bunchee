@@ -1,7 +1,6 @@
 import fs from 'fs'
 import fsp from 'fs/promises'
 import path from 'path'
-import { rimraf } from 'rimraf'
 import { PackageMetadata } from './types'
 import {
   runtimeExportConventions,
@@ -224,7 +223,7 @@ async function removeDir(dirPath: string) {
   try {
     const dirStat = await fsp.stat(dirPath)
     if (dirStat.isDirectory()) {
-      await rimraf(dirPath)
+      await fsp.rm(dirPath, { recursive: true, force: true })
     }
   } catch (err: any) {
     if (err.code !== 'ENOENT') {
