@@ -8,6 +8,7 @@ import {
   baseNameWithoutExtension,
   getFileBasename,
   getSourcePathFromExportPath,
+  isBinExportPath,
   isTestFile,
   resolveSourceFile,
 } from './utils'
@@ -24,7 +25,7 @@ import { relativify } from './lib/format'
 // shared.<export condition>.ts -> ./shared
 // index.ts -> ./index
 // index.development.ts -> ./index.development
-function sourceFilenameToExportPath(filename: string) {
+function sourceFilenameToExportFullPath(filename: string) {
   const baseName = baseNameWithoutExtension(filename)
   let exportPath = baseName
 
@@ -38,7 +39,7 @@ export async function collectEntriesFromParsedExports(
 ): Promise<Entries> {
   const entries: Entries = {}
   if (sourceFile) {
-    const defaultExport = parsedExportsInfo.get('.')![0]
+    const defaultExport = parsedExportsInfo.get('./index')![0]
     entries['.'] = {
       source: sourceFile,
       name: '.',
@@ -48,14 +49,11 @@ export async function collectEntriesFromParsedExports(
     }
   }
 
-  const exportPaths = [...parsedExportsInfo.keys()]
-
   // Find source files
   const { bins, exportsEntries } = await collectSourceEntriesFromExportPaths(
     join(cwd, SRC),
-    exportPaths,
+    parsedExportsInfo,
   )
-  // console.log('exportsEntries', exportsEntries, 'parsedExportsInfo', parsedExportsInfo)
 
   // A mapping between each export path and its related special export conditions,
   // excluding the 'default' export condition.
@@ -75,11 +73,11 @@ export async function collectEntriesFromParsedExports(
 
   // Traverse source files and try to match the entries
   // Find exports from parsed exports info
-  // entryExportPath can be: '.', './index.development', './shared.edge-light', etc.
+  // entryExportPath can be: './index', './index.development', './shared.edge-light', etc.
   for (const [entryExportPath, sourceFilesMap] of exportsEntries) {
     const normalizedExportPath = normalizeExportPath(entryExportPath)
     const entryExportPathType = getExportTypeFromExportPath(entryExportPath)
-    const outputExports = parsedExportsInfo.get(normalizedExportPath)
+    const outputExports = parsedExportsInfo.get(entryExportPath)
     if (!outputExports) {
       continue
     }
@@ -95,15 +93,15 @@ export async function collectEntriesFromParsedExports(
         continue
       }
 
-      if (!entries[entryExportPath]) {
-        entries[entryExportPath] = {
+      if (!entries[normalizedExportPath]) {
+        entries[normalizedExportPath] = {
           source: sourceFile,
           name: normalizedExportPath,
           export: {},
         }
       }
 
-      const exportMap = entries[entryExportPath].export
+      const exportMap = entries[normalizedExportPath].export
       if (
         entryExportPathType === 'default' &&
         matchedExportType !== 'default' &&
@@ -118,8 +116,7 @@ export async function collectEntriesFromParsedExports(
 
   // Handling binaries
   for (const [exportPath, sourceFile] of bins) {
-    const normalizedExportPath = normalizeExportPath(exportPath)
-    const outputExports = parsedExportsInfo.get(normalizedExportPath)
+    const outputExports = parsedExportsInfo.get(exportPath)
     if (!outputExports) {
       continue
     }
@@ -243,7 +240,7 @@ export async function collectSourceEntriesByExportPath(
   bins: Map<string, string>,
   exportsEntries: Map<string, Record<string, string>>,
 ) {
-  const isBinaryPath = originalSubpath.startsWith(BINARY_TAG)
+  const isBinaryPath = isBinExportPath(originalSubpath)
   const subpath = originalSubpath.replace(BINARY_TAG, 'bin')
   const absoluteDirPath = path.join(sourceFolderPath, subpath)
 
@@ -253,16 +250,14 @@ export async function collectSourceEntriesByExportPath(
 
   if (isDirectory) {
     if (isBinaryPath) {
-      // const binPath = subpath.replace(BINARY_TAG, 'bin')
       const binDirentList = await fsp.readdir(absoluteDirPath, {
         withFileTypes: true,
       })
       for (const binDirent of binDirentList) {
         if (binDirent.isFile()) {
           const binFileAbsolutePath = path.join(binDirent.path, binDirent.name)
-          const binExportPath = sourceFilenameToExportPath(binDirent.name)
           if (fs.existsSync(binFileAbsolutePath)) {
-            bins.set(posix.join(BINARY_TAG, binExportPath), binFileAbsolutePath)
+            bins.set(normalizeExportPath(originalSubpath), binFileAbsolutePath)
           }
         }
       }
@@ -325,62 +320,79 @@ export async function collectSourceEntriesByExportPath(
         continue
       }
 
-      const sourceFileAbsolutePath = path.join(dirent.path, dirent.name)
-      const exportPath = relativify(subpath)
+      if (isTestFile(dirent.name)) {
+        continue
+      }
 
-      // const exportPath = sourceFilenameToExportPath(baseName)
-      // const isBinFile = exportPath === './bin'
-      // const fullPath = path.join(subpath, baseName) // ?
+      const sourceFileAbsolutePath = path.join(dirent.path, dirent.name)
+      // e.g. ./foo/index.react-server
+      const exportFullPath = sourceFilenameToExportFullPath(
+        path.join(dirName, dirent.name),
+      )
       if (isBinaryPath) {
         bins.set(originalSubpath, sourceFileAbsolutePath)
       } else {
-        if (isTestFile(baseName)) {
-          continue
-        }
-        const sourceFilesMap = exportsEntries.get(exportPath) || {}
-        const exportType = getExportTypeFromExportPath(exportPath)
+        const sourceFilesMap = exportsEntries.get(exportFullPath) || {}
+        const exportType = getExportTypeFromExportPath(exportFullPath)
+
         sourceFilesMap[exportType] = sourceFileAbsolutePath
-        exportsEntries.set(exportPath, sourceFilesMap)
+        exportsEntries.set(exportFullPath, sourceFilesMap)
       }
-
-      // const sourceFilesMap = exportsEntries.get(exportPath) || {}
-      // const exportType = getExportTypeFromExportPath(exportPath)
-      // sourceFilesMap[exportType] = sourceFileAbsolutePath
-      // exportsEntries.set(exportPath, sourceFilesMap)
     }
-
-    // const isAvailableExtension = availableExtensions.has(
-    //   path.extname(baseName).slice(1),
-    // )
-    // if (isAvailableExtension) {
-
-    // }
   }
 }
 
+/**
+ * exportsEntries {
+ *   "./index" => {
+ *      "development" => source"
+ *      "react-server" => "source"
+ *   },
+ *  "./index.react-server" => {
+ *      "development" => source"
+ *      "react-server" => "source"
+ *   }
+ *  }
+ */
 export async function collectSourceEntriesFromExportPaths(
   sourceFolderPath: string,
-  exportPaths: string[],
+  parsedExportsInfo: ParsedExportsInfo,
 ) {
   const bins = new Map<string, string>()
   const exportsEntries = new Map<string, Record<string, string>>()
-  // console.log('collectSourceEntriesFromExportPaths:exportPaths', exportPaths)
-  for (const exportPath of exportPaths) {
-    // path.join(sourceFolderPath, exportPath)
-    // const exportPathDirent = await fsp.re(exportDirPath)
+
+  for (const [exportPath, exportInfo] of parsedExportsInfo.entries()) {
+    const specialConditions = new Set<string>()
+    for (const [_, composedExportType] of exportInfo) {
+      const specialExportType =
+        getSpecialExportTypeFromExportPath(composedExportType)
+      specialConditions.add(specialExportType)
+    }
+    const namedExportPath = exportPath === '.' ? './index' : exportPath
     await collectSourceEntriesByExportPath(
       sourceFolderPath,
-      exportPath,
+      namedExportPath,
       bins,
       exportsEntries,
     )
+
+    for (const specialCondition of specialConditions) {
+      await collectSourceEntriesByExportPath(
+        sourceFolderPath,
+        namedExportPath + '.' + specialCondition,
+        bins,
+        exportsEntries,
+      )
+    }
   }
+
   return {
     bins,
     exportsEntries,
   }
 }
 
+// For `prepare`
 export async function collectSourceEntries(sourceFolderPath: string) {
   const bins = new Map<string, string>()
   const exportsEntries = new Map<string, Record<string, string>>()
@@ -422,7 +434,10 @@ export async function collectSourceEntries(sourceFolderPath: string) {
         },
       )
       for (const binDirent of binDirentList) {
-        const binExportPath = posix.join(BINARY_TAG, binDirent.name)
+        const binExportPath = posix.join(
+          BINARY_TAG,
+          getFileBasename(binDirent.name),
+        )
 
         await collectSourceEntriesByExportPath(
           sourceFolderPath,
@@ -430,16 +445,6 @@ export async function collectSourceEntries(sourceFolderPath: string) {
           bins,
           exportsEntries,
         )
-        // if (binDirent.isFile()) {
-        //   const binFileAbsolutePath = path.join(
-        //     binDirent.name,
-        //     binDirent.name,
-        //   )
-        //   const binExportPath = sourceFilenameToExportPath(binDirent.name)
-        //   if (fs.existsSync(binFileAbsolutePath)) {
-        //     bins.set(posix.join(BINARY_TAG, binExportPath), binFileAbsolutePath)
-        //   }
-        // }
       }
     } else {
       await collectSourceEntriesByExportPath(

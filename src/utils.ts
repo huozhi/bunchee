@@ -215,3 +215,7 @@ export async function removeOutputDir(output: OutputOptions, cwd: string) {
     removedDirs.add(dir)
   }
 }
+
+export function isBinExportPath(exportPath: string) {
+  return exportPath === BINARY_TAG || exportPath.startsWith(BINARY_TAG + '/')
+}

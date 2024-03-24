@@ -68,7 +68,7 @@ function createExportCondition(
 }
 
 function createExportConditionPair(
-  exportName: string,
+  exportName: string, // <export path>.<condition>
   sourceFile: string,
   moduleType: string | undefined,
 ) {
@@ -216,17 +216,19 @@ export async function prepare(cwd: string): Promise<void> {
     const pkgExports: Record<string, any> = {}
     for (const [exportName, sourceFilesMap] of exportsEntries.entries()) {
       for (const sourceFile of Object.values(sourceFilesMap)) {
-        const [key, value] = createExportConditionPair(
+        const [normalizedExportPath, conditions] = createExportConditionPair(
           exportName,
           sourceFile,
           pkgJson.type,
         )
-        pkgExports[key] = {
-          ...value,
-          ...pkgExports[key],
+        pkgExports[normalizedExportPath] = {
+          ...conditions,
+          ...pkgExports[normalizedExportPath],
         }
       }
     }
+
+    console.log('pkgExports', pkgExports)
 
     // Configure node10 module resolution
     if (exportsEntries.has('./index')) {

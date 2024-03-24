@@ -9,6 +9,7 @@ import {
   getSpecialExportTypeFromExportPath,
   normalizeExportPath,
 } from '../entries'
+import { isBinExportPath } from '../utils'
 
 // [filename, sourceFileName, size]
 type FileState = [string, string, number]
@@ -90,10 +91,6 @@ function createOutputState({ entries }: { entries: Entries }): {
   }
 }
 
-function isBin(filename: string) {
-  return filename === BINARY_TAG || filename.startsWith(BINARY_TAG + '/')
-}
-
 function isTypeFile(filename: string) {
   return (
     filename.endsWith('.d.ts') ||
@@ -103,7 +100,7 @@ function isTypeFile(filename: string) {
 }
 
 function normalizeExportName(exportName: string): string {
-  const isBinary = isBin(exportName)
+  const isBinary = isBinExportPath(exportName)
   let result = exportName
 
   if (isBinary) {

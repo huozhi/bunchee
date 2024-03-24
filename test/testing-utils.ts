@@ -64,8 +64,8 @@ export async function assertFilesContent(
 }
 
 export async function removeDirectory(tempDirPath: string) {
-  debug.log(`Clean up ${tempDirPath}`)
-  await fsp.rm(tempDirPath, { recursive: true, force: true })
+  // debug.log(`Clean up ${tempDirPath}`)
+  // await fsp.rm(tempDirPath, { recursive: true, force: true })
 }
 
 // bundle.min.js => .min.js

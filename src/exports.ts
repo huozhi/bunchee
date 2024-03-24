@@ -69,7 +69,7 @@ function collectExportPath(
         exportValue,
         exportCondition,
       ]
-      exportToDist.set(currentPath, [outputConditionPair])
+      addToExportDistMap(exportToDist, currentPath, [outputConditionPair])
     } else {
       exportInfo.push([exportValue, exportCondition])
     }
@@ -106,10 +106,32 @@ function collectExportPath(
   }
 }
 
+const mapExportFullPath = (exportPath: string) =>
+  exportPath === '.' ? './index' : exportPath
+
+function addToExportDistMap(
+  exportToDist: ParsedExportsInfo,
+  exportPath: string,
+  outputConditionPairs: [string, string][],
+) {
+  const fullPath = mapExportFullPath(exportPath)
+  const existingExportInfo = exportToDist.get(fullPath)
+  if (!existingExportInfo) {
+    exportToDist.set(fullPath, outputConditionPairs)
+  } else {
+    existingExportInfo.push(...outputConditionPairs)
+  }
+}
+
 /**
  * parseExports - parse package.exports field and other fields like main,module to a map
  *
  * map from export path to output path and export conditions
+ *
+ * exportToDist: {
+ *  './index': { development: ..., default: ... }
+ *  './index.react-server': { development: ..., default: ... }
+ * }
  */
 export function parseExports(pkg: PackageMetadata): ParsedExportsInfo {
   const exportsField = pkg.exports ?? {}
@@ -125,7 +147,7 @@ export function parseExports(pkg: PackageMetadata): ParsedExportsInfo {
       exportsField,
       defaultCondition,
     ]
-    exportToDist.set(currentPath, [outputConditionPair])
+    addToExportDistMap(exportToDist, currentPath, [outputConditionPair])
   } else {
     // keys means unknown if they're relative path or export type
     const exportConditionKeys = Object.keys(exportsField)
@@ -154,14 +176,14 @@ export function parseExports(pkg: PackageMetadata): ParsedExportsInfo {
 
   if (typeof bins === 'string') {
     const outputConditionPair: [string, string] = [bins, defaultCondition]
-    exportToDist.set(BINARY_TAG, [outputConditionPair])
+    addToExportDistMap(exportToDist, BINARY_TAG, [outputConditionPair])
   } else {
     for (const binName of Object.keys(bins)) {
       const binDistPath = bins[binName]
       const exportType = getExportTypeFromFile(binDistPath, pkg.type)
       const exportPath = posix.join(BINARY_TAG, binName)
       const outputConditionPair: [string, string] = [binDistPath, exportType]
-      exportToDist.set(exportPath, [outputConditionPair])
+      addToExportDistMap(exportToDist, exportPath, [outputConditionPair])
     }
   }
 
@@ -170,11 +192,11 @@ export function parseExports(pkg: PackageMetadata): ParsedExportsInfo {
     const mainExportPath = pkg.main
     const moduleExportPath = pkg.module
     const typesEntryPath = pkg.types
-    const existingExportInfo = exportToDist.get('.')
-    exportToDist.set(
-      '.',
+
+    addToExportDistMap(
+      exportToDist,
+      './index',
       [
-        ...(existingExportInfo || []),
         Boolean(mainExportPath) && [
           mainExportPath,
           getMainFieldExportType(pkg),
