@@ -94,7 +94,7 @@ async function bundle(
       }
 
       parsedExportsInfo.set(
-        '.',
+        './index',
         [
           [mainExportPath, 'default'],
           Boolean(typesEntryPath) && [typesEntryPath, 'types'],

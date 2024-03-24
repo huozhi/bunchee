@@ -12,7 +12,11 @@ import {
   isESModulePackage,
   joinRelativePath,
 } from './utils'
-import { BINARY_TAG, dtsExtensionsMap } from './constants'
+import {
+  BINARY_TAG,
+  dtsExtensionsMap,
+  specialExportConventions,
+} from './constants'
 import { OutputOptions } from 'rollup'
 
 export function getPackageTypings(pkg: PackageMetadata) {
@@ -61,7 +65,8 @@ function collectExportPath(
   // <export key>: <export value> (string)
   if (typeof exportValue === 'string') {
     const composedTypes = new Set(exportTypes)
-    composedTypes.add(exportKey.startsWith('.') ? 'default' : exportKey)
+    const exportType = exportKey.startsWith('.') ? 'default' : exportKey
+    composedTypes.add(exportType)
     const exportInfo = exportToDist.get(currentPath)
     const exportCondition = Array.from(composedTypes).join('.')
     if (!exportInfo) {
@@ -69,7 +74,12 @@ function collectExportPath(
         exportValue,
         exportCondition,
       ]
-      addToExportDistMap(exportToDist, currentPath, [outputConditionPair])
+      addToExportDistMap(
+        exportToDist,
+        currentPath,
+        [outputConditionPair],
+        specialExportConventions.has(exportType) ? exportType : undefined,
+      )
     } else {
       exportInfo.push([exportValue, exportCondition])
     }
@@ -113,8 +123,11 @@ function addToExportDistMap(
   exportToDist: ParsedExportsInfo,
   exportPath: string,
   outputConditionPairs: [string, string][],
+  specialExportType?: string,
 ) {
-  const fullPath = mapExportFullPath(exportPath)
+  const fullPath =
+    mapExportFullPath(exportPath) +
+    (specialExportType ? '.' + specialExportType : '')
   const existingExportInfo = exportToDist.get(fullPath)
   if (!existingExportInfo) {
     exportToDist.set(fullPath, outputConditionPairs)

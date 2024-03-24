@@ -228,8 +228,6 @@ export async function prepare(cwd: string): Promise<void> {
       }
     }
 
-    console.log('pkgExports', pkgExports)
-
     // Configure node10 module resolution
     if (exportsEntries.has('./index')) {
       const isESM = pkgJson.type === 'module'
