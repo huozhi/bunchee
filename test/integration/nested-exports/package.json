@@ -1,0 +1,6 @@
+{
+  "name": "nested-name",
+  "exports": {
+    "./foo/bar": "./dist/foo/bar.js"
+  }
+}

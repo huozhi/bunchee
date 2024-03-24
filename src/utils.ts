@@ -149,6 +149,9 @@ export function filePathWithoutExtension(filePath: string | undefined) {
   return filePath
 }
 
+// 'index.server.js' -> 'index'
+export const getFileBasename = (str: string) => str.split('.')[0]
+
 export const nonNullable = <T>(n?: T): n is T => Boolean(n)
 
 export const fileExtension = (file: string | undefined) =>
