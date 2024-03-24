@@ -255,12 +255,9 @@ export async function collectSourceEntriesByExportPath(
   if (isDirectory) {
     if (isBinaryPath) {
       // const binPath = subpath.replace(BINARY_TAG, 'bin')
-      const binDirentList = await fsp.readdir(
-        path.join(sourceFolderPath, subpath),
-        {
-          withFileTypes: true,
-        },
-      )
+      const binDirentList = await fsp.readdir(absoluteDirPath, {
+        withFileTypes: true,
+      })
       for (const binDirent of binDirentList) {
         if (binDirent.isFile()) {
           const binFileAbsolutePath = path.join(binDirent.path, binDirent.name)
@@ -316,7 +313,11 @@ export async function collectSourceEntriesByExportPath(
     const dirName = dirname(subpath)
     const baseName = basename(subpath)
     // Read current file's directory
-    const dirents = await fsp.readdir(path.join(sourceFolderPath, dirName), {
+    const dirPath = path.join(sourceFolderPath, dirName)
+    if (!fs.existsSync(dirPath)) {
+      return
+    }
+    const dirents = await fsp.readdir(dirPath, {
       withFileTypes: true,
     })
     for (const dirent of dirents) {
