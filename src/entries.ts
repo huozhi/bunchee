@@ -49,10 +49,12 @@ export async function collectEntriesFromParsedExports(
     }
   }
 
+  const exportPaths = [...parsedExportsInfo.keys()]
+  console.log('exportPaths', exportPaths)
   // Find source files
   const { bins, exportsEntries } = await collectSourceEntriesFromExportPaths(
     join(cwd, SRC),
-    [...parsedExportsInfo.keys()],
+    exportPaths,
   )
   // console.log('exportsEntries', exportsEntries, 'parsedExportsInfo', parsedExportsInfo)
 
@@ -252,20 +254,16 @@ export async function collectSourceEntriesByExportPath(
 
   if (isDirectory) {
     if (isBinaryPath) {
-      const binPath = subpath.replace(BINARY_TAG, 'bin')
+      // const binPath = subpath.replace(BINARY_TAG, 'bin')
       const binDirentList = await fsp.readdir(
-        path.join(sourceFolderPath, binPath),
+        path.join(sourceFolderPath, subpath),
         {
           withFileTypes: true,
         },
       )
       for (const binDirent of binDirentList) {
         if (binDirent.isFile()) {
-          const binFileAbsolutePath = path.join(
-            subpath,
-            binDirent.name,
-            binDirent.name,
-          )
+          const binFileAbsolutePath = path.join(binDirent.path, binDirent.name)
           const binExportPath = sourceFilenameToExportPath(binDirent.name)
           if (fs.existsSync(binFileAbsolutePath)) {
             bins.set(posix.join(BINARY_TAG, binExportPath), binFileAbsolutePath)
@@ -313,11 +311,11 @@ export async function collectSourceEntriesByExportPath(
         }
       }
     }
-  }
-  {
+  } else {
     // subpath could be a file
     const dirName = dirname(subpath)
     const baseName = basename(subpath)
+    // Read current file's directory
     const dirents = await fsp.readdir(path.join(sourceFolderPath, dirName), {
       withFileTypes: true,
     })
@@ -339,7 +337,7 @@ export async function collectSourceEntriesByExportPath(
       // const isBinFile = exportPath === './bin'
       // const fullPath = path.join(subpath, baseName) // ?
       if (isBinaryPath) {
-        bins.set(posix.join(BINARY_TAG, subpath), sourceFileAbsolutePath)
+        bins.set(originalSubpath, sourceFileAbsolutePath)
       } else {
         // hasAvailableExtension(baseName) &&
         if (!isTestFile(baseName)) {
@@ -400,13 +398,63 @@ export async function collectSourceEntries(sourceFolderPath: string) {
   const entryFileDirentList = await fsp.readdir(sourceFolderPath, {
     withFileTypes: true,
   })
+
+  // Collect source files for `exports` field
   for (const dirent of entryFileDirentList) {
+    if (getFileBasename(dirent.name) === 'bin') {
+      continue
+    }
+    const exportPath = relativify(getFileBasename(dirent.name))
+
     await collectSourceEntriesByExportPath(
       sourceFolderPath,
-      dirent.name,
+      exportPath,
       bins,
       exportsEntries,
     )
+  }
+
+  // Collect source files for `bin` field
+  const binDirent = entryFileDirentList.find(
+    (dirent) => getFileBasename(dirent.name) === 'bin',
+    // dirent.name === 'bin' && dirent.isDirectory()
+  )
+  if (binDirent) {
+    if (binDirent.isDirectory()) {
+      const binDirentList = await fsp.readdir(
+        path.join(binDirent.path, binDirent.name),
+        {
+          withFileTypes: true,
+        },
+      )
+      for (const binDirent of binDirentList) {
+        const binExportPath = posix.join(BINARY_TAG, binDirent.name)
+
+        await collectSourceEntriesByExportPath(
+          sourceFolderPath,
+          binExportPath,
+          bins,
+          exportsEntries,
+        )
+        // if (binDirent.isFile()) {
+        //   const binFileAbsolutePath = path.join(
+        //     binDirent.name,
+        //     binDirent.name,
+        //   )
+        //   const binExportPath = sourceFilenameToExportPath(binDirent.name)
+        //   if (fs.existsSync(binFileAbsolutePath)) {
+        //     bins.set(posix.join(BINARY_TAG, binExportPath), binFileAbsolutePath)
+        //   }
+        // }
+      }
+    } else {
+      await collectSourceEntriesByExportPath(
+        sourceFolderPath,
+        BINARY_TAG,
+        bins,
+        exportsEntries,
+      )
+    }
   }
 
   return {
