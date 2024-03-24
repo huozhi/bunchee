@@ -8,7 +8,6 @@ import {
   baseNameWithoutExtension,
   getFileBasename,
   getSourcePathFromExportPath,
-  hasAvailableExtension,
   isTestFile,
   resolveSourceFile,
 } from './utils'
@@ -50,7 +49,7 @@ export async function collectEntriesFromParsedExports(
   }
 
   const exportPaths = [...parsedExportsInfo.keys()]
-  console.log('exportPaths', exportPaths)
+
   // Find source files
   const { bins, exportsEntries } = await collectSourceEntriesFromExportPaths(
     join(cwd, SRC),
@@ -271,24 +270,19 @@ export async function collectSourceEntriesByExportPath(
       // Search folder/index.<ext> convention entries
       for (const extension of availableExtensions) {
         const indexAbsoluteFile = path.join(
-          subpath,
-          // dirent.path,
-          // dirent.name,
+          absoluteDirPath,
           `index.${extension}`,
         )
         // Search folder/index.<special type>.<ext> convention entries
         for (const specialExportType of runtimeExportConventions) {
           const indexSpecialAbsoluteFile = path.join(
-            subpath,
-            // dirent.path,
-            // dirent.name,
+            absoluteDirPath,
             `index.${specialExportType}.${extension}`,
           )
           if (fs.existsSync(indexSpecialAbsoluteFile)) {
             // Add special export path
             // { ./<export path>.<special cond>: { <special cond>: 'index.<special cond>.<ext>' } }
-
-            const exportPath = relativify(subpath) //sourceFilenameToExportPath(baseName)
+            const exportPath = relativify(subpath)
             const specialExportPath = exportPath + '.' + specialExportType
             const sourceFilesMap = exportsEntries.get(specialExportPath) || {}
             sourceFilesMap[specialExportType] = indexSpecialAbsoluteFile
@@ -340,13 +334,13 @@ export async function collectSourceEntriesByExportPath(
       if (isBinaryPath) {
         bins.set(originalSubpath, sourceFileAbsolutePath)
       } else {
-        // hasAvailableExtension(baseName) &&
-        if (!isTestFile(baseName)) {
-          const sourceFilesMap = exportsEntries.get(exportPath) || {}
-          const exportType = getExportTypeFromExportPath(exportPath)
-          sourceFilesMap[exportType] = sourceFileAbsolutePath
-          exportsEntries.set(exportPath, sourceFilesMap)
+        if (isTestFile(baseName)) {
+          continue
         }
+        const sourceFilesMap = exportsEntries.get(exportPath) || {}
+        const exportType = getExportTypeFromExportPath(exportPath)
+        sourceFilesMap[exportType] = sourceFileAbsolutePath
+        exportsEntries.set(exportPath, sourceFilesMap)
       }
 
       // const sourceFilesMap = exportsEntries.get(exportPath) || {}
@@ -405,7 +399,7 @@ export async function collectSourceEntries(sourceFolderPath: string) {
     if (getFileBasename(dirent.name) === 'bin') {
       continue
     }
-    const exportPath = relativify(getFileBasename(dirent.name))
+    const exportPath = normalizeExportPath(getFileBasename(dirent.name))
 
     await collectSourceEntriesByExportPath(
       sourceFolderPath,
@@ -418,7 +412,6 @@ export async function collectSourceEntries(sourceFolderPath: string) {
   // Collect source files for `bin` field
   const binDirent = entryFileDirentList.find(
     (dirent) => getFileBasename(dirent.name) === 'bin',
-    // dirent.name === 'bin' && dirent.isDirectory()
   )
   if (binDirent) {
     if (binDirent.isDirectory()) {
