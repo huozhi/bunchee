@@ -44,7 +44,7 @@ import {
 import { BuildContext } from './types'
 import { getDefinedInlineVariables } from './env'
 import {
-  getSpecialExportTypeFromExportPath,
+  getSpecialExportTypeFromComposedExportPath,
   normalizeExportPath,
 } from './entries'
 
@@ -134,7 +134,7 @@ export function getReversedAlias({
     const normalizedExportPath = normalizeExportPath(entryExportPath)
     // entryExportPath format: ./index, ./shared, etc.
     const specialExportType =
-      getSpecialExportTypeFromExportPath(entryExportPath)
+      getSpecialExportTypeFromComposedExportPath(entryExportPath)
     if (specialExportType === 'default') {
       alias[exportCondition.source] = posix.join(
         name || '',

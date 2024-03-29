@@ -9,7 +9,7 @@ import { DIST } from './constants'
 import { writeDefaultTsconfig } from './typescript'
 import {
   collectSourceEntries,
-  getSpecialExportTypeFromExportPath,
+  getSpecialExportTypeFromComposedExportPath,
   normalizeExportPath,
 } from './entries'
 
@@ -74,7 +74,8 @@ function createExportConditionPair(
 ) {
   // <exportName>.<specialCondition>
   let specialCondition: Record<string, string> | undefined
-  const specialConditionName = getSpecialExportTypeFromExportPath(exportName)
+  const specialConditionName =
+    getSpecialExportTypeFromComposedExportPath(exportName)
   const normalizedExportPath = normalizeExportPath(exportName)
   if (specialConditionName !== 'default') {
     // e.g.

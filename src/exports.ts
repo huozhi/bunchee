@@ -15,7 +15,7 @@ import {
 import {
   BINARY_TAG,
   dtsExtensionsMap,
-  specialExportConventions,
+  runtimeExportConventions,
 } from './constants'
 import { OutputOptions } from 'rollup'
 
@@ -67,7 +67,7 @@ function collectExportPath(
     const composedTypes = new Set(exportTypes)
     const exportType = exportKey.startsWith('.') ? 'default' : exportKey
     composedTypes.add(exportType)
-    const exportInfo = exportToDist.get(currentPath)
+    const exportInfo = exportToDist.get(mapExportFullPath(currentPath))
     const exportCondition = Array.from(composedTypes).join('.')
     if (!exportInfo) {
       const outputConditionPair: [string, string] = [
@@ -78,7 +78,7 @@ function collectExportPath(
         exportToDist,
         currentPath,
         [outputConditionPair],
-        specialExportConventions.has(exportType) ? exportType : undefined,
+        runtimeExportConventions.has(exportType) ? exportType : undefined,
       )
     } else {
       exportInfo.push([exportValue, exportCondition])
@@ -125,9 +125,8 @@ function addToExportDistMap(
   outputConditionPairs: [string, string][],
   specialExportType?: string,
 ) {
-  const fullPath =
-    mapExportFullPath(exportPath) +
-    (specialExportType ? '.' + specialExportType : '')
+  const fullPath = mapExportFullPath(exportPath)
+  // + (specialExportType ? '.' + specialExportType : '')
   const existingExportInfo = exportToDist.get(fullPath)
   if (!existingExportInfo) {
     exportToDist.set(fullPath, outputConditionPairs)
@@ -302,6 +301,9 @@ export function getExportsDistFilesOfCondition(
     if (uniqueFiles.has(distFile)) {
       continue
     }
+    // if (dts) {
+    //   console.log('uniqueFiles', uniqueFiles, 'distFile', distFile, 'exportType', exportType, 'exportCondition', exportCondition, 'format', format, 'parsedExportCondition', parsedExportCondition, 'exportConditionNames', exportConditionNames, 'pkg', pkg, 'cwd', cwd, 'dts', dts)
+    // }
     uniqueFiles.add(distFile)
     dist.push({ format, file: distFile, exportCondition })
   }

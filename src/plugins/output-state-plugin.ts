@@ -6,7 +6,7 @@ import { type Entries } from '../types'
 import { logger } from '../logger'
 import { BINARY_TAG } from '../constants'
 import {
-  getSpecialExportTypeFromExportPath,
+  getSpecialExportTypeFromComposedExportPath,
   normalizeExportPath,
 } from '../entries'
 import { isBinExportPath } from '../utils'
@@ -109,7 +109,8 @@ function normalizeExportName(exportName: string): string {
       ' (bin)'
   } else {
     const normalizedExportPath = normalizeExportPath(exportName)
-    const specialConditionName = getSpecialExportTypeFromExportPath(exportName)
+    const specialConditionName =
+      getSpecialExportTypeFromComposedExportPath(exportName)
 
     result =
       normalizedExportPath +
