@@ -7,6 +7,7 @@ import { logger } from '../logger'
 import { BINARY_TAG } from '../constants'
 import {
   getSpecialExportTypeFromComposedExportPath,
+  getSpecialExportTypeFromComposedExportPath,
   normalizeExportPath,
 } from '../entries'
 import { isBinExportPath, isTypeFile } from '../utils'
@@ -89,6 +90,14 @@ function createOutputState({ entries }: { entries: Entries }): {
       return sizeStats
     },
   }
+}
+
+function isTypeFile(filename: string) {
+  return (
+    filename.endsWith('.d.ts') ||
+    filename.endsWith('.d.mts') ||
+    filename.endsWith('.d.cts')
+  )
 }
 
 function normalizeExportName(exportName: string): string {
