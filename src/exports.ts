@@ -301,9 +301,6 @@ export function getExportsDistFilesOfCondition(
     if (uniqueFiles.has(distFile)) {
       continue
     }
-    // if (dts) {
-    //   console.log('uniqueFiles', uniqueFiles, 'distFile', distFile, 'exportType', exportType, 'exportCondition', exportCondition, 'format', format, 'parsedExportCondition', parsedExportCondition, 'exportConditionNames', exportConditionNames, 'pkg', pkg, 'cwd', cwd, 'dts', dts)
-    // }
     uniqueFiles.add(distFile)
     dist.push({ format, file: distFile, exportCondition })
   }
