@@ -21,16 +21,17 @@ export const patchBinary = (executablePaths: string[]): Plugin => ({
         : outputOptions.entryFileNames
     const outputPath = path.resolve(outputOptions.dir!, entryFileNames)
 
-    if (executablePaths.includes(outputPath)) {
-      const transformed = new MagicString(code)
-      transformed.prepend('#!/usr/bin/env node\n')
+    if (!executablePaths.includes(outputPath)) {
+      return
+    }
+    const transformed = new MagicString(code)
+    transformed.prepend('#!/usr/bin/env node\n')
 
-      return {
-        code: transformed.toString(),
-        map: outputOptions.sourcemap
-          ? (transformed.generateMap({ hires: true }) as SourceMapInput)
-          : undefined,
-      }
+    return {
+      code: transformed.toString(),
+      map: outputOptions.sourcemap
+        ? (transformed.generateMap({ hires: true }) as SourceMapInput)
+        : undefined,
     }
   },
 
