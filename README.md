@@ -14,7 +14,7 @@
   </a>
 </p>
 
-**bunchee** is a zero configuration bundler makes bundling JS/tS library effortless. It's built on top of Rollup and SWC ⚡️, allowing you to focus on writing code and generating multiple bundles (CommonJS or ESModule) at the same time.
+**bunchee** is a zero configuration bundler makes bundling JS/TS library effortless. It's built on top of Rollup and SWC ⚡️, allowing you to focus on writing code and generating multiple bundles (CommonJS or ESModule) at the same time.
 It uses the standard exports configuration in `package.json` as the only source of truth, and uses entry file conventions to match your exports and build them into bundles.
 
 ## Quick Start
