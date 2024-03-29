@@ -270,11 +270,9 @@ async function buildInputConfig(
       : [
           ...commonPlugins,
           preserveDirectives(),
-
           aliasPlugin,
           inlineCss({ exclude: /node_modules/ }),
           rawContent({ exclude: /node_modules/ }),
-
           patchBinary(executablePaths),
           replace({
             values: inlineDefinedValues,
