@@ -7,7 +7,6 @@ import type {
   ParsedExportCondition,
 } from './types'
 import type {
-  CustomPluginOptions,
   GetManualChunk,
   InputOptions,
   OutputOptions,
@@ -39,7 +38,6 @@ import {
   availableESExtensionsRegex,
   nodeResolveExtensions,
   disabledWarnings,
-  availableExtensions,
 } from './constants'
 import { BuildContext } from './types'
 import { getDefinedInlineVariables } from './env'

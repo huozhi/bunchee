@@ -18,7 +18,6 @@ export function getDefinedInlineVariables(
     return acc
   }, {})
 
-  // console.log('parsedExportCondition', parsedExportCondition)
   const exportConditionNames = Object.keys(parsedExportCondition.export).reduce(
     (acc, key) => {
       // key could be 'require' or 'import.development' etc.

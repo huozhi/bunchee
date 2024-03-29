@@ -55,11 +55,6 @@ export async function collectEntriesFromParsedExports(
     parsedExportsInfo,
   )
 
-  // console.log(
-  //   ':exportsEntries', exportsEntries,
-  //   'parsedExportsInfo', parsedExportsInfo
-  // )
-
   // A mapping between each export path and its related special export conditions,
   // excluding the 'default' export condition.
   // { './index' => Set('development', 'edge-light') }
@@ -121,7 +116,6 @@ export async function collectEntriesFromParsedExports(
         const exportMap = entries[entryExportPath].export
         exportMap[outputComposedExportType] = outputPath
       }
-      // console.log('match', matchedExportType, 'vs', entryExportPathType, sourceFile)
     }
   }
 
@@ -264,8 +258,6 @@ export async function collectSourceEntriesByExportPath(
     ? (await fsp.stat(absoluteDirPath)).isDirectory()
     : false
 
-  // console.log('collectSourceEntriesByExportPath', originalSubpath, 'isDirectory', isDirectory)
-
   if (isDirectory) {
     if (isBinaryPath) {
       const binDirentList = await fsp.readdir(absoluteDirPath, {
@@ -345,8 +337,6 @@ export async function collectSourceEntriesByExportPath(
 
       const sourceFileAbsolutePath = path.join(dirent.path, dirent.name)
 
-      // console.log('scan', sourceFileAbsolutePath, 'originalSubpath', originalSubpath, '>', exportFullPath)
-
       if (isBinaryPath) {
         bins.set(originalSubpath, sourceFileAbsolutePath)
       } else {
@@ -365,8 +355,6 @@ export async function collectSourceEntriesByExportPath(
             ...sourceFilesMap,
           }
         }
-
-        // console.log('exportFullPath', originalSubpath, 'exportType', exportType, sourceFileAbsolutePath)
 
         exportsEntries.set(originalSubpath, sourceFilesMap)
       }
@@ -411,7 +399,6 @@ export async function collectSourceEntriesFromExportPaths(
     )
 
     for (const specialCondition of specialConditions) {
-      // console.log(`exportPath + '.' + specialCondition`, exportPath + '.' + specialCondition)
       await collectSourceEntriesByExportPath(
         sourceFolderPath,
         exportPath + '.' + specialCondition,
