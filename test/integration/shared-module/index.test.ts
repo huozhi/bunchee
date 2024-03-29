@@ -24,8 +24,7 @@ describe('integration shared-module', () => {
             ),
         )
 
-        // should be 2, but the 3rd one is not used
-        expect(sharedUtilModuleFiles).toHaveLength(3)
+        expect(sharedUtilModuleFiles).toHaveLength(2)
         expect(entryModuleFiles).toHaveLength(5)
 
         const indexFileMatcher = (content: string) => {
