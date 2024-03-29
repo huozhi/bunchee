@@ -143,7 +143,6 @@ export async function collectEntriesFromParsedExports(
     }
   }
 
-  // console.log('entries', entries)
   return entries
 }
 
