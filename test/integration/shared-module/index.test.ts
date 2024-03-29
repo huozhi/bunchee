@@ -1,5 +1,6 @@
-import { promises as fsp } from 'fs'
+import { readFileSync, promises as fsp } from 'fs'
 import { assertFilesContent, createIntegrationTest } from '../utils'
+import path from 'path'
 
 describe('integration shared-module', () => {
   it('should split shared module into one chunk layer', async () => {
@@ -15,8 +16,12 @@ describe('integration shared-module', () => {
         const entryModuleFiles = files.filter(
           (file) => !file.includes('shared-'),
         )
-        const appContextSharedFiles = files.filter((file) =>
-          file.startsWith('app-context-shared-'),
+        const appContextSharedFiles = files.filter(
+          (file) =>
+            file.startsWith('app-context-shared-') &&
+            readFileSync(path.join(distDir, file), 'utf-8').includes(
+              'use client',
+            ),
         )
 
         expect(sharedUtilModuleFiles).toHaveLength(2)

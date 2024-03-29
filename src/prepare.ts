@@ -9,7 +9,7 @@ import { DIST } from './constants'
 import { writeDefaultTsconfig } from './typescript'
 import {
   collectSourceEntries,
-  getSpecialExportTypeFromExportPath,
+  getSpecialExportTypeFromComposedExportPath,
   normalizeExportPath,
 } from './entries'
 
@@ -68,13 +68,14 @@ function createExportCondition(
 }
 
 function createExportConditionPair(
-  exportName: string,
+  exportName: string, // <export path>.<condition>
   sourceFile: string,
   moduleType: string | undefined,
 ) {
   // <exportName>.<specialCondition>
   let specialCondition: Record<string, string> | undefined
-  const specialConditionName = getSpecialExportTypeFromExportPath(exportName)
+  const specialConditionName =
+    getSpecialExportTypeFromComposedExportPath(exportName)
   const normalizedExportPath = normalizeExportPath(exportName)
   if (specialConditionName !== 'default') {
     // e.g.
@@ -216,14 +217,14 @@ export async function prepare(cwd: string): Promise<void> {
     const pkgExports: Record<string, any> = {}
     for (const [exportName, sourceFilesMap] of exportsEntries.entries()) {
       for (const sourceFile of Object.values(sourceFilesMap)) {
-        const [key, value] = createExportConditionPair(
+        const [normalizedExportPath, conditions] = createExportConditionPair(
           exportName,
           sourceFile,
           pkgJson.type,
         )
-        pkgExports[key] = {
-          ...value,
-          ...pkgExports[key],
+        pkgExports[normalizedExportPath] = {
+          ...conditions,
+          ...pkgExports[normalizedExportPath],
         }
       }
     }

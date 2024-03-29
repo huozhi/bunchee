@@ -6,10 +6,10 @@ import { type Entries } from '../types'
 import { logger } from '../logger'
 import { BINARY_TAG } from '../constants'
 import {
-  getSpecialExportTypeFromExportPath,
+  getSpecialExportTypeFromComposedExportPath,
   normalizeExportPath,
 } from '../entries'
-import { isBin, isTypeFile } from '../utils'
+import { isBinExportPath, isTypeFile } from '../utils'
 
 // [filename, sourceFileName, size]
 type FileState = [string, string, number]
@@ -92,7 +92,7 @@ function createOutputState({ entries }: { entries: Entries }): {
 }
 
 function normalizeExportName(exportName: string): string {
-  const isBinary = isBin(exportName)
+  const isBinary = isBinExportPath(exportName)
   let result = exportName
 
   if (isBinary) {
@@ -101,7 +101,8 @@ function normalizeExportName(exportName: string): string {
       ' (bin)'
   } else {
     const normalizedExportPath = normalizeExportPath(exportName)
-    const specialConditionName = getSpecialExportTypeFromExportPath(exportName)
+    const specialConditionName =
+      getSpecialExportTypeFromComposedExportPath(exportName)
 
     result =
       normalizedExportPath +

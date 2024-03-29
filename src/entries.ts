@@ -1,13 +1,14 @@
 import fs from 'fs'
 import fsp from 'fs/promises'
-import path, { join, posix } from 'path'
+import path, { basename, dirname, extname, join, posix } from 'path'
 import { getExportTypeFromFile, type ParsedExportsInfo } from './exports'
 import { PackageMetadata, type Entries, ExportPaths } from './types'
 import { logger } from './logger'
 import {
   baseNameWithoutExtension,
+  getFileBasename,
   getSourcePathFromExportPath,
-  hasAvailableExtension,
+  isBinExportPath,
   isTestFile,
   resolveSourceFile,
 } from './utils'
@@ -24,7 +25,7 @@ import { relativify } from './lib/format'
 // shared.<export condition>.ts -> ./shared
 // index.ts -> ./index
 // index.development.ts -> ./index.development
-function sourceFilenameToExportPath(filename: string) {
+function sourceFilenameToExportFullPath(filename: string) {
   const baseName = baseNameWithoutExtension(filename)
   let exportPath = baseName
 
@@ -38,8 +39,8 @@ export async function collectEntriesFromParsedExports(
 ): Promise<Entries> {
   const entries: Entries = {}
   if (sourceFile) {
-    const defaultExport = parsedExportsInfo.get('.')![0]
-    entries['.'] = {
+    const defaultExport = parsedExportsInfo.get('./index')![0]
+    entries['./index'] = {
       source: sourceFile,
       name: '.',
       export: {
@@ -49,14 +50,17 @@ export async function collectEntriesFromParsedExports(
   }
 
   // Find source files
-  const { bins, exportsEntries } = await collectSourceEntries(join(cwd, SRC))
+  const { bins, exportsEntries } = await collectSourceEntriesFromExportPaths(
+    join(cwd, SRC),
+    parsedExportsInfo,
+  )
 
   // A mapping between each export path and its related special export conditions,
   // excluding the 'default' export condition.
-  // { '.' => Set('development') }
+  // { './index' => Set('development', 'edge-light') }
   const pathSpecialConditionsMap: Record<string, Set<string>> = {}
   for (const [exportPath] of exportsEntries) {
-    const normalizedExportPath = normalizeExportPath(exportPath)
+    const normalizedExportPath = stripSpecialCondition(exportPath)
     if (!pathSpecialConditionsMap[normalizedExportPath]) {
       pathSpecialConditionsMap[normalizedExportPath] = new Set()
     }
@@ -69,22 +73,27 @@ export async function collectEntriesFromParsedExports(
 
   // Traverse source files and try to match the entries
   // Find exports from parsed exports info
-  // entryExportPath can be: '.', './index.development', './shared.edge-light', etc.
+  // entryExportPath can be: './index', './index.development', './shared.edge-light', etc.
   for (const [entryExportPath, sourceFilesMap] of exportsEntries) {
-    const normalizedExportPath = normalizeExportPath(entryExportPath)
+    const normalizedExportPath = stripSpecialCondition(entryExportPath)
+
     const entryExportPathType = getExportTypeFromExportPath(entryExportPath)
     const outputExports = parsedExportsInfo.get(normalizedExportPath)
     if (!outputExports) {
       continue
     }
 
-    for (const [outputPath, composedExportType] of outputExports) {
-      const matchedExportType =
-        getSpecialExportTypeFromExportPath(composedExportType)
-
+    for (const [outputPath, outputComposedExportType] of outputExports) {
       // export type can be: default, development, react-server, etc.
+
+      const matchedExportType = getSpecialExportTypeFromComposedExportPath(
+        outputComposedExportType,
+      )
+      const specialSet = pathSpecialConditionsMap[normalizedExportPath]
+      const hasSpecialEntry = specialSet.has(matchedExportType)
       const sourceFile =
         sourceFilesMap[matchedExportType] || sourceFilesMap.default
+
       if (!sourceFile) {
         continue
       }
@@ -95,25 +104,24 @@ export async function collectEntriesFromParsedExports(
           name: normalizedExportPath,
           export: {},
         }
+      } else if (matchedExportType === entryExportPathType) {
+        entries[entryExportPath].source = sourceFile
       }
 
-      const exportMap = entries[entryExportPath].export
+      // output exports match
       if (
-        entryExportPathType === 'default' &&
-        matchedExportType !== 'default' &&
-        pathSpecialConditionsMap[normalizedExportPath].size > 0
+        matchedExportType === entryExportPathType ||
+        (!hasSpecialEntry && matchedExportType !== 'default')
       ) {
-        continue
+        const exportMap = entries[entryExportPath].export
+        exportMap[outputComposedExportType] = outputPath
       }
-
-      exportMap[composedExportType] = outputPath
     }
   }
 
   // Handling binaries
   for (const [exportPath, sourceFile] of bins) {
-    const normalizedExportPath = normalizeExportPath(exportPath)
-    const outputExports = parsedExportsInfo.get(normalizedExportPath)
+    const outputExports = parsedExportsInfo.get(exportPath)
     if (!outputExports) {
       continue
     }
@@ -176,16 +184,16 @@ export async function collectBinaries(
   }
 }
 
-// ./index -> import|require|default
+// ./index -> default
 // ./index.development -> development
 // ./index.react-server -> react-server
 function getExportTypeFromExportPath(exportPath: string): string {
   // Skip the first two segments: `.` and `index`
   const exportTypes = exportPath.split('.').slice(2)
-  return getExportTypeFromExportTypes(exportTypes)
+  return getExportTypeFromExportTypesArray(exportTypes)
 }
 
-export function getSpecialExportTypeFromExportPath(
+export function getSpecialExportTypeFromComposedExportPath(
   composedExportType: string,
 ): string {
   const exportTypes = composedExportType.split('.')
@@ -197,7 +205,7 @@ export function getSpecialExportTypeFromExportPath(
   return 'default'
 }
 
-function getExportTypeFromExportTypes(types: string[]): string {
+function getExportTypeFromExportTypesArray(types: string[]): string {
   let exportType = 'default'
   new Set(types).forEach((value) => {
     if (specialExportConventions.has(value)) {
@@ -231,6 +239,182 @@ export function normalizeExportPath(exportPath: string): string {
   return baseName
 }
 
+// ./index.react-server -> ./index
+function stripSpecialCondition(exportPath: string): string {
+  return exportPath.split('.').slice(0, 2).join('.')
+}
+
+export async function collectSourceEntriesByExportPath(
+  sourceFolderPath: string,
+  originalSubpath: string,
+  bins: Map<string, string>,
+  exportsEntries: Map<string, Record<string, string>>,
+) {
+  const isBinaryPath = isBinExportPath(originalSubpath)
+  const subpath = originalSubpath.replace(BINARY_TAG, 'bin')
+  const absoluteDirPath = path.join(sourceFolderPath, subpath)
+
+  const isDirectory = fs.existsSync(absoluteDirPath)
+    ? (await fsp.stat(absoluteDirPath)).isDirectory()
+    : false
+
+  if (isDirectory) {
+    if (isBinaryPath) {
+      const binDirentList = await fsp.readdir(absoluteDirPath, {
+        withFileTypes: true,
+      })
+      for (const binDirent of binDirentList) {
+        if (binDirent.isFile()) {
+          const binFileAbsolutePath = path.join(binDirent.path, binDirent.name)
+          if (fs.existsSync(binFileAbsolutePath)) {
+            bins.set(normalizeExportPath(originalSubpath), binFileAbsolutePath)
+          }
+        }
+      }
+    } else {
+      // Search folder/index.<ext> convention entries
+      for (const extension of availableExtensions) {
+        const indexAbsoluteFile = path.join(
+          absoluteDirPath,
+          `index.${extension}`,
+        )
+        // Search folder/index.<special type>.<ext> convention entries
+        for (const specialExportType of runtimeExportConventions) {
+          const indexSpecialAbsoluteFile = path.join(
+            absoluteDirPath,
+            `index.${specialExportType}.${extension}`,
+          )
+          if (fs.existsSync(indexSpecialAbsoluteFile)) {
+            // Add special export path
+            // { ./<export path>.<special cond>: { <special cond>: 'index.<special cond>.<ext>' } }
+            const exportPath = relativify(subpath)
+            const specialExportPath = exportPath + '.' + specialExportType
+            const sourceFilesMap = exportsEntries.get(specialExportPath) || {}
+            sourceFilesMap[specialExportType] = indexSpecialAbsoluteFile
+            exportsEntries.set(specialExportPath, sourceFilesMap)
+          }
+        }
+        if (
+          fs.existsSync(indexAbsoluteFile) &&
+          !isTestFile(indexAbsoluteFile)
+        ) {
+          const exportPath = relativify(subpath)
+          const sourceFilesMap = exportsEntries.get(exportPath) || {}
+          const exportType = getExportTypeFromExportPath(exportPath)
+          sourceFilesMap[exportType] = indexAbsoluteFile
+          exportsEntries.set(exportPath, sourceFilesMap)
+          break
+        }
+      }
+    }
+  } else {
+    // subpath could be a file
+    const dirName = dirname(subpath)
+    const baseName = basename(subpath)
+    // Read current file's directory
+    const dirPath = path.join(sourceFolderPath, dirName)
+    if (!fs.existsSync(dirPath)) {
+      return
+    }
+    const dirents = await fsp.readdir(dirPath, {
+      withFileTypes: true,
+    })
+    for (const dirent of dirents) {
+      // index.development.js -> index.development
+      const direntBaseName = baseNameWithoutExtension(dirent.name)
+      const ext = extname(dirent.name).slice(1)
+      if (
+        !dirent.isFile() ||
+        direntBaseName !== baseName ||
+        !availableExtensions.has(ext)
+      ) {
+        continue
+      }
+
+      if (isTestFile(dirent.name)) {
+        continue
+      }
+
+      const sourceFileAbsolutePath = path.join(dirent.path, dirent.name)
+
+      if (isBinaryPath) {
+        bins.set(originalSubpath, sourceFileAbsolutePath)
+      } else {
+        let sourceFilesMap = exportsEntries.get(originalSubpath) || {}
+        const exportType = getExportTypeFromExportPath(originalSubpath)
+        sourceFilesMap[exportType] = sourceFileAbsolutePath
+
+        if (specialExportConventions.has(exportType)) {
+          // e.g. ./foo/index.react-server -> ./foo/index
+          const fallbackExportPath =
+            sourceFilenameToExportFullPath(originalSubpath)
+          const fallbackSourceFilesMap =
+            exportsEntries.get(fallbackExportPath) || {}
+          sourceFilesMap = {
+            ...fallbackSourceFilesMap,
+            ...sourceFilesMap,
+          }
+        }
+
+        exportsEntries.set(originalSubpath, sourceFilesMap)
+      }
+    }
+  }
+}
+
+/**
+ * exportsEntries {
+ *   "./index" => {
+ *      "development" => source"
+ *      "react-server" => "source"
+ *   },
+ *  "./index.react-server" => {
+ *      "development" => source"
+ *      "react-server" => "source"
+ *   }
+ *  }
+ */
+export async function collectSourceEntriesFromExportPaths(
+  sourceFolderPath: string,
+  parsedExportsInfo: ParsedExportsInfo,
+) {
+  const bins = new Map<string, string>()
+  const exportsEntries = new Map<string, Record<string, string>>()
+
+  for (const [exportPath, exportInfo] of parsedExportsInfo.entries()) {
+    const specialConditions = new Set<string>()
+    for (const [_, composedExportType] of exportInfo) {
+      const specialExportType =
+        getSpecialExportTypeFromComposedExportPath(composedExportType)
+      if (specialExportType !== 'default') {
+        specialConditions.add(specialExportType)
+      }
+    }
+
+    await collectSourceEntriesByExportPath(
+      sourceFolderPath,
+      exportPath,
+      bins,
+      exportsEntries,
+    )
+
+    for (const specialCondition of specialConditions) {
+      await collectSourceEntriesByExportPath(
+        sourceFolderPath,
+        exportPath + '.' + specialCondition,
+        bins,
+        exportsEntries,
+      )
+    }
+  }
+
+  return {
+    bins,
+    exportsEntries,
+  }
+}
+
+// For `prepare`
 export async function collectSourceEntries(sourceFolderPath: string) {
   const bins = new Map<string, string>()
   const exportsEntries = new Map<string, Record<string, string>>()
@@ -243,88 +427,54 @@ export async function collectSourceEntries(sourceFolderPath: string) {
   const entryFileDirentList = await fsp.readdir(sourceFolderPath, {
     withFileTypes: true,
   })
+
+  // Collect source files for `exports` field
   for (const dirent of entryFileDirentList) {
-    if (dirent.isDirectory()) {
-      if (dirent.name === 'bin') {
-        const binDirentList = await fsp.readdir(
-          path.join(sourceFolderPath, dirent.name),
-          {
-            withFileTypes: true,
-          },
-        )
-        for (const binDirent of binDirentList) {
-          if (binDirent.isFile()) {
-            const binFileAbsolutePath = path.join(
-              sourceFolderPath,
-              dirent.name,
-              binDirent.name,
-            )
-            const binExportPath = sourceFilenameToExportPath(binDirent.name)
-            if (fs.existsSync(binFileAbsolutePath)) {
-              bins.set(
-                posix.join(BINARY_TAG, binExportPath),
-                binFileAbsolutePath,
-              )
-            }
-          }
-        }
-      } else {
-        // Search folder/index.<ext> convention entries
-        for (const extension of availableExtensions) {
-          const indexAbsoluteFile = path.join(
-            dirent.path,
-            dirent.name,
-            `index.${extension}`,
-          )
-          // Search folder/index.<special type>.<ext> convention entries
-          for (const specialExportType of runtimeExportConventions) {
-            const indexSpecialAbsoluteFile = path.join(
-              dirent.path,
-              dirent.name,
-              `index.${specialExportType}.${extension}`,
-            )
-            if (fs.existsSync(indexSpecialAbsoluteFile)) {
-              // Add special export path
-              // { ./<export path>.<special cond>: { <special cond>: 'index.<special cond>.<ext>' } }
-              const exportPath = sourceFilenameToExportPath(dirent.name)
-              const specialExportPath = exportPath + '.' + specialExportType
-              const sourceFilesMap = exportsEntries.get(specialExportPath) || {}
-              sourceFilesMap[specialExportType] = indexSpecialAbsoluteFile
-              exportsEntries.set(specialExportPath, sourceFilesMap)
-            }
-          }
-          if (
-            fs.existsSync(indexAbsoluteFile) &&
-            !isTestFile(indexAbsoluteFile)
-          ) {
-            const exportPath = sourceFilenameToExportPath(dirent.name)
-            const sourceFilesMap = exportsEntries.get(exportPath) || {}
-            const exportType = getExportTypeFromExportPath(exportPath)
-            sourceFilesMap[exportType] = indexAbsoluteFile
-            exportsEntries.set(exportPath, sourceFilesMap)
-            break
-          }
-        }
-      }
-    } else if (dirent.isFile()) {
-      const isAvailableExtension = availableExtensions.has(
-        path.extname(dirent.name).slice(1),
+    if (getFileBasename(dirent.name) === 'bin') {
+      continue
+    }
+    const exportPath = sourceFilenameToExportFullPath(dirent.name)
+
+    await collectSourceEntriesByExportPath(
+      sourceFolderPath,
+      exportPath,
+      bins,
+      exportsEntries,
+    )
+  }
+
+  // Collect source files for `bin` field
+  const binDirent = entryFileDirentList.find(
+    (dirent) => getFileBasename(dirent.name) === 'bin',
+  )
+  if (binDirent) {
+    if (binDirent.isDirectory()) {
+      const binDirentList = await fsp.readdir(
+        path.join(binDirent.path, binDirent.name),
+        {
+          withFileTypes: true,
+        },
       )
-      if (isAvailableExtension) {
-        const exportPath = sourceFilenameToExportPath(dirent.name)
-        const isBinFile = exportPath === './bin'
-        const fullPath = path.join(sourceFolderPath, dirent.name)
-        if (isBinFile) {
-          bins.set(BINARY_TAG, fullPath)
-        } else {
-          if (hasAvailableExtension(dirent.name) && !isTestFile(dirent.name)) {
-            const sourceFilesMap = exportsEntries.get(exportPath) || {}
-            const exportType = getExportTypeFromExportPath(exportPath)
-            sourceFilesMap[exportType] = fullPath
-            exportsEntries.set(exportPath, sourceFilesMap)
-          }
-        }
+      for (const binDirent of binDirentList) {
+        const binExportPath = posix.join(
+          BINARY_TAG,
+          getFileBasename(binDirent.name),
+        )
+
+        await collectSourceEntriesByExportPath(
+          sourceFolderPath,
+          binExportPath,
+          bins,
+          exportsEntries,
+        )
       }
+    } else {
+      await collectSourceEntriesByExportPath(
+        sourceFolderPath,
+        BINARY_TAG,
+        bins,
+        exportsEntries,
+      )
     }
   }
 
