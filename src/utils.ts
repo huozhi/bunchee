@@ -212,3 +212,15 @@ export async function removeOutputDir(output: OutputOptions, cwd: string) {
     removedDirs.add(dir)
   }
 }
+
+export function isBin(filename: string) {
+  return filename === BINARY_TAG || filename.startsWith(BINARY_TAG + '/')
+}
+
+export function isTypeFile(filename: string) {
+  return (
+    filename.endsWith('.d.ts') ||
+    filename.endsWith('.d.mts') ||
+    filename.endsWith('.d.cts')
+  )
+}

@@ -9,6 +9,7 @@ import {
   getSpecialExportTypeFromExportPath,
   normalizeExportPath,
 } from '../entries'
+import { isBin, isTypeFile } from '../utils'
 
 // [filename, sourceFileName, size]
 type FileState = [string, string, number]
@@ -88,18 +89,6 @@ function createOutputState({ entries }: { entries: Entries }): {
       return sizeStats
     },
   }
-}
-
-function isBin(filename: string) {
-  return filename === BINARY_TAG || filename.startsWith(BINARY_TAG + '/')
-}
-
-function isTypeFile(filename: string) {
-  return (
-    filename.endsWith('.d.ts') ||
-    filename.endsWith('.d.mts') ||
-    filename.endsWith('.d.cts')
-  )
 }
 
 function normalizeExportName(exportName: string): string {

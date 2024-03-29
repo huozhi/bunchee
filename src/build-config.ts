@@ -28,12 +28,19 @@ import { inlineCss } from './plugins/inline-css'
 import { rawContent } from './plugins/raw-plugin'
 import { aliasEntries } from './plugins/alias-plugin'
 import { prependDirectives } from './plugins/prepend-directives'
+import { patchBinary } from './plugins/patch-binary'
 import {
   getExportsDistFilesOfCondition,
   getExportFileTypePath,
   ExportOutput,
 } from './exports'
-import { isESModulePackage, isNotNull, filePathWithoutExtension } from './utils'
+import {
+  isESModulePackage,
+  isNotNull,
+  filePathWithoutExtension,
+  isBin,
+  isTypeFile,
+} from './utils'
 import { memoizeByKey } from './lib/memoize'
 import {
   availableESExtensionsRegex,
@@ -159,6 +166,15 @@ async function buildInputConfig(
     tsOptions: { tsConfigPath, tsCompilerOptions },
     pluginContext,
   } = buildContext
+  const executablePaths = Object.entries(entries)
+    .filter(([key]) => isBin(key))
+    .map(([_, entry]) =>
+      Object.values(entry.export)
+        .filter((p) => !isTypeFile(p))
+        .map((p) => path.resolve(cwd, p)),
+    )
+    .flat()
+
   const hasNoExternal = bundleConfig.external === null
   const externals = hasNoExternal
     ? []
@@ -261,6 +277,7 @@ async function buildInputConfig(
           rawContent({ exclude: /node_modules/ }),
           preserveDirectives(),
           prependDirectives(),
+          patchBinary(executablePaths),
           replace({
             values: inlineDefinedValues,
             preventAssignment: true,

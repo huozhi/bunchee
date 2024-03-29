@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import type { CliArgs, BundleConfig } from '../types'
 
 import path from 'path'
