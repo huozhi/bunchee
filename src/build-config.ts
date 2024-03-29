@@ -7,7 +7,6 @@ import type {
   ParsedExportCondition,
 } from './types'
 import type {
-  CustomPluginOptions,
   GetManualChunk,
   InputOptions,
   OutputOptions,
@@ -39,14 +38,14 @@ import {
   availableESExtensionsRegex,
   nodeResolveExtensions,
   disabledWarnings,
-  availableExtensions,
 } from './constants'
 import { BuildContext } from './types'
 import { getDefinedInlineVariables } from './env'
 import {
-  getSpecialExportTypeFromExportPath,
+  getSpecialExportTypeFromComposedExportPath,
   normalizeExportPath,
 } from './entries'
+import { getCustomModuleLayer, getModuleLayer } from './lib/split-chunk'
 
 const swcMinifyOptions = {
   compress: {
@@ -134,7 +133,7 @@ export function getReversedAlias({
     const normalizedExportPath = normalizeExportPath(entryExportPath)
     // entryExportPath format: ./index, ./shared, etc.
     const specialExportType =
-      getSpecialExportTypeFromExportPath(entryExportPath)
+      getSpecialExportTypeFromComposedExportPath(entryExportPath)
     if (specialExportType === 'default') {
       alias[exportCondition.source] = posix.join(
         name || '',
@@ -225,17 +224,14 @@ async function buildInputConfig(
       : 'esm'
     : bundleConfig.format
 
-  const commonPlugins = [
-    json(),
-    sizePlugin,
-    aliasEntries({
-      entry,
-      entries,
-      entriesAlias: pluginContext.entriesAlias,
-      format: aliasFormat,
-      dts,
-    }),
-  ]
+  const aliasPlugin = aliasEntries({
+    entry,
+    entries,
+    entriesAlias: pluginContext.entriesAlias,
+    format: aliasFormat,
+    dts,
+  })
+  const commonPlugins = [json(), sizePlugin]
 
   const typesPlugins = [...commonPlugins, inlineCss({ skip: true })]
 
@@ -254,13 +250,15 @@ async function buildInputConfig(
 
   const plugins: Plugin[] = (
     dts
-      ? typesPlugins
+      ? [...typesPlugins, aliasPlugin]
       : [
           ...commonPlugins,
+          preserveDirectives(),
+
+          aliasPlugin,
           inlineCss({ exclude: /node_modules/ }),
           rawContent({ exclude: /node_modules/ }),
-          preserveDirectives(),
-          prependDirectives(),
+
           replace({
             values: inlineDefinedValues,
             preventAssignment: true,
@@ -281,6 +279,7 @@ async function buildInputConfig(
           commonjs({
             exclude: bundleConfig.external || null,
           }),
+          prependDirectives(),
         ]
   ).filter(isNotNull<Plugin>)
 
@@ -305,34 +304,12 @@ async function buildInputConfig(
       ) {
         return
       }
+      if (code === 'MODULE_LEVEL_DIRECTIVE') {
+        return
+      }
       warn(warning)
     },
   }
-}
-
-function getModuleLater(moduleMeta: CustomPluginOptions) {
-  const directives = (
-    moduleMeta.preserveDirectives || { directives: [] }
-  ).directives
-    .map((d: string) => d.replace(/^use /, ''))
-    .filter((d: string) => d !== 'strict')
-
-  const moduleLayer = directives[0]
-  return moduleLayer
-}
-
-function getCustomModuleLayer(moduleId: string): string | undefined {
-  const segments = path.basename(moduleId).split('.')
-  if (segments.length >= 2) {
-    const [layerSegment, ext] = segments.slice(-2)
-    const baseName = segments[0]
-    const match = layerSegment.match(/^(\w+)-runtime$/)
-    const layer = match && match[1]
-    if (availableExtensions.has(ext) && layer && layer.length > 0) {
-      return baseName + '-' + layer
-    }
-  }
-  return undefined
 }
 
 // dependencyGraphMap: Map<subModuleId, Set<entryParentId>>
@@ -351,7 +328,7 @@ function createSplitChunks(
 
     const { isEntry } = moduleInfo
     const moduleMeta = moduleInfo.meta
-    const moduleLayer = getModuleLater(moduleMeta)
+    const moduleLayer = getModuleLayer(moduleMeta)
 
     if (!isEntry) {
       const cachedCustomModuleLayer = splitChunksGroupMap.get(id)
@@ -372,7 +349,7 @@ function createSplitChunks(
           continue
         }
 
-        const subModuleLayer = getModuleLater(moduleMeta)
+        const subModuleLayer = getModuleLayer(moduleMeta)
         if (subModuleLayer === moduleLayer) {
           if (!dependencyGraphMap.has(subId)) {
             dependencyGraphMap.set(subId, new Set())
@@ -396,7 +373,7 @@ function createSplitChunks(
           // If other entry is dependency of this entry
           if (entryFiles.has(id)) {
             const entryModuleInfo = ctx.getModuleInfo(id)
-            const entryModuleLayer = getModuleLater(
+            const entryModuleLayer = getModuleLayer(
               entryModuleInfo ? entryModuleInfo.meta : {},
             )
             return entryModuleLayer === moduleLayer

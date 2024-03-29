@@ -94,7 +94,7 @@ async function bundle(
       }
 
       parsedExportsInfo.set(
-        '.',
+        './index',
         [
           [mainExportPath, 'default'],
           Boolean(typesEntryPath) && [typesEntryPath, 'types'],
@@ -130,6 +130,7 @@ async function bundle(
     parsedExportsInfo,
     inputFile,
   )
+
   const hasTypeScriptFiles = Object.values(entries).some((entry) =>
     isTypescriptFile(entry.source),
   )
