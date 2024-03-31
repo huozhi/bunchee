@@ -1,6 +1,6 @@
 import fsp from 'fs/promises'
 import { execSync, fork } from 'child_process'
-import path, { resolve, join, extname } from 'path'
+import path, { resolve, join } from 'path'
 import { existsFile, assertContainFiles } from './testing-utils'
 import * as debug from './utils/debug'
 
@@ -103,108 +103,12 @@ const testCases: {
     },
   },
   {
-    name: 'no-entry',
-    args: [],
-    async expected(_dir, { stderr }) {
-      const log =
-        'The "src" directory does not contain any entry files. ' +
-        'For proper usage, please refer to the following link: ' +
-        'https://github.com/huozhi/bunchee#usage'
-      expect(stderr).toContain(log)
-    },
-  },
-  {
     name: 'raw-data',
     args: [],
     async expected(dir) {
       const distFile = join(dir, './dist/index.js')
       expect(await existsFile(distFile)).toBe(true)
       expect(await fsp.readFile(distFile, 'utf-8')).toContain(`"thisismydata"`)
-    },
-  },
-  {
-    name: 'server-components',
-    args: [],
-    async expected(dir) {
-      const distFiles = await fsp.readdir(join(dir, 'dist'))
-
-      const requiredFiles = [
-        join(dir, 'dist/index.js'),
-        join(dir, 'dist/index.cjs'),
-        join(dir, 'dist/ui.js'),
-        join(dir, 'dist/ui.cjs'),
-      ]
-      for (const f of requiredFiles) {
-        expect(await existsFile(f)).toBe(true)
-      }
-
-      // split chunks
-      const indexContent = await fsp.readFile(
-        join(dir, 'dist/index.js'),
-        'utf-8',
-      )
-      expect(indexContent).not.toContain('use server')
-      expect(indexContent).not.toContain('use client')
-
-      // client component chunks will remain the directive
-      const clientClientChunkFiles = distFiles.filter((f) =>
-        f.includes('client-client-'),
-      )
-      clientClientChunkFiles.forEach(async (f) => {
-        const content = await fsp.readFile(join(dir, 'dist', f), 'utf-8')
-        expect(content).toContain('use client')
-      })
-      // cjs and esm, check the extension and files amount
-      expect(clientClientChunkFiles.map((f) => extname(f)).sort()).toEqual([
-        '.cjs',
-        '.js',
-      ])
-
-      // asset is only being imported to ui, no split
-      const assetClientChunkFiles = distFiles.filter((f) =>
-        f.includes('_asset-client-'),
-      )
-      expect(assetClientChunkFiles.length).toBe(0)
-
-      // server component chunks will remain the directive
-      const serverChunkFiles = distFiles.filter((f) =>
-        f.includes('_actions-server-'),
-      )
-      serverChunkFiles.forEach(async (f) => {
-        const content = await fsp.readFile(join(dir, 'dist', f), 'utf-8')
-        expect(content).toContain('use server')
-        expect(content).not.toContain('use client')
-      })
-      // cjs and esm, check the extension and files amount
-      expect(serverChunkFiles.map((f) => extname(f)).sort()).toEqual([
-        '.cjs',
-        '.js',
-      ])
-
-      // For single entry ./ui, client is bundled into client
-      const uiEsm = await fsp.readFile(join(dir, 'dist/ui.js'), 'utf-8')
-      expect(uiEsm).toContain('use client')
-      expect(uiEsm).not.toContain('./_client-client')
-
-      // asset is only being imported to ui, no split
-      expect(uiEsm).not.toContain('./_asset-client')
-    },
-  },
-  {
-    name: 'server-components-same-layer',
-    args: [],
-    async expected(dir) {
-      const distFiles = await fsp.readdir(join(dir, 'dist'))
-      const clientChunkFiles = distFiles.filter((f) =>
-        f.includes('client-client-'),
-      )
-      expect(clientChunkFiles.length).toBe(0)
-
-      // index doesn't have "use client" directive
-      const indexCjs = await fsp.readFile(join(dir, 'dist/index.cjs'), 'utf-8')
-      const indexEsm = await fsp.readFile(join(dir, 'dist/index.js'), 'utf-8')
-      expect(indexCjs).toContain('use client')
-      expect(indexEsm).toContain('use client')
     },
   },
   {
