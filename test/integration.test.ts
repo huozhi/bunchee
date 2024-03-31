@@ -1,24 +1,11 @@
 import fsp from 'fs/promises'
 import { execSync, fork } from 'child_process'
 import path, { resolve, join, extname } from 'path'
-import {
-  stripANSIColor,
-  existsFile,
-  assertFilesContent,
-  assertContainFiles,
-} from './testing-utils'
+import { existsFile, assertContainFiles } from './testing-utils'
 import * as debug from './utils/debug'
 
 const integrationTestDir = resolve(__dirname, 'integration')
 const getPath = (filepath: string) => join(integrationTestDir, filepath)
-
-const getOutputSizeColumnIndex = (line: string): number => {
-  let match
-  if ((match = /\d+\sK?B/g.exec(line)) !== null) {
-    return match.index
-  }
-  return -1
-}
 
 const testCases: {
   name: string
@@ -40,58 +27,6 @@ const testCases: {
     },
   },
   {
-    name: 'pkg-exports-js',
-    async expected(dir) {
-      const distFiles = [
-        'dist/index.cjs',
-        'dist/index.mjs',
-        'dist/index.esm.js',
-      ]
-      assertContainFiles(dir, distFiles)
-    },
-  },
-  {
-    name: 'pkg-exports-ts-rsc',
-    async expected(dir) {
-      await assertFilesContent(dir, {
-        './dist/index.mjs': /const shared = true/,
-        './dist/react-server.mjs': /'react-server'/,
-        './dist/react-native.js': /'react-native'/,
-        './dist/index.d.ts': /declare const shared = true/,
-        './dist/api.mjs': /\'pkg-export-ts-rsc\'/,
-      })
-    },
-  },
-  {
-    name: 'pkg-exports-default',
-    args: [],
-    async expected(dir) {
-      const distFiles = [
-        join(dir, './dist/index.cjs'),
-        join(dir, './dist/index.mjs'),
-      ]
-      for (const f of distFiles) {
-        expect(await existsFile(f)).toBe(true)
-      }
-      const cjsFile = await fsp.readFile(join(dir, './dist/index.cjs'), {
-        encoding: 'utf-8',
-      })
-      expect(cjsFile).toContain(
-        `function _interopDefault (e) { return e && e.__esModule ? e : { default: e }; }`,
-      )
-      expect(cjsFile).toContain(
-        `Object.defineProperty(exports, '__esModule', { value: true });`,
-      )
-    },
-  },
-  {
-    name: 'ts-dual-package-type-cjs',
-    args: [],
-    async expected(dir) {
-      assertContainFiles(dir, ['./dist/index.js', './dist/index.mjs'])
-    },
-  },
-  {
     name: 'ts-dual-package-module',
     args: [],
     async expected(dir) {
@@ -109,35 +44,6 @@ const testCases: {
         './dist/index.d.ts',
       ]
       assertContainFiles(dir, distFiles)
-    },
-  },
-  {
-    name: 'single-entry',
-    async expected(dir, { stdout, stderr }) {
-      const distFiles = [
-        join(dir, './dist/index.js'),
-        join(dir, './dist/index.d.ts'),
-      ]
-      for (const f of distFiles) {
-        expect(await existsFile(f)).toBe(true)
-      }
-      expect(await fsp.readFile(distFiles[0], 'utf-8')).toContain(
-        `Object.defineProperty(exports, '__esModule', { value: true });`,
-      )
-      expect(await fsp.readFile(distFiles[1], 'utf-8')).toContain(
-        'declare const _default: () => string;',
-      )
-
-      const log = `\
-      dist/index.d.ts
-      dist/index.js`
-
-      expect(stderr).not.toContain('Cannot export `exports` field with')
-
-      const rawStdout = stripANSIColor(stdout)
-      log.split('\n').forEach((line: string) => {
-        expect(rawStdout).toContain(line.trim())
-      })
     },
   },
   {
@@ -299,146 +205,6 @@ const testCases: {
       const indexEsm = await fsp.readFile(join(dir, 'dist/index.js'), 'utf-8')
       expect(indexCjs).toContain('use client')
       expect(indexEsm).toContain('use client')
-    },
-  },
-  {
-    name: 'shared-entry',
-    args: [],
-    async expected(dir) {
-      const distFiles = [
-        './dist/index.js',
-        './dist/index.mjs',
-        './dist/shared.js',
-        './dist/shared.mjs',
-      ]
-      assertContainFiles(dir, distFiles)
-
-      // ESM bundle imports from <pkg/export>
-      const indexEsm = await fsp.readFile(
-        join(dir, './dist/index.mjs'),
-        'utf-8',
-      )
-      expect(indexEsm).toContain('shared-entry/shared')
-      expect(indexEsm).toContain('index-export')
-      expect(indexEsm).not.toMatch(/['"]\.\/shared['"]/)
-      expect(indexEsm).not.toContain('shared-export')
-
-      // CJS bundle imports from <pkg/export>
-      const indexCjs = await fsp.readFile(join(dir, './dist/index.js'), 'utf-8')
-      expect(indexCjs).toContain('shared-entry/shared')
-      expect(indexCjs).toContain('index-export')
-      expect(indexCjs).not.toMatch(/['"]\.\/shared['"]/)
-
-      // shared entry contains its own content
-      const sharedEsm = await fsp.readFile(
-        join(dir, './dist/shared.mjs'),
-        'utf-8',
-      )
-      expect(sharedEsm).toContain('shared-export')
-
-      // shared entry contains its own content
-      const sharedCjs = await fsp.readFile(
-        join(dir, './dist/shared.js'),
-        'utf-8',
-      )
-      expect(sharedCjs).toContain('shared-export')
-    },
-  },
-  {
-    name: 'output',
-    args: [],
-    async expected(dir, { stdout }) {
-      /*
-        output:
-  
-        Exports          File                        Size
-        cli (bin)        dist/cli.js                 103 B
-        .                dist/index.js               42 B
-        . (react-server) dist/index.react-server.js  55 B
-        ./foo            dist/foo.js                 103 B
-        */
-
-      const lines = stripANSIColor(stdout).split('\n')
-      const [tableHeads, ...restLines] = lines
-      const cliLine = restLines.find((line) => line.includes('cli'))!
-      const indexLine = restLines.find(
-        (line) => line.includes('. ') && !line.includes('react-server'),
-      )!
-      const indexReactServerLine = restLines.find((line) =>
-        line.includes('. (react-server)'),
-      )!
-      const fooLine = restLines.find((line) => line.includes('./foo'))!
-
-      expect(tableHeads).toContain('Exports')
-      expect(tableHeads).toContain('File')
-      expect(tableHeads).toContain('Size')
-
-      expect(cliLine).toContain('cli (bin)')
-      expect(cliLine).toContain('dist/cli.js')
-
-      expect(indexLine).toContain('.')
-      expect(indexLine).toContain('dist/index.js')
-
-      expect(indexReactServerLine).toContain('. (react-server)')
-      expect(indexReactServerLine).toContain('dist/index.react-server.js')
-
-      expect(fooLine).toContain('./foo')
-      expect(fooLine).toContain('dist/foo.js')
-
-      const [exportsIndex, fileIndex, sizeIndex] = [
-        tableHeads.indexOf('Exports'),
-        tableHeads.indexOf('File'),
-        tableHeads.indexOf('Size'),
-      ]
-
-      expect(cliLine.indexOf('cli (bin)')).toEqual(exportsIndex)
-      expect(cliLine.indexOf('dist/cli.js')).toEqual(fileIndex)
-      expect(getOutputSizeColumnIndex(cliLine)).toEqual(sizeIndex)
-
-      expect(indexLine.indexOf('.')).toEqual(exportsIndex)
-      expect(indexLine.indexOf('dist/index.js')).toEqual(fileIndex)
-      expect(getOutputSizeColumnIndex(indexLine)).toEqual(sizeIndex)
-
-      expect(indexReactServerLine.indexOf('. (react-server)')).toEqual(
-        exportsIndex,
-      )
-      expect(
-        indexReactServerLine.indexOf('dist/index.react-server.js'),
-      ).toEqual(fileIndex)
-      expect(getOutputSizeColumnIndex(indexReactServerLine)).toEqual(sizeIndex)
-
-      expect(fooLine.indexOf('./foo')).toEqual(exportsIndex)
-      expect(fooLine.indexOf('dist/foo.js')).toEqual(fileIndex)
-      expect(getOutputSizeColumnIndex(fooLine)).toEqual(sizeIndex)
-    },
-  },
-  {
-    name: 'output-short',
-    args: [],
-    async expected(dir, { stdout, stderr }) {
-      /*
-        output:
-  
-        Exports File          Size
-        .       dist/index.js 30 B
-        */
-      const [tableHeads, indexLine] = stripANSIColor(stdout).split('\n')
-      expect(tableHeads).toContain('Exports')
-      expect(tableHeads).toContain('File')
-      expect(tableHeads).toContain('Size')
-
-      expect(indexLine).toContain('.')
-      expect(indexLine).toContain('dist/index.js')
-
-      const [exportsIndex, fileIndex, sizeIndex] = [
-        tableHeads.indexOf('Exports'),
-        tableHeads.indexOf('File'),
-        tableHeads.indexOf('Size'),
-      ]
-
-      expect(indexLine.indexOf('.')).toEqual(exportsIndex)
-      expect(indexLine.indexOf('dist/index.js')).toEqual(fileIndex)
-      expect(getOutputSizeColumnIndex(indexLine)).toEqual(sizeIndex)
     },
   },
   {

@@ -55,7 +55,7 @@ export function inlineCss(options: {
         map: { mappings: '' },
       }
     },
-    renderChunk(code) {
+    renderChunk(code, chunk) {
       const dependenciesIds = this.getModuleIds()
       let foundCss = false
       for (const depId of dependenciesIds) {
