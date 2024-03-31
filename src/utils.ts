@@ -216,14 +216,6 @@ export async function removeOutputDir(output: OutputOptions, cwd: string) {
   }
 }
 
-export function isTypeFile(filename: string) {
-  return (
-    filename.endsWith('.d.ts') ||
-    filename.endsWith('.d.mts') ||
-    filename.endsWith('.d.cts')
-  )
-}
-
 export function isBinExportPath(exportPath: string) {
   return exportPath === BINARY_TAG || exportPath.startsWith(BINARY_TAG + '/')
 }
