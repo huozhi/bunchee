@@ -27,7 +27,7 @@ import { inlineCss } from './plugins/inline-css'
 import { rawContent } from './plugins/raw-plugin'
 import { aliasEntries } from './plugins/alias-plugin'
 import { prependDirectives } from './plugins/prepend-directives'
-import { patchBinary } from './plugins/patch-binary'
+import { prependShebang } from './plugins/prepend-shebang'
 import {
   getExportsDistFilesOfCondition,
   getExportFileTypePath,
@@ -273,7 +273,7 @@ async function buildInputConfig(
           aliasPlugin,
           inlineCss({ exclude: /node_modules/ }),
           rawContent({ exclude: /node_modules/ }),
-          patchBinary(executablePaths),
+          prependShebang(executablePaths),
           replace({
             values: inlineDefinedValues,
             preventAssignment: true,

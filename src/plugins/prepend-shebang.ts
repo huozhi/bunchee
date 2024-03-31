@@ -3,7 +3,7 @@ import MagicString from 'magic-string'
 import path from 'path'
 import type { OutputChunk, Plugin, SourceMapInput } from 'rollup'
 
-export const patchBinary = (executablePaths: string[]): Plugin => ({
+export const prependShebang = (executablePaths: string[]): Plugin => ({
   name: 'patchBinary',
 
   renderChunk: (code, chunk, outputOptions) => {
