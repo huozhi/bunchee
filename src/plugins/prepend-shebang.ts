@@ -4,7 +4,7 @@ import path from 'path'
 import type { OutputChunk, Plugin, SourceMapInput } from 'rollup'
 
 export const prependShebang = (executablePaths: string[]): Plugin => ({
-  name: 'patchBinary',
+  name: 'prependShebang',
 
   renderChunk: (code, chunk, outputOptions) => {
     if (
