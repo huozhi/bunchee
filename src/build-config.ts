@@ -38,7 +38,6 @@ import {
   isNotNull,
   filePathWithoutExtension,
   isBinExportPath,
-  isTypeFile,
 } from './utils'
 import { memoizeByKey } from './lib/memoize'
 import {
@@ -165,14 +164,11 @@ async function buildInputConfig(
     tsOptions: { tsConfigPath, tsCompilerOptions },
     pluginContext,
   } = buildContext
-  const executablePaths = Object.entries(entries)
-    .filter(([key]) => isBinExportPath(key))
-    .map(([_, entry]) =>
-      Object.values(entry.export)
-        .filter((p) => !isTypeFile(p))
-        .map((p) => path.resolve(cwd, p)),
-    )
-    .flat()
+  const isBinEntry = isBinExportPath(
+    Object.entries(entries)
+      .find(([, condition]) => condition.source === entry)
+      ?.at(0) as string,
+  )
 
   const hasNoExternal = bundleConfig.external === null
   const externals = hasNoExternal
@@ -273,7 +269,7 @@ async function buildInputConfig(
           aliasPlugin,
           inlineCss({ exclude: /node_modules/ }),
           rawContent({ exclude: /node_modules/ }),
-          prependShebang(executablePaths),
+          isBinEntry && prependShebang(),
           replace({
             values: inlineDefinedValues,
             preventAssignment: true,

@@ -3,7 +3,7 @@ import MagicString from 'magic-string'
 import path from 'path'
 import type { OutputChunk, Plugin, SourceMapInput } from 'rollup'
 
-export const prependShebang = (executablePaths: string[]): Plugin => ({
+export const prependShebang = (): Plugin => ({
   name: 'prependShebang',
 
   renderChunk: (code, chunk, outputOptions) => {
@@ -15,15 +15,6 @@ export const prependShebang = (executablePaths: string[]): Plugin => ({
       return
     }
 
-    const entryFileNames =
-      typeof outputOptions.entryFileNames === 'function'
-        ? outputOptions.entryFileNames(chunk)
-        : outputOptions.entryFileNames
-    const outputPath = path.resolve(outputOptions.dir!, entryFileNames)
-
-    if (!executablePaths.includes(outputPath)) {
-      return
-    }
     const transformed = new MagicString(code)
     transformed.prepend('#!/usr/bin/env node\n')
 
