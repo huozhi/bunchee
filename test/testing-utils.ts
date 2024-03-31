@@ -87,7 +87,7 @@ export async function deleteFile(f: string) {
 type CreateTestResultExtra = {
   dir: string
   distDir: string
-  distFile: string | null
+  distFile: string
 }
 export async function createTest<T>(
   {
@@ -111,7 +111,7 @@ export async function createTest<T>(
 ) {
   const fixturesDir = directory
   const distDir = path.join(fixturesDir, './dist')
-  let distFile = null
+  let distFile = ''
 
   if (!args.includes('--cwd')) {
     args.push('--cwd', fixturesDir)

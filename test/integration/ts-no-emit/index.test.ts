@@ -3,7 +3,6 @@ import {
   assertFilesContent,
   createIntegrationTest,
 } from '../utils'
-import { execSync } from 'child_process'
 
 describe('integration ts-no-emit', () => {
   it('should succeed the build', async () => {

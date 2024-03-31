@@ -38,7 +38,7 @@ export function createIntegration(
   stderr: string
   dir: string
   distDir: string
-  distFile: string | null
+  distFile: string
 } {
   let result: any
   beforeAll(async () => {
