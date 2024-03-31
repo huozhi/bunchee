@@ -87,7 +87,7 @@ export async function deleteFile(f: string) {
 type CreateTestResultExtra = {
   dir: string
   distDir: string
-  distFile: string
+  distFile: string | null
 }
 export async function createTest<T>(
   {
@@ -107,11 +107,11 @@ export async function createTest<T>(
       processOptions?: { abortTimeout?: number },
     ) => Promise<T>
   },
-  testFn: (context: T & CreateTestResultExtra) => void,
+  testFn?: (context: T & CreateTestResultExtra) => void,
 ) {
   const fixturesDir = directory
   const distDir = path.join(fixturesDir, './dist')
-  let distFile = ''
+  let distFile = null
 
   if (!args.includes('--cwd')) {
     args.push('--cwd', fixturesDir)
@@ -122,18 +122,22 @@ export async function createTest<T>(
   }
 
   const result = await run(args, options, { abortTimeout })
-  try {
-    await testFn({
-      ...result,
-      dir: directory,
-      distDir,
-      distFile,
-    })
-  } finally {
-    if (!process.env.TEST_NOT_CLEANUP) {
-      await removeDirectory(distDir)
+  const build = {
+    ...result,
+    dir: directory,
+    distDir,
+    distFile,
+  }
+  if (testFn) {
+    try {
+      await testFn(build)
+    } finally {
+      if (!process.env.TEST_NOT_CLEANUP) {
+        await removeDirectory(distDir)
+      }
     }
   }
+  return build
 }
 
 export type ExcuteBuncheeResult = {
