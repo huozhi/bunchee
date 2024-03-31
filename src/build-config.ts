@@ -269,7 +269,7 @@ async function buildInputConfig(
           aliasPlugin,
           inlineCss({ exclude: /node_modules/ }),
           rawContent({ exclude: /node_modules/ }),
-          isBinEntry && prependShebang(),
+          isBinEntry && prependShebang(entry),
           replace({
             values: inlineDefinedValues,
             preventAssignment: true,

@@ -11,7 +11,7 @@
     "test:post": "POST_BUILD=1 pnpm jest test/compile.test.ts test/integration.test.ts",
     "clean": "rm -rf ./dist",
     "typecheck": "tsc --noEmit && tsc -p test/tsconfig.json --noEmit",
-    "prepublishOnly": "pnpm clean && pnpm build && pnpm test",
+    "prepublishOnly": "pnpm clean && pnpm build && chmod +x ./dist/bin/cli.js && pnpm test",
     "tsx": "node -r @swc-node/register",
     "build": "node -r @swc-node/register ./src/bin/index.ts --runtime node",
     "format": "prettier --write .",
