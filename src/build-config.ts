@@ -27,12 +27,18 @@ import { inlineCss } from './plugins/inline-css'
 import { rawContent } from './plugins/raw-plugin'
 import { aliasEntries } from './plugins/alias-plugin'
 import { prependDirectives } from './plugins/prepend-directives'
+import { prependShebang } from './plugins/prepend-shebang'
 import {
   getExportsDistFilesOfCondition,
   getExportFileTypePath,
   ExportOutput,
 } from './exports'
-import { isESModulePackage, isNotNull, filePathWithoutExtension } from './utils'
+import {
+  isESModulePackage,
+  isNotNull,
+  filePathWithoutExtension,
+  isBinExportPath,
+} from './utils'
 import { memoizeByKey } from './lib/memoize'
 import {
   availableESExtensionsRegex,
@@ -158,6 +164,8 @@ async function buildInputConfig(
     tsOptions: { tsConfigPath, tsCompilerOptions },
     pluginContext,
   } = buildContext
+  const isBinEntry = isBinExportPath(exportCondition.name)
+
   const hasNoExternal = bundleConfig.external === null
   const externals = hasNoExternal
     ? []
@@ -254,11 +262,10 @@ async function buildInputConfig(
       : [
           ...commonPlugins,
           preserveDirectives(),
-
           aliasPlugin,
           inlineCss({ exclude: /node_modules/ }),
           rawContent({ exclude: /node_modules/ }),
-
+          isBinEntry && prependShebang(entry),
           replace({
             values: inlineDefinedValues,
             preventAssignment: true,
