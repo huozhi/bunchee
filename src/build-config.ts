@@ -238,10 +238,15 @@ async function buildInputConfig(
     entriesAlias: pluginContext.entriesAlias,
     format: aliasFormat,
     dts,
+    cwd,
   })
   const commonPlugins = [json(), sizePlugin]
 
-  const typesPlugins = [...commonPlugins, inlineCss({ skip: true })]
+  const typesPlugins = [
+    aliasPlugin,
+    ...commonPlugins,
+    inlineCss({ skip: true }),
+  ]
 
   if (useTypeScript) {
     // Each process should be unique
@@ -258,7 +263,7 @@ async function buildInputConfig(
 
   const plugins: Plugin[] = (
     dts
-      ? [...typesPlugins, aliasPlugin]
+      ? typesPlugins
       : [
           ...commonPlugins,
           preserveDirectives(),
