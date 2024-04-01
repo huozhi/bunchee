@@ -1,0 +1,17 @@
+{
+  "name": "basic",
+  "version": "0.0.1",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "bunchee"
+  },
+  "devDependencies": {
+    "bunchee": "latest"
+  }
+}

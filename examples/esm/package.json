@@ -1,0 +1,18 @@
+{
+  "name": "esm",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "bunchee"
+  },
+  "devDependencies": {
+    "bunchee": "latest"
+  }
+}
