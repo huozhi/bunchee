@@ -1,7 +1,6 @@
 import { OutputOptions, Plugin } from 'rollup'
 import { Entries } from '../types'
 import path from 'path'
-import { filePathWithoutExtension } from '../utils'
 import { relativify } from '../lib/format'
 
 // Alias entries to import path
@@ -14,41 +13,38 @@ export function aliasEntries({
   entriesAlias,
   format,
   dts,
+  cwd,
 }: {
   entry: string
   entries: Entries
   entriesAlias: Record<string, string>
   format: OutputOptions['format']
   dts: boolean
+  cwd: string
 }): Plugin {
-  let currentDistPath = ''
   const entryAliasWithoutSelf = {
     ...entriesAlias,
     [entry]: null,
   }
   const pathToRelativeDistMap = new Map<string, string>()
   for (const [, exportCondition] of Object.entries(entries)) {
-    const {
-      import: importCond,
-      require: requireCond,
-      default: defaultCond,
-    } = exportCondition.export
-    const firstCond = Object.entries(exportCondition.export).find(
-      ([key, cond]) => key !== 'types' && cond != null,
-    )?.[1]
+    const exportDistMaps = exportCondition.export
 
     if (dts) {
-      const fallbackCond = defaultCond || firstCond
-      // For cjs, use require() instead of import
-      const firstDistPath =
-        (format === 'cjs' ? requireCond : importCond) || fallbackCond
+      // Search types + [format] condition from entries map
+      // e.g. import.types, require.types
+      const typeCond = Object.entries(exportDistMaps).find(
+        ([composedKey, cond]) => {
+          const typesSet = new Set(composedKey.split('.'))
+          const formatCond = format === 'cjs' ? 'require' : 'import'
+          return (
+            typesSet.has('types') && typesSet.has(formatCond) && cond != null
+          )
+        },
+      )?.[1]
 
-      if (firstDistPath) {
-        if (entry !== exportCondition.source) {
-          pathToRelativeDistMap.set(exportCondition.source, firstDistPath)
-        } else {
-          currentDistPath = firstDistPath
-        }
+      if (typeCond) {
+        pathToRelativeDistMap.set(exportCondition.source, typeCond)
       }
     }
   }
@@ -57,23 +53,27 @@ export function aliasEntries({
     name: 'alias',
     resolveId: {
       async handler(source, importer, options) {
-        const resolvedId = await this.resolve(source, importer, options)
-        if (resolvedId != null) {
+        const resolved = await this.resolve(source, importer, options)
+
+        if (resolved != null) {
           if (dts) {
             // For types, generate relative path to the other type files,
             // this will be compatible for the node10 ts module resolution.
-            const aliasedId = pathToRelativeDistMap.get(resolvedId.id)
+            const resolvedDist = pathToRelativeDistMap.get(resolved.id)
+            const entryDist = pathToRelativeDistMap.get(entry)
+            if (resolved.id !== entry && entryDist && resolvedDist) {
+              const absoluteEntryDist = path.resolve(cwd, entryDist)
+              const absoluteResolvedDist = path.resolve(cwd, resolvedDist)
 
-            if (aliasedId != null && aliasedId !== currentDistPath) {
-              const ext = path.extname(aliasedId)
-              const filePathBase = filePathWithoutExtension(
-                path.relative(path.dirname(currentDistPath), aliasedId),
+              const filePathBase = path.relative(
+                path.dirname(absoluteEntryDist),
+                absoluteResolvedDist,
               )!
-              const relativePath = relativify(filePathBase + ext)
+              const relativePath = relativify(filePathBase)
               return { id: relativePath, external: true }
             }
           } else {
-            const aliasedId = entryAliasWithoutSelf[resolvedId.id]
+            const aliasedId = entryAliasWithoutSelf[resolved.id]
 
             if (aliasedId != null) {
               return { id: aliasedId }

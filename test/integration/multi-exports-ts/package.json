@@ -1,0 +1,26 @@
+{
+  "name": "multi-exports-ts",
+  "version": "0.0.1",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/es/index.d.mts",
+        "default": "./dist/es/index.mjs"
+      },
+      "require": {
+        "types": "./dist/cjs/index.d.cts",
+        "default": "./dist/cjs/index.js"
+      }
+    },
+    "./foo": {
+      "import": {
+        "types": "./foo/es/index.d.mts",
+        "default": "./foo/es/index.mjs"
+      },
+      "require": {
+        "types": "./foo/cjs/index.d.cts",
+        "default": "./foo/cjs/index.js"
+      }
+    }
+  }
+}
