@@ -164,11 +164,7 @@ async function buildInputConfig(
     tsOptions: { tsConfigPath, tsCompilerOptions },
     pluginContext,
   } = buildContext
-  const isBinEntry = isBinExportPath(
-    Object.entries(entries)
-      .find(([, condition]) => condition.source === entry)
-      ?.at(0) as string,
-  )
+  const isBinEntry = isBinExportPath(exportCondition.name)
 
   const hasNoExternal = bundleConfig.external === null
   const externals = hasNoExternal
