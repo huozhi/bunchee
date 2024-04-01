@@ -265,7 +265,7 @@ export async function collectSourceEntriesByExportPath(
       })
       for (const binDirent of binDirentList) {
         if (binDirent.isFile()) {
-          const binFileAbsolutePath = path.join(binDirent.path, binDirent.name)
+          const binFileAbsolutePath = path.join(absoluteDirPath, binDirent.name)
           if (fs.existsSync(binFileAbsolutePath)) {
             bins.set(normalizeExportPath(originalSubpath), binFileAbsolutePath)
           }
@@ -335,7 +335,7 @@ export async function collectSourceEntriesByExportPath(
         continue
       }
 
-      const sourceFileAbsolutePath = path.join(dirent.path, dirent.name)
+      const sourceFileAbsolutePath = path.join(dirPath, dirent.name)
 
       if (isBinaryPath) {
         bins.set(originalSubpath, sourceFileAbsolutePath)
@@ -450,7 +450,7 @@ export async function collectSourceEntries(sourceFolderPath: string) {
   if (binDirent) {
     if (binDirent.isDirectory()) {
       const binDirentList = await fsp.readdir(
-        path.join(binDirent.path, binDirent.name),
+        path.join(sourceFolderPath, binDirent.name),
         {
           withFileTypes: true,
         },
