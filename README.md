@@ -165,7 +165,7 @@ Assuming you have default export package as `"."` and subpath export `"./lite"` 
      "build": "bunchee"
   },
   "exports": {
-    "./lite": "./dist/lite.js"
+    "./lite": "./dist/lite.js",
     ".": {
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
