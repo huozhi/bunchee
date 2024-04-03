@@ -21,6 +21,10 @@
         "types": "./foo/cjs/index.d.cts",
         "default": "./foo/cjs/index.js"
       }
+    },
+    "./types": {
+      "types": "./dist/types/types.d.ts",
+      "default": "./dist/types/types.js"
     }
   }
 }
