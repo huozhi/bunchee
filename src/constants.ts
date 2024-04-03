@@ -39,6 +39,7 @@ export const dtsExtensionsMap = {
 }
 
 export const disabledWarnings = new Set([
+  'EMPTY_BUNDLE',
   'MIXED_EXPORTS',
   'PREFER_NAMED_EXPORTS',
   'UNRESOLVED_IMPORT',

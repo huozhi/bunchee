@@ -14,6 +14,7 @@ describe('integration multi-exports', () => {
       './foo/cjs/index.d.cts': `export { type Foo, foo }`,
       './foo/es/index.mjs': `export { foo }`,
       './foo/es/index.d.mts': `export { type Foo, foo }`,
+      './types/types.d.ts': `export type { SharedType }`,
     })
   })
 })

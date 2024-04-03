@@ -37,9 +37,11 @@ export function aliasEntries({
         ([composedKey, cond]) => {
           const typesSet = new Set(composedKey.split('.'))
           const formatCond = format === 'cjs' ? 'require' : 'import'
-          return (
-            typesSet.has('types') && typesSet.has(formatCond) && cond != null
-          )
+          const isMatchedCond =
+            typesSet.has(formatCond) ||
+            (!typesSet.has('import') && !typesSet.has('require'))
+
+          return typesSet.has('types') && isMatchedCond && cond != null
         },
       )?.[1]
 
