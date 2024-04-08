@@ -28,7 +28,6 @@ Options:
   --env <env>            inlined process env variables, separate by comma. default: NODE_ENV
   --cwd <cwd>            specify current working directory
   --sourcemap            enable sourcemap generation, default: false
-  --dts                  determine if need to generate types, default: undefined
   --no-dts               do not generate types, default: undefined
   --tsconfig             path to tsconfig file, default: tsconfig.json
 `
@@ -50,7 +49,6 @@ function parseCliArgs(argv: string[]) {
   args = arg(
     {
       '--cwd': String,
-      '--dts': Boolean,
       '--no-dts': Boolean,
       '--output': String,
       '--format': String,
@@ -89,7 +87,7 @@ function parseCliArgs(argv: string[]) {
     minify: args['--minify'],
     sourcemap: !!args['--sourcemap'],
     cwd: args['--cwd'],
-    dts: args['--no-dts'] ? false : args['--dts'],
+    dts: args['--no-dts'] ? false : undefined,
     help: args['--help'],
     version: args['--version'],
     runtime: args['--runtime'],
@@ -120,7 +118,7 @@ async function run(args: CliArgs) {
   const cwd = args.cwd || process.cwd()
   const file = args.file ? path.resolve(cwd, args.file) : undefined
   const bundleConfig: BundleConfig = {
-    dts: typeof dts === 'boolean' ? dts : undefined,
+    dts,
     file,
     format,
     cwd,
