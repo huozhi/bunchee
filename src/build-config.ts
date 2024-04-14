@@ -214,6 +214,9 @@ async function buildInputConfig(
           sourceMap: bundleConfig.sourcemap,
         },
       }),
+      transform: {
+        decoratorVersion: '2022-03',
+      },
     },
     sourceMaps: bundleConfig.sourcemap,
     inlineSourcesContent: false,
