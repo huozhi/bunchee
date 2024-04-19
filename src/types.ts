@@ -77,7 +77,7 @@ type CliArgs = {
   version?: boolean
   env?: string
   external?: string
-  dts?: boolean
+  dts?: false
   runtime?: string
   prepare?: boolean
   clean?: boolean

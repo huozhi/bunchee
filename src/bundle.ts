@@ -89,7 +89,7 @@ async function bundle(
     }
 
     if (mainExportPath) {
-      if (options.dts) {
+      if (options.dts !== false) {
         typesEntryPath = getExportFileTypePath(mainExportPath)
       }
 

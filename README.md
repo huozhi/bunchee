@@ -162,14 +162,14 @@ Assuming you have default export package as `"."` and subpath export `"./lite"` 
 {
   "name": "example",
   "scripts": {
-     "build": "bunchee"
+    "build": "bunchee"
   },
   "exports": {
     "./lite": "./dist/lite.js",
     ".": {
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
-   }
+    }
   }
 }
 ```
@@ -322,7 +322,6 @@ import { AppContext } from './app-context.shared-runtime'
 - Runtime (`--runtime <runtime>`): Set build runtime (default: `'browser'`).
 - Environment (`--env <env,>`): Define environment variables. (default: `NODE_ENV`, separate by comma)
 - Working Directory (`--cwd <cwd>`): Set current working directory where containing `package.json`.
-- Types (`--dts`): Generate TypeScript declaration files along with assets.
 - Minify (`-m`): Compress output.
 - Watch (`-w`): Watch for source file changes.
 - No Clean(`--no-clean`): Do not clean the dist folder before building. (default: `false`)
