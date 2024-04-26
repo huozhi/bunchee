@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    // Customized JSX for Vue
+    "jsx": "preserve",
+    "jsxFactory": "Vue.h",
+    "jsxImportSource": "vue"
+  }
+}
