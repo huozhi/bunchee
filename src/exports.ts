@@ -213,7 +213,7 @@ export function parseExports(pkg: PackageMetadata): ParsedExportsInfo {
           mainExportPath,
           getMainFieldExportType(pkg),
         ],
-        Boolean(moduleExportPath) && [moduleExportPath, 'import'],
+        Boolean(moduleExportPath) && [moduleExportPath, 'module'],
         Boolean(typesEntryPath) && [typesEntryPath, 'types'],
       ].filter(Boolean) as [string, string][],
     )

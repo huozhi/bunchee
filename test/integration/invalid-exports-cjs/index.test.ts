@@ -16,6 +16,7 @@ describe('integration invalid-exports-cjs', () => {
           'Cannot export `import` field with .js or .cjs extension in CJS package, only .mjs extensions are allowed',
         )
         expect(stderr).toContain('./dist/foo.js')
+        expect(stderr).not.toContain('./dist/index.esm.js')
       },
     )
   })
