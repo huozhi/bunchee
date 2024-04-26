@@ -1,4 +1,5 @@
 {
+  "module": "./dist/index.esm.js",
   "exports": {
     ".": {
       "require": "./dist/index.mjs"
