@@ -149,7 +149,7 @@ async function run(args: CliArgs) {
   await lint(cwd)
 
   const spinner = ora({
-    text: 'building...\n\n',
+    text: 'bundling...\n\n',
     spinner: 'dots',
     color: 'green',
   })
