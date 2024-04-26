@@ -2,7 +2,6 @@ import type { CliArgs, BundleConfig } from '../types'
 
 import path from 'path'
 import arg from 'arg'
-import ora from 'ora'
 import { lint as lintPackage } from '../lint'
 import { exit, getPackageMeta, hasPackageJson } from '../utils'
 import { logger, paint } from '../logger'
@@ -148,13 +147,7 @@ async function run(args: CliArgs) {
   // lint package
   await lint(cwd)
 
-  const spinner = ora({
-    text: 'building...\n\n',
-    spinner: 'dots',
-    color: 'green',
-  })
   try {
-    spinner.start()
     await bundle(cliEntry, bundleConfig)
   } catch (err: any) {
     if (err.name === 'NOT_EXISTED') {
@@ -162,8 +155,6 @@ async function run(args: CliArgs) {
       return exit(err)
     }
     throw err
-  } finally {
-    spinner.stop()
   }
 
   // watching mode
