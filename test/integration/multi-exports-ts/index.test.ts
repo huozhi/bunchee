@@ -5,7 +5,7 @@ describe('integration multi-exports', () => {
     directory: __dirname,
   })
   it('should work with multi exports condition', async () => {
-    assertFilesContent(dir, {
+    await assertFilesContent(dir, {
       './dist/cjs/index.js': `var foo = require('multi-exports-ts/foo')`,
       './dist/cjs/index.d.cts': `import { Foo } from '../../foo/cjs/index.cjs'`,
       './dist/es/index.mjs': `import { foo } from 'multi-exports-ts/foo'`,
@@ -14,7 +14,7 @@ describe('integration multi-exports', () => {
       './foo/cjs/index.d.cts': `export { type Foo, foo }`,
       './foo/es/index.mjs': `export { foo }`,
       './foo/es/index.d.mts': `export { type Foo, foo }`,
-      './types/types.d.ts': `export type { SharedType }`,
+      './dist/types/types.d.ts': `export type { SharedType }`,
     })
   })
 })
