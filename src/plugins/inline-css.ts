@@ -45,32 +45,38 @@ export function inlineCss(options: {
 
   return {
     name: 'inline-css',
-    transform(code, id) {
-      if (!filter(id)) return
-      if (options.skip) return ''
-      const cssCode = minify(code)
-      cssIds.add(id)
-      return {
-        code: helpers.cssImport.create(cssCode),
-        map: { mappings: '' },
-      }
-    },
-    renderChunk(code) {
-      const dependenciesIds = this.getModuleIds()
-      let foundCss = false
-      for (const depId of dependenciesIds) {
-        if (depId && cssIds.has(depId)) {
-          foundCss = true
-          break
+    transform: {
+      order: 'post',
+      handler(code, id) {
+        if (!filter(id)) return
+        if (options.skip) return ''
+        const cssCode = minify(code)
+        cssIds.add(id)
+        return {
+          code: helpers.cssImport.create(cssCode),
+          map: { mappings: '' },
         }
-      }
+      },
+    },
+    renderChunk: {
+      order: 'pre',
+      handler(code) {
+        const dependenciesIds = this.getModuleIds()
+        let foundCss = false
+        for (const depId of dependenciesIds) {
+          if (depId && cssIds.has(depId)) {
+            foundCss = true
+            break
+          }
+        }
 
-      if (!foundCss) return
+        if (!foundCss) return
 
-      return {
-        code: `${helpers.cssImport.global}\n${code}`,
-        map: { mappings: '' },
-      }
+        return {
+          code: `${helpers.cssImport.global}\n${code}`,
+          map: { mappings: '' },
+        }
+      },
     },
   }
 }
