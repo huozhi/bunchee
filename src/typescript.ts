@@ -15,7 +15,6 @@ export type TypescriptOptions = {
 let hasLoggedTsWarning = false
 function resolveTypescript(cwd: string): typeof import('typescript') {
   let ts
-
   try {
     const tsPath = require.resolve('typescript', { paths: [cwd] })
     ts = require(tsPath)
