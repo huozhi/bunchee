@@ -1,6 +1,7 @@
 import type { CompilerOptions } from 'typescript'
 import { resolve, dirname } from 'path'
 import { promises as fsp } from 'fs'
+import { Module } from 'module'
 import pc from 'picocolors'
 import { exit, fileExists } from './utils'
 import { memoizeByKey } from './lib/memoize'
@@ -15,9 +16,16 @@ export type TypescriptOptions = {
 let hasLoggedTsWarning = false
 function resolveTypescript(cwd: string): typeof import('typescript') {
   let ts
+  const m = new Module('', undefined)
+  m.paths = (Module as any)._nodeModulePaths(cwd)
   try {
-    const tsPath = require.resolve('typescript', { paths: [cwd] })
-    ts = require(tsPath)
+    // Bun does not yet support the `Module` class properly.
+    if (typeof m === 'undefined') {
+      const tsPath = require.resolve('typescript', { paths: [cwd] })
+      ts = require(tsPath)
+    } else {
+      ts = m.require('typescript')
+    }
   } catch (e) {
     console.error(e)
     if (!hasLoggedTsWarning) {
