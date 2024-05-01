@@ -19,7 +19,13 @@ function resolveTypescript(cwd: string): typeof import('typescript') {
   const m = new Module('', undefined)
   m.paths = (Module as any)._nodeModulePaths(cwd)
   try {
-    ts = m.require('typescript')
+    // Bun does not yet support the `Module` class properly.
+    if (typeof m?.require === 'undefined') {
+      const tsPath = require.resolve('typescript', { paths: [cwd] })
+      ts = require(tsPath)
+    } else {
+      ts = m.require('typescript')
+    }
   } catch (e) {
     console.error(e)
     if (!hasLoggedTsWarning) {
