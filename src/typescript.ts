@@ -20,7 +20,7 @@ function resolveTypescript(cwd: string): typeof import('typescript') {
   m.paths = (Module as any)._nodeModulePaths(cwd)
   try {
     // Bun does not yet support the `Module` class properly.
-    if (typeof m === 'undefined') {
+    if (typeof m?.require === 'undefined') {
       const tsPath = require.resolve('typescript', { paths: [cwd] })
       ts = require(tsPath)
     } else {
