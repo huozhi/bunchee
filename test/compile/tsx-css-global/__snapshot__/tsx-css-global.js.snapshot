@@ -1,3 +1,4 @@
+'use client';
 function __insertCSS(code) {
   if (!code || typeof document == 'undefined') return
   let head = document.head || document.getElementsByTagName('head')[0]
