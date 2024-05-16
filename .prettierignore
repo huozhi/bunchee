@@ -1,5 +1,1 @@
-dist/
-test/compile/
-test/**/fixtures/
-
 pnpm-lock.yaml
