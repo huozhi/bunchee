@@ -326,6 +326,8 @@ import { AppContext } from './app-context.shared-runtime'
 - Watch (`-w`): Watch for source file changes.
 - No Clean(`--no-clean`): Do not clean the dist folder before building. (default: `false`)
 - TSConfig (`--tsconfig <path>`): Specify the path to the TypeScript configuration file. (default: `tsconfig.json`)
+- Name (`--name`): Global variable name representing your bundle
+- Extend (`--extend`): Whether to extend the global variable defined by the name option in umd or iife formats
 
 ```sh
 cd <project-root-dir>
@@ -337,6 +339,10 @@ bunchee ./src/index.js -f esm -o ./dist/bundle.esm.js
 
 # build node.js library, or change target to es2019
 bunchee ./src/index.js --runtime node --target es2019
+
+
+# build umd library, and extend global variable
+bunchee ./src/index.js -f umd --name jquery --extent -o ./dist/bundle.umd.js
 ```
 
 #### Specifying extra external dependencies

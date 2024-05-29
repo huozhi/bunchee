@@ -74,13 +74,13 @@ async function createDtsPlugin(
     tsCompilerOptions.incremental && !tsCompilerOptions.tsBuildInfoFile
   const incrementalOptions = enableIncrementalWithoutBuildInfo
     ? {
-        incremental: false,
-      }
+      incremental: false,
+    }
     : undefined
   const compositeOptions = tsCompilerOptions.composite
     ? {
-        composite: false,
-      }
+      composite: false,
+    }
     : undefined
 
   const { options: overrideResolvedTsOptions }: any =
@@ -98,8 +98,8 @@ async function createDtsPlugin(
       target: 'ESNext',
       ...(!tsCompilerOptions.jsx
         ? {
-            jsx: 'react-jsx',
-          }
+          jsx: 'react-jsx',
+        }
         : undefined),
       // error TS5074: Option '--incremental' can only be specified using tsconfig, emitting to single
       // file or when option '--tsBuildInfoFile' is specified.
@@ -170,10 +170,10 @@ async function buildInputConfig(
   const externals = hasNoExternal
     ? []
     : [pkg.peerDependencies, pkg.dependencies, pkg.peerDependenciesMeta]
-        .filter(<T>(n?: T): n is T => Boolean(n))
-        .map((o: { [key: string]: any }): string[] => Object.keys(o))
-        .reduce((a: string[], b: string[]) => a.concat(b), [])
-        .concat(bundleConfig.external ?? [])
+      .filter(<T>(n?: T): n is T => Boolean(n))
+      .map((o: { [key: string]: any }): string[] => Object.keys(o))
+      .reduce((a: string[], b: string[]) => a.concat(b), [])
+      .concat(bundleConfig.external ?? [])
 
   for (const [exportImportPath, exportCondition] of Object.entries(entries)) {
     const entryFilePath = exportCondition.source
@@ -265,34 +265,34 @@ async function buildInputConfig(
     dts
       ? typesPlugins
       : [
-          ...commonPlugins,
-          preserveDirectives(),
-          aliasPlugin,
-          inlineCss({ exclude: /node_modules/ }),
-          rawContent({ exclude: /node_modules/ }),
-          isBinEntry && prependShebang(entry),
-          replace({
-            values: inlineDefinedValues,
-            preventAssignment: true,
-          }),
-          nodeResolve({
-            preferBuiltins: runtime === 'node',
-            extensions: nodeResolveExtensions,
-          }),
-          bundleConfig.format === 'esm' && esmShim(),
-          wasm(),
-          swc({
-            include: availableESExtensionsRegex,
-            exclude: 'node_modules',
-            // Use `false` to disable retrieving tsconfig.json
-            tsconfig: tsConfigPath ?? false,
-            ...swcOptions,
-          }),
-          commonjs({
-            exclude: bundleConfig.external || null,
-          }),
-          prependDirectives(),
-        ]
+        ...commonPlugins,
+        preserveDirectives(),
+        aliasPlugin,
+        inlineCss({ exclude: /node_modules/ }),
+        rawContent({ exclude: /node_modules/ }),
+        isBinEntry && prependShebang(entry),
+        replace({
+          values: inlineDefinedValues,
+          preventAssignment: true,
+        }),
+        nodeResolve({
+          preferBuiltins: runtime === 'node',
+          extensions: nodeResolveExtensions,
+        }),
+        bundleConfig.format === 'esm' && esmShim(),
+        wasm(),
+        swc({
+          include: availableESExtensionsRegex,
+          exclude: 'node_modules',
+          // Use `false` to disable retrieving tsconfig.json
+          tsconfig: tsConfigPath ?? false,
+          ...swcOptions,
+        }),
+        commonjs({
+          exclude: bundleConfig.external || null,
+        }),
+        prependDirectives(),
+      ]
   ).filter(isNotNull<Plugin>)
 
   return {
@@ -425,7 +425,7 @@ async function buildOutputConfigs(
   input: InputOptions
   output: OutputOptions
 }> {
-  const { format } = bundleConfig
+  const { format, extend, name: globalName } = bundleConfig
   const {
     entries,
     pkg,
@@ -444,7 +444,7 @@ async function buildOutputConfigs(
     dts
       ? bundleConfig.file!
       : exportCondition.export.types ??
-          getExportFileTypePath(bundleConfig.file!),
+      getExportFileTypePath(bundleConfig.file!),
   )
   const typesDir = dirname(dtsFile)
   const jsDir = dirname(absoluteOutputFile!)
@@ -462,7 +462,7 @@ async function buildOutputConfigs(
   )
 
   const outputOptions: OutputOptions = {
-    name: pkg.name || name,
+    name: globalName || pkg.name || name,
     dir: dts ? typesDir : jsDir,
     format,
     exports: 'named',
@@ -484,6 +484,7 @@ async function buildOutputConfigs(
     // will be added as empty imports to the entry chunks. Disable to avoid imports hoist outside of boundaries
     hoistTransitiveImports: false,
     entryFileNames: basename(outputFile),
+    extend: extend
   }
 
   return {

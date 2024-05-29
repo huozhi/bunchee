@@ -116,5 +116,5 @@
     ],
     "testTimeout": 60000
   },
-  "packageManager": "pnpm@8.8.0"
+  "packageManager": "pnpm@9.1.3"
 }
