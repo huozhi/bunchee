@@ -109,6 +109,16 @@ type BuildContext = {
   }
 }
 
+type BundleJobOptions = {
+  isFromCli: boolean
+  generateTypes: boolean
+}
+
+type bundleEntryOptions = {
+  dts: boolean
+  isFromCli: boolean
+}
+
 export type {
   ExportPaths,
   ExportType,
@@ -123,4 +133,6 @@ export type {
   ParsedExportCondition,
   Entries,
   BuildContext,
+  BundleJobOptions,
+  bundleEntryOptions,
 }

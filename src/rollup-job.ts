@@ -8,24 +8,30 @@ import {
 } from 'rollup'
 
 import { buildEntryConfig } from './build-config'
-import { BuildContext, BuncheeRollupConfig, BundleConfig } from './types'
+import {
+  BuildContext,
+  BuncheeRollupConfig,
+  BundleConfig,
+  BundleJobOptions,
+} from './types'
 import { removeOutputDir } from './utils'
 import { logger } from './logger'
 
 export async function createAssetRollupJobs(
   options: BundleConfig,
   buildContext: BuildContext,
-  {
-    isFromCli,
-    generateTypes,
-  }: {
-    isFromCli: boolean
-    generateTypes: boolean
-  },
+  bundleJobOptions: BundleJobOptions,
 ) {
-  const assetsConfigs = await buildEntryConfig(options, buildContext, false)
+  const { isFromCli, generateTypes } = bundleJobOptions
+  const assetsConfigs = await buildEntryConfig(options, buildContext, {
+    dts: false,
+    isFromCli,
+  })
   const typesConfigs = generateTypes
-    ? await buildEntryConfig(options, buildContext, true)
+    ? await buildEntryConfig(options, buildContext, {
+        dts: true,
+        isFromCli,
+      })
     : []
   const allConfigs = assetsConfigs.concat(typesConfigs)
 
