@@ -30,6 +30,8 @@ Options:
   --sourcemap            enable sourcemap generation, default: false
   --no-dts               do not generate types, default: undefined
   --tsconfig             path to tsconfig file, default: tsconfig.json
+  --extend               whether to extend the global variable defined by the name option in umd or iife formats
+  --name                 global variable name representing your bundle 
 `
 
 function help() {
@@ -65,6 +67,8 @@ function parseCliArgs(argv: string[]) {
       '--no-clean': Boolean,
       '--prepare': Boolean,
       '--tsconfig': String,
+      '--extend':Boolean,
+      '--name':String,
 
       '-h': '--help',
       '-v': '--version',
@@ -97,6 +101,8 @@ function parseCliArgs(argv: string[]) {
     env: args['--env'],
     prepare: !!args['--prepare'],
     tsconfig: args['--tsconfig'],
+    extend: !!args['--extend'],
+    name: args['--name'],
   }
   return parsedArgs
 }
@@ -114,6 +120,8 @@ async function run(args: CliArgs) {
     env,
     clean,
     tsconfig,
+    name,
+    extend
   } = args
   const cwd = args.cwd || process.cwd()
   const file = args.file ? path.resolve(cwd, args.file) : undefined
@@ -131,6 +139,8 @@ async function run(args: CliArgs) {
     env: env?.split(',') || [],
     clean,
     tsconfig,
+    name,
+    extend
   }
   if (args.version) {
     return logger.log(version)

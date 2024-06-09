@@ -24,8 +24,8 @@ type FullExportCondition = {
 type ExportCondition =
   | string
   | {
-      [key: string]: ExportCondition | string
-    }
+    [key: string]: ExportCondition | string
+  }
 
 // configs which are normalized from cli args
 type BundleConfig = {
@@ -43,6 +43,8 @@ type BundleConfig = {
   pkg?: PackageMetadata
   clean?: boolean
   tsconfig?: string
+  name?: string
+  extend?: boolean
 }
 
 type PackageMetadata = {
@@ -82,6 +84,8 @@ type CliArgs = {
   prepare?: boolean
   clean?: boolean
   tsconfig?: string
+  name?: string
+  extend: boolean
 }
 
 type BundleOptions = BundleConfig
