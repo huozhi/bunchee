@@ -3,10 +3,43 @@ import { Entries } from '../types'
 import path from 'path'
 import { relativify } from '../lib/format'
 
-// Alias entries to import path
-// e.g.
-// For a resolved file, if it's one of the entries,
-// aliases it as export path, such as <absolute file> -> <pkg>/<export path>
+function findJsBundlePathCallback({
+  format,
+  bundlePath,
+  conditionNames,
+}: {
+  format: OutputOptions['format']
+  bundlePath: string
+  conditionNames: Set<string>
+}) {
+  const hasCondition = bundlePath != null
+  const formatCond = format === 'cjs' ? 'require' : 'import'
+  const isTypesCondName = conditionNames.has('types')
+
+  const isMatchedFormat = conditionNames.has(formatCond)
+  return isMatchedFormat && !isTypesCondName && hasCondition
+}
+
+function findTypesFileCallback({
+  format,
+  bundlePath,
+  conditionNames,
+}: {
+  format: OutputOptions['format'] | undefined
+  bundlePath: string
+  conditionNames: Set<string>
+}) {
+  const hasCondition = bundlePath != null
+  const formatCond = format ? (format === 'cjs' ? 'require' : 'import') : null
+  const isTypesCondName = conditionNames.has('types')
+  return (
+    isTypesCondName &&
+    hasCondition &&
+    (formatCond ? conditionNames.has(formatCond) : true)
+  )
+}
+
+// Alias entry key to dist bundle path
 export function aliasEntries({
   entry: sourceFilePath,
   entries,
@@ -20,28 +53,41 @@ export function aliasEntries({
   dts: boolean
   cwd: string
 }): Plugin {
-  const pathToRelativeDistMap = new Map<string, string>()
+  // <imported source file path>: <relative path to source's bundle>
+  const sourceToRelativeBundleMap = new Map<string, string>()
   for (const [, exportCondition] of Object.entries(entries)) {
     const exportDistMaps = exportCondition.export
-    const exportMapEntries = Object.entries(exportDistMaps)
+    const exportMapEntries = Object.entries(exportDistMaps).map(
+      ([composedKey, bundlePath]) => ({
+        conditionNames: new Set(composedKey.split('.')),
+        bundlePath,
+        format,
+      }),
+    )
 
-    const matchedBundlePath = exportMapEntries.find(([composedKey, cond]) => {
-      const hasCondition = cond != null
-      const conditionNames = new Set(composedKey.split('.'))
-      const formatCond = format === 'cjs' ? 'require' : 'import'
-      const isTypesCondName = conditionNames.has('types')
-
-      if (dts) {
-        return isTypesCondName && hasCondition
-      } else {
-        const isMatchedFormat = conditionNames.has(formatCond)
-        return isMatchedFormat && !isTypesCondName && hasCondition
+    let matchedBundlePath: string | undefined
+    if (dts) {
+      // Find the type with format condition first
+      matchedBundlePath = exportMapEntries.find(findTypesFileCallback)
+        ?.bundlePath
+      // If theres no format specific types such as import.types or require.types,
+      // fallback to the general types file.
+      if (!matchedBundlePath) {
+        matchedBundlePath = exportMapEntries.find((item) => {
+          return findTypesFileCallback({
+            ...item,
+            format: undefined,
+          })
+        })?.bundlePath
       }
-    })?.[1]
+    } else {
+      matchedBundlePath = exportMapEntries.find(findJsBundlePathCallback)
+        ?.bundlePath
+    }
 
     if (matchedBundlePath) {
-      if (!pathToRelativeDistMap.has(exportCondition.source))
-        pathToRelativeDistMap.set(exportCondition.source, matchedBundlePath)
+      if (!sourceToRelativeBundleMap.has(exportCondition.source))
+        sourceToRelativeBundleMap.set(exportCondition.source, matchedBundlePath)
     }
   }
 
@@ -54,17 +100,22 @@ export function aliasEntries({
         if (resolved != null) {
           // For types, generate relative path to the other type files,
           // this will be compatible for the node10 ts module resolution.
-          const srcBundlePath = pathToRelativeDistMap.get(sourceFilePath)
+          const srcBundle = sourceToRelativeBundleMap.get(sourceFilePath)
           // Resolved module bundle path
-          const importBundlePath = pathToRelativeDistMap.get(resolved.id)
-          // console.log('pathToRelativeDistMap', 'entry', basename( sourceFilePath), 'entryDist', relativeBundlePath, 'resolved.id', resolved.id)
+          const resolvedModuleBundle = sourceToRelativeBundleMap.get(
+            resolved.id,
+          )
+
           if (
             resolved.id !== sourceFilePath &&
-            srcBundlePath &&
-            importBundlePath
+            srcBundle &&
+            resolvedModuleBundle
           ) {
-            const absoluteBundlePath = path.resolve(cwd, srcBundlePath)
-            const absoluteImportBundlePath = path.resolve(cwd, importBundlePath)
+            const absoluteBundlePath = path.resolve(cwd, srcBundle)
+            const absoluteImportBundlePath = path.resolve(
+              cwd,
+              resolvedModuleBundle,
+            )
 
             const filePathBase = path.relative(
               path.dirname(absoluteBundlePath),
