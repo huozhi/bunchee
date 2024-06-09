@@ -27,7 +27,7 @@ function resolveTypescript(cwd: string): typeof import('typescript') {
       ts = m.require('typescript')
     }
   } catch (e) {
-    console.error(e)
+    logger.error(e)
     if (!hasLoggedTsWarning) {
       hasLoggedTsWarning = true
       exit(

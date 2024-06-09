@@ -4,7 +4,7 @@ import path from 'path'
 import arg from 'arg'
 import { lint as lintPackage } from '../lint'
 import { exit, getPackageMeta, hasPackageJson } from '../utils'
-import { logger } from '../logger'
+import { logger, paint, buildingSpinner } from '../logger'
 import { version } from '../../package.json'
 import { bundle } from '../../src/index'
 import { prepare } from '../prepare'
@@ -147,9 +147,8 @@ async function run(args: CliArgs) {
   // lint package
   await lint(cwd)
 
-  logger.start('bundling...\n\n')
-
   try {
+    buildingSpinner.start()
     await bundle(cliEntry, bundleConfig)
   } catch (err: any) {
     if (err.name === 'NOT_EXISTED') {
@@ -157,6 +156,8 @@ async function run(args: CliArgs) {
       return exit(err)
     }
     throw err
+  } finally {
+    buildingSpinner.stop()
   }
 
   // watching mode
@@ -167,7 +168,7 @@ async function run(args: CliArgs) {
 
   // build mode
   logger.log()
-  logger.success(`bunchee ${version} build completed`)
+  paint('✓', 'green', `bunchee ${version} build completed`)
 }
 
 async function main() {

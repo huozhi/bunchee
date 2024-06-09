@@ -1,28 +1,44 @@
 import pc from 'picocolors'
-import { consola } from 'consola'
+import ora from 'ora'
+
+const defaultColorFn = (text: string) => text
+function color(prefixColor: any) {
+  return pc.isColorSupported ? (pc as any)[prefixColor] : defaultColorFn
+}
+
+export const buildingSpinner = ora({
+  text: 'bundling...\n\n',
+  spinner: 'dots',
+  color: 'green',
+})
+
+function clearSpinner() {
+  if (buildingSpinner.isSpinning) {
+    buildingSpinner.stop()
+  }
+}
 
 export const logger = {
   log(...arg: any[]) {
+    clearSpinner()
     console.log(...arg)
   },
   warn(...arg: any[]) {
-    consola.warn.raw(...arg)
+    clearSpinner()
+    console.warn(color('yellow')('⚠️'), ...arg)
   },
   error(...arg: any) {
-    consola.error.raw(...arg)
+    clearSpinner()
+    console.error(color('red')('⨯'), ...arg)
   },
   info(...arg: any) {
-    consola.info.raw(...arg)
-  },
-  start(...arg: any) {
-    consola.start.raw(...arg)
-  },
-  success(...arg: any) {
-    consola.success.raw(...arg)
+    clearSpinner()
+    console.log(color('green')('✓'), ...arg)
   },
 }
 
 export function paint(prefix: string, prefixColor: any, ...arg: any[]) {
+  clearSpinner()
   if (pc.isColorSupported) {
     console.log((pc as any)[prefixColor](prefix), ...arg)
   } else {

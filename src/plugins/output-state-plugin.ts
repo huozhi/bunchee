@@ -139,7 +139,7 @@ function logOutputState(sizeCollector: ReturnType<typeof createOutputState>) {
   const maxLengthOfExportName = Math.max(
     ...statsArray.map(([exportName]) => normalizeExportName(exportName).length),
   )
-  console.log(
+  logger.log(
     pc.underline('Exports'),
     ' '.repeat(Math.max(maxLengthOfExportName - 'Exports'.length, 0)),
     pc.underline('File'),
@@ -182,7 +182,7 @@ function logOutputState(sizeCollector: ReturnType<typeof createOutputState>) {
         )
         const prettiedSize = prettyBytes(size)
 
-        console.log(
+        logger.log(
           prefix,
           filenamePadding,
           `${pc[isType ? 'dim' : 'bold'](filename)}`,

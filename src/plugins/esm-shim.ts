@@ -2,6 +2,7 @@ import { availableESExtensionsRegex } from '../constants'
 import { Plugin, ProgramNode, AstNode } from 'rollup'
 import { extname } from 'path'
 import MagicString from 'magic-string'
+import { logger } from '../logger'
 
 const FILENAME_REGEX = /__filename/
 const DIRNAME_REGEX = /__dirname/
@@ -80,7 +81,7 @@ export function esmShim(): Plugin {
             allowReturnOutsideFunction: true,
           })
         } catch (e) {
-          console.warn(e)
+          logger.warn(e)
           return null
         }
 
