@@ -14,6 +14,8 @@
     "typecheck": "tsc --noEmit && tsc -p test/tsconfig.json --noEmit",
     "prepublishOnly": "pnpm clean && pnpm build && chmod +x ./dist/bin/cli.js && pnpm test:ci",
     "tsx": "node -r @swc-node/register",
+    "ts-bunchee": "pnpm tsx ./src/bin/index.ts",
+    "build-dir": "pnpm ts-bunchee --cwd",
     "build": "node -r @swc-node/register ./src/bin/index.ts --runtime node",
     "format": "prettier --write .",
     "prepare": "husky"

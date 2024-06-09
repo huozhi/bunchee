@@ -22,7 +22,7 @@ describe('integration shared-entry', () => {
           join(dir, './dist/index.mjs'),
           'utf-8',
         )
-        expect(indexEsm).toContain('shared-entry/shared')
+        expect(indexEsm).toContain(`'./shared.mjs'`)
         expect(indexEsm).toContain('index-export')
         expect(indexEsm).not.toMatch(/['"]\.\/shared['"]/)
         expect(indexEsm).not.toContain('shared-export')
@@ -32,7 +32,7 @@ describe('integration shared-entry', () => {
           join(dir, './dist/index.js'),
           'utf-8',
         )
-        expect(indexCjs).toContain('shared-entry/shared')
+        expect(indexCjs).toContain(`require('./shared.js')`)
         expect(indexCjs).toContain('index-export')
         expect(indexCjs).not.toMatch(/['"]\.\/shared['"]/)
 

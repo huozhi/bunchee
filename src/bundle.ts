@@ -4,7 +4,6 @@ import fsp from 'fs/promises'
 import fs from 'fs'
 import { resolve } from 'path'
 import { performance } from 'perf_hooks'
-import { getReversedAlias } from './build-config'
 import {
   createOutputState,
   logOutputState,
@@ -142,7 +141,6 @@ async function bundle(
   }
 
   const sizeCollector = createOutputState({ entries })
-  const entriesAlias = getReversedAlias({ entries, name: pkg.name })
   const buildContext: BuildContext = {
     entries,
     pkg,
@@ -152,7 +150,6 @@ async function bundle(
     pluginContext: {
       outputState: sizeCollector,
       moduleDirectiveLayerMap: new Map(),
-      entriesAlias,
     },
   }
 

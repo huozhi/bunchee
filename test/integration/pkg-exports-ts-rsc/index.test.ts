@@ -12,7 +12,7 @@ describe('integration pkg-exports-ts-rsc', () => {
           './react-server.mjs': /'react-server'/,
           './react-native.js': /'react-native'/,
           './index.d.ts': /declare const shared = true/,
-          './api.mjs': /\'pkg-export-ts-rsc\'/,
+          './api.mjs': `'./index.mjs'`,
         })
       },
     )

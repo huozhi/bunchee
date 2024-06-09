@@ -236,7 +236,6 @@ async function buildInputConfig(
   const aliasPlugin = aliasEntries({
     entry,
     entries,
-    entriesAlias: pluginContext.entriesAlias,
     format: aliasFormat,
     dts,
     cwd,
