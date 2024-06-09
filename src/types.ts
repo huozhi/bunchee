@@ -43,6 +43,21 @@ type BundleConfig = {
   pkg?: PackageMetadata
   clean?: boolean
   tsconfig?: string
+
+  // hooks
+  /*
+   * This hook is called before the build starts
+   * @experimental
+   */
+  _callbacks?: {
+    onBuildStart?: (state: any) => void
+
+    /*
+     * This hook is called before the build starts
+     * @experimental
+     */
+    onBuildEnd?: (assetJobs: any) => void
+  }
 }
 
 type PackageMetadata = {

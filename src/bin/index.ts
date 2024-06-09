@@ -1,13 +1,15 @@
-import type { CliArgs, BundleConfig } from '../types'
-
+import type { CliArgs, BundleConfig, BuildContext } from '../types'
 import path from 'path'
 import arg from 'arg'
+import { performance } from 'perf_hooks'
 import { lint as lintPackage } from '../lint'
 import { exit, getPackageMeta, hasPackageJson } from '../utils'
 import { logger, paint } from '../logger'
 import { version } from '../../package.json'
 import { bundle } from '../../src/index'
 import { prepare } from '../prepare'
+import { RollupWatcher } from 'rollup'
+import { logOutputState } from '../plugins/output-state-plugin'
 
 const helpMessage = `
 Usage: bunchee [options]
@@ -147,14 +149,73 @@ async function run(args: CliArgs) {
   // lint package
   await lint(cwd)
 
+  const { default: ora } = await import('ora')
+
+  const spinner = ora({
+    text: 'Building...\n',
+    color: 'green',
+  })
+
+  function stopSpinner() {
+    if (spinner.isSpinning) {
+      spinner.stop()
+    }
+  }
+
+  let initialBuildContext: BuildContext | undefined
+  function onBuildStart(buildContext: BuildContext) {
+    initialBuildContext = buildContext
+  }
+
+  function onBuildEnd(assetJobs: RollupWatcher[]) {
+    if (watch) {
+      logWatcherBuildTime(assetJobs)
+    } else {
+      // Stop spinner before logging output files and sizes
+      stopSpinner()
+
+      if (assetJobs.length === 0) {
+        logger.warn(
+          'The "src" directory does not contain any entry files. ' +
+            'For proper usage, please refer to the following link: ' +
+            'https://github.com/huozhi/bunchee#usage',
+        )
+      }
+
+      const outputState = initialBuildContext?.pluginContext.outputState
+      if (outputState) {
+        logOutputState(outputState.getSizeStats())
+      }
+    }
+  }
+
+  let buildError: any
+  bundleConfig._callbacks = {
+    onBuildStart,
+    onBuildEnd,
+  }
+
+  spinner.start()
   try {
     await bundle(cliEntry, bundleConfig)
   } catch (err: any) {
+    stopSpinner()
     if (err.name === 'NOT_EXISTED') {
-      help()
-      return exit(err)
+      buildError = {
+        digest: 'bunchee:not-existed',
+        error: err,
+      }
     }
-    throw err
+
+    if (buildError?.digest === 'bunchee:not-existed') {
+      help()
+    } else {
+      if (watch) {
+        logError(err)
+      } else {
+        throw err
+      }
+    }
   }
 
   // watching mode
@@ -180,6 +241,50 @@ async function main() {
     return exit(error as Error)
   }
   await run(params)
+}
+
+function logWatcherBuildTime(result: RollupWatcher[]) {
+  let watcherCounter = 0
+  let startTime = 0
+
+  result.map((watcher) => {
+    function start() {
+      if (watcherCounter === 0) startTime = performance.now()
+      watcherCounter++
+    }
+    function end() {
+      watcherCounter--
+      if (watcherCounter === 0) {
+        logger.info(`Build in ${(performance.now() - startTime).toFixed(2)}ms`)
+      }
+    }
+    ;(watcher as RollupWatcher).on('event', (event) => {
+      switch (event.code) {
+        case 'ERROR': {
+          logError(event.error)
+          break
+        }
+        case 'START': {
+          start()
+          break
+        }
+        case 'END': {
+          end()
+          break
+        }
+        default:
+          break
+      }
+    })
+  })
+}
+
+function logError(error: any) {
+  if (!error) return
+  // logging source code in format
+  if (error.frame) {
+    process.stderr.write(error.frame + '\n')
+  }
 }
 
 main().catch(exit)
