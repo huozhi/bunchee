@@ -4,7 +4,7 @@ import path from 'path'
 import arg from 'arg'
 import { lint as lintPackage } from '../lint'
 import { exit, getPackageMeta, hasPackageJson } from '../utils'
-import { logger, paint } from '../logger'
+import { logger } from '../logger'
 import { version } from '../../package.json'
 import { bundle } from '../../src/index'
 import { prepare } from '../prepare'
@@ -147,6 +147,8 @@ async function run(args: CliArgs) {
   // lint package
   await lint(cwd)
 
+  logger.start('bundling...\n\n')
+
   try {
     await bundle(cliEntry, bundleConfig)
   } catch (err: any) {
@@ -165,7 +167,7 @@ async function run(args: CliArgs) {
 
   // build mode
   logger.log()
-  paint('✓', 'green', `bunchee ${version} build completed`)
+  logger.success(`bunchee ${version} build completed`)
 }
 
 async function main() {

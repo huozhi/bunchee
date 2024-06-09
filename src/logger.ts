@@ -1,22 +1,24 @@
 import pc from 'picocolors'
-
-const defaultColorFn = (text: string) => text
-function color(prefixColor: any) {
-  return pc.isColorSupported ? (pc as any)[prefixColor] : defaultColorFn
-}
+import { consola } from 'consola'
 
 export const logger = {
   log(...arg: any[]) {
     console.log(...arg)
   },
   warn(...arg: any[]) {
-    console.warn(color('yellow')('⚠️'), ...arg)
+    consola.warn.raw(...arg)
   },
   error(...arg: any) {
-    console.error(color('red')('⨯'), ...arg)
+    consola.error.raw(...arg)
   },
   info(...arg: any) {
-    console.log(color('green')('✓'), ...arg)
+    consola.info.raw(...arg)
+  },
+  start(...arg: any) {
+    consola.start.raw(...arg)
+  },
+  success(...arg: any) {
+    consola.success.raw(...arg)
   },
 }
 
