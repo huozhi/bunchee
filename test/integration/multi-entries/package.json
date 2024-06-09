@@ -12,6 +12,7 @@
       "import": "./dist/client/index.mjs"
     },
     "./shared": {
+      "types": "./dist/shared/index.d.ts",
       "import": "./dist/shared/index.mjs",
       "require": "./dist/shared/index.cjs",
       "edge-light": "./dist/shared/edge-light.mjs"

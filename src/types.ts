@@ -105,7 +105,6 @@ type BuildContext = {
   pluginContext: {
     outputState: OutputState
     moduleDirectiveLayerMap: Map<string, Set<[string, string]>>
-    entriesAlias: Record<string, string>
   }
 }
 
