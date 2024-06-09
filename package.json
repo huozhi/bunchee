@@ -1,6 +1,6 @@
 {
   "name": "bunchee",
-  "version": "5.1.5",
+  "version": "5.1.6",
   "description": "zero config bundler for js/ts/jsx libraries",
   "bin": "./dist/bin/cli.js",
   "main": "./dist/index.js",
