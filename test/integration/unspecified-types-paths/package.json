@@ -1,0 +1,10 @@
+{
+  "name": "undefined-types-paths",
+  "type": "module",
+  "exports": {
+    "./subpath/nested": {
+      "import": "./dist/subpath/nested.js",
+      "require": "./dist/subpath/nested.cjs"
+    }
+  }
+}

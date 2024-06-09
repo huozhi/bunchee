@@ -1,5 +1,5 @@
 import type { RollupWatcher } from 'rollup'
-import type { BundleConfig } from './types'
+import type { BundleConfig, BundleJobOptions } from './types'
 import fsp from 'fs/promises'
 import fs from 'fs'
 import { resolve } from 'path'
@@ -157,7 +157,7 @@ async function bundle(
   }
 
   const generateTypes = hasTsConfig && options.dts !== false
-  const rollupJobsOptions = { isFromCli, generateTypes }
+  const rollupJobsOptions: BundleJobOptions = { isFromCli, generateTypes }
 
   const assetJobs = await createAssetRollupJobs(
     options,

@@ -5,6 +5,7 @@ import type {
   BundleOptions,
   BundleConfig,
   ParsedExportCondition,
+  bundleEntryOptions,
 } from './types'
 import type {
   GetManualChunk,
@@ -495,7 +496,7 @@ async function buildOutputConfigs(
 export async function buildEntryConfig(
   bundleConfig: BundleConfig,
   pluginContext: BuildContext,
-  dts: boolean,
+  bundleEntryOptions: bundleEntryOptions,
 ): Promise<BuncheeRollupConfig[]> {
   const configs: BuncheeRollupConfig[] = []
   const { entries } = pluginContext
@@ -504,7 +505,7 @@ export async function buildEntryConfig(
       bundleConfig,
       exportCondition,
       pluginContext,
-      dts,
+      bundleEntryOptions,
     )
     configs.push(...rollupConfigs)
   }
@@ -515,10 +516,11 @@ async function buildConfig(
   bundleConfig: BundleConfig,
   exportCondition: ParsedExportCondition,
   pluginContext: BuildContext,
-  dts: boolean,
+  bundleEntryOptions: bundleEntryOptions,
 ): Promise<BuncheeRollupConfig[]> {
   const { file } = bundleConfig
   const { pkg, cwd } = pluginContext
+  const { dts, isFromCli } = bundleEntryOptions
   const entry = exportCondition.source
 
   const outputExports = getExportsDistFilesOfCondition(
@@ -528,8 +530,10 @@ async function buildConfig(
     dts,
   )
 
-  // If there's nothing found, give a default output
-  if (outputExports.length === 0 && !pkg.bin) {
+  // If it's CLI generation for JS asset and there's nothing found,
+  // give a default output dist/index.js.
+  // We don't do it for types generation or non-CLI bundle generation.
+  if (!dts && isFromCli && outputExports.length === 0 && !pkg.bin) {
     const isEsmPkg = isESModulePackage(pkg.type)
     const defaultFormat: OutputOptions['format'] = isEsmPkg ? 'esm' : 'cjs'
     outputExports.push({
