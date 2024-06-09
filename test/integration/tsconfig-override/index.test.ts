@@ -1,6 +1,4 @@
-import * as fsp from 'fs/promises'
-import { join } from 'path'
-import { createIntegrationTest } from '../utils'
+import { assertFilesContent, createIntegrationTest } from '../utils'
 
 describe('integration tsconfig-override', () => {
   it('should use es5 output in build without override', async () => {
@@ -9,12 +7,13 @@ describe('integration tsconfig-override', () => {
         directory: __dirname,
       },
       async ({ dir }) => {
-        const content = await fsp.readFile(
-          join(dir, './dist/index.js'),
-          'utf-8',
-        )
-        expect(content).toContain('function A')
-        expect(content).not.toContain('class A')
+        assertFilesContent(dir, {
+          ['./dist/index.js']: (content) => {
+            return (
+              content.includes('function A') && !content.includes('class A')
+            )
+          },
+        })
       },
     )
   })
@@ -25,12 +24,13 @@ describe('integration tsconfig-override', () => {
         args: ['--tsconfig', 'tsconfig.build.json'],
       },
       async ({ dir }) => {
-        const content = await fsp.readFile(
-          join(dir, './dist/index.js'),
-          'utf-8',
-        )
-        expect(content).not.toContain('function A')
-        expect(content).toContain('class A')
+        assertFilesContent(dir, {
+          ['./dist/index.js']: (content) => {
+            return (
+              content.includes('class A') && !content.includes('function A')
+            )
+          },
+        })
       },
     )
   })
