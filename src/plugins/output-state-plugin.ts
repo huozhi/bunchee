@@ -1,8 +1,8 @@
 import type { Plugin } from 'rollup'
+import { type Entries } from '../types'
 import path from 'path'
 import prettyBytes from 'pretty-bytes'
 import pc from 'picocolors'
-import { type Entries } from '../types'
 import { logger } from '../logger'
 import { BINARY_TAG } from '../constants'
 import {
@@ -119,9 +119,7 @@ function normalizeExportName(exportName: string): string {
   return result
 }
 
-function logOutputState(sizeCollector: ReturnType<typeof createOutputState>) {
-  const stats = sizeCollector.getSizeStats()
-
+function logOutputState(stats: SizeStats) {
   if (stats.size === 0) {
     logger.warn('No build info can be logged')
     return

@@ -1,14 +1,8 @@
-import type { RollupWatcher } from 'rollup'
 import type { BundleConfig, BundleJobOptions } from './types'
 import fsp from 'fs/promises'
 import fs from 'fs'
 import { resolve } from 'path'
-import { performance } from 'perf_hooks'
-import {
-  createOutputState,
-  logOutputState,
-} from './plugins/output-state-plugin'
-import { logger } from './logger'
+import { createOutputState } from './plugins/output-state-plugin'
 import {
   getPackageMeta,
   getSourcePathFromExportPath,
@@ -47,7 +41,7 @@ function hasMultiEntryExport(exportPaths: object): boolean {
 async function bundle(
   cliEntryPath: string,
   { cwd: _cwd, ...options }: BundleConfig = {},
-): Promise<any> {
+): Promise<void> {
   const cwd = resolve(process.cwd(), _cwd || '')
   assignDefault(options, 'format', 'esm')
   assignDefault(options, 'minify', false)
@@ -140,7 +134,7 @@ async function bundle(
     hasTsConfig = true
   }
 
-  const sizeCollector = createOutputState({ entries })
+  const outputState = createOutputState({ entries })
   const buildContext: BuildContext = {
     entries,
     pkg,
@@ -148,10 +142,12 @@ async function bundle(
     tsOptions: defaultTsOptions,
     useTypeScript: hasTsConfig,
     pluginContext: {
-      outputState: sizeCollector,
+      outputState,
       moduleDirectiveLayerMap: new Map(),
     },
   }
+
+  options._callbacks?.onBuildStart?.(buildContext)
 
   const generateTypes = hasTsConfig && options.dts !== false
   const rollupJobsOptions: BundleJobOptions = { isFromCli, generateTypes }
@@ -162,65 +158,7 @@ async function bundle(
     rollupJobsOptions,
   )
 
-  if (assetJobs.length === 0) {
-    logger.warn(
-      'The "src" directory does not contain any entry files. ' +
-        'For proper usage, please refer to the following link: ' +
-        'https://github.com/huozhi/bunchee#usage',
-    )
-  }
-
-  if (options.watch) {
-    logWatcherBuildTime(assetJobs as RollupWatcher[])
-  } else {
-    logOutputState(sizeCollector)
-  }
-
-  return
-}
-
-function logWatcherBuildTime(result: RollupWatcher[]) {
-  let watcherCounter = 0
-  let startTime = 0
-
-  result.map((watcher) => {
-    function start() {
-      if (watcherCounter === 0) startTime = performance.now()
-      watcherCounter++
-    }
-    function end() {
-      watcherCounter--
-      if (watcherCounter === 0) {
-        logger.info(`Build in ${(performance.now() - startTime).toFixed(2)}ms`)
-      }
-    }
-    ;(watcher as RollupWatcher).on('event', (event) => {
-      switch (event.code) {
-        case 'ERROR': {
-          logError(event.error)
-          break
-        }
-        case 'START': {
-          start()
-          break
-        }
-        case 'END': {
-          end()
-          break
-        }
-        default:
-          break
-      }
-    })
-  })
-}
-
-function logError(error: any) {
-  if (!error) return
-  // logging source code in format
-  if (error.frame) {
-    process.stderr.write(error.frame + '\n')
-  }
+  options._callbacks?.onBuildEnd?.(assetJobs)
 }
 
 export default bundle
