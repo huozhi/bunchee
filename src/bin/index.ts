@@ -4,13 +4,12 @@ import arg from 'arg'
 import { performance } from 'perf_hooks'
 import { lint as lintPackage } from '../lint'
 import { exit, getPackageMeta, hasPackageJson } from '../utils'
-import { logger, paint } from '../logger'
+import { logger } from '../logger'
 import { version } from '../../package.json'
 import { bundle } from '../../src/index'
 import { prepare } from '../prepare'
 import { RollupWatcher } from 'rollup'
 import { logOutputState } from '../plugins/output-state-plugin'
-import { Ora } from 'ora'
 
 const helpMessage = `
 Usage: bunchee [options]
