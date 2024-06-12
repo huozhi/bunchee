@@ -10,6 +10,7 @@ import { bundle } from '../../src/index'
 import { prepare } from '../prepare'
 import { RollupWatcher } from 'rollup'
 import { logOutputState } from '../plugins/output-state-plugin'
+import { Ora } from 'ora'
 
 const helpMessage = `
 Usage: bunchee [options]
@@ -152,13 +153,18 @@ async function run(args: CliArgs) {
   const { default: ora } = await import('ora')
 
   const spinner = ora({
-    text: 'Building...\n',
+    text: 'Building...\n\n',
     color: 'green',
   })
 
-  function stopSpinner() {
+  function stopSpinner(text: string) {
     if (spinner.isSpinning) {
-      spinner.stop()
+      spinner.clear()
+      console.log()
+      spinner.stopAndPersist({
+        symbol: '✔',
+        text,
+      })
     }
   }
 
@@ -168,12 +174,10 @@ async function run(args: CliArgs) {
   }
 
   function onBuildEnd(assetJobs: RollupWatcher[]) {
+    // Stop spinner before logging output files and sizes on build end
     if (watch) {
-      logWatcherBuildTime(assetJobs)
+      logWatcherBuildTime(assetJobs, stopSpinner)
     } else {
-      // Stop spinner before logging output files and sizes
-      stopSpinner()
-
       if (assetJobs.length === 0) {
         logger.warn(
           'The "src" directory does not contain any entry files. ' +
@@ -195,11 +199,14 @@ async function run(args: CliArgs) {
     onBuildEnd,
   }
 
+  if (watch) {
+    logger.log(`Watching project ${cwd}...`)
+  }
+
   spinner.start()
   try {
     await bundle(cliEntry, bundleConfig)
   } catch (err: any) {
-    stopSpinner()
     if (err.name === 'NOT_EXISTED') {
       buildError = {
         digest: 'bunchee:not-existed',
@@ -219,14 +226,9 @@ async function run(args: CliArgs) {
   }
 
   // watching mode
-  if (watch) {
-    logger.log(`Watching project ${cwd}...`)
-    return
+  if (!watch) {
+    stopSpinner(`bunchee ${version} build completed`)
   }
-
-  // build mode
-  logger.log()
-  paint('✓', 'green', `bunchee ${version} build completed`)
 }
 
 async function main() {
@@ -243,7 +245,10 @@ async function main() {
   await run(params)
 }
 
-function logWatcherBuildTime(result: RollupWatcher[]) {
+function logWatcherBuildTime(
+  result: RollupWatcher[],
+  onSpinnerStop: (text: string) => void,
+) {
   let watcherCounter = 0
   let startTime = 0
 
@@ -255,7 +260,9 @@ function logWatcherBuildTime(result: RollupWatcher[]) {
     function end() {
       watcherCounter--
       if (watcherCounter === 0) {
-        logger.info(`Build in ${(performance.now() - startTime).toFixed(2)}ms`)
+        onSpinnerStop(
+          `Built in ${(performance.now() - startTime).toFixed(2)}ms`,
+        )
       }
     }
     ;(watcher as RollupWatcher).on('event', (event) => {
