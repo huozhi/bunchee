@@ -160,22 +160,28 @@ async function run(args: CliArgs) {
     if (spinner.isSpinning) {
       spinner.clear()
       console.log()
-      spinner.stopAndPersist({
-        symbol: '✔',
-        text,
-      })
+      if (text) {
+        spinner.stopAndPersist({
+          symbol: '✔',
+          text,
+        })
+      } else {
+        spinner.stop()
+      }
     }
   }
 
   let initialBuildContext: BuildContext | undefined
   function onBuildStart(buildContext: BuildContext) {
     initialBuildContext = buildContext
+    spinner.start()
   }
 
   function onBuildEnd(assetJobs: RollupWatcher[]) {
     // Stop spinner before logging output files and sizes on build end
     if (watch) {
-      logWatcherBuildTime(assetJobs, stopSpinner)
+      stopSpinner('')
+      logWatcherBuildTime(assetJobs)
     } else {
       if (assetJobs.length === 0) {
         logger.warn(
@@ -202,7 +208,6 @@ async function run(args: CliArgs) {
     logger.log(`Watching project ${cwd}...`)
   }
 
-  spinner.start()
   try {
     await bundle(cliEntry, bundleConfig)
   } catch (err: any) {
@@ -244,10 +249,7 @@ async function main() {
   await run(params)
 }
 
-function logWatcherBuildTime(
-  result: RollupWatcher[],
-  onSpinnerStop: (text: string) => void,
-) {
+function logWatcherBuildTime(result: RollupWatcher[]) {
   let watcherCounter = 0
   let startTime = 0
 
@@ -259,9 +261,7 @@ function logWatcherBuildTime(
     function end() {
       watcherCounter--
       if (watcherCounter === 0) {
-        onSpinnerStop(
-          `Built in ${(performance.now() - startTime).toFixed(2)}ms`,
-        )
+        logger.info(`Built in ${(performance.now() - startTime).toFixed(2)}ms`)
       }
     }
     ;(watcher as RollupWatcher).on('event', (event) => {
