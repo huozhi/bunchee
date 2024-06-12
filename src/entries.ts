@@ -113,6 +113,22 @@ export async function collectEntriesFromParsedExports(
         matchedExportType === entryExportPathType ||
         (!hasSpecialEntry && matchedExportType !== 'default')
       ) {
+        // When we dealing with special export conditions, we need to make sure
+        // the outputs won't override the default export output paths.
+        // e.g. We have './index' -> { default: 'index.js', development: 'index.development.js' };
+        // When we generate './index.react-server' -> { 'react-server': 'index.react-server.js' },
+        // Normalize the entryExportPath to './index' first and check if it already exists with output paths.
+        const normalizedEntryExportPath = stripSpecialCondition(entryExportPath)
+        if (
+          // The entry already exists, e.g. normalize './index.react-server' to './index'
+          entries[normalizedEntryExportPath] &&
+          // Is special export condition
+          entryExportPathType !== 'default' &&
+          // The extracted special condition is not the current loop one.
+          entryExportPathType !== matchedExportType
+        ) {
+          continue
+        }
         const exportMap = entries[entryExportPath].export
         exportMap[outputComposedExportType] = outputPath
       }
