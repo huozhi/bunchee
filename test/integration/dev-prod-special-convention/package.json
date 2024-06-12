@@ -1,0 +1,19 @@
+{
+  "name": "dev-prod-special-convention",
+  "exports": {
+    ".": {
+      "react-server": "./dist/index.react-server.mjs",
+      "import": {
+        "production": "./dist/index.production.mjs",
+        "development": "./dist/index.development.mjs",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "production": "./dist/index.production.js",
+        "development": "./dist/index.development.js",
+        "default": "./dist/index.js"
+      },
+      "default": "./dist/index.js"
+    }
+  }
+}
