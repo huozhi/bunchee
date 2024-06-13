@@ -252,7 +252,7 @@ Then when the library is integrated to an app such as Next.js, app bundler can t
 If you're using `"use client"` or `"use server"` in entry file, then it will be preserved on top and the dist file of that entry will become a client component.
 If you're using `"use client"` or `"use server"` in a file that used as a dependency for an entry, then that file containing directives be split into a separate chunk and hoist the directives to the top of the chunk.
 
-### Shared Modules
+### Shared Modules (Experimental)
 
 There're always cases that you need to share code among bundles but they don't have to be a separate entry or exports. You want to have them bundled into a shared chunk and then use them in different bundles. You can use shared module convention `[name].[layer]-runtime.[ext]` to create shared modules bundles.
 
