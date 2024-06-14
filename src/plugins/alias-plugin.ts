@@ -2,22 +2,37 @@ import { OutputOptions, Plugin } from 'rollup'
 import { Entries } from '../types'
 import path from 'path'
 import { relativify } from '../lib/format'
+import { getSpecialExportTypeFromSourcePath } from '../entries'
 
-function findJsBundlePathCallback({
-  format,
-  bundlePath,
-  conditionNames,
-}: {
-  format: OutputOptions['format']
-  bundlePath: string
-  conditionNames: Set<string>
-}) {
-  const hasCondition = bundlePath != null
+function findJsBundlePathCallback(
+  {
+    format,
+    bundlePath,
+    conditionNames,
+  }: {
+    format: OutputOptions['format']
+    bundlePath: string
+    conditionNames: Set<string>
+  },
+  specialCondition: string,
+) {
+  const hasBundle = bundlePath != null
   const formatCond = format === 'cjs' ? 'require' : 'import'
-  const isTypesCondName = conditionNames.has('types')
 
-  const isMatchedFormat = conditionNames.has(formatCond)
-  return isMatchedFormat && !isTypesCondName && hasCondition
+  const isTypesCondName = conditionNames.has('types')
+  const hasFormatCond =
+    conditionNames.has('import') || conditionNames.has('require')
+
+  const isMatchedFormat = hasFormatCond ? conditionNames.has(formatCond) : true
+
+  const isMatchedSpecialCondition =
+    specialCondition !== 'default' ? conditionNames.has(specialCondition) : true
+
+  return (
+    (isMatchedSpecialCondition || isMatchedFormat) &&
+    !isTypesCondName &&
+    hasBundle
+  )
 }
 
 function findTypesFileCallback({
@@ -81,8 +96,11 @@ export function aliasEntries({
         })?.bundlePath
       }
     } else {
-      matchedBundlePath = exportMapEntries.find(findJsBundlePathCallback)
-        ?.bundlePath
+      const specialCondition =
+        getSpecialExportTypeFromSourcePath(sourceFilePath)
+      matchedBundlePath = exportMapEntries.find((item) =>
+        findJsBundlePathCallback(item, specialCondition),
+      )?.bundlePath
     }
 
     if (matchedBundlePath) {
@@ -100,11 +118,9 @@ export function aliasEntries({
         if (resolved != null) {
           // For types, generate relative path to the other type files,
           // this will be compatible for the node10 ts module resolution.
-          const srcBundle = sourceToRelativeBundleMap.get(sourceFilePath)
+          let srcBundle = sourceToRelativeBundleMap.get(sourceFilePath)
           // Resolved module bundle path
-          const resolvedModuleBundle = sourceToRelativeBundleMap.get(
-            resolved.id,
-          )
+          let resolvedModuleBundle = sourceToRelativeBundleMap.get(resolved.id)
 
           if (
             resolved.id !== sourceFilePath &&

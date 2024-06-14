@@ -221,6 +221,11 @@ export function getSpecialExportTypeFromComposedExportPath(
   return 'default'
 }
 
+export function getSpecialExportTypeFromSourcePath(sourcePath: string): string {
+  const fileBaseName = baseNameWithoutExtension(sourcePath)
+  return getSpecialExportTypeFromComposedExportPath(fileBaseName)
+}
+
 function getExportTypeFromExportTypesArray(types: string[]): string {
   let exportType = 'default'
   new Set(types).forEach((value) => {
