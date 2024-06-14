@@ -103,6 +103,11 @@ function parseCliArgs(argv: string[]) {
   return parsedArgs
 }
 
+type Spinner = {
+  start: () => void
+  stop: (text?: string) => void
+}
+
 async function run(args: CliArgs) {
   const {
     source,
@@ -151,22 +156,30 @@ async function run(args: CliArgs) {
 
   const { default: ora } = await import('ora')
 
-  const spinner = ora({
+  const oraInstance = ora({
     text: 'Building...\n\n',
     color: 'green',
   })
 
-  function stopSpinner(text: string) {
-    if (spinner.isSpinning) {
-      spinner.clear()
-      console.log()
+  const spinner: Spinner = {
+    start: startSpinner,
+    stop: stopSpinner,
+  }
+
+  function startSpinner() {
+    oraInstance.start()
+  }
+
+  function stopSpinner(text?: string) {
+    if (oraInstance.isSpinning) {
+      oraInstance.clear()
       if (text) {
-        spinner.stopAndPersist({
+        oraInstance.stopAndPersist({
           symbol: '✔',
           text,
         })
       } else {
-        spinner.stop()
+        oraInstance.stop()
       }
     }
   }
@@ -174,14 +187,15 @@ async function run(args: CliArgs) {
   let initialBuildContext: BuildContext | undefined
   function onBuildStart(buildContext: BuildContext) {
     initialBuildContext = buildContext
-    spinner.start()
+    if (!watch) {
+      spinner.start()
+    }
   }
 
   function onBuildEnd(assetJobs: RollupWatcher[]) {
     // Stop spinner before logging output files and sizes on build end
     if (watch) {
-      stopSpinner('')
-      logWatcherBuildTime(assetJobs)
+      logWatcherBuildTime(assetJobs, spinner)
     } else {
       if (assetJobs.length === 0) {
         logger.warn(
@@ -230,8 +244,10 @@ async function run(args: CliArgs) {
   }
 
   // watching mode
-  if (!watch) {
-    stopSpinner(`bunchee ${version} build completed`)
+  if (watch) {
+    spinner.stop()
+  } else {
+    spinner.stop(`bunchee ${version} build completed`)
   }
 }
 
@@ -249,24 +265,28 @@ async function main() {
   await run(params)
 }
 
-function logWatcherBuildTime(result: RollupWatcher[]) {
+function logWatcherBuildTime(result: RollupWatcher[], spinner: Spinner) {
   let watcherCounter = 0
   let startTime = 0
 
   result.map((watcher) => {
     function start() {
-      if (watcherCounter === 0) startTime = performance.now()
+      if (watcherCounter === 0) {
+        startTime = performance.now()
+        spinner.start()
+      }
       watcherCounter++
     }
     function end() {
       watcherCounter--
       if (watcherCounter === 0) {
-        logger.info(`Built in ${(performance.now() - startTime).toFixed(2)}ms`)
+        spinner.stop(`Built in ${(performance.now() - startTime).toFixed(2)}ms`)
       }
     }
     ;(watcher as RollupWatcher).on('event', (event) => {
       switch (event.code) {
         case 'ERROR': {
+          spinner.stop()
           logError(event.error)
           break
         }
