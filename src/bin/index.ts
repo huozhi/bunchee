@@ -105,7 +105,7 @@ function parseCliArgs(argv: string[]) {
 
 type Spinner = {
   start: () => void
-  stop: (text: string) => void
+  stop: (text?: string) => void
 }
 
 async function run(args: CliArgs) {
@@ -244,7 +244,9 @@ async function run(args: CliArgs) {
   }
 
   // watching mode
-  if (!watch) {
+  if (watch) {
+    spinner.stop()
+  } else {
     spinner.stop(`bunchee ${version} build completed`)
   }
 }
@@ -284,6 +286,7 @@ function logWatcherBuildTime(result: RollupWatcher[], spinner: Spinner) {
     ;(watcher as RollupWatcher).on('event', (event) => {
       switch (event.code) {
         case 'ERROR': {
+          spinner.stop()
           logError(event.error)
           break
         }
