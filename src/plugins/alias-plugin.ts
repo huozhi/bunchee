@@ -25,14 +25,14 @@ function findJsBundlePathCallback(
 
   const isMatchedFormat = hasFormatCond ? conditionNames.has(formatCond) : true
 
-  const isMatchedSpecialCondition =
-    specialCondition !== 'default' ? conditionNames.has(specialCondition) : true
+  const isMatchedConditionWithFormat =
+    specialCondition !== 'default'
+      ? // If there's special condition, fallback to default condition if the exportsMap doesn't have the special condition;
+        conditionNames.has(specialCondition) || isMatchedFormat
+      : // If there's no special, just match the default condition with expected format.
+        isMatchedFormat
 
-  return (
-    (isMatchedSpecialCondition || isMatchedFormat) &&
-    !isTypesCondName &&
-    hasBundle
-  )
+  return isMatchedConditionWithFormat && !isTypesCondName && hasBundle
 }
 
 function findTypesFileCallback({
