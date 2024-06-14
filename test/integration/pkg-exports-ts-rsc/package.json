@@ -9,6 +9,7 @@
       "require": "./dist/index.cjs"
     },
     "./api": {
+      "react-server": "./dist/api.react-server.mjs",
       "import": "./dist/api.mjs",
       "require": "./dist/api.cjs"
     }

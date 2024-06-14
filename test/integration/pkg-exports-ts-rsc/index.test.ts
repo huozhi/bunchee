@@ -13,6 +13,12 @@ describe('integration pkg-exports-ts-rsc', () => {
           './react-native.js': /'react-native'/,
           './index.d.ts': /declare const shared = true/,
           './api.mjs': `'./index.mjs'`,
+          './api.react-server.mjs': (content) => {
+            return (
+              content.includes('api:react-server') &&
+              content.includes('./index.mjs')
+            )
+          },
         })
       },
     )
