@@ -57,7 +57,7 @@
     "@rollup/plugin-replace": "^5.0.5",
     "@rollup/plugin-wasm": "^6.2.2",
     "@rollup/pluginutils": "^5.1.0",
-    "@swc/core": "^1.4.17",
+    "@swc/core": "^1.6.1",
     "@swc/helpers": "^0.5.11",
     "arg": "^5.0.2",
     "clean-css": "^5.3.3",
