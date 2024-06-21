@@ -179,8 +179,8 @@ export async function executeBunchee(
   >((resolve) => {
     ps.on('close', (code, signal) => resolve([code, signal]))
   })
-  if (stdout) console.log(stdout)
-  if (stderr) console.error(stderr)
+  if (stdout) process.stdout.write(stdout)
+  if (stderr) process.stderr.write(stderr)
 
   return { code, stdout, stderr, signal }
 }
