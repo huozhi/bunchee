@@ -2,7 +2,14 @@ import { OutputOptions, Plugin } from 'rollup'
 import { Entries } from '../types'
 import path from 'path'
 import { relativify } from '../lib/format'
-import { getSpecialExportTypeFromSourcePath } from '../entries'
+import { getSpecialExportTypeFromConditionNames } from '../entries'
+import { specialExportConventions } from '../constants'
+
+function hasNoSpecialCondition(conditionNames: Set<string>) {
+  return [...conditionNames].every(
+    (name) => !specialExportConventions.has(name),
+  )
+}
 
 function findJsBundlePathCallback(
   {
@@ -26,13 +33,15 @@ function findJsBundlePathCallback(
   const isMatchedFormat = hasFormatCond ? conditionNames.has(formatCond) : true
 
   const isMatchedConditionWithFormat =
-    specialCondition !== 'default'
-      ? // If there's special condition, fallback to default condition if the exportsMap doesn't have the special condition;
-        conditionNames.has(specialCondition) || isMatchedFormat
-      : // If there's no special, just match the default condition with expected format.
-        isMatchedFormat
+    conditionNames.has(specialCondition) ||
+    (!conditionNames.has('default') && hasNoSpecialCondition(conditionNames))
 
-  return isMatchedConditionWithFormat && !isTypesCondName && hasBundle
+  return (
+    isMatchedConditionWithFormat &&
+    !isTypesCondName &&
+    hasBundle &&
+    isMatchedFormat
+  )
 }
 
 function findTypesFileCallback({
@@ -57,6 +66,7 @@ function findTypesFileCallback({
 // Alias entry key to dist bundle path
 export function aliasEntries({
   entry: sourceFilePath,
+  conditionNames,
   entries,
   format,
   dts,
@@ -65,11 +75,14 @@ export function aliasEntries({
   entry: string
   entries: Entries
   format: OutputOptions['format']
+  conditionNames: Set<string>
   dts: boolean
   cwd: string
 }): Plugin {
   // <imported source file path>: <relative path to source's bundle>
   const sourceToRelativeBundleMap = new Map<string, string>()
+  const specialCondition =
+    getSpecialExportTypeFromConditionNames(conditionNames)
   for (const [, exportCondition] of Object.entries(entries)) {
     const exportDistMaps = exportCondition.export
     const exportMapEntries = Object.entries(exportDistMaps).map(
@@ -96,11 +109,9 @@ export function aliasEntries({
         })?.bundlePath
       }
     } else {
-      const specialCondition =
-        getSpecialExportTypeFromSourcePath(sourceFilePath)
-      matchedBundlePath = exportMapEntries.find((item) =>
-        findJsBundlePathCallback(item, specialCondition),
-      )?.bundlePath
+      matchedBundlePath = exportMapEntries.find((item) => {
+        return findJsBundlePathCallback(item, specialCondition)
+      })?.bundlePath
     }
 
     if (matchedBundlePath) {

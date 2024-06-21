@@ -238,6 +238,20 @@ function getExportTypeFromExportTypesArray(types: string[]): string {
   return exportType
 }
 
+export function getSpecialExportTypeFromConditionNames(
+  conditionNames: Set<string>,
+): string {
+  let exportType = 'default'
+  conditionNames.forEach((value) => {
+    if (specialExportConventions.has(value)) {
+      exportType = value
+    } else if (value === 'import' || value === 'require' || value === 'types') {
+      // exportType = value
+    }
+  })
+  return exportType
+}
+
 // ./index -> .
 // ./index.development -> .
 // ./index.react-server -> .

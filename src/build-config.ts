@@ -233,10 +233,12 @@ async function buildInputConfig(
       : 'esm'
     : bundleConfig.format
 
+  const currentConditionNames = Object.keys(exportCondition.export)[0]
   const aliasPlugin = aliasEntries({
     entry,
     entries,
     format: aliasFormat,
+    conditionNames: new Set(currentConditionNames.split('.')),
     dts,
     cwd,
   })
