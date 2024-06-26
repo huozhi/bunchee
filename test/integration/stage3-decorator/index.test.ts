@@ -1,8 +1,4 @@
-import {
-  assertContainFiles,
-  assertFilesContent,
-  stripANSIColor,
-} from '../../testing-utils'
+import { assertContainFiles, stripANSIColor } from '../../testing-utils'
 import { createIntegrationTest } from '../utils'
 import * as console from 'node:console'
 
