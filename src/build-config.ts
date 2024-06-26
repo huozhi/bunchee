@@ -195,10 +195,11 @@ async function buildInputConfig(
   const { runtime, target: jscTarget, minify: shouldMinify } = bundleConfig
   const hasSpecifiedTsTarget = Boolean(tsCompilerOptions.target && tsConfigPath)
 
-  const swcParserConfig = {
+  const swcParserConfig: import('@swc/types').ParserConfig = {
     syntax: useTypeScript ? 'typescript' : 'ecmascript',
     [useTypeScript ? 'tsx' : 'jsx']: true,
     exportDefaultFrom: true,
+    decorators: !!bundleConfig.decorator,
   } as const
 
   const swcOptions: import('@swc/types').Options = {
@@ -209,6 +210,12 @@ async function buildInputConfig(
       loose: true, // Use loose mode
       externalHelpers: false,
       parser: swcParserConfig,
+      transform:
+        typeof bundleConfig.decorator === 'string'
+          ? {
+              decoratorVersion: bundleConfig.decorator,
+            }
+          : {},
       ...(shouldMinify && {
         minify: {
           ...swcMinifyOptions,

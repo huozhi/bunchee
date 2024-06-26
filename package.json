@@ -85,7 +85,7 @@
     "@huozhi/testing-package": "1.0.0",
     "@swc-node/register": "^1.9.0",
     "@swc/jest": "^0.2.31",
-    "@swc/types": "^0.1.5",
+    "@swc/types": "^0.1.9",
     "@types/clean-css": "^4.2.11",
     "@types/jest": "29.0.0",
     "@types/node": "^20.4.1",
@@ -119,5 +119,5 @@
     ],
     "testTimeout": 60000
   },
-  "packageManager": "pnpm@8.8.0"
+  "packageManager": "pnpm@9.4.0"
 }
