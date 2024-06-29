@@ -6,7 +6,6 @@ describe('integration stage3-decorator', () => {
   it('should build success when enable decorator', async () => {
     await createIntegrationTest(
       {
-        args: ['--decorator'],
         directory: __dirname,
       },
       async ({ distDir, stdout, stderr }) => {

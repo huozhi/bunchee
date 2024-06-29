@@ -43,7 +43,6 @@ type BundleConfig = {
   pkg?: PackageMetadata
   clean?: boolean
   tsconfig?: string
-  decorator?: '2021-12' | '2022-03' | false
 
   // hooks
   /*
@@ -94,8 +93,6 @@ type CliArgs = {
   env?: string
   external?: string
   dts?: false
-  decorator?: false
-  decoratorVersion?: '2021-12' | '2022-03'
   runtime?: string
   prepare?: boolean
   clean?: boolean

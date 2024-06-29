@@ -199,7 +199,7 @@ async function buildInputConfig(
     syntax: useTypeScript ? 'typescript' : 'ecmascript',
     [useTypeScript ? 'tsx' : 'jsx']: true,
     exportDefaultFrom: true,
-    decorators: !!bundleConfig.decorator,
+    decorators: true,
   } as const
 
   const swcOptions: import('@swc/types').Options = {
@@ -210,12 +210,9 @@ async function buildInputConfig(
       loose: true, // Use loose mode
       externalHelpers: false,
       parser: swcParserConfig,
-      transform:
-        typeof bundleConfig.decorator === 'string'
-          ? {
-              decoratorVersion: bundleConfig.decorator,
-            }
-          : {},
+      transform: {
+        decoratorVersion: '2022-03',
+      },
       ...(shouldMinify && {
         minify: {
           ...swcMinifyOptions,

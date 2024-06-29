@@ -67,8 +67,6 @@ function parseCliArgs(argv: string[]) {
       '--no-clean': Boolean,
       '--prepare': Boolean,
       '--tsconfig': String,
-      '--decorator': Boolean,
-      '--decoratorVersion': String,
 
       '-h': '--help',
       '-v': '--version',
@@ -101,8 +99,6 @@ function parseCliArgs(argv: string[]) {
     env: args['--env'],
     prepare: !!args['--prepare'],
     tsconfig: args['--tsconfig'],
-    decorator: args['--decorator'],
-    decoratorVersion: args['--decoratorVersion'] ?? '2022-03',
   }
   return parsedArgs
 }
@@ -141,7 +137,6 @@ async function run(args: CliArgs) {
     sourcemap: sourcemap === false ? false : true,
     env: env?.split(',') || [],
     clean,
-    decorator: args.decorator ? args.decoratorVersion : false,
     tsconfig,
   }
   if (args.version) {
