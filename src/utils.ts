@@ -210,7 +210,14 @@ async function removeDir(dirPath: string) {
 const removedDirs = new Set<string>()
 export async function removeOutputDir(output: OutputOptions, cwd: string) {
   const dir = output.dir
-  if (dir && dir !== cwd && !removedDirs.has(dir)) {
+  if (
+    dir &&
+    // not equal to cwd
+    dir !== cwd &&
+    // not equal to src/ dir
+    dir !== path.resolve(cwd, SRC) &&
+    !removedDirs.has(dir)
+  ) {
     await removeDir(dir)
     removedDirs.add(dir)
   }
