@@ -8,10 +8,12 @@ describe('integration entry-index-index', () => {
       },
       async ({ distDir }) => {
         await assertFilesContent(distDir, {
-          'index.js': /'index'/,
+          'default.js': /'index'/,
           'react-server.js': /\'react-server\'/,
         })
       },
     )
   })
 })
+
+// TODO: fix output log

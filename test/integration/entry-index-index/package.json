@@ -2,6 +2,6 @@
   "name": "entry-index-index",
   "exports": {
     "react-server": "./dist/react-server.js",
-    "default": "./dist/index.js"
+    "default": "./dist/default.js"
   }
 }
