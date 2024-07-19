@@ -338,7 +338,6 @@ export async function collectSourceEntriesByExportPath(
           const exportType = getExportTypeFromExportPath(exportPath)
           sourceFilesMap[exportType] = indexAbsoluteFile
           exportsEntries.set(exportPath, sourceFilesMap)
-          break
         }
       }
     }

@@ -197,6 +197,7 @@ async function run(args: CliArgs) {
     if (watch) {
       logWatcherBuildTime(assetJobs, spinner)
     } else {
+      stopSpinner()
       if (assetJobs.length === 0) {
         logger.warn(
           'The "src" directory does not contain any entry files. ' +
