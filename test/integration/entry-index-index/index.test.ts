@@ -6,14 +6,15 @@ describe('integration entry-index-index', () => {
       {
         directory: __dirname,
       },
-      async ({ distDir }) => {
+      async ({ distDir, stdout }) => {
         await assertFilesContent(distDir, {
           'default.js': /'index'/,
           'react-server.js': /\'react-server\'/,
         })
+
+        expect(stdout).toContain('dist/react-server.js')
+        expect(stdout).toContain('dist/default.js')
       },
     )
   })
 })
-
-// TODO: fix output log
