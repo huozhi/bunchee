@@ -9,14 +9,56 @@ on:
   pull_request:
 
 jobs:
+  install_and_test_win:
+    runs-on: windows-latest
+    timeout-minutes: 5
+    strategy:
+      matrix:
+        node-version: [20]
+
+    name: Windows - Node ${{ matrix.node-version }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v3
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - uses: actions/cache@v3
+        name: Setup pnpm cache
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Build
+        run: pnpm build
+
+      - name: Test
+        run: |
+          pnpm test
+          pnpm test:post
+
   install_and_test:
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest]
     timeout-minutes: 5
     strategy:
       matrix:
         node-version: [16, 18, 20]
 
-    name: Node ${{ matrix.node-version }}
+    name: Linux - Node ${{ matrix.node-version }}
     steps:
       - uses: actions/checkout@v3
         with:
