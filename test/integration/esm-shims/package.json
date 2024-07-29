@@ -11,6 +11,10 @@
     "./filename": {
       "import": "./dist/filename.mjs",
       "require": "./dist/filename.js"
+    },
+    "./custom-require": {
+      "import": "./dist/custom-require.mjs",
+      "require": "./dist/custom-require.js"
     }
   }
 }
