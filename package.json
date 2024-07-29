@@ -8,7 +8,7 @@
   "scripts": {
     "test": "jest --env node",
     "test:update": "TEST_UPDATE_SNAPSHOT=1 pnpm test",
-    "test:post": "POST_BUILD=1 pnpm jest test/compile.test.ts test/integration.test.ts",
+    "test:post": "cross-env POST_BUILD=1 pnpm jest test/compile.test.ts test/integration.test.ts",
     "test:ci": "[ -z $CI ] || pnpm test",
     "clean": "rm -rf ./dist",
     "typecheck": "tsc --noEmit && tsc -p test/tsconfig.json --noEmit",

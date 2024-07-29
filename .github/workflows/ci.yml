@@ -58,7 +58,7 @@ jobs:
       matrix:
         node-version: [16, 18, 20]
 
-    name: Ubuntu - Node ${{ matrix.node-version }}
+    name: Linux - Node ${{ matrix.node-version }}
     steps:
       - uses: actions/checkout@v3
         with:
