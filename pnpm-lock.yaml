@@ -55,7 +55,7 @@ importers:
         version: 6.1.0(rollup@4.17.2)(typescript@5.5.2)
       rollup-plugin-swc3:
         specifier: ^0.11.1
-        version: 0.11.1(@swc/core@1.6.1)(rollup@4.17.2)
+        version: 0.11.1(@swc/core@1.6.1(@swc/helpers@0.5.11))(rollup@4.17.2)
       rollup-preserve-directives:
         specifier: ^1.1.1
         version: 1.1.1(rollup@4.17.2)
@@ -68,10 +68,10 @@ importers:
         version: 1.0.0
       '@swc-node/register':
         specifier: ^1.9.0
-        version: 1.9.0(@swc/core@1.6.1)(@swc/types@0.1.9)(typescript@5.5.2)
+        version: 1.9.0(@swc/core@1.6.1(@swc/helpers@0.5.11))(@swc/types@0.1.9)(typescript@5.5.2)
       '@swc/jest':
         specifier: ^0.2.31
-        version: 0.2.31(@swc/core@1.6.1)
+        version: 0.2.31(@swc/core@1.6.1(@swc/helpers@0.5.11))
       '@swc/types':
         specifier: ^0.1.9
         version: 0.1.9
@@ -87,6 +87,9 @@ importers:
       bunchee:
         specifier: link:./
         version: 'link:'
+      cross-env:
+        specifier: ^7.0.3
+        version: 7.0.3
       husky:
         specifier: ^9.0.11
         version: 9.0.11
@@ -950,6 +953,11 @@ packages:
 
   convert-source-map@1.8.0:
     resolution: {integrity: sha512-+OQdjP49zViI/6i7nIJpA8rAl4sV/JdPfU9nZs3VqOwGIgizICvuN2ru6fMd+4llL0tar18UYJXfZ/TWtmhUjA==}
+
+  cross-env@7.0.3:
+    resolution: {integrity: sha512-+/HKd6EgcQCJGh2PSjZuUitQBQynKor4wrFbRg4DtAgS1aWO+gU52xpH7M9ScGgXSYmAVS9bIJ8EzuaGw0oNAw==}
+    engines: {node: '>=10.14', npm: '>=6', yarn: '>=1'}
+    hasBin: true
 
   cross-spawn@7.0.3:
     resolution: {integrity: sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==}
@@ -2342,11 +2350,13 @@ snapshots:
       glob: 8.1.0
       is-reference: 1.2.1
       magic-string: 0.30.10
+    optionalDependencies:
       rollup: 4.17.2
 
   '@rollup/plugin-json@6.1.0(rollup@4.17.2)':
     dependencies:
       '@rollup/pluginutils': 5.1.0(rollup@4.17.2)
+    optionalDependencies:
       rollup: 4.17.2
 
   '@rollup/plugin-node-resolve@15.2.3(rollup@4.17.2)':
@@ -2357,17 +2367,20 @@ snapshots:
       is-builtin-module: 3.2.1
       is-module: 1.0.0
       resolve: 1.22.1
+    optionalDependencies:
       rollup: 4.17.2
 
   '@rollup/plugin-replace@5.0.5(rollup@4.17.2)':
     dependencies:
       '@rollup/pluginutils': 5.1.0(rollup@4.17.2)
       magic-string: 0.30.10
+    optionalDependencies:
       rollup: 4.17.2
 
   '@rollup/plugin-wasm@6.2.2(rollup@4.17.2)':
     dependencies:
       '@rollup/pluginutils': 5.1.0(rollup@4.17.2)
+    optionalDependencies:
       rollup: 4.17.2
 
   '@rollup/pluginutils@5.1.0(rollup@4.17.2)':
@@ -2375,6 +2388,7 @@ snapshots:
       '@types/estree': 1.0.5
       estree-walker: 2.0.2
       picomatch: 2.3.1
+    optionalDependencies:
       rollup: 4.17.2
 
   '@rollup/rollup-android-arm-eabi@4.17.2':
@@ -2437,14 +2451,14 @@ snapshots:
     dependencies:
       '@sinonjs/commons': 1.8.3
 
-  '@swc-node/core@1.13.0(@swc/core@1.6.1)(@swc/types@0.1.9)':
+  '@swc-node/core@1.13.0(@swc/core@1.6.1(@swc/helpers@0.5.11))(@swc/types@0.1.9)':
     dependencies:
       '@swc/core': 1.6.1(@swc/helpers@0.5.11)
       '@swc/types': 0.1.9
 
-  '@swc-node/register@1.9.0(@swc/core@1.6.1)(@swc/types@0.1.9)(typescript@5.5.2)':
+  '@swc-node/register@1.9.0(@swc/core@1.6.1(@swc/helpers@0.5.11))(@swc/types@0.1.9)(typescript@5.5.2)':
     dependencies:
-      '@swc-node/core': 1.13.0(@swc/core@1.6.1)(@swc/types@0.1.9)
+      '@swc-node/core': 1.13.0(@swc/core@1.6.1(@swc/helpers@0.5.11))(@swc/types@0.1.9)
       '@swc-node/sourcemap-support': 0.5.0
       '@swc/core': 1.6.1(@swc/helpers@0.5.11)
       colorette: 2.0.20
@@ -2494,7 +2508,6 @@ snapshots:
   '@swc/core@1.6.1(@swc/helpers@0.5.11)':
     dependencies:
       '@swc/counter': 0.1.3
-      '@swc/helpers': 0.5.11
       '@swc/types': 0.1.9
     optionalDependencies:
       '@swc/core-darwin-arm64': 1.6.1
@@ -2507,6 +2520,7 @@ snapshots:
       '@swc/core-win32-arm64-msvc': 1.6.1
       '@swc/core-win32-ia32-msvc': 1.6.1
       '@swc/core-win32-x64-msvc': 1.6.1
+      '@swc/helpers': 0.5.11
 
   '@swc/counter@0.1.3': {}
 
@@ -2514,7 +2528,7 @@ snapshots:
     dependencies:
       tslib: 2.6.2
 
-  '@swc/jest@0.2.31(@swc/core@1.6.1)':
+  '@swc/jest@0.2.31(@swc/core@1.6.1(@swc/helpers@0.5.11))':
     dependencies:
       '@jest/create-cache-key-function': 29.7.0
       '@swc/core': 1.6.1(@swc/helpers@0.5.11)
@@ -2791,6 +2805,10 @@ snapshots:
   convert-source-map@1.8.0:
     dependencies:
       safe-buffer: 5.1.2
+
+  cross-env@7.0.3:
+    dependencies:
+      cross-spawn: 7.0.3
 
   cross-spawn@7.0.3:
     dependencies:
@@ -3081,7 +3099,6 @@ snapshots:
       '@babel/core': 7.18.13
       '@jest/test-sequencer': 29.0.1
       '@jest/types': 29.0.2
-      '@types/node': 20.4.1
       babel-jest: 29.0.1(@babel/core@7.18.13)
       chalk: 4.1.2
       ci-info: 3.3.2
@@ -3101,6 +3118,8 @@ snapshots:
       pretty-format: 29.0.2
       slash: 3.0.0
       strip-json-comments: 3.1.1
+    optionalDependencies:
+      '@types/node': 20.4.1
     transitivePeerDependencies:
       - supports-color
 
@@ -3180,7 +3199,7 @@ snapshots:
       '@types/node': 20.4.1
 
   jest-pnp-resolver@1.2.2(jest-resolve@29.0.1):
-    dependencies:
+    optionalDependencies:
       jest-resolve: 29.0.1
 
   jest-regex-util@29.0.0: {}
@@ -3576,7 +3595,7 @@ snapshots:
     optionalDependencies:
       '@babel/code-frame': 7.24.7
 
-  rollup-plugin-swc3@0.11.1(@swc/core@1.6.1)(rollup@4.17.2):
+  rollup-plugin-swc3@0.11.1(@swc/core@1.6.1(@swc/helpers@0.5.11))(rollup@4.17.2):
     dependencies:
       '@fastify/deepmerge': 1.3.0
       '@rollup/pluginutils': 5.1.0(rollup@4.17.2)
