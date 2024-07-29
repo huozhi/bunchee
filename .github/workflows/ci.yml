@@ -16,7 +16,7 @@ jobs:
       matrix:
         node-version: [20]
 
-    name: ${{ runner.os }} - Node ${{ matrix.node-version }}
+    name: Windows - Node ${{ matrix.node-version }}
     steps:
       - uses: actions/checkout@v3
         with:
@@ -58,7 +58,7 @@ jobs:
       matrix:
         node-version: [16, 18, 20]
 
-    name: ${{ runner.os }} - Node ${{ matrix.node-version }}
+    name: Ubuntu - Node ${{ matrix.node-version }}
     steps:
       - uses: actions/checkout@v3
         with:
