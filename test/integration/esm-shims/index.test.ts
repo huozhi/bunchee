@@ -18,9 +18,11 @@ describe('integration esm-shims', () => {
           'require.mjs': requirePolyfill,
           'filename.mjs': filenamePolyfill,
           'dirname.mjs': dirnamePolyfill,
+          'custom-require.mjs': (code) => !code.includes(requirePolyfill),
           'require.js': /require\(/,
           'filename.js': /__filename/,
           'dirname.js': /__dirname/,
+          'custom-require.js': (code) => !code.includes(requirePolyfill),
         })
       },
     )
