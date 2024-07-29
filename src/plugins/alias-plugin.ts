@@ -1,6 +1,6 @@
 import { OutputOptions, Plugin } from 'rollup'
 import { Entries } from '../types'
-import path from 'path'
+import { posix as path } from 'path'
 import { relativify } from '../lib/format'
 import { getSpecialExportTypeFromConditionNames } from '../entries'
 import { specialExportConventions } from '../constants'
