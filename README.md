@@ -1,6 +1,6 @@
 # bunchee
 
-> Zero-config bundler for frontend libraries.
+> Zero-config bundler for JS/TS packages.
 
 ![bunchee](https://repository-images.githubusercontent.com/154026156/5d132698-0ff5-4644-a4fd-d9570e6229bc)
 
