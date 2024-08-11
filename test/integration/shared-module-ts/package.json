@@ -1,0 +1,20 @@
+{
+  "name": "shared-module",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "react-server": "./dist/index.react-server.js",
+      "import": "./dist/index.js",
+      "default": "./dist/index.cjs"
+    },
+    "./another": {
+      "types": "./dist/another.d.ts",
+      "import": "./dist/another.js",
+      "default": "./dist/another.cjs"
+    }
+  },
+  "dependencies": {
+    "react": "*"
+  }
+}

@@ -482,8 +482,11 @@ async function buildOutputConfigs(
       entryFiles,
     ),
     chunkFileNames() {
-      const ext =
-        format === 'cjs' && outputFileExtension === '.cjs' ? 'cjs' : 'js'
+      const ext = dts
+        ? 'd.ts'
+        : format === 'cjs' && outputFileExtension === '.cjs'
+        ? 'cjs'
+        : 'js'
       return '[name]-[hash].' + ext
     },
     // By default in rollup, when creating multiple chunks, transitive imports of entry chunks
