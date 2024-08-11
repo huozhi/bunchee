@@ -20,8 +20,6 @@ describe('integration multi-entries', () => {
           './dist/server/react-server.mjs': /'server.react-server'/,
           // types
           './dist/server/index.d.ts': `export { Client } from '../client/index.js';\nexport { Shared } from '../shared/index.js';`,
-          // './dist/client/index.d.mts': `export { Shared } from '../shared/index.mjs'`,
-          // './dist/client/index.d.cts': `export { Shared } from '../shared/index.cjs'`,
           './dist/client/index.d.ts': `export { Shared } from '../shared/index.js'`,
         }
 
