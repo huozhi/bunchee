@@ -15,7 +15,7 @@ import type {
 } from 'rollup'
 import { convertCompilerOptions } from './typescript'
 
-import path, { resolve, dirname, join, basename, extname } from 'path'
+import path, { resolve, dirname, join, basename } from 'path'
 import { wasm } from '@rollup/plugin-wasm'
 import { swc } from 'rollup-plugin-swc3'
 import commonjs from '@rollup/plugin-commonjs'
@@ -443,7 +443,6 @@ async function buildOutputConfigs(
   // Add esm mark and interop helper if esm export is detected
   const useEsModuleMark = tsCompilerOptions?.esModuleInterop // hasEsmExport(exportPaths, tsCompilerOptions)
   const absoluteOutputFile = resolve(cwd, bundleConfig.file!)
-  const outputFileExtension = extname(absoluteOutputFile)
   const isEsmPkg = isESModulePackage(pkg.type)
   const name = filePathWithoutExtension(absoluteOutputFile)
   const dtsFile = resolve(
