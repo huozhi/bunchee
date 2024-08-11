@@ -444,6 +444,7 @@ async function buildOutputConfigs(
   const useEsModuleMark = tsCompilerOptions?.esModuleInterop // hasEsmExport(exportPaths, tsCompilerOptions)
   const absoluteOutputFile = resolve(cwd, bundleConfig.file!)
   const outputFileExtension = extname(absoluteOutputFile)
+  const isEsmPkg = isESModulePackage(pkg.type)
   const name = filePathWithoutExtension(absoluteOutputFile)
   const dtsFile = resolve(
     cwd,
@@ -482,10 +483,13 @@ async function buildOutputConfigs(
       entryFiles,
     ),
     chunkFileNames() {
+      const isCjsFormat = format === 'cjs'
       const ext = dts
         ? 'd.ts'
-        : format === 'cjs' && outputFileExtension === '.cjs'
+        : isCjsFormat && isEsmPkg
         ? 'cjs'
+        : !isCjsFormat && !isEsmPkg
+        ? 'mjs'
         : 'js'
       return '[name]-[hash].' + ext
     },

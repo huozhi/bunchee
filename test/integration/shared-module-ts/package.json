@@ -1,5 +1,5 @@
 {
-  "name": "shared-module",
+  "name": "shared-module-ts",
   "type": "module",
   "exports": {
     ".": {
