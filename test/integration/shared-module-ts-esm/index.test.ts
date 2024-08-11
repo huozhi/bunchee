@@ -1,4 +1,4 @@
-import { readFileSync, promises as fsp } from 'fs'
+import { promises as fsp } from 'fs'
 import { createIntegrationTest } from '../utils'
 import path from 'path'
 
