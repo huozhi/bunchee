@@ -12,12 +12,12 @@ describe('integration shared-module-ts', () => {
         const files = await fsp.readdir(distDir)
         const sharedUtilModuleFile = files.find((file) =>
           /util-shared-\w+\.d\.ts/.test(file),
-        )
+        )!
         const appContextSharedFile = files.find((file) =>
           /app-context-shared-\w+\.d\.ts/.test(file),
-        )
+        )!
 
-        const indexType = files.find((file) => file === 'index.d.ts')
+        const indexType = files.find((file) => file === 'index.d.ts')!
         const indexFileContent = readFileSync(
           path.join(distDir, indexType),
           'utf-8',
