@@ -67,6 +67,7 @@ function parseCliArgs(argv: string[]) {
       '--no-clean': Boolean,
       '--prepare': Boolean,
       '--tsconfig': String,
+      '--dts-bundle': Boolean,
 
       '-h': '--help',
       '-v': '--version',
@@ -90,6 +91,7 @@ function parseCliArgs(argv: string[]) {
     sourcemap: !!args['--sourcemap'],
     cwd: args['--cwd'],
     dts: args['--no-dts'] ? false : undefined,
+    dtsBundle: args['--dts-bundle'],
     help: args['--help'],
     version: args['--version'],
     runtime: args['--runtime'],
@@ -118,6 +120,7 @@ async function run(args: CliArgs) {
     target,
     runtime,
     dts,
+    dtsBundle,
     env,
     clean,
     tsconfig,
@@ -125,7 +128,7 @@ async function run(args: CliArgs) {
   const cwd = args.cwd || process.cwd()
   const file = args.file ? path.resolve(cwd, args.file) : undefined
   const bundleConfig: BundleConfig = {
-    dts,
+    dts: dts !== false && { respectExternal: dtsBundle ? true : undefined },
     file,
     format,
     cwd,

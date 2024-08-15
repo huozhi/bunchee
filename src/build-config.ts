@@ -69,6 +69,7 @@ const swcMinifyOptions = {
 async function createDtsPlugin(
   tsCompilerOptions: BuildContext['tsOptions']['tsCompilerOptions'],
   tsConfigPath: string | undefined,
+  respectExternal: boolean | undefined,
   cwd: string,
 ) {
   const enableIncrementalWithoutBuildInfo =
@@ -114,6 +115,7 @@ async function createDtsPlugin(
   ).default({
     tsconfig: tsConfigPath,
     compilerOptions: overrideResolvedTsOptions,
+    respectExternal,
   })
 
   return dtsPlugin
@@ -262,6 +264,7 @@ async function buildInputConfig(
     const dtsPlugin = await memoizeDtsPluginByKey(uniqueProcessId)(
       tsCompilerOptions,
       tsConfigPath,
+      bundleConfig.dts && bundleConfig.dts.respectExternal,
       cwd,
     )
     typesPlugins.push(dtsPlugin)

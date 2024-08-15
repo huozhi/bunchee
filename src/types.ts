@@ -38,7 +38,7 @@ type BundleConfig = {
   sourcemap?: boolean
   external?: string[] | null
   env?: string[]
-  dts?: boolean
+  dts?: { respectExternal?: boolean } | false
   runtime?: string
   pkg?: PackageMetadata
   clean?: boolean
@@ -93,6 +93,7 @@ type CliArgs = {
   env?: string
   external?: string
   dts?: false
+  dtsBundle?: boolean
   runtime?: string
   prepare?: boolean
   clean?: boolean
