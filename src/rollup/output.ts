@@ -19,13 +19,12 @@ export async function buildOutputConfigs(
   const {
     entries,
     pkg,
-    // exportPaths,
     cwd,
     tsOptions: { tsCompilerOptions },
     pluginContext,
   } = buildContext
   // Add esm mark and interop helper if esm export is detected
-  const useEsModuleMark = tsCompilerOptions?.esModuleInterop // hasEsmExport(exportPaths, tsCompilerOptions)
+  const useEsModuleMark = tsCompilerOptions?.esModuleInterop
   const absoluteOutputFile = resolve(cwd, bundleConfig.file!)
   const isEsmPkg = isESModulePackage(pkg.type)
   const name = filePathWithoutExtension(absoluteOutputFile)
@@ -42,14 +41,6 @@ export async function buildOutputConfigs(
   const entryFiles = new Set(
     Object.values(entries).map((entry) => entry.source),
   )
-
-  // const inputOptions = await buildInputConfig(
-  //   entry,
-  //   bundleConfig,
-  //   exportCondition,
-  //   buildContext,
-  //   dts,
-  // )
 
   const outputOptions: OutputOptions = {
     name: pkg.name || name,
@@ -83,9 +74,4 @@ export async function buildOutputConfigs(
   }
 
   return outputOptions
-
-  // return {
-  //   input: inputOptions,
-  //   output: outputOptions,
-  // }
 }
