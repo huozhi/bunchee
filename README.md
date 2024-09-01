@@ -326,6 +326,7 @@ import { AppContext } from './app-context.shared-runtime'
 - Watch (`-w`): Watch for source file changes.
 - No Clean(`--no-clean`): Do not clean the dist folder before building. (default: `false`)
 - TSConfig (`--tsconfig <path>`): Specify the path to the TypeScript configuration file. (default: `tsconfig.json`)
+- Bundle Types (`--dts-bundle`): Bundle type declaration files. (default: `false`)
 
 ```sh
 cd <project-root-dir>

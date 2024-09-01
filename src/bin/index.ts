@@ -32,6 +32,7 @@ Options:
   --sourcemap            enable sourcemap generation, default: false
   --no-dts               do not generate types, default: undefined
   --tsconfig             path to tsconfig file, default: tsconfig.json
+  --dts-bundle           bundle type declaration files, default: false
 `
 
 function help() {
