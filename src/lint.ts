@@ -2,11 +2,21 @@ import path from 'path'
 import { parseExports } from './exports'
 import { logger } from './logger'
 import { PackageMetadata } from './types'
-import { hasCjsExtension, isESModulePackage } from './utils'
+import { hasCjsExtension, isESModulePackage, isTypeFile } from './utils'
 
 type BadExportItem = {
   value: boolean
   paths: string[]
+}
+
+function validateTypesFieldCondition(pair: [string, string]) {
+  const [outputPath, composedExportType] = pair
+  const exportTypes = new Set(composedExportType.split('.'))
+
+  if (!exportTypes.has('types') && isTypeFile(outputPath)) {
+    return true
+  }
+  return false
 }
 
 export function lint(pkg: PackageMetadata) {
@@ -26,6 +36,7 @@ export function lint(pkg: PackageMetadata) {
     badCjsImportExport: BadExportItem
     badEsmRequireExport: BadExportItem
     badEsmImportExport: BadExportItem
+    badTypesExport: [string, string][]
   } = {
     badMainExtension: false,
     badMainExport: false,
@@ -46,6 +57,7 @@ export function lint(pkg: PackageMetadata) {
       value: false,
       paths: [],
     },
+    badTypesExport: [],
   }
 
   // Validate ESM package
@@ -59,7 +71,12 @@ export function lint(pkg: PackageMetadata) {
         state.invalidExportsFieldType = true
       } else {
         parsedExports.forEach((outputPairs) => {
-          for (const [outputPath, composedExportType] of outputPairs) {
+          for (const outputPair of outputPairs) {
+            const [outputPath, composedExportType] = outputPair
+            if (validateTypesFieldCondition([outputPath, composedExportType])) {
+              state.badTypesExport.push([outputPath, composedExportType])
+            }
+
             const exportTypes = new Set(composedExportType.split('.'))
             let requirePath: string = ''
             let importPath: string = ''
@@ -97,7 +114,11 @@ export function lint(pkg: PackageMetadata) {
         state.invalidExportsFieldType = true
       } else {
         parsedExports.forEach((outputPairs) => {
-          for (const [outputPath, composedExportType] of outputPairs) {
+          for (const outputPair of outputPairs) {
+            const [outputPath, composedExportType] = outputPair
+            if (validateTypesFieldCondition([outputPath, composedExportType])) {
+              state.badTypesExport.push([outputPath, composedExportType])
+            }
             const exportTypes = new Set(composedExportType.split('.'))
             let requirePath: string = ''
             let importPath: string = ''
@@ -178,5 +199,14 @@ export function lint(pkg: PackageMetadata) {
     state.badEsmImportExport.paths.forEach((p) => {
       logger.warn(`  ${p}`)
     })
+  }
+
+  if (state.badTypesExport.length) {
+    state.badTypesExport.forEach(([outputPath, composedExportType]) => {
+      logger.error(
+        `Bad export types field with ${composedExportType} in ${outputPath}, use "types" export condition for it`,
+      )
+    })
+    process.exit(1)
   }
 }
