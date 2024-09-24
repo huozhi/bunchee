@@ -16,10 +16,28 @@ export const nodeResolveExtensions = [
   '.node',
   '.jsx',
 ]
+// You can find the list of runtime keys here:
+//  https://runtime-keys.proposal.wintercg.org/
 export const runtimeExportConventions = new Set([
+  'azion',
+  'lagon',
+  'moddable',
+  'netlify',
+  'electron',
+  'fastly',
+  'kiesel',
+  'wasmer',
   'react-server',
+  'edge-routine',
   'react-native',
   'edge-light',
+  'node',
+  'deno',
+  'bun',
+  'workerd',
+  // This is not official, but it's used in the vite
+  //  Refs: https://vitejs.dev/config/shared-options#resolve-conditions
+  'browser',
 ])
 export const optimizeConventions = new Set(['development', 'production'])
 export const specialExportConventions = new Set([
