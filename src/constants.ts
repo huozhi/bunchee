@@ -27,8 +27,8 @@ export const runtimeExportConventions = new Set([
   'deno',
   'bun',
   'workerd',
-  // This is not official, but it's used in the vite
-  // x-ref: https://vitejs.dev/config/shared-options#resolve-conditions
+
+  // Browser only
   'browser',
 ])
 export const optimizeConventions = new Set(['development', 'production'])
