@@ -16,10 +16,20 @@ export const nodeResolveExtensions = [
   '.node',
   '.jsx',
 ]
+// You can find the list of runtime keys here:
+// https://runtime-keys.proposal.wintercg.org/
 export const runtimeExportConventions = new Set([
+  'electron',
   'react-server',
   'react-native',
   'edge-light',
+  'node',
+  'deno',
+  'bun',
+  'workerd',
+
+  // Browser only
+  'browser',
 ])
 export const optimizeConventions = new Set(['development', 'production'])
 export const specialExportConventions = new Set([
