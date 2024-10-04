@@ -64,7 +64,7 @@
     "magic-string": "^0.30.11",
     "ora": "^8.0.1",
     "pretty-bytes": "^5.6.0",
-    "rollup": "^4.19.2",
+    "rollup": "^4.24.0",
     "rollup-plugin-dts": "^6.1.1",
     "rollup-plugin-swc3": "^0.11.1",
     "rollup-preserve-directives": "^1.1.1",
