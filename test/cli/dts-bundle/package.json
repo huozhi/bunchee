@@ -1,0 +1,6 @@
+{
+  "name": "prepare-ts-with-pkg-json",
+  "devDependencies": {
+    "@swc/types": "*"
+  }
+}

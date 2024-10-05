@@ -1,5 +1,5 @@
 {
-  "name": "dev-prod-nested-convention",
+  "name": "dev-prod-convention-reexport",
   "exports": {
     ".": {
       "import": {

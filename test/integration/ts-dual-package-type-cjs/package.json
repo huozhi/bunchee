@@ -1,5 +1,5 @@
 {
-  "name": "ts-dual-esm-cjs",
+  "name": "ts-dual-package-type-cjs",
   "main": "./dist/index.js",
   "exports": {
     "import": "./dist/index.mjs",
