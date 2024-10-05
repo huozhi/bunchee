@@ -57,8 +57,8 @@ importers:
         specifier: ^0.11.1
         version: 0.11.1(@swc/core@1.7.14(@swc/helpers@0.5.11))(rollup@4.24.0)
       rollup-preserve-directives:
-        specifier: ^1.1.1
-        version: 1.1.1(rollup@4.24.0)
+        specifier: ^1.1.2
+        version: 1.1.2(rollup@4.24.0)
       tslib:
         specifier: ^2.6.2
         version: 2.6.2
@@ -1672,8 +1672,8 @@ packages:
       '@swc/core': '>=1.2.165'
       rollup: ^2.0.0 || ^3.0.0 || ^4.0.0
 
-  rollup-preserve-directives@1.1.1:
-    resolution: {integrity: sha512-+eQafbuEfDPfxQ9hQPlwaROfin4yiVRxap8hnrvvvcSGoukv1tTiYpAW9mvm3uR8J+fe4xd8FdVd5rz9q7jZ+Q==}
+  rollup-preserve-directives@1.1.2:
+    resolution: {integrity: sha512-OOaYh4zO0Dcd/eVWGB8H69CgTiohl+jJqc2TLtjLENVIQaV2rxO3OW6RILzCQOdDvPT+/rzwRp+97OXhem895Q==}
     peerDependencies:
       rollup: ^2.0.0 || ^3.0.0 || ^4.0.0
 
@@ -3701,9 +3701,9 @@ snapshots:
       '@swc/core': 1.7.14(@swc/helpers@0.5.11)
       get-tsconfig: 4.7.3
       rollup: 4.24.0
-      rollup-preserve-directives: 1.1.1(rollup@4.24.0)
+      rollup-preserve-directives: 1.1.2(rollup@4.24.0)
 
-  rollup-preserve-directives@1.1.1(rollup@4.24.0):
+  rollup-preserve-directives@1.1.2(rollup@4.24.0):
     dependencies:
       magic-string: 0.30.11
       rollup: 4.24.0
