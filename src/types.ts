@@ -91,7 +91,7 @@ type CliArgs = {
   help?: boolean
   version?: boolean
   env?: string
-  external?: string
+  external?: string | null
   dts?: false
   dtsBundle?: boolean
   runtime?: string

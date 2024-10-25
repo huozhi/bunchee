@@ -59,7 +59,6 @@
     "@rollup/pluginutils": "^5.1.0",
     "@swc/core": "^1.7.14",
     "@swc/helpers": "^0.5.11",
-    "arg": "^5.0.2",
     "clean-css": "^5.3.3",
     "magic-string": "^0.30.11",
     "ora": "^8.0.1",
@@ -68,7 +67,8 @@
     "rollup-plugin-dts": "^6.1.1",
     "rollup-plugin-swc3": "^0.11.1",
     "rollup-preserve-directives": "^1.1.2",
-    "tslib": "^2.7.0"
+    "tslib": "^2.7.0",
+    "yargs": "^17.7.2"
   },
   "peerDependencies": {
     "typescript": "^4.1 || ^5.0"
@@ -89,6 +89,7 @@
     "@types/clean-css": "^4.2.11",
     "@types/jest": "29.0.0",
     "@types/node": "^20.4.1",
+    "@types/yargs": "^17.0.33",
     "bunchee": "link:./",
     "cross-env": "^7.0.3",
     "husky": "^9.0.11",
