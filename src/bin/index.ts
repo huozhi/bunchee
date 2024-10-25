@@ -1,6 +1,7 @@
 import type { CliArgs, BundleConfig, BuildContext } from '../types'
 import path from 'path'
-import arg from 'arg'
+import yargs from 'yargs'
+import { hideBin } from 'yargs/helpers'
 import { performance } from 'perf_hooks'
 import { lint as lintPackage } from '../lint'
 import { exit, getPackageMeta, hasPackageJson } from '../utils'
@@ -47,61 +48,114 @@ async function lint(cwd: string) {
   await lintPackage(await getPackageMeta(cwd))
 }
 
-function parseCliArgs(argv: string[]) {
-  let args: arg.Result<any> | undefined
-  args = arg(
-    {
-      '--cwd': String,
-      '--no-dts': Boolean,
-      '--output': String,
-      '--format': String,
-      '--watch': Boolean,
-      '--minify': Boolean,
-      '--help': Boolean,
-      '--version': Boolean,
-      '--runtime': String,
-      '--target': String,
-      '--sourcemap': Boolean,
-      '--env': String,
-      '--external': String,
-      '--no-external': Boolean,
-      '--no-clean': Boolean,
-      '--prepare': Boolean,
-      '--tsconfig': String,
-      '--dts-bundle': Boolean,
+async function parseCliArgs(argv: string[]) {
+  const args = await yargs(hideBin(argv))
+    .option('cwd', {
+      type: 'string',
+      description: 'specify current working directory',
+    })
+    .option('dts', {
+      coerce(arg) {
+        return arg === false ? false : undefined
+      },
+      description: 'do not generate types',
+    })
+    .option('clean', {
+      coerce(arg) {
+        return arg === false ? false : undefined
+      },
+      description: 'do not clean dist folder before building',
+    })
+    .option('output', {
+      type: 'string',
+      alias: 'o',
+      description: 'specify output filename',
+    })
+    .option('format', {
+      type: 'string',
+      alias: 'f',
+      default: 'esm',
+      description: 'type of output (esm, amd, cjs, iife, umd, system)',
+    })
+    .option('watch', {
+      type: 'boolean',
+      alias: 'w',
+      description: 'watch src files changes',
+    })
+    .option('minify', {
+      type: 'boolean',
+      alias: 'm',
+      description: 'compress output',
+    })
+    .option('help', {
+      type: 'boolean',
+      alias: 'h',
+      description: 'output usage information',
+    })
+    .option('runtime', {
+      type: 'string',
+      default: 'browser',
+      description: 'build runtime (nodejs, browser)',
+    })
+    .option('target', {
+      type: 'string',
+      description: 'js features target: swc target es versions',
+    })
+    .option('sourcemap', {
+      type: 'boolean',
+      default: false,
+      description: 'enable sourcemap generation',
+    })
+    .option('env', {
+      type: 'string',
+      description: 'inlined process env variables, separate by comma',
+    })
+    .option('external', {
+      coerce(arg) {
+        return typeof arg === 'string' || typeof arg === 'boolean'
+          ? arg
+          : undefined
+      },
+      description: 'specify an external dependency, separate by comma',
+    })
+    .option('prepare', {
+      type: 'boolean',
+      description: 'auto configure package.json exports for building',
+    })
+    .option('tsconfig', {
+      type: 'string',
+      description: 'path to tsconfig file',
+    })
+    .option('dts-bundle', {
+      type: 'boolean',
+      description: 'bundle type declaration files',
+    })
+    .version(version)
+    .help('help', 'output usage information')
+    .showHelpOnFail(true)
+    .parse()
 
-      '-h': '--help',
-      '-v': '--version',
-      '-w': '--watch',
-      '-o': '--output',
-      '-f': '--format',
-      '-m': '--minify',
-    },
-    {
-      permissive: true,
-      argv,
-    },
-  )
-  const source: string = args._[0]
+  const source: string = args._[0] as string
   const parsedArgs: CliArgs = {
     source,
-    format: args['--format'],
-    file: args['--output'],
-    watch: args['--watch'],
-    minify: args['--minify'],
-    sourcemap: !!args['--sourcemap'],
-    cwd: args['--cwd'],
-    dts: args['--no-dts'] ? false : undefined,
-    dtsBundle: args['--dts-bundle'],
-    help: args['--help'],
-    version: args['--version'],
-    runtime: args['--runtime'],
-    target: args['--target'],
-    external: !!args['--no-external'] ? null : args['--external'],
-    clean: !args['--no-clean'],
-    env: args['--env'],
-    prepare: !!args['--prepare'],
-    tsconfig: args['--tsconfig'],
+    format: args['format'] as CliArgs['format'],
+    file: args['output'],
+    watch: args['watch'],
+    minify: args['minify'],
+    sourcemap: !!args['sourcemap'],
+    cwd: args['cwd'],
+    dts: args['dts'] === false ? false : undefined,
+    dtsBundle: args['dts-bundle'],
+    help: args['help'],
+    runtime: args['runtime'],
+    target: args['target'] as CliArgs['target'],
+    // no-external is a boolean flag, turning external to `false`
+    external:
+      args['external'] === false ? null : (args['external'] as string) || null,
+    clean: args['clean'] !== false,
+    env: args['env'],
+    prepare: !!args['prepare'],
+    tsconfig: args['tsconfig'],
   }
   return parsedArgs
 }
@@ -135,19 +189,17 @@ async function run(args: CliArgs) {
     cwd,
     target,
     runtime,
-    external: args.external === null ? null : args.external?.split(',') || [],
+    external:
+      args.external === null
+        ? null
+        : // args.external is boolean when --no-external is passed
+          args.external?.split(',') || [],
     watch: !!watch,
     minify: !!minify,
     sourcemap: sourcemap === false ? false : true,
     env: env?.split(',') || [],
     clean,
     tsconfig,
-  }
-  if (args.version) {
-    return logger.log(version)
-  }
-  if (args.help) {
-    return help()
   }
   if (args.prepare) {
     return await prepare(cwd)
@@ -259,12 +311,12 @@ async function run(args: CliArgs) {
 async function main() {
   let params, error
   try {
-    params = parseCliArgs(process.argv.slice(2))
+    params = await parseCliArgs(process.argv)
   } catch (err) {
     error = err
   }
   if (error || !params) {
-    if (!error) help()
+    // if (!error) help()
     return exit(error as Error)
   }
   await run(params)
