@@ -151,7 +151,9 @@ async function parseCliArgs(argv: string[]) {
     target: args['target'] as CliArgs['target'],
     // no-external is a boolean flag, turning external to `false`
     external:
-      args['external'] === false ? null : (args['external'] as string) || null,
+      args['external'] === false
+        ? null
+        : (args['external'] as CliArgs['external']),
     clean: args['clean'] !== false,
     env: args['env'],
     prepare: !!args['prepare'],
