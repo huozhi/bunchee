@@ -214,10 +214,18 @@ async function run(args: CliArgs) {
 
   const { default: ora } = await import('ora')
 
-  const oraInstance = ora({
-    text: 'Building...\n\n',
-    color: 'green',
-  })
+  const oraInstance = process.stdout.isTTY
+    ? ora({
+        text: 'Building...\n\n',
+        color: 'green',
+      })
+    : {
+        start: () => {},
+        stop: () => {},
+        clear: () => {},
+        stopAndPersist: () => {},
+        isSpinning: false,
+      }
 
   const spinner: Spinner = {
     start: startSpinner,
