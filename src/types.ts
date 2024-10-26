@@ -2,7 +2,6 @@ import type { JscTarget } from '@swc/types'
 import type { InputOptions, OutputOptions } from 'rollup'
 import type { OutputState } from './plugins/output-state-plugin'
 import type { TypescriptOptions } from './typescript'
-import type browserslist from 'browserslist'
 
 type PackageType = 'commonjs' | 'module'
 
