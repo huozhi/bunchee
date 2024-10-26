@@ -1,4 +1,5 @@
 import { InputOptions, Plugin } from 'rollup'
+import { type Options as SwcOptions } from '@swc/core'
 import { BuildContext, BundleOptions, ParsedExportCondition } from '../types'
 import { isBinExportPath, isESModulePackage, isNotNull } from '../utils'
 import { normalizeExportPath } from '../entries'
@@ -106,6 +107,7 @@ export async function buildInputConfig(
     pkg,
     cwd,
     tsOptions: { tsConfigPath, tsCompilerOptions },
+    browserslistConfig,
     pluginContext,
   } = buildContext
   const isBinEntry = isBinExportPath(exportCondition.name)
@@ -145,11 +147,13 @@ export async function buildInputConfig(
     decorators: true,
   } as const
 
-  const swcOptions: import('@swc/types').Options = {
+  const hasBrowserslistConfig = !!(browserslistConfig && !hasSpecifiedTsTarget)
+  const swcOptions = {
     jsc: {
-      ...(!hasSpecifiedTsTarget && {
-        target: jscTarget,
-      }),
+      ...(!hasSpecifiedTsTarget &&
+        !hasBrowserslistConfig && {
+          target: jscTarget,
+        }),
       loose: true, // Use loose mode
       externalHelpers: false,
       parser: swcParserConfig,
@@ -166,7 +170,12 @@ export async function buildInputConfig(
     sourceMaps: bundleConfig.sourcemap,
     inlineSourcesContent: false,
     isModule: true,
-  } as const
+    ...(hasBrowserslistConfig && {
+      env: {
+        targets: browserslistConfig,
+      },
+    }),
+  } satisfies SwcOptions
 
   const sizePlugin = pluginContext.outputState.plugin(cwd)
 

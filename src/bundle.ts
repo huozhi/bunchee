@@ -1,4 +1,8 @@
-import type { BundleConfig, BundleJobOptions } from './types'
+import type {
+  BrowserslistConfig,
+  BundleConfig,
+  BundleJobOptions,
+} from './types'
 import fsp from 'fs/promises'
 import fs from 'fs'
 import { resolve } from 'path'
@@ -134,6 +138,11 @@ async function bundle(
     hasTsConfig = true
   }
 
+  let browserslistConfig: BrowserslistConfig | undefined
+  if (options.runtime === 'browser') {
+    browserslistConfig = pkg.browserslist
+  }
+
   const outputState = createOutputState({ entries })
   const buildContext: BuildContext = {
     entries,
@@ -141,6 +150,7 @@ async function bundle(
     cwd,
     tsOptions: defaultTsOptions,
     useTypeScript: hasTsConfig,
+    browserslistConfig,
     pluginContext: {
       outputState,
       moduleDirectiveLayerMap: new Map(),
