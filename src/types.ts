@@ -72,6 +72,7 @@ type PackageMetadata = {
   exports?: string | Record<string, ExportCondition>
   types?: string
   typings?: string
+  browserslist?: BrowserslistConfig
 }
 
 type BuncheeRollupConfig = {
@@ -112,12 +113,15 @@ type ExportPaths = Record<string, FullExportCondition>
 
 type Entries = Record<string, ParsedExportCondition>
 
+type BrowserslistConfig = string | string[] | Record<string, string>
+
 type BuildContext = {
   entries: Entries
   pkg: PackageMetadata
   cwd: string
   tsOptions: TypescriptOptions
   useTypeScript: boolean
+  browserslistConfig: BrowserslistConfig | undefined
   pluginContext: {
     outputState: OutputState
     moduleDirectiveLayerMap: Map<string, Set<[string, string]>>
@@ -150,4 +154,5 @@ export type {
   BuildContext,
   BundleJobOptions,
   bundleEntryOptions,
+  BrowserslistConfig,
 }

@@ -470,6 +470,20 @@ Bunchee offers a convenient watch mode for rebuilding your library whenever chan
 #### `target`
 
 If you specify `target` option in `tsconfig.json`, then you don't have to pass it again through CLI.
+To target a range of browsers, you can use the `browserslist` field in `package.json`, bunchee will use it to determine the target browsers for the output bundle.
+
+For example:
+
+```json
+{
+  "browserslist": [
+    "last 1 version",
+    "> 1%",
+    "maintained node versions",
+    "not dead"
+  ]
+}
+```
 
 #### Package lint
 
