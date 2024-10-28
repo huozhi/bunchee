@@ -3,7 +3,10 @@ import { Entries } from '../types'
 import { posix } from 'path'
 import { relativify } from '../lib/format'
 import { getSpecialExportTypeFromConditionNames } from '../entries'
-import { specialExportConventions } from '../constants'
+import {
+  specialExportConventions,
+  runtimeExportConventionsFallback,
+} from '../constants'
 
 function hasNoSpecialCondition(conditionNames: Set<string>) {
   return [...conditionNames].every(
@@ -36,12 +39,21 @@ function findJsBundlePathCallback(
     conditionNames.has(specialCondition) ||
     (!conditionNames.has('default') && hasNoSpecialCondition(conditionNames))
 
-  return (
+  const match =
     isMatchedConditionWithFormat &&
     !isTypesCondName &&
     hasBundle &&
     isMatchedFormat
-  )
+  if (!match) {
+    const fallback = runtimeExportConventionsFallback.get(specialCondition)
+    if (!fallback) {
+      return false
+    } else {
+      return fallback.some((name) => conditionNames.has(name))
+    }
+  } else {
+    return match
+  }
 }
 
 function findTypesFileCallback({
