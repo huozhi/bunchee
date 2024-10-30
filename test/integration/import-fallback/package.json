@@ -1,0 +1,11 @@
+{
+  "type": "module",
+  "exports": {
+    "./a": {
+      "edge-light": "./dist/a.edge-light.js"
+    },
+    "./b": {
+      "default": "./dist/b.js"
+    }
+  }
+}
