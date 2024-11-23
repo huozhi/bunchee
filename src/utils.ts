@@ -237,12 +237,13 @@ export function isTypeFile(filename: string) {
 }
 
 // shared.ts -> ./shared
-// shared.<export condition>.ts -> ./shared
+// shared.<export condition>.ts -> ./shared.<export condition>
 // index.ts -> ./index
 // index.development.ts -> ./index.development
+// foo/index.ts -> ./foo
 export function sourceFilenameToExportFullPath(filename: string) {
-  const baseName = baseNameWithoutExtension(filename)
-  let exportPath = baseName
+  const ext = path.extname(filename)
+  const exportPath = filename.slice(0, -ext.length)
 
   return relativify(exportPath)
 }
