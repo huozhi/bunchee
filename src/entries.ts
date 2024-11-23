@@ -1,6 +1,7 @@
-import fs from 'fs'
+import { existsSync } from 'fs'
 import fsp from 'fs/promises'
 import path, { basename, dirname, extname, join, posix } from 'path'
+import { glob } from 'glob'
 import { getExportTypeFromFile, type ParsedExportsInfo } from './exports'
 import { PackageMetadata, type Entries, ExportPaths } from './types'
 import { logger } from './logger'
@@ -287,111 +288,60 @@ export async function collectSourceEntriesByExportPath(
 ) {
   const isBinaryPath = isBinExportPath(originalSubpath)
   const subpath = originalSubpath.replace(BINARY_TAG, 'bin')
-  const absoluteDirPath = path.join(sourceFolderPath, subpath)
+  const absoluteDirPath = join(sourceFolderPath, subpath)
+  const dirName = dirname(subpath) // Get directory name regardless of file/directory
+  const baseName = basename(subpath) // Get base name regardless of file/directory
+  const dirPath = join(sourceFolderPath, dirName)
 
-  const isDirectory = fs.existsSync(absoluteDirPath)
-    ? (await fsp.stat(absoluteDirPath)).isDirectory()
-    : false
+  // Match <name>{,/index}.{<ext>,<runtime>.<ext>}
+  const globalPatterns = [
+    `${baseName}.{${[...availableExtensions].join(',')}}`,
+    `${baseName}.{${[...runtimeExportConventions].join(',')}}.{${[
+      ...availableExtensions,
+    ].join(',')}}`,
+    `${baseName}/index.{${[...availableExtensions].join(',')}}`,
+    `${baseName}/index.{${[...runtimeExportConventions].join(',')}}.{${[
+      ...availableExtensions,
+    ].join(',')}}`,
+  ]
 
-  if (isDirectory) {
+  const files = await glob(globalPatterns, { cwd: dirPath, nodir: true })
+
+  for (const file of files) {
+    const ext = extname(file).slice(1)
+    if (!availableExtensions.has(ext) || isTestFile(file)) continue
+
+    const sourceFileAbsolutePath = join(dirPath, file)
+    const exportPath = relativify(
+      existsSync(absoluteDirPath) &&
+        (await fsp.stat(absoluteDirPath)).isDirectory()
+        ? subpath
+        : originalSubpath,
+    )
+
     if (isBinaryPath) {
-      const binDirentList = await fsp.readdir(absoluteDirPath, {
-        withFileTypes: true,
-      })
-      for (const binDirent of binDirentList) {
-        if (binDirent.isFile()) {
-          const binFileAbsolutePath = path.join(absoluteDirPath, binDirent.name)
-          if (fs.existsSync(binFileAbsolutePath)) {
-            bins.set(normalizeExportPath(originalSubpath), binFileAbsolutePath)
-          }
-        }
-      }
+      bins.set(normalizeExportPath(originalSubpath), sourceFileAbsolutePath)
     } else {
-      // Search folder/index.<ext> convention entries
-      for (const extension of availableExtensions) {
-        const indexAbsoluteFile = path.join(
-          absoluteDirPath,
-          `index.${extension}`,
-        )
-        // Search folder/index.<special type>.<ext> convention entries
-        for (const specialExportType of runtimeExportConventions) {
-          const indexSpecialAbsoluteFile = path.join(
-            absoluteDirPath,
-            `index.${specialExportType}.${extension}`,
-          )
-          if (fs.existsSync(indexSpecialAbsoluteFile)) {
-            // Add special export path
-            // { ./<export path>.<special cond>: { <special cond>: 'index.<special cond>.<ext>' } }
-            const exportPath = relativify(subpath)
-            const specialExportPath = exportPath + '.' + specialExportType
-            const sourceFilesMap = exportsEntries.get(specialExportPath) || {}
-            sourceFilesMap[specialExportType] = indexSpecialAbsoluteFile
-            exportsEntries.set(specialExportPath, sourceFilesMap)
-          }
-        }
-        if (
-          fs.existsSync(indexAbsoluteFile) &&
-          !isTestFile(indexAbsoluteFile)
-        ) {
-          const exportPath = relativify(subpath)
-          const sourceFilesMap = exportsEntries.get(exportPath) || {}
-          const exportType = getExportTypeFromExportPath(exportPath)
-          sourceFilesMap[exportType] = indexAbsoluteFile
-          exportsEntries.set(exportPath, sourceFilesMap)
-        }
-      }
-    }
-  } else {
-    // subpath could be a file
-    const dirName = dirname(subpath)
-    const baseName = basename(subpath)
-    // Read current file's directory
-    const dirPath = path.join(sourceFolderPath, dirName)
-    if (!fs.existsSync(dirPath)) {
-      return
-    }
-    const dirents = await fsp.readdir(dirPath, {
-      withFileTypes: true,
-    })
-    for (const dirent of dirents) {
-      // index.development.js -> index.development
-      const direntBaseName = baseNameWithoutExtension(dirent.name)
-      const ext = extname(dirent.name).slice(1)
-      if (
-        !dirent.isFile() ||
-        direntBaseName !== baseName ||
-        !availableExtensions.has(ext)
-      ) {
-        continue
+      const parts = basename(file).split('.')
+      const exportType =
+        parts.length > 2 ? parts[1] : getExportTypeFromExportPath(exportPath)
+      const specialExportPath =
+        exportType !== 'index' && parts.length > 2
+          ? exportPath + '.' + exportType
+          : exportPath // Adjust for direct file matches
+
+      const sourceFilesMap = exportsEntries.get(specialExportPath) || {}
+      sourceFilesMap[exportType] = sourceFileAbsolutePath
+
+      if (specialExportConventions.has(exportType)) {
+        const fallbackExportPath =
+          sourceFilenameToExportFullPath(originalSubpath)
+        const fallbackSourceFilesMap =
+          exportsEntries.get(fallbackExportPath) || {}
+        Object.assign(sourceFilesMap, fallbackSourceFilesMap)
       }
 
-      if (isTestFile(dirent.name)) {
-        continue
-      }
-
-      const sourceFileAbsolutePath = path.join(dirPath, dirent.name)
-
-      if (isBinaryPath) {
-        bins.set(originalSubpath, sourceFileAbsolutePath)
-      } else {
-        let sourceFilesMap = exportsEntries.get(originalSubpath) || {}
-        const exportType = getExportTypeFromExportPath(originalSubpath)
-        sourceFilesMap[exportType] = sourceFileAbsolutePath
-
-        if (specialExportConventions.has(exportType)) {
-          // e.g. ./foo/index.react-server -> ./foo/index
-          const fallbackExportPath =
-            sourceFilenameToExportFullPath(originalSubpath)
-          const fallbackSourceFilesMap =
-            exportsEntries.get(fallbackExportPath) || {}
-          sourceFilesMap = {
-            ...fallbackSourceFilesMap,
-            ...sourceFilesMap,
-          }
-        }
-
-        exportsEntries.set(originalSubpath, sourceFilesMap)
-      }
+      exportsEntries.set(specialExportPath, sourceFilesMap)
     }
   }
 }
@@ -452,23 +402,33 @@ export async function collectSourceEntriesFromExportPaths(
 export async function collectSourceEntries(sourceFolderPath: string) {
   const bins = new Map<string, string>()
   const exportsEntries = new Map<string, Record<string, string>>()
-  if (!fs.existsSync(sourceFolderPath)) {
+  if (!existsSync(sourceFolderPath)) {
     return {
       bins,
       exportsEntries,
     }
   }
-  const entryFileDirentList = await fsp.readdir(sourceFolderPath, {
-    withFileTypes: true,
+
+  // Match with global patterns
+  // bin/**/*.<ext>, bin/**/index.<ext>
+  const binPattern = `bin/**/*.{${[...availableExtensions].join(',')}}`
+  const srcPattern = `**/*.{${[...availableExtensions].join(',')}}`
+
+  // console.log('binPattern', binPattern)
+  const binMatches = await glob(binPattern, {
+    cwd: sourceFolderPath,
+    nodir: true,
   })
 
-  // Collect source files for `exports` field
-  for (const dirent of entryFileDirentList) {
-    if (getFileBasename(dirent.name) === 'bin') {
-      continue
-    }
-    const exportPath = sourceFilenameToExportFullPath(dirent.name)
+  // console.log('srcPattern', srcPattern)
+  const srcMatches = await glob(srcPattern, {
+    cwd: sourceFolderPath,
+    nodir: true,
+  })
 
+  for (const file of binMatches) {
+    // convert relative path to export path
+    const exportPath = sourceFilenameToExportFullPath(file)
     await collectSourceEntriesByExportPath(
       sourceFolderPath,
       exportPath,
@@ -477,39 +437,18 @@ export async function collectSourceEntries(sourceFolderPath: string) {
     )
   }
 
-  // Collect source files for `bin` field
-  const binDirent = entryFileDirentList.find(
-    (dirent) => getFileBasename(dirent.name) === 'bin',
-  )
-  if (binDirent) {
-    if (binDirent.isDirectory()) {
-      const binDirentList = await fsp.readdir(
-        path.join(sourceFolderPath, binDirent.name),
-        {
-          withFileTypes: true,
-        },
-      )
-      for (const binDirent of binDirentList) {
-        const binExportPath = posix.join(
-          BINARY_TAG,
-          getFileBasename(binDirent.name),
-        )
+  for (const file of srcMatches) {
+    const binExportPath = file
+      .replace(/^bin/, BINARY_TAG)
+      // Remove index.<ext> to [^index].<ext> to build the export path
+      .replace(/(\/index)?\.[^/]+$/, '')
 
-        await collectSourceEntriesByExportPath(
-          sourceFolderPath,
-          binExportPath,
-          bins,
-          exportsEntries,
-        )
-      }
-    } else {
-      await collectSourceEntriesByExportPath(
-        sourceFolderPath,
-        BINARY_TAG,
-        bins,
-        exportsEntries,
-      )
-    }
+    await collectSourceEntriesByExportPath(
+      sourceFolderPath,
+      binExportPath,
+      bins,
+      exportsEntries,
+    )
   }
 
   return {
