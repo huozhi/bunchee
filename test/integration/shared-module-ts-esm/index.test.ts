@@ -1,6 +1,5 @@
-import { promises as fsp } from 'fs'
+import { glob } from 'glob'
 import { createIntegrationTest } from '../utils'
-import path from 'path'
 
 describe('integration shared-module-ts-esm', () => {
   it('should contain correct type file path of shared chunks', async () => {
@@ -9,20 +8,16 @@ describe('integration shared-module-ts-esm', () => {
         directory: __dirname,
       },
       async ({ distDir }) => {
-        const cjsFiles = await fsp.readdir(path.join(distDir, 'cjs'))
-        const esmFiles = await fsp.readdir(path.join(distDir, 'es'))
-
-        expect(cjsFiles).toEqual(
-          expect.arrayContaining([
-            expect.stringMatching(/util-shared-\w+\.js/),
-          ]),
-        )
-
-        expect(esmFiles).toEqual(
-          expect.arrayContaining([
-            expect.stringMatching(/util-shared-\w+\.mjs/),
-          ]),
-        )
+        const jsFiles = await glob(['**/*.{,c,m}js', '**/*.{,c,m}d.ts'], {
+          cwd: distDir,
+        })
+        expect(jsFiles).toEqual([
+          '_util.mjs',
+          '_util.js',
+          'es/index.mjs',
+          'cjs/index.js',
+          'cjs/index.d.ts',
+        ])
       },
     )
   })
