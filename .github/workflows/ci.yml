@@ -56,7 +56,7 @@ jobs:
     timeout-minutes: 5
     strategy:
       matrix:
-        node-version: [16, 18, 20]
+        node-version: [18, 20]
 
     name: Linux - Node ${{ matrix.node-version }}
     steps:
