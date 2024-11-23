@@ -8,6 +8,7 @@ type PackageType = 'commonjs' | 'module'
 type ExportType =
   | 'import'
   | 'module'
+  | 'module-sync'
   | 'require'
   | 'default'
   | 'node'

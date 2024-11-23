@@ -241,7 +241,7 @@ export function constructDefaultExportCondition(
 }
 
 export function isEsmExportName(name: string, ext: string) {
-  return ['import', 'module'].includes(name) || ext === 'mjs'
+  return ['import', 'module', 'module-sync'].includes(name) || ext === 'mjs'
 }
 
 export function isCjsExportName(
