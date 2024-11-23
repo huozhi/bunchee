@@ -1,5 +1,4 @@
 import { createIntegrationTest, getFileNamesFromDirectory } from '../utils'
-import { glob } from 'glob'
 
 describe('integration shared-module-ts', () => {
   it('should contain correct type file path of shared chunks', async () => {
