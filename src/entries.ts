@@ -12,6 +12,7 @@ import {
   isBinExportPath,
   isTestFile,
   resolveSourceFile,
+  sourceFilenameToExportFullPath,
 } from './utils'
 import {
   availableExtensions,
@@ -21,17 +22,6 @@ import {
   specialExportConventions,
 } from './constants'
 import { relativify } from './lib/format'
-
-// shared.ts -> ./shared
-// shared.<export condition>.ts -> ./shared
-// index.ts -> ./index
-// index.development.ts -> ./index.development
-function sourceFilenameToExportFullPath(filename: string) {
-  const baseName = baseNameWithoutExtension(filename)
-  let exportPath = baseName
-
-  return relativify(exportPath)
-}
 
 export async function collectEntriesFromParsedExports(
   cwd: string,
@@ -390,65 +380,6 @@ export async function collectSourceEntriesFromExportPaths(
         exportsEntries,
       )
     }
-  }
-
-  return {
-    bins,
-    exportsEntries,
-  }
-}
-
-// For `prepare`
-export async function collectSourceEntries(sourceFolderPath: string) {
-  const bins = new Map<string, string>()
-  const exportsEntries = new Map<string, Record<string, string>>()
-  if (!existsSync(sourceFolderPath)) {
-    return {
-      bins,
-      exportsEntries,
-    }
-  }
-
-  // Match with global patterns
-  // bin/**/*.<ext>, bin/**/index.<ext>
-  const binPattern = `bin/**/*.{${[...availableExtensions].join(',')}}`
-  const srcPattern = `**/*.{${[...availableExtensions].join(',')}}`
-
-  // console.log('binPattern', binPattern)
-  const binMatches = await glob(binPattern, {
-    cwd: sourceFolderPath,
-    nodir: true,
-  })
-
-  // console.log('srcPattern', srcPattern)
-  const srcMatches = await glob(srcPattern, {
-    cwd: sourceFolderPath,
-    nodir: true,
-  })
-
-  for (const file of binMatches) {
-    // convert relative path to export path
-    const exportPath = sourceFilenameToExportFullPath(file)
-    await collectSourceEntriesByExportPath(
-      sourceFolderPath,
-      exportPath,
-      bins,
-      exportsEntries,
-    )
-  }
-
-  for (const file of srcMatches) {
-    const binExportPath = file
-      .replace(/^bin/, BINARY_TAG)
-      // Remove index.<ext> to [^index].<ext> to build the export path
-      .replace(/(\/index)?\.[^/]+$/, '')
-
-    await collectSourceEntriesByExportPath(
-      sourceFolderPath,
-      binExportPath,
-      bins,
-      exportsEntries,
-    )
   }
 
   return {

@@ -12,6 +12,7 @@ import {
 } from './constants'
 import { logger } from './logger'
 import { type OutputOptions } from 'rollup'
+import { relativify } from './lib/format'
 
 export function exit(err: string | Error) {
   logger.error(err)
@@ -233,4 +234,15 @@ export function isTypeFile(filename: string) {
     filename.endsWith('.d.mts') ||
     filename.endsWith('.d.cts')
   )
+}
+
+// shared.ts -> ./shared
+// shared.<export condition>.ts -> ./shared
+// index.ts -> ./index
+// index.development.ts -> ./index.development
+export function sourceFilenameToExportFullPath(filename: string) {
+  const baseName = baseNameWithoutExtension(filename)
+  let exportPath = baseName
+
+  return relativify(exportPath)
 }
