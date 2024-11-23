@@ -1,5 +1,4 @@
-import { glob } from 'glob'
-import { createIntegrationTest } from '../utils'
+import { createIntegrationTest, getFileNamesFromDirectory } from '../utils'
 
 describe('integration shared-module-ts-esm', () => {
   it('should contain correct type file path of shared chunks', async () => {
@@ -8,15 +7,13 @@ describe('integration shared-module-ts-esm', () => {
         directory: __dirname,
       },
       async ({ distDir }) => {
-        const jsFiles = await glob(['**/*.{,c,m}js', '**/*.{,c,m}d.ts'], {
-          cwd: distDir,
-        })
-        expect(jsFiles).toEqual([
-          '_util.mjs',
+        const files = await getFileNamesFromDirectory(distDir)
+        expect(files).toEqual([
           '_util.js',
-          'es/index.mjs',
-          'cjs/index.js',
+          '_util.mjs',
           'cjs/index.d.ts',
+          'cjs/index.js',
+          'es/index.mjs',
         ])
       },
     )

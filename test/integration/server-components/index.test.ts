@@ -1,5 +1,4 @@
-import { createIntegrationTest } from '../utils'
-import { glob } from 'glob'
+import { createIntegrationTest, getFileNamesFromDirectory } from '../utils'
 
 describe('integration server-components', () => {
   it('should generate proper assets for each exports', async () => {
@@ -8,19 +7,17 @@ describe('integration server-components', () => {
         directory: __dirname,
       },
       async ({ distDir }) => {
-        const jsFiles = await glob(['**/*.{,c,m}js', '**/*.{,c,m}d.ts'], {
-          cwd: distDir,
-        })
+        const jsFiles = await getFileNamesFromDirectory(distDir)
 
         expect(jsFiles).toEqual([
-          'ui.js',
-          'ui.cjs',
-          'mod_client-client-DAeHkA4H.cjs',
-          'mod_client-client-BO96FYFA.js',
-          'mod_actions-server-DSdgX-jM.js',
-          'mod_actions-server-B2kXJwqw.cjs',
-          'index.js',
           'index.cjs',
+          'index.js',
+          'mod_actions-server-B2kXJwqw.cjs',
+          'mod_actions-server-DSdgX-jM.js',
+          'mod_client-client-BO96FYFA.js',
+          'mod_client-client-DAeHkA4H.cjs',
+          'ui.cjs',
+          'ui.js',
         ])
       },
     )

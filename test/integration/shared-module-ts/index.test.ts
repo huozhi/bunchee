@@ -1,4 +1,4 @@
-import { createIntegrationTest } from '../utils'
+import { createIntegrationTest, getFileNamesFromDirectory } from '../utils'
 import { glob } from 'glob'
 
 describe('integration shared-module-ts', () => {
@@ -8,21 +8,19 @@ describe('integration shared-module-ts', () => {
         directory: __dirname,
       },
       async ({ distDir }) => {
-        const jsFiles = await glob(['**/*.{,c,m}js', '**/*.{,c,m}d.ts'], {
-          cwd: distDir,
-        })
+        const jsFiles = await getFileNamesFromDirectory(distDir)
         expect(jsFiles).toEqual([
-          'index.react-server.js',
-          'index.js',
-          'index.d.ts',
-          'index.cjs',
-          'another.js',
-          'another.d.ts',
           'another.cjs',
-          'lib/_util.js',
-          'lib/_util.cjs',
-          'lib/_app-context.js',
+          'another.d.ts',
+          'another.js',
+          'index.cjs',
+          'index.d.ts',
+          'index.js',
+          'index.react-server.js',
           'lib/_app-context.cjs',
+          'lib/_app-context.js',
+          'lib/_util.cjs',
+          'lib/_util.js',
         ])
       },
     )

@@ -1,3 +1,4 @@
+import { glob } from 'glob'
 import {
   createTest,
   executeBunchee,
@@ -75,4 +76,12 @@ export function createIntegration(
       return proxy.distFile ?? null
     },
   }
+}
+
+export async function getFileNamesFromDirectory(directory: string) {
+  const files = await glob(['**/*.{,c,m}js', '**/*.{,c,m}d.ts'], {
+    cwd: directory,
+  })
+
+  return files.sort()
 }
