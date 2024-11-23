@@ -298,7 +298,11 @@ export async function collectSourceEntriesByExportPath(
     ].join(',')}}`,
   ]
 
-  const files = await glob(globalPatterns, { cwd: dirPath, nodir: true })
+  const files = await glob(globalPatterns, {
+    cwd: dirPath,
+    nodir: true,
+    ignore: '**/_*',
+  })
 
   for (const file of files) {
     const ext = extname(file).slice(1)

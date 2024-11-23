@@ -7,5 +7,5 @@ export function Button() {
   return React.createElement('button', `count: ${count}`)
 }
 
-export { Client } from './_client'
-export { asset } from './_asset'
+export { Client } from './mod_client'
+export { asset } from './mod_asset'
