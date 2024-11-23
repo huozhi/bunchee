@@ -252,62 +252,64 @@ Then when the library is integrated to an app such as Next.js, app bundler can t
 If you're using `"use client"` or `"use server"` in entry file, then it will be preserved on top and the dist file of that entry will become a client component.
 If you're using `"use client"` or `"use server"` in a file that used as a dependency for an entry, then that file containing directives be split into a separate chunk and hoist the directives to the top of the chunk.
 
-### Shared Modules (Experimental)
+### Shared Modules
 
-There're always cases that you need to share code among bundles but they don't have to be a separate entry or exports. You want to have them bundled into a shared chunk and then use them in different bundles. You can use shared module convention `[name].[layer]-runtime.[ext]` to create shared modules bundles.
+In some cases, you may need to share code across multiple bundles without promoting them to separate entries or exports. These modules should be bundled into shared chunks that can be reused by various bundles. By convention, files or directories prefixed with an underscore (`_<name>.<ext>` or `_<name>/index.<ext>`) are treated as **shared modules**. They're private and not exposed publicly as entry points or exports.
 
 <details>
   <summary>Shared Utils Example</summary>
 
 ```js
-// src/util.shared-runtime.js
+// src/_util.js
 export function sharedUtil() {
   /* ... */
 }
 ```
 
-Then you can use them in different entry files:
+You can then use them in different entry files:
 
 ```js
 // src/index.js
-import { sharedUtil } from './util.shared-runtime'
+import { sharedUtil } from './_util'
 ```
 
 ```js
 // src/lite.js
-import { sharedUtil } from './util.shared-runtime'
+import { sharedUtil } from './_util'
 ```
 
-`bunchee` will bundle the shared module into a separate **layer** which matches the file name convention, in the above case it's "shared", and that bundle will be referenced by the different entry bundles.
+`bunchee` will bundle the shared module into a separate chunk, keeping it private and ensuring it's referenced by multiple entry bundles.
 
 </details>
 
-With multiple runtime bundles, such as having `default` and `react-server` together. They could have the modules that need to be shared and kept as only one instance among different runtime bundles. You can use the shared module convention to create shared modules bundles for different runtime bundles.
+For scenarios involving multiple runtime bundles, such as `default` and `react-server`, modules that need to be shared and remain as a single instance across different runtime bundles can also follow this convention. The leading underscore (`_`) ensures that these modules are private to your application while facilitating reuse.
 
 <details>
   <summary>Shared Runtime Module Example</summary>
 
 ```js
 'use client'
-// src/app-context.shared-runtime.js
+// src/_app-context.js
 export const AppContext = React.createContext(null)
 ```
 
-Then you can use them in different entry files:
+These modules can be imported in various runtime entry files:
 
 ```js
 // src/index.js
-import { AppContext } from './app-context.shared-runtime'
+import { AppContext } from './_app-context'
 ```
 
 ```js
 // src/index.react-server.js
-import { AppContext } from './app-context.shared-runtime'
+import { AppContext } from './_app-context'
 ```
 
-`app-context.shared-runtime` will be bundled into a separate chunk that only has one instance and be shared among different runtime bundles.
+The `_app-context` module will be bundled into a shared chunk that exists as a single instance across different runtime bundles.
 
 </details>
+
+This convention keeps shared modules private while enabling efficient bundling and reuse across your codebase.
 
 ### CLI
 

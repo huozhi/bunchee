@@ -1,7 +1,6 @@
 import { type GetManualChunk } from 'rollup'
 import { type CustomPluginOptions } from 'rollup'
 import path from 'path'
-import { availableExtensions } from '../constants'
 
 function getModuleLayer(moduleMeta: CustomPluginOptions) {
   const directives = (
@@ -12,20 +11,6 @@ function getModuleLayer(moduleMeta: CustomPluginOptions) {
 
   const moduleLayer = directives[0]
   return moduleLayer
-}
-
-function getCustomModuleLayer(moduleId: string): string | undefined {
-  const segments = path.basename(moduleId).split('.')
-  if (segments.length >= 2) {
-    const [layerSegment, ext] = segments.slice(-2)
-    const baseName = segments[0]
-    const match = layerSegment.match(/^(\w+)-runtime$/)
-    const layer = match && match[1]
-    if (availableExtensions.has(ext) && layer && layer.length > 0) {
-      return baseName + '-' + layer
-    }
-  }
-  return undefined
 }
 
 // dependencyGraphMap: Map<subModuleId, Set<entryParentId>>
@@ -45,16 +30,6 @@ export function createSplitChunks(
     const { isEntry } = moduleInfo
     const moduleMeta = moduleInfo.meta
     const moduleLayer = getModuleLayer(moduleMeta)
-
-    if (!isEntry) {
-      const cachedCustomModuleLayer = splitChunksGroupMap.get(id)
-      if (cachedCustomModuleLayer) return cachedCustomModuleLayer
-      const customModuleLayer = getCustomModuleLayer(id)
-      if (customModuleLayer) {
-        splitChunksGroupMap.set(id, customModuleLayer)
-        return customModuleLayer
-      }
-    }
 
     // Collect the sub modules of the entry, if they're having layer, and the same layer with the entry, push them to the dependencyGraphMap.
     if (isEntry) {
