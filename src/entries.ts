@@ -1,13 +1,12 @@
 import { existsSync } from 'fs'
 import fsp from 'fs/promises'
-import path, { basename, dirname, extname, join, posix } from 'path'
+import { basename, dirname, extname, join } from 'path'
 import { glob } from 'glob'
 import { getExportTypeFromFile, type ParsedExportsInfo } from './exports'
 import { PackageMetadata, type Entries, ExportPaths } from './types'
 import { logger } from './logger'
 import {
   baseNameWithoutExtension,
-  getFileBasename,
   getSourcePathFromExportPath,
   isBinExportPath,
   isTestFile,
