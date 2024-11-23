@@ -1,17 +1,17 @@
 import fs from 'fs'
 import fsp from 'fs/promises'
 import path, { posix } from 'path'
-import { BINARY_TAG, SRC, dtsExtensionsMap } from './constants'
-import { logger } from './logger'
-import { isTypescriptFile } from './utils'
-import { relativify } from './lib/format'
-import { DIST } from './constants'
-import { writeDefaultTsconfig } from './typescript'
+import { BINARY_TAG, SRC, dtsExtensionsMap } from '../constants'
+import { logger } from '../logger'
+import { isTypescriptFile } from '../utils'
+import { relativify } from '../lib/format'
+import { DIST } from '../constants'
+import { writeDefaultTsconfig } from '../typescript'
 import {
-  collectSourceEntries,
   getSpecialExportTypeFromComposedExportPath,
   normalizeExportPath,
-} from './entries'
+} from '../entries'
+import { collectSourceEntries } from './prepare-entries'
 
 // Output with posix style in package.json
 function getDistPath(...subPaths: string[]) {
