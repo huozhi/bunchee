@@ -15,6 +15,9 @@ import { logOutputState } from '../plugins/output-state-plugin'
 const helpMessage = `
 Usage: bunchee [options]
 
+Commands:
+prepare                  auto configure package.json exports for building
+
 Options:
   -v, --version          output the version number
   -w, --watch            watch src files changes
@@ -22,7 +25,7 @@ Options:
   -o, --output <file>    specify output filename
   -f, --format <format>  type of output (esm, amd, cjs, iife, umd, system), default: esm
   -h, --help             output usage information
-  --prepare              auto configure package.json exports for building
+  
   --external <mod>       specify an external dependency, separate by comma
   --no-external          do not bundle external dependencies
   --no-clean             do not clean dist folder before building, default: false
@@ -50,6 +53,11 @@ async function lint(cwd: string) {
 
 async function parseCliArgs(argv: string[]) {
   const args = await yargs(hideBin(argv))
+    .option('watch', {
+      type: 'boolean',
+      alias: 'w',
+      description: 'watch src files changes',
+    })
     .option('cwd', {
       type: 'string',
       description: 'specify current working directory',
@@ -76,11 +84,6 @@ async function parseCliArgs(argv: string[]) {
       alias: 'f',
       default: 'esm',
       description: 'type of output (esm, amd, cjs, iife, umd, system)',
-    })
-    .option('watch', {
-      type: 'boolean',
-      alias: 'w',
-      description: 'watch src files changes',
     })
     .option('minify', {
       type: 'boolean',
@@ -118,10 +121,6 @@ async function parseCliArgs(argv: string[]) {
       },
       description: 'specify an external dependency, separate by comma',
     })
-    .option('prepare', {
-      type: 'boolean',
-      description: 'auto configure package.json exports for building',
-    })
     .option('tsconfig', {
       type: 'string',
       description: 'path to tsconfig file',
@@ -130,6 +129,22 @@ async function parseCliArgs(argv: string[]) {
       type: 'boolean',
       description: 'bundle type declaration files',
     })
+    .command(
+      'prepare',
+      'auto configure package.json exports for building',
+      () => {}, // skip builder arg
+      (argv) => {
+        return prepare(argv.cwd || process.cwd())
+      },
+    )
+    .command(
+      'lint',
+      'lint package.json',
+      () => {}, // skip builder arg
+      (argv) => {
+        return lint(argv.cwd || process.cwd())
+      },
+    )
     .version(version)
     .help('help', 'output usage information')
     .showHelpOnFail(true)
@@ -140,7 +155,7 @@ async function parseCliArgs(argv: string[]) {
     source,
     format: args['format'] as CliArgs['format'],
     file: args['output'],
-    watch: args['watch'],
+    watch: !!args['watch'],
     minify: args['minify'],
     sourcemap: !!args['sourcemap'],
     cwd: args['cwd'],
@@ -156,7 +171,6 @@ async function parseCliArgs(argv: string[]) {
         : (args['external'] as CliArgs['external']),
     clean: args['clean'] !== false,
     env: args['env'],
-    prepare: !!args['prepare'],
     tsconfig: args['tsconfig'],
   }
   return parsedArgs
@@ -203,13 +217,10 @@ async function run(args: CliArgs) {
     clean,
     tsconfig,
   }
-  if (args.prepare) {
-    return await prepare(cwd)
-  }
 
   const cliEntry = source ? path.resolve(cwd, source) : ''
 
-  // lint package
+  // lint package by default
   await lint(cwd)
 
   const { default: ora } = await import('ora')
