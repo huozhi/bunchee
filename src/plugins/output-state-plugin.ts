@@ -1,6 +1,6 @@
 import type { Plugin } from 'rollup'
 import { type Entries } from '../types'
-import path, { posix } from 'path'
+import path from 'path'
 import prettyBytes from 'pretty-bytes'
 import pc from 'picocolors'
 import { logger } from '../logger'
@@ -59,9 +59,9 @@ function createOutputState({ entries }: { entries: Entries }): {
       return {
         name: 'collect-sizes',
         writeBundle(options, bundle) {
-          const dir = options.dir || posix.dirname(options.file!)
+          const dir = options.dir || path.dirname(options.file!)
           Object.entries(bundle).forEach(([fileName, chunk]) => {
-            const filePath = posix.join(dir, fileName)
+            const filePath = path.join(dir, fileName)
             if (chunk.type !== 'chunk') {
               return
             }
@@ -74,9 +74,7 @@ function createOutputState({ entries }: { entries: Entries }): {
               reversedMapping.get(sourceFileName) || '.',
             )
             addSize({
-              fileName: path.isAbsolute(cwd)
-                ? posix.relative(cwd, filePath)
-                : filePath,
+              fileName: path.relative(cwd, filePath).replace(path.sep, '/'),
               size,
               sourceFileName,
               exportPath,
