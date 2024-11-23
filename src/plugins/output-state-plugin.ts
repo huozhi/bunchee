@@ -74,7 +74,7 @@ function createOutputState({ entries }: { entries: Entries }): {
               reversedMapping.get(sourceFileName) || '.',
             )
             addSize({
-              fileName: path.relative(cwd, filePath),
+              fileName: path.relative(cwd, filePath).replace(path.sep, '/'),
               size,
               sourceFileName,
               exportPath,
