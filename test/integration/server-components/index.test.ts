@@ -13,6 +13,8 @@ describe('integration server-components', () => {
         })
 
         expect(jsFiles).toEqual([
+          'ui.js',
+          'ui.cjs',
           'mod_client-client-DAeHkA4H.cjs',
           'mod_client-client-BO96FYFA.js',
           'mod_actions-server-DSdgX-jM.js',
