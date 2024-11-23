@@ -16,7 +16,7 @@ describe('integration prepare-ts', () => {
   it('should contain files', async () => {
     await createIntegrationTest(
       {
-        args: ['--prepare'],
+        args: ['prepare'],
         directory: __dirname,
       },
       async ({ dir, stdout }) => {
