@@ -10,6 +10,10 @@
     "./another": {
       "import": "./dist/another.js",
       "default": "./dist/another.cjs"
+    },
+    "./client": {
+      "import": "./dist/client.js",
+      "default": "./dist/client.cjs"
     }
   },
   "dependencies": {

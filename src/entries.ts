@@ -7,8 +7,10 @@ import { PackageMetadata, type Entries, ExportPaths } from './types'
 import { logger } from './logger'
 import {
   baseNameWithoutExtension,
+  filePathWithoutExtension,
   getSourcePathFromExportPath,
   isBinExportPath,
+  isESModulePackage,
   isTestFile,
   resolveSourceFile,
   sourceFilenameToExportFullPath,
@@ -25,6 +27,7 @@ import { relativify } from './lib/format'
 export async function collectEntriesFromParsedExports(
   cwd: string,
   parsedExportsInfo: ParsedExportsInfo,
+  pkg: PackageMetadata,
   sourceFile: string | undefined,
 ): Promise<Entries> {
   const entries: Entries = {}
@@ -43,6 +46,7 @@ export async function collectEntriesFromParsedExports(
   const { bins, exportsEntries } = await collectSourceEntriesFromExportPaths(
     join(cwd, SRC),
     parsedExportsInfo,
+    pkg,
   )
 
   // A mapping between each export path and its related special export conditions,
@@ -294,7 +298,11 @@ export async function collectSourceEntriesByExportPath(
     ].join(',')}}`,
   ]
 
-  const files = await glob(globalPatterns, { cwd: dirPath, nodir: true })
+  const files = await glob(globalPatterns, {
+    cwd: dirPath,
+    nodir: true,
+    ignore: '**/_*',
+  })
 
   for (const file of files) {
     const ext = extname(file).slice(1)
@@ -350,6 +358,7 @@ export async function collectSourceEntriesByExportPath(
 export async function collectSourceEntriesFromExportPaths(
   sourceFolderPath: string,
   parsedExportsInfo: ParsedExportsInfo,
+  pkg: PackageMetadata,
 ) {
   const bins = new Map<string, string>()
   const exportsEntries = new Map<string, Record<string, string>>()
@@ -379,6 +388,44 @@ export async function collectSourceEntriesFromExportPaths(
         exportsEntries,
       )
     }
+  }
+
+  // Search private shared module files which are not in the parsedExportsInfo, but start with _.
+  // e.g. _utils.ts, _utils/index.ts
+  const privatePattern = `**/_*{,/index}.{${[...availableExtensions].join(
+    ',',
+  )}}`
+  const privateFiles = await glob(privatePattern, {
+    cwd: sourceFolderPath,
+    nodir: true,
+  })
+
+  for (const file of privateFiles) {
+    const sourceFileAbsolutePath = join(sourceFolderPath, file)
+    const relativeFilePath = relativify(file)
+    const exportPath = filePathWithoutExtension(relativeFilePath)
+
+    // exportsEntries.set(specialExportPath, sourceFilesMap)
+    const isEsmPkg = isESModulePackage(pkg.type)
+
+    // Add private shared files to parsedExportsInfo
+    parsedExportsInfo.set(exportPath, [
+      // Map private shared files to the dist directory
+      // e.g. ./_utils.ts -> ./dist/_utils.js
+      [
+        relativify(join('./dist', exportPath + (isEsmPkg ? '.js' : '.mjs'))),
+        'import',
+      ],
+      [
+        relativify(join('./dist', exportPath + (isEsmPkg ? '.cjs' : '.js'))),
+        'require',
+      ],
+    ])
+
+    // Insert private shared modules into the entries
+    exportsEntries.set(exportPath, {
+      default: sourceFileAbsolutePath,
+    })
   }
 
   return {

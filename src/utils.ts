@@ -138,7 +138,7 @@ export async function getSourcePathFromExportPath(
 // TODO: add unit test
 // Unlike path.basename, forcedly removing extension
 export function filePathWithoutExtension(filePath: string | undefined) {
-  if (!filePath) return
+  if (!filePath) return ''
 
   const lastDotIndex = filePath.lastIndexOf('.')
   const lastSlashIndex = filePath.lastIndexOf('/')

@@ -1,1 +1,1 @@
-export { sharedApi as anotherSharedApi } from './lib/util.shared-runtime'
+export { sharedApi as anotherSharedApi } from './lib/_util'

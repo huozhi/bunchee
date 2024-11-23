@@ -1,2 +1,2 @@
 export const index = 'index'
-export { sharedApi } from './lib/util.shared-runtime'
+export { sharedApi } from './_util'

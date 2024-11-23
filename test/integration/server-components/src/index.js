@@ -1,3 +1,3 @@
 export { Button, Client as UIClient } from './ui'
-export { action } from './_actions'
-export { Client } from './_client'
+export { action } from './mod_actions'
+export { Client } from './mod_client'

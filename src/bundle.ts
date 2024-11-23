@@ -125,6 +125,7 @@ async function bundle(
   const entries = await collectEntriesFromParsedExports(
     cwd,
     parsedExportsInfo,
+    pkg,
     inputFile,
   )
 

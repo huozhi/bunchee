@@ -1,1 +1,1 @@
-export { AppContext } from './lib/app-context.shared-runtime'
+export { AppContext } from './lib/_app-context'

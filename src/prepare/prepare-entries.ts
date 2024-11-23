@@ -24,11 +24,13 @@ export async function collectSourceEntries(sourceFolderPath: string) {
   const binMatches = await glob(binPattern, {
     cwd: sourceFolderPath,
     nodir: true,
+    ignore: '**/_*', // ignore private entries
   })
 
   const srcMatches = await glob(srcPattern, {
     cwd: sourceFolderPath,
     nodir: true,
+    ignore: '**/_*', // ignore private entries
   })
 
   for (const file of binMatches) {
