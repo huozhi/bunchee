@@ -6,7 +6,8 @@ import MagicString from 'magic-string'
 const FILENAME_REGEX = /__filename/
 const DIRNAME_REGEX = /__dirname/
 // not char, or space before require(.resolve)?(
-const GLOBAL_REQUIRE_REGEX = /[\W\s]require(\.resolve)?\(/
+export const GLOBAL_REQUIRE_REGEX =
+  /(?:^|[^.\w'"`])\brequire(\.resolve)?\(\s*[\r\n]*(['"`])/
 
 const PolyfillComment = '/** rollup-private-do-not-use-esm-shim-polyfill */'
 const createESMShim = ({
