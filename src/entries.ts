@@ -412,17 +412,6 @@ export async function collectSourceEntriesFromExportPaths(
     const specialExportType = getSpecialExportTypeFromSourcePath(file)
     const normalizedExportPath = stripSpecialCondition(exportPath)
     const isSpecialExport = specialExportType !== 'default'
-    // if (isSpecialExport) {
-    //   specialItems.push([
-    //     relativify(
-    //       join(
-    //         './dist',
-    //         exportPath + '.' + specialExportType + (isEsmPkg ? '.js' : '.mjs'),
-    //       ),
-    //     ),
-    //     specialExportType,
-    //   ])
-    // }
 
     // export type: default => ''
     // export type: development => '.development'
