@@ -1,9 +1,10 @@
-import { createIntegrationTest } from '../utils'
+import { createIntegrationTest } from '../../utils'
 
 describe('integration cjs-pkg-esm-main-field', () => {
   it('should warn if main field with .mjs extension in CJS package', async () => {
     await createIntegrationTest(
       {
+        args: ['lint'],
         directory: __dirname,
       },
       ({ stderr }) => {

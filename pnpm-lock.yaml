@@ -44,6 +44,9 @@ importers:
       ora:
         specifier: ^8.0.1
         version: 8.0.1
+      picomatch:
+        specifier: ^4.0.2
+        version: 4.0.2
       pretty-bytes:
         specifier: ^5.6.0
         version: 5.6.0
@@ -87,6 +90,9 @@ importers:
       '@types/node':
         specifier: ^22.9.3
         version: 22.9.3
+      '@types/picomatch':
+        specifier: ^3.0.1
+        version: 3.0.1
       '@types/yargs':
         specifier: ^17.0.33
         version: 17.0.33
@@ -774,6 +780,9 @@ packages:
 
   '@types/node@22.9.3':
     resolution: {integrity: sha512-F3u1fs/fce3FFk+DAxbxc78DF8x0cY09RRL8GnXLmkJ1jvx3TtPdWoTT5/NiYfI5ASqXBmfqJi9dZ3gxMx4lzw==}
+
+  '@types/picomatch@3.0.1':
+    resolution: {integrity: sha512-1MRgzpzY0hOp9pW/kLRxeQhUWwil6gnrUYd3oEpeYBqp/FexhaCPv3F8LsYr47gtUU45fO2cm1dbwkSrHEo8Uw==}
 
   '@types/prettier@2.7.0':
     resolution: {integrity: sha512-RI1L7N4JnW5gQw2spvL7Sllfuf1SaHdrZpCHiBlCXjIlufi1SMNnbu2teze3/QE67Fg2tBlH7W+mi4hVNk4p0A==}
@@ -2688,6 +2697,8 @@ snapshots:
   '@types/node@22.9.3':
     dependencies:
       undici-types: 6.19.8
+
+  '@types/picomatch@3.0.1': {}
 
   '@types/prettier@2.7.0': {}
 

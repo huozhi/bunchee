@@ -3,6 +3,7 @@ import { parseExports } from './exports'
 import { logger } from './logger'
 import { PackageMetadata } from './types'
 import { hasCjsExtension, isESModulePackage, isTypeFile } from './utils'
+import picomatch from 'picomatch'
 
 type BadExportItem = {
   value: boolean
@@ -17,6 +18,56 @@ function validateTypesFieldCondition(pair: [string, string]) {
     return true
   }
   return false
+}
+
+const isPathIncluded = (filesField: string[], filePath: string) => {
+  return filesField.some((pattern) => {
+    const normalizedPattern = path.normalize(pattern)
+    const matcher = picomatch(normalizedPattern)
+    return matcher(filePath)
+  })
+}
+
+function validateFilesField(packageJson: PackageMetadata) {
+  const state: {
+    definedField: boolean
+    missingFiles: string[]
+  } = {
+    definedField: false,
+    missingFiles: [],
+  }
+  const filesField = packageJson.files || []
+  const exportsField = packageJson.exports || {}
+
+  state.definedField = !!packageJson.files
+
+  const resolveExportsPaths = (exports: any): string[] => {
+    const paths = []
+    if (typeof exports === 'string') {
+      paths.push(exports)
+    } else if (typeof exports === 'object') {
+      for (const key in exports) {
+        paths.push(...resolveExportsPaths(exports[key]))
+      }
+    }
+    return paths
+  }
+
+  const exportedPaths = resolveExportsPaths(exportsField).map((p) =>
+    path.normalize(p),
+  )
+  const commonFields = ['main', 'module', 'types', 'module-sync']
+  for (const field of commonFields) {
+    if (field in packageJson) {
+      exportedPaths.push((packageJson as any)[field])
+    }
+  }
+
+  state.missingFiles = exportedPaths.filter((exportPath) => {
+    return !isPathIncluded(filesField, exportPath)
+  })
+
+  return state
 }
 
 export function lint(pkg: PackageMetadata) {
@@ -142,6 +193,17 @@ export function lint(pkg: PackageMetadata) {
         })
       }
     }
+  }
+
+  const fieldState = validateFilesField(pkg)
+
+  if (!fieldState.definedField) {
+    logger.warn('Missing files field in package.json')
+  } else if (fieldState.missingFiles.length) {
+    logger.warn('Missing files in package.json')
+    fieldState.missingFiles.forEach((p) => {
+      logger.warn(`  ${p}`)
+    })
   }
 
   if (state.badMainExtension) {

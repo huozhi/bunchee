@@ -150,6 +150,13 @@ async function parseCliArgs(argv: string[]) {
     .showHelpOnFail(true)
     .parse()
 
+  const cmd = args._[0]
+  if (cmd === 'prepare' || cmd === 'lint') {
+    return {
+      cmd,
+    }
+  }
+
   const source: string = args._[0] as string
   const parsedArgs: CliArgs = {
     source,
@@ -339,6 +346,9 @@ async function main() {
   if (error || !params) {
     // if (!error) help()
     return exit(error as Error)
+  }
+  if ('cmd' in params) {
+    return
   }
   await run(params)
 }

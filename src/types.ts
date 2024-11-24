@@ -66,6 +66,7 @@ type PackageMetadata = {
   main?: string
   bin?: string | Record<string, string>
   module?: string
+  files?: string[]
   type?: 'commonjs' | 'module'
   dependencies?: Record<string, string>
   peerDependencies?: Record<string, string>
