@@ -4,6 +4,7 @@ describe('integration - lint - missing-files-exports', () => {
   it('should warn on missing files', async () => {
     await createIntegrationTest(
       {
+        args: ['lint'],
         directory: __dirname,
       },
       async ({ stderr }) => {

@@ -1,16 +1,13 @@
-import { assertFilesContent, createIntegrationTest } from '../../utils'
+import { createIntegrationTest } from '../../utils'
 
 describe('integration invalid-exports-cjs', () => {
   it('should warn on invalid exports as CJS', async () => {
     await createIntegrationTest(
       {
+        args: ['lint'],
         directory: __dirname,
       },
-      async ({ stderr, distDir }) => {
-        assertFilesContent(distDir, {
-          './index.esm.js': 'export { index }',
-        })
-
+      async ({ stderr }) => {
         expect(stderr).toContain('Missing package name')
         expect(stderr).toContain(
           'Cannot export `require` field with .mjs extension in CJS package, only .cjs and .js extensions are allowed',
