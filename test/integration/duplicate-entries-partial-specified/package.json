@@ -1,0 +1,10 @@
+{
+  "name": "undefined-types-paths",
+  "type": "module",
+  "exports": {
+    "./a": {
+      "workerd": "./dist/a.workerd.js",
+      "import": "./dist/a.js"
+    }
+  }
+}
