@@ -14,7 +14,6 @@ export function prependDirectives(): Plugin {
           if (firstDirective) {
             const directive = firstDirective.value
             const directiveCode = `'${directive}';`
-            // return directiveCode + '\n' + code
             const magicString = new MagicString(code)
             magicString.prepend(directiveCode + '\n')
             return {
