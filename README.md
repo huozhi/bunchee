@@ -40,6 +40,20 @@ cd ./my-lib
 mkdir src && touch ./src/index.ts
 ```
 
+#### Build
+
+Then files in `src` folders will be treated as entry files and match the export names in package.json. For example:
+`src/index.ts` will match the exports name `"."` or the only main export.
+
+Now just run `npm run build` (or `pnpm build` / `yarn build`) if you're using these package managers, `bunchee` will find the entry files and build them.
+The output format will based on the exports condition and also the file extension. Given an example:
+
+- It's CommonJS for `require` and ESM for `import` based on the exports condition.
+- It's CommonJS for `.js` and ESM for `.mjs` based on the extension regardless the exports condition. Then for export condition like "node" you could choose the format with your extension.
+
+> [!NOTE]
+> All the `dependencies` and `peerDependencies` will be marked as external automatically and not included in the bundle. If you want to include them in the bundle, you can use the `--no-external` option.
+
 #### Prepare
 
 ```sh
@@ -128,19 +142,17 @@ If you're using TypeScript with Node 10 and Node 16 module resolution, you can u
 
 </details>
 
-#### Build
+#### Lint
 
-Then files in `src` folders will be treated as entry files and match the export names in package.json. For example:
-`src/index.ts` will match the exports name `"."` or the only main export.
+`lint` command will check the package.json configuration is valid or not, it can valid few things like:
 
-Now just run `npm run build` (or `pnpm build` / `yarn build`) if you're using these package managers, `bunchee` will find the entry files and build them.
-The output format will based on the exports condition and also the file extension. Given an example:
+- if the entry files are matched with the exports conditions.
+- if the entry files are matched with the exports paths.
 
-- It's CommonJS for `require` and ESM for `import` based on the exports condition.
-- It's CommonJS for `.js` and ESM for `.mjs` based on the extension regardless the exports condition. Then for export condition like "node" you could choose the format with your extension.
-
-> [!NOTE]
-> All the `dependencies` and `peerDependencies` will be marked as external automatically and not included in the bundle. If you want to include them in the bundle, you can use the `--no-external` option.
+```sh
+# Use bunchee to lint if the package.json configuration is valid
+npm exec bunchee lint
+```
 
 ## Usage
 
