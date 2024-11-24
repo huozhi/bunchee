@@ -10,7 +10,7 @@ describe('integration shared-module', () => {
       {
         directory: __dirname,
       },
-      async ({ distDir }) => {
+      async ({ distDir, stdout }) => {
         const jsFiles = await getFileNamesFromDirectory(distDir)
         expect(jsFiles).toEqual([
           '_internal/index.cjs',
@@ -35,6 +35,9 @@ describe('integration shared-module', () => {
           'index.react-server.js': `'./_internal/index.react-server.js'`,
           './_internal/index.react-server.js': 'internal:react-server',
         })
+
+        // Hide private shared module
+        expect(stdout).not.toContain('./lib/_util')
       },
     )
   })

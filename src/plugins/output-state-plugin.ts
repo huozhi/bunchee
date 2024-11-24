@@ -9,7 +9,7 @@ import {
   getSpecialExportTypeFromComposedExportPath,
   normalizeExportPath,
 } from '../entries'
-import { isBinExportPath, isTypeFile } from '../utils'
+import { isBinExportPath, isPrivateExportPath, isTypeFile } from '../utils'
 
 // [filename, sourceFileName, size]
 type FileState = [string, string, number]
@@ -156,22 +156,43 @@ function logOutputState(stats: SizeStats) {
         const [filename, , size] = item
         const normalizedExportName = normalizeExportName(exportName)
 
-        const prefix =
+        const exportNameWithPadding =
           index === 0
-            ? normalizedExportName
+            ? // Each exports, only show the export path in the first item.
+              // For other formats, just show the padding spaces.
+              normalizedExportName
             : ' '.repeat(normalizedExportName.length)
         const filenamePadding = ' '.repeat(
           Math.max(maxLengthOfExportName, 'Exports'.length) -
             normalizedExportName.length,
         )
         const isType = isTypeFile(filename)
+
+        const prettiedSize = prettyBytes(size)
         const sizePadding = ' '.repeat(
           Math.max(maxFilenameLength, 'File'.length) - filename.length,
         )
-        const prettiedSize = prettyBytes(size)
+
+        // Logging shared in debug mode
+        if (isPrivateExportPath(exportName)) {
+          if (index === 0 && process.env.DEBUG) {
+            const sizePadding = ' '.repeat(
+              Math.max(maxFilenameLength, 'File'.length) -
+                'private shared'.length,
+            )
+            console.log(
+              pc.dim(normalizeExportName(exportName)),
+              filenamePadding,
+              pc.dim('private shared'),
+              sizePadding,
+              pc.dim(prettiedSize),
+            )
+          }
+          return
+        }
 
         console.log(
-          prefix,
+          exportNameWithPadding,
           filenamePadding,
           `${pc[isType ? 'dim' : 'bold'](filename)}`,
           sizePadding,
