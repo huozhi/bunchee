@@ -1,5 +1,5 @@
 {
-  "name": "missing-files",
+  "name": "missing-files-exports",
   "exports": {
     ".": "./dist/index.js",
     "./foo": "./foo/index.js"

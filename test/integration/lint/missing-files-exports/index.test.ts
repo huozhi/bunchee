@@ -1,6 +1,6 @@
 import { createIntegrationTest } from '../../utils'
 
-describe('integration - lint - missing-files', () => {
+describe('integration - lint - missing-files-exports', () => {
   it('should warn on missing files', async () => {
     await createIntegrationTest(
       {

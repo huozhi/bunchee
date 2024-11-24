@@ -56,6 +56,12 @@ function validateFilesField(packageJson: PackageMetadata) {
   const exportedPaths = resolveExportsPaths(exportsField).map((p) =>
     path.normalize(p),
   )
+  const commonFields = ['main', 'module', 'types', 'module-sync']
+  for (const field of commonFields) {
+    if (field in packageJson) {
+      exportedPaths.push((packageJson as any)[field])
+    }
+  }
 
   state.missingFiles = exportedPaths.filter((exportPath) => {
     return !isPathIncluded(filesField, exportPath)

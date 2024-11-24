@@ -1,0 +1,7 @@
+{
+  "name": "missing-files-main",
+  "main": "index.js",
+  "files": [
+    "dist"
+  ]
+}
