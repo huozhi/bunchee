@@ -3,7 +3,7 @@ import MagicString from 'magic-string'
 
 export function prependDirectives(): Plugin {
   return {
-    name: 'prependDirective',
+    name: 'prepend-directive',
     transform: {
       order: 'post',
       handler(code, id) {
