@@ -7,6 +7,7 @@ describe('require regex', () => {
     expect(match('require(\n"foo"\n)')).toBe(true)
     expect(match(`require(\`mod\`)`)).toBe(true)
     expect(match(`require.resolve('mod')`)).toBe(true)
+    expect(match(`\nrequire.resolve(value)`)).toBe(true)
 
     expect(match('foo.require("foo")')).toBe(false)
     expect(match(`"require('module')"`)).toBe(false)
