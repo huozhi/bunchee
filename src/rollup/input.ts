@@ -16,7 +16,6 @@ import { esmShim } from '../plugins/esm-shim'
 import { inlineCss } from '../plugins/inline-css'
 import { rawContent } from '../plugins/raw-plugin'
 import { aliasEntries } from '../plugins/alias-plugin'
-import { prependDirectives } from '../plugins/prepend-directives'
 import { prependShebang } from '../plugins/prepend-shebang'
 import { memoizeByKey } from '../lib/memoize'
 import { convertCompilerOptions } from '../typescript'
@@ -250,7 +249,6 @@ export async function buildInputConfig(
           commonjs({
             exclude: bundleConfig.external || null,
           }),
-          prependDirectives(),
         ]
   ).filter(isNotNull<Plugin>)
 
