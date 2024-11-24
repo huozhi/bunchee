@@ -36,9 +36,10 @@ export async function collectSourceEntries(sourceFolderPath: string) {
   for (const file of binMatches) {
     // convert relative path to export path
     const exportPath = sourceFilenameToExportFullPath(file)
+    const binExportPath = exportPath.replace(/^\.[\//]bin/, BINARY_TAG)
     await collectSourceEntriesByExportPath(
       sourceFolderPath,
-      exportPath,
+      binExportPath,
       bins,
       exportsEntries,
     )
