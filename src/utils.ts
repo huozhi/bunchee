@@ -247,3 +247,12 @@ export function sourceFilenameToExportFullPath(filename: string) {
 
   return relativify(exportPath)
 }
+
+// If the file is matching the private module convention file export path.
+// './lib/_foo' -> true
+// './_util/index' -> true
+// './lib/_foo/bar' -> true
+// './foo' -> false
+export function isPrivateExportPath(exportPath: string) {
+  return /\/_/.test(exportPath)
+}
