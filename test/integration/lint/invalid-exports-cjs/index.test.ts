@@ -1,4 +1,4 @@
-import { assertFilesContent, createIntegrationTest } from '../utils'
+import { assertFilesContent, createIntegrationTest } from '../../utils'
 
 describe('integration invalid-exports-cjs', () => {
   it('should warn on invalid exports as CJS', async () => {

@@ -2,8 +2,8 @@ import {
   assertContainFiles,
   assertFilesContent,
   stripANSIColor,
-} from '../../testing-utils'
-import { createIntegrationTest } from '../utils'
+} from '../../../testing-utils'
+import { createIntegrationTest } from '../../utils'
 
 describe('integration single-entry', () => {
   it('should warn on invalid exports as CJS', async () => {
