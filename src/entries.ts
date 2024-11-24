@@ -7,7 +7,6 @@ import { PackageMetadata, type Entries, ExportPaths } from './types'
 import { logger } from './logger'
 import {
   baseNameWithoutExtension,
-  filePathWithoutExtension,
   getSourcePathFromExportPath,
   isBinExportPath,
   isESModulePackage,
@@ -392,9 +391,13 @@ export async function collectSourceEntriesFromExportPaths(
 
   // Search private shared module files which are not in the parsedExportsInfo, but start with _.
   // e.g. _utils.ts, _utils/index.ts
-  const privatePattern = `**/_*{,/index}.{${[...availableExtensions].join(
-    ',',
-  )}}`
+  // e.g. _utils.development.ts, _utils/index.development.js
+  const privatePattern = [
+    `**/_*{,/index}.{${[...availableExtensions].join(',')}}`,
+    `**/_*{,/index}.{${[...runtimeExportConventions].join(',')}}.{${[
+      ...availableExtensions,
+    ].join(',')}}`,
+  ]
   const privateFiles = await glob(privatePattern, {
     cwd: sourceFolderPath,
     nodir: true,
@@ -402,30 +405,49 @@ export async function collectSourceEntriesFromExportPaths(
 
   for (const file of privateFiles) {
     const sourceFileAbsolutePath = join(sourceFolderPath, file)
-    const relativeFilePath = relativify(file)
-    const exportPath = filePathWithoutExtension(relativeFilePath)
-
-    // exportsEntries.set(specialExportPath, sourceFilesMap)
+    const exportPath = sourceFilenameToExportFullPath(file)
     const isEsmPkg = isESModulePackage(pkg.type)
 
-    // Add private shared files to parsedExportsInfo
-    parsedExportsInfo.set(exportPath, [
-      // Map private shared files to the dist directory
-      // e.g. ./_utils.ts -> ./dist/_utils.js
+    // const specialItems: [string, string][] = []
+    const specialExportType = getSpecialExportTypeFromSourcePath(file)
+    const normalizedExportPath = stripSpecialCondition(exportPath)
+    const isSpecialExport = specialExportType !== 'default'
+
+    // export type: default => ''
+    // export type: development => '.development'
+    const condPart = isSpecialExport ? specialExportType + '.' : ''
+
+    // Map private shared files to the dist directory
+    // e.g. ./_utils.ts -> ./dist/_utils.js
+    const privateExportInfo: [string, string][] = [
       [
         relativify(join('./dist', exportPath + (isEsmPkg ? '.js' : '.mjs'))),
-        'import',
+        condPart + 'import',
       ],
       [
         relativify(join('./dist', exportPath + (isEsmPkg ? '.cjs' : '.js'))),
-        'require',
+        condPart + 'require',
       ],
-    ])
+    ]
+
+    const exportsInfo = parsedExportsInfo.get(normalizedExportPath)
+    if (!exportsInfo) {
+      // Add private shared files to parsedExportsInfo
+      parsedExportsInfo.set(normalizedExportPath, privateExportInfo)
+    } else {
+      // Merge private shared files to the existing exportsInfo
+      exportsInfo.push(...privateExportInfo)
+    }
 
     // Insert private shared modules into the entries
-    exportsEntries.set(exportPath, {
-      default: sourceFileAbsolutePath,
-    })
+    const entry = exportsEntries.get(exportPath)
+    if (!entry) {
+      exportsEntries.set(exportPath, {
+        [specialExportType]: sourceFileAbsolutePath,
+      })
+    } else {
+      entry[specialExportType] = sourceFileAbsolutePath
+    }
   }
 
   return {

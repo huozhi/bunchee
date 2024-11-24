@@ -1,4 +1,8 @@
-import { createIntegrationTest, getFileNamesFromDirectory } from '../utils'
+import {
+  assertFilesContent,
+  createIntegrationTest,
+  getFileNamesFromDirectory,
+} from '../utils'
 
 describe('integration shared-module', () => {
   it('should split shared module into one chunk layer', async () => {
@@ -9,6 +13,10 @@ describe('integration shared-module', () => {
       async ({ distDir }) => {
         const jsFiles = await getFileNamesFromDirectory(distDir)
         expect(jsFiles).toEqual([
+          '_internal/index.cjs',
+          '_internal/index.js',
+          '_internal/index.react-server.cjs',
+          '_internal/index.react-server.js',
           'another.cjs',
           'another.js',
           'client.cjs',
@@ -21,6 +29,12 @@ describe('integration shared-module', () => {
           'lib/_util.cjs',
           'lib/_util.js',
         ])
+
+        // In index.react-server.js, it should refers to _internal/index.react-server.js
+        await assertFilesContent(distDir, {
+          'index.react-server.js': `'./_internal/index.react-server.js'`,
+          './_internal/index.react-server.js': 'internal:react-server',
+        })
       },
     )
   })
