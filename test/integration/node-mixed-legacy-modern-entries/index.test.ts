@@ -1,6 +1,6 @@
 import { createIntegrationTest, assertContainFiles } from '../utils'
 
-describe('integration duplicate-entry', () => {
+describe('node-mixed-legacy-modern-entries', () => {
   it('should deduplicate entries', async () => {
     await createIntegrationTest(
       {

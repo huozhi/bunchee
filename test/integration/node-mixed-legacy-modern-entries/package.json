@@ -1,4 +1,5 @@
 {
+  "name": "node-mixed-legacy-modern-entries",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
