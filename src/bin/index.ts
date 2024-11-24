@@ -16,7 +16,8 @@ const helpMessage = `
 Usage: bunchee [options]
 
 Commands:
-prepare                  auto configure package.json exports for building
+prepare                  auto setup package.json for building
+lint                     lint configuration in package.json
 
 Options:
   -v, --version          output the version number
