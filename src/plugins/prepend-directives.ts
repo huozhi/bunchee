@@ -1,4 +1,5 @@
 import type { Plugin } from 'rollup'
+import type { PreserveDirectiveMeta } from 'rollup-preserve-directives'
 
 export function prependDirectives(): Plugin {
   return {
@@ -7,11 +8,12 @@ export function prependDirectives(): Plugin {
       order: 'post',
       handler(code, id) {
         const moduleInfo = this.getModuleInfo(id)
-        if (moduleInfo?.meta?.preserveDirectives) {
-          const firstDirective =
-            moduleInfo.meta.preserveDirectives.directives[0]
+        const preserveDirectives: PreserveDirectiveMeta =
+          moduleInfo?.meta?.preserveDirectives
+        if (preserveDirectives) {
+          const firstDirective = preserveDirectives.directives[0]
           if (firstDirective) {
-            const directive = firstDirective.value
+            const directive = firstDirective
             const directiveCode = `'${directive}';`
             return directiveCode + '\n' + code
           }
