@@ -71,7 +71,7 @@ export function lint(pkg: PackageMetadata) {
     logger.warn('Missing package name')
   }
 
-  const state: {
+  const exportsState: {
     badMainExtension: boolean
     badMainExport: boolean
     invalidExportsFieldType: boolean
@@ -108,16 +108,16 @@ export function lint(pkg: PackageMetadata) {
     if (exports) {
       if (typeof exports === 'string') {
         if (hasCjsExtension(exports)) {
-          state.badMainExport = true
+          exportsState.badMainExport = true
         }
       } else if (typeof exports !== 'object') {
-        state.invalidExportsFieldType = true
+        exportsState.invalidExportsFieldType = true
       } else {
         parsedExports.forEach((outputPairs) => {
           for (const outputPair of outputPairs) {
             const [outputPath, composedExportType] = outputPair
             if (validateTypesFieldCondition([outputPath, composedExportType])) {
-              state.badTypesExport.push([outputPath, composedExportType])
+              exportsState.badTypesExport.push([outputPath, composedExportType])
             }
 
             const exportTypes = new Set(composedExportType.split('.'))
@@ -132,12 +132,12 @@ export function lint(pkg: PackageMetadata) {
             const requireExt = requirePath && path.extname(requirePath)
             const importExt = importPath && path.extname(importPath)
             if (requireExt === '.mjs' || requireExt === '.js') {
-              state.badEsmRequireExport.value = true
-              state.badEsmRequireExport.paths.push(requirePath)
+              exportsState.badEsmRequireExport.value = true
+              exportsState.badEsmRequireExport.paths.push(requirePath)
             }
             if (importExt === '.cjs') {
-              state.badEsmImportExport.value = true
-              state.badEsmImportExport.paths.push(importPath)
+              exportsState.badEsmImportExport.value = true
+              exportsState.badEsmImportExport.paths.push(importPath)
             }
           }
         })
@@ -146,21 +146,21 @@ export function lint(pkg: PackageMetadata) {
   } else {
     // Validate CJS package
     if (main && path.extname(main) === '.mjs') {
-      state.badMainExtension = true
+      exportsState.badMainExtension = true
     }
     if (exports) {
       if (typeof exports === 'string') {
         if (path.extname(exports) === '.mjs') {
-          state.badMainExport = true
+          exportsState.badMainExport = true
         }
       } else if (typeof exports !== 'object') {
-        state.invalidExportsFieldType = true
+        exportsState.invalidExportsFieldType = true
       } else {
         parsedExports.forEach((outputPairs) => {
           for (const outputPair of outputPairs) {
             const [outputPath, composedExportType] = outputPair
             if (validateTypesFieldCondition([outputPath, composedExportType])) {
-              state.badTypesExport.push([outputPath, composedExportType])
+              exportsState.badTypesExport.push([outputPath, composedExportType])
             }
             const exportTypes = new Set(composedExportType.split('.'))
             let requirePath: string = ''
@@ -174,12 +174,12 @@ export function lint(pkg: PackageMetadata) {
             const requireExt = requirePath && path.extname(requirePath)
             const importExt = importPath && path.extname(importPath)
             if (requireExt === '.mjs') {
-              state.badCjsRequireExport.value = true
-              state.badCjsRequireExport.paths.push(requirePath)
+              exportsState.badCjsRequireExport.value = true
+              exportsState.badCjsRequireExport.paths.push(requirePath)
             }
             if (importExt === '.js' || importExt === '.cjs') {
-              state.badCjsImportExport.value = true
-              state.badCjsImportExport.paths.push(importPath)
+              exportsState.badCjsImportExport.value = true
+              exportsState.badCjsImportExport.paths.push(importPath)
             }
           }
         })
@@ -188,6 +188,15 @@ export function lint(pkg: PackageMetadata) {
   }
 
   const fieldState = validateFilesField(pkg)
+
+  const warningsCount =
+    exportsState.badTypesExport.length + fieldState.missingFiles.length
+
+  if (warningsCount) {
+    logger.warn(`Lint: ${warningsCount} issues found.`)
+  } else {
+    logger.info(`Lint: package.json is healthy.`)
+  }
 
   if (!fieldState.definedField) {
     logger.warn('Missing files field in package.json')
@@ -198,12 +207,12 @@ export function lint(pkg: PackageMetadata) {
     })
   }
 
-  if (state.badMainExtension) {
+  if (exportsState.badMainExtension) {
     logger.warn(
       'Cannot export `main` field with .mjs extension in CJS package, only .js extension is allowed',
     )
   }
-  if (state.badMainExport) {
+  if (exportsState.badMainExport) {
     if (isESM) {
       logger.warn(
         'Cannot export `exports` field with .cjs extension in ESM package, only .mjs and .js extensions are allowed',
@@ -215,52 +224,51 @@ export function lint(pkg: PackageMetadata) {
     }
   }
 
-  if (state.invalidExportsFieldType) {
+  if (exportsState.invalidExportsFieldType) {
     logger.warn('Invalid exports field type, only object or string is allowed')
   }
 
-  if (state.badCjsRequireExport.value) {
+  if (exportsState.badCjsRequireExport.value) {
     logger.warn(
       'Cannot export `require` field with .mjs extension in CJS package, only .cjs and .js extensions are allowed',
     )
-    state.badCjsRequireExport.paths.forEach((p) => {
+    exportsState.badCjsRequireExport.paths.forEach((p) => {
       logger.warn(`  ${p}`)
     })
   }
 
-  if (state.badCjsImportExport.value) {
+  if (exportsState.badCjsImportExport.value) {
     logger.warn(
       'Cannot export `import` field with .js or .cjs extension in CJS package, only .mjs extensions are allowed',
     )
-    state.badCjsImportExport.paths.forEach((p) => {
+    exportsState.badCjsImportExport.paths.forEach((p) => {
       logger.warn(`  ${p}`)
     })
   }
 
-  if (state.badEsmRequireExport.value) {
+  if (exportsState.badEsmRequireExport.value) {
     logger.warn(
       'Cannot export `require` field with .js or .mjs extension in ESM package, only .cjs extensions are allowed',
     )
-    state.badEsmRequireExport.paths.forEach((p) => {
+    exportsState.badEsmRequireExport.paths.forEach((p) => {
       logger.warn(`  ${p}`)
     })
   }
 
-  if (state.badEsmImportExport.value) {
+  if (exportsState.badEsmImportExport.value) {
     logger.warn(
       'Cannot export `import` field with .cjs extension in ESM package, only .js and .mjs extensions are allowed',
     )
-    state.badEsmImportExport.paths.forEach((p) => {
+    exportsState.badEsmImportExport.paths.forEach((p) => {
       logger.warn(`  ${p}`)
     })
   }
 
-  if (state.badTypesExport.length) {
-    state.badTypesExport.forEach(([outputPath, composedExportType]) => {
+  if (exportsState.badTypesExport.length) {
+    exportsState.badTypesExport.forEach(([outputPath, composedExportType]) => {
       logger.error(
         `Bad export types field with ${composedExportType} in ${outputPath}, use "types" export condition for it`,
       )
     })
-    process.exit(1)
   }
 }
