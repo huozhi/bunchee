@@ -261,6 +261,14 @@ export function lint(pkg: PackageMetadata) {
         `Bad export types field with ${composedExportType} in ${outputPath}, use "types" export condition for it`,
       )
     })
-    process.exit(1)
+  }
+
+  const warningsCount =
+    state.badTypesExport.length + fieldState.missingFiles.length
+
+  if (warningsCount) {
+    logger.warn(`Found ${warningsCount} lint warnings.\n`)
+  } else {
+    logger.info(`Lint passed successfully.\n`)
   }
 }
