@@ -3,7 +3,7 @@ import { parseExports } from './exports'
 import { logger } from './logger'
 import { PackageMetadata } from './types'
 import { hasCjsExtension, isESModulePackage, isTypeFile } from './utils'
-import picomatch from 'picomatch'
+import { matchFile } from './lib/file-match'
 
 type BadExportItem = {
   value: boolean
@@ -18,14 +18,6 @@ function validateTypesFieldCondition(pair: [string, string]) {
     return true
   }
   return false
-}
-
-const isPathIncluded = (filesField: string[], filePath: string) => {
-  return filesField.some((pattern) => {
-    const normalizedPattern = path.normalize(pattern)
-    const matcher = picomatch(normalizedPattern)
-    return matcher(filePath)
-  })
 }
 
 function validateFilesField(packageJson: PackageMetadata) {
@@ -64,7 +56,7 @@ function validateFilesField(packageJson: PackageMetadata) {
   }
 
   state.missingFiles = exportedPaths.filter((exportPath) => {
-    return !isPathIncluded(filesField, exportPath)
+    return !matchFile(filesField, exportPath)
   })
 
   return state
