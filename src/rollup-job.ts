@@ -15,7 +15,6 @@ import {
   BundleJobOptions,
 } from './types'
 import { removeOutputDir } from './utils'
-import { logger } from './logger'
 
 export async function createAssetRollupJobs(
   options: BundleConfig,
