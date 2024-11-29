@@ -7,7 +7,7 @@ describe('integration js-bad-configured-types', () => {
         directory: __dirname,
       },
       async ({ stderr, code }) => {
-        expect(code).toBe(1)
+        expect(code).toBe(0)
 
         expect(stderr).toContain(
           `Bad export types field with import.require in ./dist/index.d.mts, use "types" export condition for it`,
