@@ -130,6 +130,10 @@ async function parseCliArgs(argv: string[]) {
       type: 'boolean',
       description: 'bundle type declaration files',
     })
+    .option('prepare', {
+      type: 'boolean',
+      description: 'auto setup package.json for building',
+    })
     .command(
       'prepare',
       'auto configure package.json exports for building',
@@ -156,6 +160,14 @@ async function parseCliArgs(argv: string[]) {
     return {
       cmd,
     }
+  }
+
+  // Warn about this command being deprecated
+  if (args['prepare']) {
+    logger.warn(
+      'The "--prepare" option is deprecated. Please use `bunchee prepare` instead.',
+    )
+    return
   }
 
   const source: string = args._[0] as string
