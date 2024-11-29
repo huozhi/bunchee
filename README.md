@@ -54,7 +54,7 @@ The output format will based on the exports condition and also the file extensio
 > [!NOTE]
 > All the `dependencies` and `peerDependencies` will be marked as external automatically and not included in the bundle. If you want to include them in the bundle, you can use the `--no-external` option.
 
-#### Prepare
+#### Prepare Package
 
 ```sh
 # Use bunchee to prepare package.json configuration
@@ -142,7 +142,7 @@ If you're using TypeScript with Node 10 and Node 16 module resolution, you can u
 
 </details>
 
-#### Lint
+#### Lint Package
 
 `lint` command will check the package.json configuration is valid or not, it can valid few things like:
 
