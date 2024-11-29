@@ -81,9 +81,8 @@ function runWatch({ input, output }: BuncheeRollupConfig): RollupWatcher {
 
 function catchErrorHandler(error: any) {
   if (!error) return
-  logger.error(error)
   // filter out the rollup plugin error information such as loc/frame/code...
   const err = new Error(error.message)
   err.stack = error.stack
-  throw err
+  throw error
 }
