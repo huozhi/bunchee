@@ -25,7 +25,7 @@ function validateFilesField(packageJson: PackageMetadata) {
     definedField: boolean
     missingFiles: string[]
   } = {
-    definedField: false,
+    definedField: true,
     missingFiles: [],
   }
   const filesField = packageJson.files || []
@@ -56,6 +56,10 @@ function validateFilesField(packageJson: PackageMetadata) {
   }
 
   state.missingFiles = exportedPaths.filter((exportPath) => {
+    // Special case for package.json
+    if (exportPath === './package.json') {
+      return false
+    }
     return !matchFile(filesField, exportPath)
   })
 
