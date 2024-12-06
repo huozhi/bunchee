@@ -57,7 +57,7 @@ function validateFilesField(packageJson: PackageMetadata) {
 
   state.missingFiles = exportedPaths.filter((exportPath) => {
     // Special case for package.json
-    if (exportPath === './package.json') {
+    if (exportPath === 'package.json') {
       return false
     }
     return !matchFile(filesField, exportPath)
