@@ -46,7 +46,7 @@ export async function collectSourceEntries(sourceFolderPath: string) {
   }
 
   for (const file of srcMatches) {
-    const binExportPath = file
+    const binExportPath = normalizePath(file)
       .replace(/^bin/, BINARY_TAG)
       // Remove index.<ext> to [^index].<ext> to build the export path
       .replace(/(\/index)?\.[^/]+$/, '')
