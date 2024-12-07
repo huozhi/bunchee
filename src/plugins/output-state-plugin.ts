@@ -9,11 +9,12 @@ import {
   getSpecialExportTypeFromComposedExportPath,
   normalizeExportPath,
 } from '../entries'
-import { isBinExportPath, isPrivateExportPath, isTypeFile } from '../utils'
-
-function normalizePath(filePath: string) {
-  return filePath.replace(/\\/g, '/')
-}
+import {
+  isBinExportPath,
+  isPrivateExportPath,
+  isTypeFile,
+  normalizePath,
+} from '../utils'
 
 // [filename, sourceFileName, size]
 type FileState = [string, string, number]

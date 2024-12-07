@@ -7,6 +7,7 @@ import {
   specialExportConventions,
   runtimeExportConventionsFallback,
 } from '../constants'
+import { normalizePath } from '../utils'
 
 function hasNoSpecialCondition(conditionNames: Set<string>) {
   return [...conditionNames].every(
@@ -150,7 +151,9 @@ export function aliasEntries({
             srcBundle &&
             resolvedModuleBundle
           ) {
-            const absoluteBundlePath = posix.resolve(cwd, srcBundle)
+            const absoluteBundlePath = normalizePath(
+              posix.resolve(cwd, srcBundle),
+            )
             const absoluteImportBundlePath = posix.resolve(
               cwd,
               resolvedModuleBundle,

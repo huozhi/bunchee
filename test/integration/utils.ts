@@ -4,6 +4,7 @@ import {
   executeBunchee,
   type ExcuteBuncheeResult,
 } from '../testing-utils'
+import { normalizePath } from 'src/utils'
 
 export * from '../testing-utils'
 
@@ -83,5 +84,5 @@ export async function getFileNamesFromDirectory(directory: string) {
     cwd: directory,
   })
 
-  return files.sort().map((file) => file.replace(/\\/g, '/'))
+  return files.sort().map((file) => normalizePath(file))
 }

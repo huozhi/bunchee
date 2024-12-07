@@ -256,3 +256,7 @@ export function sourceFilenameToExportFullPath(filename: string) {
 export function isPrivateExportPath(exportPath: string) {
   return /\/_/.test(exportPath)
 }
+
+export function normalizePath(filePath: string) {
+  return filePath.replace(/\\/g, '/')
+}
