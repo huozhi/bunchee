@@ -1,7 +1,7 @@
 import { OutputOptions, Plugin } from 'rollup'
 import { Entries } from '../types'
 import { posix } from 'path'
-import { relativify } from '../lib/format'
+import { posixRelativify } from '../lib/format'
 import { getSpecialExportTypeFromConditionNames } from '../entries'
 import {
   specialExportConventions,
@@ -160,7 +160,7 @@ export function aliasEntries({
               posix.dirname(absoluteBundlePath),
               absoluteImportBundlePath,
             )!
-            const relativePath = relativify(filePathBase)
+            const relativePath = posixRelativify(filePathBase)
             return { id: relativePath, external: true }
           }
         }
