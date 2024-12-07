@@ -11,6 +11,7 @@ import {
   getMainFieldExportType,
   isESModulePackage,
   joinRelativePath,
+  normalizePath,
 } from './utils'
 import {
   BINARY_TAG,
@@ -315,7 +316,7 @@ export function getExportFileTypePath(absoluteJsBundlePath: string) {
     1,
   ) as keyof typeof dtsExtensionsMap
   const typeExtension = dtsExtensionsMap[ext]
-  return join(dirName, baseName + '.' + typeExtension)
+  return normalizePath(join(dirName, baseName + '.' + typeExtension))
 }
 
 export function getExportTypeFromFile(

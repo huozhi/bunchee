@@ -1,6 +1,6 @@
 import { existsSync } from 'fs'
 import fsp from 'fs/promises'
-import { basename, dirname, extname, join } from 'path'
+import path, { posix } from 'path'
 import { glob } from 'glob'
 import { getExportTypeFromFile, type ParsedExportsInfo } from './exports'
 import { PackageMetadata, type Entries, ExportPaths } from './types'
@@ -21,7 +21,7 @@ import {
   runtimeExportConventions,
   specialExportConventions,
 } from './constants'
-import { relativify } from './lib/format'
+import { posixRelativify } from './lib/format'
 
 export async function collectEntriesFromParsedExports(
   cwd: string,
@@ -43,7 +43,7 @@ export async function collectEntriesFromParsedExports(
 
   // Find source files
   const { bins, exportsEntries } = await collectSourceEntriesFromExportPaths(
-    join(cwd, SRC),
+    path.join(cwd, SRC),
     parsedExportsInfo,
     pkg,
   )
@@ -162,7 +162,7 @@ export async function collectBinaries(
       typeof binaryExports === 'string'
         ? [['bin', binaryExports]]
         : Object.keys(binaryExports).map((key) => [
-            join('bin', key),
+            path.join('bin', key),
             binaryExports[key],
           ])
 
@@ -280,10 +280,10 @@ export async function collectSourceEntriesByExportPath(
 ) {
   const isBinaryPath = isBinExportPath(originalSubpath)
   const subpath = originalSubpath.replace(BINARY_TAG, 'bin')
-  const absoluteDirPath = join(sourceFolderPath, subpath)
-  const dirName = dirname(subpath) // Get directory name regardless of file/directory
-  const baseName = basename(subpath) // Get base name regardless of file/directory
-  const dirPath = join(sourceFolderPath, dirName)
+  const absoluteDirPath = path.join(sourceFolderPath, subpath)
+  const dirName = path.dirname(subpath) // Get directory name regardless of file/directory
+  const baseName = path.basename(subpath) // Get base name regardless of file/directory
+  const dirPath = path.join(sourceFolderPath, dirName)
 
   // Match <name>{,/index}.{<ext>,<runtime>.<ext>}
   const globalPatterns = [
@@ -304,11 +304,11 @@ export async function collectSourceEntriesByExportPath(
   })
 
   for (const file of files) {
-    const ext = extname(file).slice(1)
+    const ext = path.extname(file).slice(1)
     if (!availableExtensions.has(ext) || isTestFile(file)) continue
 
-    const sourceFileAbsolutePath = join(dirPath, file)
-    const exportPath = relativify(
+    const sourceFileAbsolutePath = path.join(dirPath, file)
+    const exportPath = posixRelativify(
       existsSync(absoluteDirPath) &&
         (await fsp.stat(absoluteDirPath)).isDirectory()
         ? subpath
@@ -318,7 +318,7 @@ export async function collectSourceEntriesByExportPath(
     if (isBinaryPath) {
       bins.set(normalizeExportPath(originalSubpath), sourceFileAbsolutePath)
     } else {
-      const parts = basename(file).split('.')
+      const parts = path.basename(file).split('.')
       const exportType =
         parts.length > 2 ? parts[1] : getExportTypeFromExportPath(exportPath)
       const specialExportPath =
@@ -404,7 +404,7 @@ export async function collectSourceEntriesFromExportPaths(
   })
 
   for (const file of privateFiles) {
-    const sourceFileAbsolutePath = join(sourceFolderPath, file)
+    const sourceFileAbsolutePath = path.join(sourceFolderPath, file)
     const exportPath = sourceFilenameToExportFullPath(file)
     const isEsmPkg = isESModulePackage(pkg.type)
 
@@ -421,11 +421,15 @@ export async function collectSourceEntriesFromExportPaths(
     // e.g. ./_utils.ts -> ./dist/_utils.js
     const privateExportInfo: [string, string][] = [
       [
-        relativify(join('./dist', exportPath + (isEsmPkg ? '.js' : '.mjs'))),
+        posixRelativify(
+          posix.join('./dist', exportPath + (isEsmPkg ? '.js' : '.mjs')),
+        ),
         condPart + 'import',
       ],
       [
-        relativify(join('./dist', exportPath + (isEsmPkg ? '.cjs' : '.js'))),
+        posixRelativify(
+          posix.join('./dist', exportPath + (isEsmPkg ? '.cjs' : '.js')),
+        ),
         condPart + 'require',
       ],
     ]

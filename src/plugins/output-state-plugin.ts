@@ -9,7 +9,12 @@ import {
   getSpecialExportTypeFromComposedExportPath,
   normalizeExportPath,
 } from '../entries'
-import { isBinExportPath, isPrivateExportPath, isTypeFile } from '../utils'
+import {
+  isBinExportPath,
+  isPrivateExportPath,
+  isTypeFile,
+  normalizePath,
+} from '../utils'
 
 // [filename, sourceFileName, size]
 type FileState = [string, string, number]
@@ -74,9 +79,9 @@ function createOutputState({ entries }: { entries: Entries }): {
               reversedMapping.get(sourceFileName) || '.',
             )
             addSize({
-              fileName: path.relative(cwd, filePath).replace(path.sep, '/'),
+              fileName: normalizePath(path.relative(cwd, filePath)),
               size,
-              sourceFileName,
+              sourceFileName: normalizePath(sourceFileName),
               exportPath,
             })
           })

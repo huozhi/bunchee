@@ -12,7 +12,7 @@ import {
 } from './constants'
 import { logger } from './logger'
 import { type OutputOptions } from 'rollup'
-import { relativify } from './lib/format'
+import { posixRelativify } from './lib/format'
 
 export function exit(err: string | Error) {
   logger.error(err)
@@ -245,7 +245,7 @@ export function sourceFilenameToExportFullPath(filename: string) {
   const ext = path.extname(filename)
   const exportPath = filename.slice(0, -ext.length)
 
-  return relativify(exportPath)
+  return posixRelativify(exportPath)
 }
 
 // If the file is matching the private module convention file export path.
@@ -255,4 +255,8 @@ export function sourceFilenameToExportFullPath(filename: string) {
 // './foo' -> false
 export function isPrivateExportPath(exportPath: string) {
   return /\/_/.test(exportPath)
+}
+
+export function normalizePath(filePath: string) {
+  return filePath.replace(/\\/g, '/')
 }

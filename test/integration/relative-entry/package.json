@@ -1,0 +1,8 @@
+{
+  "name": "relative-entry",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./relative": "./dist/relative.js"
+  }
+}

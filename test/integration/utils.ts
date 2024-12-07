@@ -5,6 +5,10 @@ import {
   type ExcuteBuncheeResult,
 } from '../testing-utils'
 
+function normalizePath(filePath: string) {
+  return filePath.replace(/\\/g, '/')
+}
+
 export * from '../testing-utils'
 
 type IntegrationTestOptions = {
@@ -83,5 +87,7 @@ export async function getFileNamesFromDirectory(directory: string) {
     cwd: directory,
   })
 
-  return files.sort()
+  return files.sort().map((file) => normalizePath(file))
 }
+
+export const isWindows = process.platform === 'win32'

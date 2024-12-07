@@ -1,0 +1,1 @@
+export const relative = 'relative'

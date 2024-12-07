@@ -1,5 +1,5 @@
 {
-  "name": "ts-incremental",
+  "name": "ts-no-emit",
   "types": "./dist/index.d.ts",
   "exports": "./dist/index.js"
 }

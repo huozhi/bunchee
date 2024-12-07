@@ -1,5 +1,5 @@
 {
-  "name": "undefined-types-paths",
+  "name": "duplicate-entries-partial-specified",
   "type": "module",
   "exports": {
     "./a": {

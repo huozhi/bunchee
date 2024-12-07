@@ -3,7 +3,7 @@ import { glob } from 'glob'
 import { BINARY_TAG, availableExtensions } from '../constants'
 
 import { collectSourceEntriesByExportPath } from '../entries'
-import { sourceFilenameToExportFullPath } from '../utils'
+import { normalizePath, sourceFilenameToExportFullPath } from '../utils'
 
 // For `prepare` command
 export async function collectSourceEntries(sourceFolderPath: string) {
@@ -35,7 +35,7 @@ export async function collectSourceEntries(sourceFolderPath: string) {
 
   for (const file of binMatches) {
     // convert relative path to export path
-    const exportPath = sourceFilenameToExportFullPath(file)
+    const exportPath = sourceFilenameToExportFullPath(normalizePath(file))
     const binExportPath = exportPath.replace(/^\.[\//]bin/, BINARY_TAG)
     await collectSourceEntriesByExportPath(
       sourceFolderPath,
@@ -46,7 +46,7 @@ export async function collectSourceEntries(sourceFolderPath: string) {
   }
 
   for (const file of srcMatches) {
-    const binExportPath = file
+    const binExportPath = normalizePath(file)
       .replace(/^bin/, BINARY_TAG)
       // Remove index.<ext> to [^index].<ext> to build the export path
       .replace(/(\/index)?\.[^/]+$/, '')

@@ -4,7 +4,7 @@ import path, { posix } from 'path'
 import { BINARY_TAG, SRC, dtsExtensionsMap } from '../constants'
 import { logger } from '../logger'
 import { isTypescriptFile } from '../utils'
-import { relativify } from '../lib/format'
+import { posixRelativify } from '../lib/format'
 import { DIST } from '../constants'
 import { writeDefaultTsconfig } from '../typescript'
 import {
@@ -15,7 +15,7 @@ import { collectSourceEntries } from './prepare-entries'
 
 // Output with posix style in package.json
 function getDistPath(...subPaths: string[]) {
-  return relativify(posix.join(DIST, ...subPaths))
+  return posixRelativify(posix.join(DIST, ...subPaths))
 }
 
 function stripeBinaryTag(exportName: string) {
@@ -25,7 +25,7 @@ function stripeBinaryTag(exportName: string) {
 
 const normalizeBaseNameToExportName = (name: string) => {
   const baseName = stripeBinaryTag(name)
-  return /^\.\/index(\.|$)/.test(baseName) ? '.' : relativify(baseName)
+  return /^\.\/index(\.|$)/.test(baseName) ? '.' : posixRelativify(baseName)
 }
 
 function createExportCondition(

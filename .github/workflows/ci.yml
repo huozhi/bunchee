@@ -47,9 +47,10 @@ jobs:
         run: pnpm build
 
       - name: Test
+        shell: cmd
         run: |
-          pnpm test
-          pnpm test:post
+          pnpm test:ci || exit /b 1
+          pnpm test:post || exit /b 1
 
   install_and_test:
     runs-on: [ubuntu-latest]
@@ -90,7 +91,7 @@ jobs:
 
       - name: Test
         run: |
-          pnpm test
+          pnpm test:ci
           pnpm test:post
 
   release:

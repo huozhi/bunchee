@@ -2,7 +2,12 @@ import path from 'path'
 import { parseExports } from './exports'
 import { logger } from './logger'
 import { PackageMetadata } from './types'
-import { hasCjsExtension, isESModulePackage, isTypeFile } from './utils'
+import {
+  hasCjsExtension,
+  isESModulePackage,
+  isTypeFile,
+  normalizePath,
+} from './utils'
 import { matchFile } from './lib/file-match'
 
 type BadExportItem = {
@@ -46,7 +51,7 @@ function validateFilesField(packageJson: PackageMetadata) {
   }
 
   const exportedPaths = resolveExportsPaths(exportsField).map((p) =>
-    path.normalize(p),
+    normalizePath(path.normalize(p)),
   )
   const commonFields = ['main', 'module', 'types', 'module-sync']
   for (const field of commonFields) {
