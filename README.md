@@ -36,8 +36,22 @@ npm install --save-dev bunchee typescript
 Create your library entry file and package.json.
 
 ```sh
-cd ./my-lib
+cd ./coffee
 mkdir src && touch ./src/index.ts
+```
+
+Add the exports in `package.json`
+
+```json
+{
+  "name": "coffee",
+  "type": "module",
+  "main": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "bunchee"
+  }
+}
 ```
 
 #### Build
@@ -69,16 +83,17 @@ npm exec bunchee prepare
 Or you can checkout the following cases to configure your package.json.
 
 <details>
-  <summary> JavaScript</summary>
+  <summary>JavaScript ESModule</summary>
 
 Then use use the [exports field in package.json](https://nodejs.org/api/packages.html#exports-sugar) to configure different conditions and leverage the same functionality as other bundlers, such as webpack. The exports field allows you to define multiple conditions.
 
 ```json
 {
   "files": ["dist"],
+  "type": "module",
   "exports": {
-    "import": "./dist/es/index.mjs",
-    "require": "./dist/cjs/index.js"
+    ".": "./dist/es/index.js",
+    "./react": "./dist/es/react.js"
   },
   "scripts": {
     "build": "bunchee"
@@ -91,19 +106,21 @@ Then use use the [exports field in package.json](https://nodejs.org/api/packages
 <details>
   <summary>TypeScript</summary>
 
-If you're build a TypeScript library, separate the types from the main entry file and specify the types path in package.json. When you're using `.mjs` or `.cjs` extensions with TypeScript and modern module resolution (above node16), TypeScript will require specific type declaration files like `.d.mts` or `.d.cts` to match the extension. `bunchee` can automatically generate them to match the types to match the condition and extensions. One example is to configure your exports like this in package.json:
+If you're build a TypeScript library, separate the types from the main entry file and specify the types path in package.json. Types exports need to stay on the top of each export with `types` condition, and you can use `default` condition for the JS bundle file.
 
 ```json
 {
   "files": ["dist"],
+  "type": "module",
+  "main": "./dist/index.js",
   "exports": {
-    "import": {
-      "types": "./dist/es/index.d.mts",
-      "default": "./dist/es/index.mjs"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
-    "require": {
-      "types": "./dist/cjs/index.d.ts",
-      "default": "./dist/cjs/index.js"
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "default": "./dist/react/index.js"
     }
   },
   "scripts": {
@@ -118,20 +135,23 @@ If you're build a TypeScript library, separate the types from the main entry fil
   <summary>Hybrid (CJS & ESM) Module Resolution with TypeScript</summary>
 If you're using TypeScript with Node 10 and Node 16 module resolution, you can use the `types` field in package.json to specify the types path. Then `bunchee` will generate the types file with the same extension as the main entry file.
 
+_NOTE_: When you're using `.mjs` or `.cjs` extensions with TypeScript and modern module resolution (above node16), TypeScript will require specific type declaration files like `.d.mts` or `.d.cts` to match the extension. `bunchee` can automatically generate them to match the types to match the condition and extensions.
+
 ```json
 {
   "files": ["dist"],
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/es/index.mjs",
-  "types": "./dist/cjs/index.d.ts",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     "import": {
-      "types": "./dist/es/index.d.ts",
-      "default": "./dist/es/index.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "require": {
-      "types": "./dist/cjs/index.d.cts",
-      "default": "./dist/cjs/index.cjs"
+      "types": "./dist/index.d.cts",
+      "default": "./dist/index.cjs"
     }
   },
   "scripts": {
@@ -176,10 +196,11 @@ Assuming you have default export package as `"."` and subpath export `"./lite"` 
   "scripts": {
     "build": "bunchee"
   },
+  "type": "module",
   "exports": {
     "./lite": "./dist/lite.js",
     ".": {
-      "import": "./dist/index.mjs",
+      "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     }
   }
