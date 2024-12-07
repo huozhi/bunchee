@@ -90,8 +90,8 @@ jobs:
 
       - name: Test
         run: |
-          pnpm test:ci
-          pnpm test:post
+          pnpm test:ci || exit /b 1
+          pnpm test:post || exit /b 1
 
   release:
     runs-on: ubuntu-latest
