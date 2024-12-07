@@ -90,7 +90,7 @@ jobs:
 
       - name: Test
         run: |
-          pnpm test:ci -- --bail
+          pnpm test:ci
           pnpm test:post
 
   release:
