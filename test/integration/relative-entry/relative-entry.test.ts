@@ -1,3 +1,4 @@
+import fsp from 'fs/promises'
 import { assertFilesContent, createIntegrationTest } from '../utils'
 
 describe('integration relative-entry', () => {
@@ -7,9 +8,11 @@ describe('integration relative-entry', () => {
         directory: __dirname,
       },
       async ({ distDir }) => {
-        await assertFilesContent(distDir, {
-          'index.js': `from './relative.js'`,
-        })
+        const indexContent = await fsp.readFile(`${distDir}/index.js`, 'utf-8')
+        expect(indexContent).toMatchSnapshot()
+        // await assertFilesContent(distDir, {
+        //   'index.js': `from './relative.js'`,
+        // })
       },
     )
   })
