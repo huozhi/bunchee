@@ -1,3 +1,5 @@
-declare function Foo(): any;
+import * as react from 'react';
+
+declare function Foo(): react.JSX.Element;
 
 export { Foo as default };
