@@ -33,16 +33,16 @@ npm install --save-dev bunchee typescript
 
 ### Configuration
 
-#### Create Entry Files
+#### Entry Files
 
-Create your library entry file and package.json.
+Create your library entry file and `package.json`.
 
 ```sh
 cd ./coffee
 mkdir src && touch ./src/index.ts
 ```
 
-Add the exports in `package.json`
+Add the exports in `package.json`.
 
 ```json
 {
@@ -59,12 +59,8 @@ Add the exports in `package.json`
 
 Run the npm `build` script.
 
-```json
-{
-  "scripts": {
-    "build": "bunchee"
-  }
-}
+```sh
+npm run build
 ```
 
 Then files in `src` folders will be treated as entry files and match the export names in package.json.
