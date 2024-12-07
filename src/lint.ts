@@ -27,16 +27,12 @@ function validateTypesFieldCondition(pair: [string, string]) {
 
 function validateFilesField(packageJson: PackageMetadata) {
   const state: {
-    definedField: boolean
     missingFiles: string[]
   } = {
-    definedField: true,
     missingFiles: [],
   }
   const filesField = packageJson.files || ['*']
   const exportsField = packageJson.exports || {}
-
-  state.definedField = !!packageJson.files
 
   const resolveExportsPaths = (exports: any): string[] => {
     const paths = []
@@ -207,9 +203,7 @@ export function lint(pkg: PackageMetadata) {
     logger.info(`Lint: package.json is healthy.`)
   }
 
-  if (!fieldState.definedField) {
-    logger.warn('Missing files field in package.json')
-  } else if (fieldState.missingFiles.length) {
+  if (fieldState.missingFiles.length) {
     logger.warn('Missing files in package.json')
     fieldState.missingFiles.forEach((p) => {
       logger.warn(`  ${p}`)
