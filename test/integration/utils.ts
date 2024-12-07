@@ -4,7 +4,10 @@ import {
   executeBunchee,
   type ExcuteBuncheeResult,
 } from '../testing-utils'
-import { normalizePath } from 'src/utils'
+
+function normalizePath(filePath: string) {
+  return filePath.replace(/\\/g, '/')
+}
 
 export * from '../testing-utils'
 
