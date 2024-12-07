@@ -1,5 +1,5 @@
 import fsp from 'fs/promises'
-import { assertFilesContent, createIntegrationTest } from '../utils'
+import { createIntegrationTest } from '../utils'
 
 describe('integration relative-entry', () => {
   it('should generate proper assets for each exports', async () => {
@@ -10,9 +10,6 @@ describe('integration relative-entry', () => {
       async ({ distDir }) => {
         const indexContent = await fsp.readFile(`${distDir}/index.js`, 'utf-8')
         expect(indexContent).toMatchSnapshot()
-        // await assertFilesContent(distDir, {
-        //   'index.js': `from './relative.js'`,
-        // })
       },
     )
   })
