@@ -48,8 +48,8 @@ jobs:
 
       - name: Test
         run: |
-          pnpm jest --ci
-          pnpm test:post
+          pnpm test:ci || exit /b 1
+          pnpm test:post || exit /b 1
 
   install_and_test:
     runs-on: [ubuntu-latest]
@@ -90,8 +90,8 @@ jobs:
 
       - name: Test
         run: |
-          pnpm test:ci || exit /b 1
-          pnpm test:post || exit /b 1
+          pnpm test:ci
+          pnpm test:post
 
   release:
     runs-on: ubuntu-latest
