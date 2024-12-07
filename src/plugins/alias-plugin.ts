@@ -151,9 +151,7 @@ export function aliasEntries({
             srcBundle &&
             resolvedModuleBundle
           ) {
-            const absoluteBundlePath = normalizePath(
-              posix.resolve(cwd, srcBundle),
-            )
+            const absoluteBundlePath = posix.resolve(cwd, srcBundle)
             const absoluteImportBundlePath = posix.resolve(
               cwd,
               resolvedModuleBundle,
@@ -163,7 +161,7 @@ export function aliasEntries({
               posix.dirname(absoluteBundlePath),
               absoluteImportBundlePath,
             )!
-            const relativePath = posixRelativify(filePathBase)
+            const relativePath = posixRelativify(normalizePath(filePathBase))
             return { id: relativePath, external: true }
           }
         }
