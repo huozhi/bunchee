@@ -47,6 +47,7 @@ jobs:
         run: pnpm build
 
       - name: Test
+        shell: cmd
         run: |
           pnpm test:ci || exit /b 1
           pnpm test:post || exit /b 1
