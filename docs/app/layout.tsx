@@ -8,3 +8,12 @@ export default function Layout({ children }) {
     </html>
   )
 }
+
+export const metadata = {
+  title: 'Bunchee',
+  description: 'Zero-config bundler for npm packages',
+  openGraph: {
+    type: 'website',
+    url: 'https://github.com/huozhi/bunchee',
+  },
+}
