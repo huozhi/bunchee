@@ -11,7 +11,7 @@ export const matchFile = (matchingPattern: string[], filePath: string) => {
 
     const matcher = picomatch(expandedPattern)
 
-    const normalizedFilePath = path.normalize(filePath.replace(/\\/g, '/'))
+    const normalizedFilePath = path.normalize(filePath)
     return matcher(normalizedFilePath)
   })
 }

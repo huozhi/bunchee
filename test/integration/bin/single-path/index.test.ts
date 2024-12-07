@@ -2,6 +2,7 @@ import {
   createIntegrationTest,
   assertContainFiles,
   assertFilesContent,
+  getFileNamesFromDirectory,
 } from '../../utils'
 
 describe('integration bin/single-path', () => {
@@ -11,6 +12,10 @@ describe('integration bin/single-path', () => {
         directory: __dirname,
       },
       async ({ distDir }) => {
+        console.log(
+          'getFileNamesFromDirectory',
+          getFileNamesFromDirectory(distDir),
+        )
         const distFiles = ['bin.js']
         await assertContainFiles(distDir, distFiles)
         await assertFilesContent(distDir, {
