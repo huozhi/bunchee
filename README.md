@@ -33,6 +33,8 @@ npm install --save-dev bunchee typescript
 
 ### Configuration
 
+#### Create Entry Files
+
 Create your library entry file and package.json.
 
 ```sh
@@ -46,8 +48,7 @@ Add the exports in `package.json`
 {
   "name": "coffee",
   "type": "module",
-  "main": "./dist/index.js"
-  },
+  "main": "./dist/index.js",
   "scripts": {
     "build": "bunchee"
   }
@@ -56,8 +57,24 @@ Add the exports in `package.json`
 
 #### Build
 
-Then files in `src` folders will be treated as entry files and match the export names in package.json. For example:
-`src/index.ts` will match the exports name `"."` or the only main export.
+Run the npm `build` script.
+
+```json
+{
+  "scripts": {
+    "build": "bunchee"
+  }
+}
+```
+
+Then files in `src` folders will be treated as entry files and match the export names in package.json.
+Simply like Node.js module resolution, each export name will match the file in `src/` directory.
+
+For example:
+
+- `src/index.ts` will match the exports name `"."` or the only main export.
+- `src/lite.ts` will match the exports name `"./lite"`.
+- `src/react/index.ts` will match the exports name `"./react"`.
 
 Now just run `npm run build` (or `pnpm build` / `yarn build`) if you're using these package managers, `bunchee` will find the entry files and build them.
 The output format will based on the exports condition and also the file extension. Given an example:
