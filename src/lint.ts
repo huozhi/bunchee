@@ -199,8 +199,6 @@ export function lint(pkg: PackageMetadata) {
 
   if (warningsCount) {
     logger.warn(`Lint: ${warningsCount} issues found.`)
-  } else {
-    logger.info(`Lint: package.json is healthy.`)
   }
 
   if (fieldState.missingFiles.length) {
