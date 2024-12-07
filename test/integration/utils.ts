@@ -89,3 +89,5 @@ export async function getFileNamesFromDirectory(directory: string) {
 
   return files.sort().map((file) => normalizePath(file))
 }
+
+export const isWindows = process.platform === 'win32'
