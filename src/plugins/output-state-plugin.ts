@@ -11,6 +11,10 @@ import {
 } from '../entries'
 import { isBinExportPath, isPrivateExportPath, isTypeFile } from '../utils'
 
+function normalizePath(filePath: string) {
+  return filePath.replace(/\\/g, '/')
+}
+
 // [filename, sourceFileName, size]
 type FileState = [string, string, number]
 type SizeStats = Map<string, FileState[]>
@@ -74,9 +78,9 @@ function createOutputState({ entries }: { entries: Entries }): {
               reversedMapping.get(sourceFileName) || '.',
             )
             addSize({
-              fileName: path.relative(cwd, filePath).replace(path.sep, '/'),
+              fileName: normalizePath(path.relative(cwd, filePath)),
               size,
-              sourceFileName,
+              sourceFileName: normalizePath(sourceFileName),
               exportPath,
             })
           })

@@ -83,5 +83,5 @@ export async function getFileNamesFromDirectory(directory: string) {
     cwd: directory,
   })
 
-  return files.sort()
+  return files.sort().map((file) => file.replace(/\\/g, '/'))
 }
