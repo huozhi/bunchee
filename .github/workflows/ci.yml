@@ -48,7 +48,7 @@ jobs:
 
       - name: Test
         run: |
-          pnpm test:ci
+          pnpm jest --ci
           pnpm test:post
 
   install_and_test:
@@ -90,7 +90,7 @@ jobs:
 
       - name: Test
         run: |
-          pnpm test:ci
+          pnpm test:ci -- --bail
           pnpm test:post
 
   release:
