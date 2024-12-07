@@ -23,7 +23,7 @@ export default function Page() {
       <pre>
         <code>
           {`$ cd ./coffee
-$ mkdir src && touch ./src/index.ts && touch package.json`}
+$ mkdir src && touch ./src/index.ts`}
         </code>
       </pre>
 
@@ -45,10 +45,6 @@ $ mkdir src && touch ./src/index.ts && touch package.json`}
       </pre>
 
       <h4>Build</h4>
-      <p>
-        Run the npm <code>build</code> script.
-      </p>
-
       <pre>
         <code>{`$ npm run build`}</code>
       </pre>
