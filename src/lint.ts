@@ -33,7 +33,7 @@ function validateFilesField(packageJson: PackageMetadata) {
     definedField: true,
     missingFiles: [],
   }
-  const filesField = packageJson.files || []
+  const filesField = packageJson.files || ['*']
   const exportsField = packageJson.exports || {}
 
   state.definedField = !!packageJson.files
