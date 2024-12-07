@@ -1,5 +1,3 @@
-const { sep } = require('path')
-
 export function relativify(path: string) {
-  return path.startsWith('.') ? path : `.${sep}${path}`
+  return path.startsWith('.') ? path : `./${path}`
 }
