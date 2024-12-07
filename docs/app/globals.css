@@ -1,0 +1,50 @@
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  font-family: 'Inter', sans-serif;
+  line-height: 1.5;
+}
+
+pre {
+  background-color: #f5f5f5;
+  padding: 1rem;
+  border-radius: 5px;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+
+pre > code {
+  font-family: monospace;
+  font-size: 0.95rem;
+  color: #333;
+  display: block;
+}
+
+.root {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 700px;
+  padding-left: 5rem;
+  padding-right: 5rem;
+}
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.link {
+  text-decoration-line: underline;
+  color: #333;
+}
+
+a, a:visited {
+  color: #333;
+}
+a:hover {
+  color: #999;
+}

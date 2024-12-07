@@ -8,3 +8,4 @@ test/**/*.js.map
 .DS_Store
 test/**/tsconfig.json
 !test/**/node_modules
+.next

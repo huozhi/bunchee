@@ -22,24 +22,16 @@ It uses the standard exports configuration in `package.json` as the only source 
 ### Installation
 
 ```sh
-npm install --save-dev bunchee
-```
-
-If you're using TypeScript
-
-```sh
 npm install --save-dev bunchee typescript
 ```
 
 ### Configuration
 
-#### Entry Files
-
-Create your library entry file and `package.json`.
+Create entry files of your library and `package.json`.
 
 ```sh
 cd ./coffee
-mkdir src && touch ./src/index.ts
+mkdir src && touch ./src/index.ts && touch package.json
 ```
 
 Add the exports in `package.json`.
@@ -56,8 +48,6 @@ Add the exports in `package.json`.
 ```
 
 #### Build
-
-Run the npm `build` script.
 
 ```sh
 npm run build
