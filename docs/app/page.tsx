@@ -5,11 +5,11 @@ export default function Page() {
     <div className="root">
       <nav className="nav">
         <h2>Bunchee</h2>
-
         <div className="link">
           <a href="https://github.com/huozhi/bunchee">{`docs ↗`}</a>
         </div>
       </nav>
+      <p>{`Build JS package with ease, package.json as configuration`}</p>
       <h3>Installation</h3>
       <pre>
         <code>{`npm install --save-dev bunchee typescript`}</code>
