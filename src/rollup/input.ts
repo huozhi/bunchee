@@ -258,7 +258,7 @@ export async function buildInputConfig(
       return externals.some((name) => id === name || id.startsWith(name + '/'))
     },
     plugins,
-    treeshake: true,
+    treeshake: 'recommended',
     onwarn(warning, warn) {
       const code = warning.code || ''
       // Some may not have types, like CLI binary
