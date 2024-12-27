@@ -1,0 +1,7 @@
+class Foo {
+    getFoo() {
+        return 'foo';
+    }
+}
+
+export { Foo };
