@@ -13,6 +13,7 @@ import {
 import { logger } from './logger'
 import { type OutputOptions } from 'rollup'
 import { posixRelativify } from './lib/format'
+import { baseNameWithoutExtension } from './util/file-path'
 
 export function exit(err: string | Error) {
   logger.error(err)
@@ -174,10 +175,6 @@ export const getMainFieldExportType = (pkg: PackageMetadata) => {
       : 'require'
   return mainExportType
 }
-
-// TODO: add unit test
-export const baseNameWithoutExtension = (filename: string): string =>
-  path.basename(filename, path.extname(filename))
 
 export const isTestFile = (filename: string): boolean =>
   /\.(test|spec)$/.test(baseNameWithoutExtension(filename))

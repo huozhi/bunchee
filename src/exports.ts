@@ -7,12 +7,12 @@ import type {
   ParsedExportCondition,
 } from './types'
 import {
-  baseNameWithoutExtension,
   getMainFieldExportType,
   isESModulePackage,
   joinRelativePath,
   normalizePath,
 } from './utils'
+import { baseNameWithoutExtension } from './util/file-path'
 import {
   BINARY_TAG,
   dtsExtensionsMap,

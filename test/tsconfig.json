@@ -8,5 +8,5 @@
       "bunchee": ["./src/index.ts"]
     }
   },
-  "include": ["./**/*.test.ts"]
+  "include": ["./**/*.test.ts", "../src/**/*.test.ts"]
 }

@@ -5,8 +5,8 @@ import { glob } from 'glob'
 import { getExportTypeFromFile, type ParsedExportsInfo } from './exports'
 import { PackageMetadata, type Entries, ExportPaths } from './types'
 import { logger } from './logger'
+import { baseNameWithoutExtension, validateEntryFiles } from './util/file-path'
 import {
-  baseNameWithoutExtension,
   getSourcePathFromExportPath,
   isBinExportPath,
   isESModulePackage,
@@ -287,7 +287,7 @@ export async function collectSourceEntriesByExportPath(
   const dirPath = path.join(sourceFolderPath, dirName)
 
   // Match <name>{,/index}.{<ext>,<runtime>.<ext>}
-  const globalPatterns = [
+  const entryFilesPatterns = [
     `${baseName}.{${[...availableExtensions].join(',')}}`,
     `${baseName}.{${[...runtimeExportConventions].join(',')}}.{${[
       ...availableExtensions,
@@ -298,13 +298,15 @@ export async function collectSourceEntriesByExportPath(
     ].join(',')}}`,
   ]
 
-  const files = await glob(globalPatterns, {
+  const entryFiles = await glob(entryFilesPatterns, {
     cwd: dirPath,
     nodir: true,
     ignore: PRIVATE_GLOB_PATTERN,
   })
 
-  for (const file of files) {
+  validateEntryFiles(entryFiles)
+
+  for (const file of entryFiles) {
     const ext = path.extname(file).slice(1)
     if (!availableExtensions.has(ext) || isTestFile(file)) continue
 
