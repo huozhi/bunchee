@@ -11,6 +11,7 @@ import {
   isBinExportPath,
   isESModulePackage,
   isTestFile,
+  isTypescriptFile,
   resolveSourceFile,
   sourceFilenameToExportFullPath,
 } from './utils'
@@ -423,6 +424,21 @@ export async function collectSourceEntriesFromExportPaths(
     // Map private shared files to the dist directory
     // e.g. ./_utils.ts -> ./dist/_utils.js
     // TODO: improve the logic to only generate the required files, not all possible files
+    const isTs = isTypescriptFile(file)
+    const typesInfos: [string, string][] = [
+      [
+        posixRelativify(
+          posix.join('./dist', exportPath + (isEsmPkg ? '.d.ts' : '.d.mts')),
+        ),
+        condPart + 'import.types',
+      ],
+      [
+        posixRelativify(
+          posix.join('./dist', exportPath + (isEsmPkg ? '.d.cts' : '.d.ts')),
+        ),
+        condPart + 'require.types',
+      ],
+    ]
     const privateExportInfo: [string, string][] = [
       [
         posixRelativify(
@@ -436,6 +452,7 @@ export async function collectSourceEntriesFromExportPaths(
         ),
         condPart + 'require',
       ],
+      ...(isTs ? typesInfos : []),
     ]
 
     const exportsInfo = parsedExportsInfo.get(normalizedExportPath)
