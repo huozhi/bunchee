@@ -17,8 +17,10 @@ describe('integration shared-module-ts', () => {
           'index.js',
           'index.react-server.js',
           'lib/_app-context.cjs',
+          'lib/_app-context.d.ts',
           'lib/_app-context.js',
           'lib/_util.cjs',
+          'lib/_util.d.ts',
           'lib/_util.js',
         ])
       },
