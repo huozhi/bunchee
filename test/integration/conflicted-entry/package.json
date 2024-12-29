@@ -1,0 +1,6 @@
+{
+  "name": "conflicted-entry",
+  "exports": {
+    "./foo": "./dist/foo.js"
+  }
+}
