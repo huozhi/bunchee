@@ -9,6 +9,7 @@ describe('integration shared-module-ts-esm', () => {
       async ({ distDir }) => {
         const files = await getFileNamesFromDirectory(distDir)
         expect(files).toEqual([
+          '_util.d.ts',
           '_util.js',
           '_util.mjs',
           'cjs/index.d.ts',

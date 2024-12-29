@@ -181,14 +181,14 @@ function logOutputState(stats: SizeStats) {
         // Logging shared in debug mode
         if (isPrivateExportPath(exportName)) {
           if (index === 0 && process.env.DEBUG) {
+            const label = '(chunk)'
             const sizePadding = ' '.repeat(
-              Math.max(maxFilenameLength, 'File'.length) -
-                'private shared'.length,
+              Math.max(maxFilenameLength, 'File'.length) - label.length,
             )
             console.log(
               pc.dim(normalizeExportName(exportName)),
               filenamePadding,
-              pc.dim('private shared'),
+              pc.dim(label),
               sizePadding,
               pc.dim(prettiedSize),
             )
