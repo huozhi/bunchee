@@ -290,7 +290,7 @@ If you're using `"use client"` or `"use server"` in a file that used as a depend
 
 ### Shared Modules
 
-In some cases, you may need to share code across multiple bundles without promoting them to separate entries or exports. These modules should be bundled into shared chunks that can be reused by various bundles. By convention, files or directories prefixed with an underscore (`_<name>.<ext>` or `_<name>/index.<ext>`) are treated as **shared modules**. They're private and not exposed publicly as entry points or exports.
+In some cases, you may need to share code across multiple bundles without promoting them to separate entries or exports. These modules should be bundled into shared chunks that can be reused by various bundles. By convention, files or directories **prefixed with an underscore** (`_<name>.<ext>` or `_<name>/**`) are treated as **shared modules**. They're private and not exposed publicly as entry points or exports. Testing, mocking related files are ignored. e.g. `_foo/a.test.ts` will not be treated as shared module.
 
 <details>
   <summary>Shared Utils Example</summary>
