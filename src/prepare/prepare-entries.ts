@@ -1,6 +1,10 @@
 import { existsSync } from 'fs'
 import { glob } from 'glob'
-import { BINARY_TAG, availableExtensions } from '../constants'
+import {
+  BINARY_TAG,
+  PRIVATE_GLOB_PATTERN,
+  availableExtensions,
+} from '../constants'
 
 import { collectSourceEntriesByExportPath } from '../entries'
 import { normalizePath, sourceFilenameToExportFullPath } from '../utils'
@@ -24,13 +28,13 @@ export async function collectSourceEntries(sourceFolderPath: string) {
   const binMatches = await glob(binPattern, {
     cwd: sourceFolderPath,
     nodir: true,
-    ignore: '**/_*', // ignore private entries
+    ignore: PRIVATE_GLOB_PATTERN, // ignore private entries
   })
 
   const srcMatches = await glob(srcPattern, {
     cwd: sourceFolderPath,
     nodir: true,
-    ignore: '**/_*', // ignore private entries
+    ignore: PRIVATE_GLOB_PATTERN, // ignore private entries
   })
 
   for (const file of binMatches) {

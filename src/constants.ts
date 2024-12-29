@@ -82,3 +82,5 @@ export const DEFAULT_TS_CONFIG = {
 }
 
 export const BINARY_TAG = '$binary'
+
+export const PRIVATE_GLOB_PATTERN = '**/_*/**'

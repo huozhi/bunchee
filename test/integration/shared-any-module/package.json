@@ -1,0 +1,12 @@
+{
+  "name": "shared-module",
+  "type": "module",
+  "exports": {
+    "./export-a": "./dist/export-a.js",
+    "./export-b": "./dist/export-b.js",
+    "./export-c": "./dist/export-c.js"
+  },
+  "dependencies": {
+    "react": "*"
+  }
+}
