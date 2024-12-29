@@ -3,6 +3,7 @@ import { glob } from 'glob'
 import {
   BINARY_TAG,
   PRIVATE_GLOB_PATTERN,
+  TESTS_GLOB_PATTERN,
   availableExtensions,
 } from '../constants'
 
@@ -28,13 +29,13 @@ export async function collectSourceEntries(sourceFolderPath: string) {
   const binMatches = await glob(binPattern, {
     cwd: sourceFolderPath,
     nodir: true,
-    ignore: PRIVATE_GLOB_PATTERN, // ignore private entries
+    ignore: [PRIVATE_GLOB_PATTERN, TESTS_GLOB_PATTERN], // ignore private entries
   })
 
   const srcMatches = await glob(srcPattern, {
     cwd: sourceFolderPath,
     nodir: true,
-    ignore: PRIVATE_GLOB_PATTERN, // ignore private entries
+    ignore: [PRIVATE_GLOB_PATTERN, TESTS_GLOB_PATTERN], // ignore private entries
   })
 
   for (const file of binMatches) {

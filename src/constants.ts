@@ -84,3 +84,5 @@ export const DEFAULT_TS_CONFIG = {
 export const BINARY_TAG = '$binary'
 
 export const PRIVATE_GLOB_PATTERN = '**/_*/**'
+export const TESTS_GLOB_PATTERN =
+  '**/{__tests__/**,__mocks__/**,*.{test,spec}.*}'

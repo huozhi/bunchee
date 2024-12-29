@@ -21,6 +21,7 @@ import {
   runtimeExportConventions,
   specialExportConventions,
   PRIVATE_GLOB_PATTERN,
+  TESTS_GLOB_PATTERN,
 } from './constants'
 import { posixRelativify } from './lib/format'
 
@@ -402,6 +403,7 @@ export async function collectSourceEntriesFromExportPaths(
   const privateFiles = await glob(privatePattern, {
     cwd: sourceFolderPath,
     nodir: true,
+    ignore: TESTS_GLOB_PATTERN,
   })
 
   for (const file of privateFiles) {
