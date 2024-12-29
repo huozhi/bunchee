@@ -20,6 +20,7 @@ import {
   SRC,
   runtimeExportConventions,
   specialExportConventions,
+  PRIVATE_GLOB_PATTERN,
 } from './constants'
 import { posixRelativify } from './lib/format'
 
@@ -300,7 +301,7 @@ export async function collectSourceEntriesByExportPath(
   const files = await glob(globalPatterns, {
     cwd: dirPath,
     nodir: true,
-    ignore: '**/_*',
+    ignore: PRIVATE_GLOB_PATTERN,
   })
 
   for (const file of files) {
@@ -390,14 +391,12 @@ export async function collectSourceEntriesFromExportPaths(
   }
 
   // Search private shared module files which are not in the parsedExportsInfo, but start with _.
-  // e.g. _utils.ts, _utils/index.ts
-  // e.g. _utils.development.ts, _utils/index.development.js
-  const privatePattern = [
-    `**/_*{,/index}.{${[...availableExtensions].join(',')}}`,
-    `**/_*{,/index}.{${[...runtimeExportConventions].join(',')}}.{${[
-      ...availableExtensions,
-    ].join(',')}}`,
-  ]
+  // Leading underscore: e.g. _utils.ts, _utils/index.ts
+  // Segment contains leading underscore: e.g. a/_b/_c.ts, a/b/_c/index.ts
+  // Contains special suffix: e.g. _utils.development.ts, _utils/index.development.js
+  const suffixPattern = [...runtimeExportConventions].join(',')
+  const extPattern = [...availableExtensions].join(',')
+  const privatePattern = `**/_*{,/*}{,{.${suffixPattern}}}.{${extPattern}}`
   const privateFiles = await glob(privatePattern, {
     cwd: sourceFolderPath,
     nodir: true,
@@ -419,6 +418,7 @@ export async function collectSourceEntriesFromExportPaths(
 
     // Map private shared files to the dist directory
     // e.g. ./_utils.ts -> ./dist/_utils.js
+    // TODO: improve the logic to only generate the required files, not all possible files
     const privateExportInfo: [string, string][] = [
       [
         posixRelativify(
