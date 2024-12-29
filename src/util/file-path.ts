@@ -20,31 +20,34 @@ export const baseNameWithoutExtension = (filePath: string): string => {
 }
 
 export function validateEntryFiles(entryFiles: string[]) {
-  const baseNames = new Set<string>()
-  const duplicateBaseNames = new Set<string>()
+  const fileBasePaths = new Set<string>()
+  const duplicatePaths = new Set<string>()
 
-  for (const file of entryFiles) {
+  for (const filePath of entryFiles) {
     // Check if there are multiple files with the same base name
-    // e.g. index.js, index.ts, index.mjs
-    // e.g. <name>.ext and <name>./index.ext
-    let baseName = getPathWithoutExtension(file)
-    const indexSuffix = '/index'
-    if (baseName.endsWith(indexSuffix)) {
-      baseName = baseName.slice(0, -indexSuffix.length)
-    }
+    const filePathWithoutExt = filePath
+      .slice(0, -path.extname(filePath).length)
+      .replace(/\\/g, '/')
+    const segments = filePathWithoutExt.split('/')
+    const lastSegment = segments.pop() || ''
 
-    if (baseNames.has(baseName)) {
-      duplicateBaseNames.add(
+    if (lastSegment !== 'index' && lastSegment !== '') {
+      segments.push(lastSegment)
+    }
+    const fileBasePath = segments.join('/')
+
+    if (fileBasePaths.has(fileBasePath)) {
+      duplicatePaths.add(
         // Add a dot if the base name is empty, 'foo' -> './foo', '' -> '.'
-        '.' + (baseName !== '' ? '/' : '') + baseName,
+        './' + filePath.replace(/\\/g, '/'),
       )
     }
-    baseNames.add(baseName)
+    fileBasePaths.add(fileBasePath)
   }
 
-  if (duplicateBaseNames.size > 0) {
+  if (duplicatePaths.size > 0) {
     throw new Error(
-      `Conflicted entry files found for entries: ${[...duplicateBaseNames].join(
+      `Conflicted entry files found for entries: ${[...duplicatePaths].join(
         ', ',
       )}`,
     )

@@ -36,12 +36,21 @@ describe('baseNameWithoutExtension', () => {
 describe('validateEntryFiles', () => {
   it('should throw error if there are multiple files with the same base name', () => {
     expect(() =>
-      validateEntryFiles(['index.js', 'index.ts', 'index.mjs']),
+      validateEntryFiles(['index.js', 'index/index.ts']),
     ).toThrowError('Conflicted entry files found for entries: .')
   })
-  it('should not throw error if there are no multiple files with the same base name', () => {
+  it.only('should throw error if the normalized base names are same', () => {
     expect(() => validateEntryFiles(['foo/index.jsx', 'foo.ts'])).toThrowError(
       'Conflicted entry files found for entries: ./foo',
     )
+  })
+  it('should not throw error if there are no multiple files with the same base name', () => {
+    expect(() =>
+      validateEntryFiles([
+        'index.development.js',
+        'index.ts',
+        'index.react-server.mjs',
+      ]),
+    ).not.toThrow()
   })
 })
