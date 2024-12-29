@@ -14,13 +14,16 @@ describe('integration shared-module', () => {
         const jsFiles = await getFileNamesFromDirectory(distDir)
         expect(jsFiles).toEqual([
           '_internal/util-a.cjs',
+          '_internal/util-a.d.ts',
           '_internal/util-a.js',
           '_internal/util-b.cjs',
+          '_internal/util-b.d.ts',
           '_internal/util-b.js',
           'export-a.js',
           'export-b.js',
           'export-c.js',
           'private/_nested/util-c.cjs',
+          'private/_nested/util-c.d.ts',
           'private/_nested/util-c.js',
         ])
 
