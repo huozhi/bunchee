@@ -440,19 +440,19 @@ export async function collectSourceEntriesFromExportPaths(
       ],
     ]
     const privateExportInfo: [string, string][] = [
+      ...(isTs ? typesInfos : []),
       [
         posixRelativify(
           posix.join('./dist', exportPath + (isEsmPkg ? '.js' : '.mjs')),
         ),
-        condPart + 'import',
+        condPart + 'import.default',
       ],
       [
         posixRelativify(
           posix.join('./dist', exportPath + (isEsmPkg ? '.cjs' : '.js')),
         ),
-        condPart + 'require',
+        condPart + 'require.default',
       ],
-      ...(isTs ? typesInfos : []),
     ]
 
     const exportsInfo = parsedExportsInfo.get(normalizedExportPath)

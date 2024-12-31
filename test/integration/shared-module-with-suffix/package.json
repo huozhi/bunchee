@@ -1,0 +1,10 @@
+{
+  "name": "mixed-export-conditions",
+  "exports": {
+    "./client": {
+      "import": {
+        "default": "./dist/client.mjs"
+      }
+    }
+  }
+}
