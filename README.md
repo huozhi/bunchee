@@ -358,7 +358,7 @@ This convention keeps shared modules private while enabling efficient bundling a
 - External (`--external <dep,>`): Specifying extra external dependencies, by default it is the list of `dependencies` and `peerDependencies` from `package.json`. Values are separate by comma.
 - Target (`--target <target>`): Set ECMAScript target (default: `'es2015'`).
 - Runtime (`--runtime <runtime>`): Set build runtime (default: `'browser'`).
-- Environment (`--env <env,>`): Define environment variables. (default: `NODE_ENV`, separate by comma)
+- Environment (`--env <env,>`): Define environment variables. (default: `[]`, separate by comma)
 - Working Directory (`--cwd <cwd>`): Set current working directory where containing `package.json`.
 - Minify (`-m`): Compress output.
 - Watch (`-w`): Watch for source file changes.

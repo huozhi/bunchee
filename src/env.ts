@@ -7,9 +7,6 @@ export function getDefinedInlineVariables(
   envs: string[],
   parsedExportCondition: ParsedExportCondition,
 ): Record<string, string> {
-  if (!envs.includes('NODE_ENV')) {
-    envs.push('NODE_ENV')
-  }
   const envVars = envs.reduce((acc: Record<string, string>, key) => {
     const value = process.env[key]
     if (typeof value !== 'undefined') {
