@@ -12,9 +12,9 @@ describe('integration dev-prod-convention', () => {
           'index.development.mjs': /= "development"/,
           'index.production.js': /= "production"/,
           'index.production.mjs': /= "production"/,
-          // In jest the NODE_ENV is set to test
-          'index.js': /= "test"/,
-          'index.mjs': /= "test"/,
+          // Do not replace NODE_ENV by default
+          'index.js': /= process.env.NODE_ENV/,
+          'index.mjs': /= process.env.NODE_ENV/,
         })
       },
     )
