@@ -1,9 +1,5 @@
 import { readFileSync } from 'fs'
-import {
-  createIntegrationTest,
-  existsFile,
-  getFileNamesFromDirectory,
-} from '../utils'
+import { createIntegrationTest, getFileNamesFromDirectory } from '../utils'
 
 describe('integration - mixed-directives', () => {
   it('should work with js only project', async () => {
