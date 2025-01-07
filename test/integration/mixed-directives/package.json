@@ -1,0 +1,12 @@
+{
+  "name": "mixed-directives",
+  "type": "module",
+  "exports": {
+    "./inline": "./dist/inline.js",
+    "./client": "./dist/client.js"
+  },
+  "dependencies": {
+    "react": "*",
+    "react-dom": "*"
+  }
+}
