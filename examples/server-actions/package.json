@@ -1,0 +1,14 @@
+{
+  "name": "server-actions-example",
+  "type": "module",
+  "exports": {
+    "./inline": "./dist/inline.js",
+    "./client": "./dist/client.js"
+  },
+  "devDependencies": {
+    "@types/react": "*"
+  },
+  "dependencies": {
+    "react": "*"
+  }
+}
