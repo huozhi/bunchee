@@ -44,7 +44,8 @@
   ],
   "prettier": {
     "semi": false,
-    "singleQuote": true
+    "singleQuote": true,
+    "trailingComma": "all"
   },
   "engines": {
     "node": ">= 18.0.0"
@@ -106,7 +107,7 @@
     "lint-staged": "^15.2.2",
     "next": "^15.0.4",
     "picocolors": "^1.0.0",
-    "prettier": "^3.0.0",
+    "prettier": "2.8.8",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "typescript": "^5.7.2"

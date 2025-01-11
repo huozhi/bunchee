@@ -1,20 +1,21 @@
-import { createIntegrationTest, assertFilesContent } from '../../testing-utils'
+import {
+  assertFilesContent,
+  createJob,
+  stripANSIColor,
+} from '../../testing-utils'
 
 describe('integration entry-index-index', () => {
+  const { distDir, job } = createJob({
+    directory: __dirname,
+  })
   it('should work with index file inside index directory', async () => {
-    await createIntegrationTest(
-      {
-        directory: __dirname,
-      },
-      async ({ distDir, stdout }) => {
-        await assertFilesContent(distDir, {
-          'default.js': /'index'/,
-          'react-server.js': /\'react-server\'/,
-        })
+    await assertFilesContent(distDir, {
+      'default.js': /'index'/,
+      'react-server.js': /\'react-server\'/,
+    })
 
-        expect(stdout).toContain('dist/react-server.js')
-        expect(stdout).toContain('dist/default.js')
-      },
-    )
+    const stdout = stripANSIColor(job.stdout)
+    expect(stdout).toContain('.                 dist/default.js')
+    expect(stdout).toContain('. (react-server)  dist/react-server.js')
   })
 })

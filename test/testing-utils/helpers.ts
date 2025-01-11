@@ -90,7 +90,7 @@ export const fullExtension = (filename: string) =>
 
 export function getChunkFileNamesFromLog(log: string) {
   return log.split('\n').map((line: string) => {
-    return line.replace(/- \d+ K?B/, '').trim()
+    return line.replace(/\s*\d+ K?B\s*/, '').trim()
   })
 }
 

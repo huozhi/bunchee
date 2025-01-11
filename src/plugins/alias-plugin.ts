@@ -121,8 +121,9 @@ export function aliasEntries({
     let matchedBundlePath: string | undefined
     if (dts) {
       // Find the type with format condition first
-      matchedBundlePath = exportMapEntries.find(findTypesFileCallback)
-        ?.bundlePath
+      matchedBundlePath = exportMapEntries.find(
+        findTypesFileCallback,
+      )?.bundlePath
       // If theres no format specific types such as import.types or require.types,
       // fallback to the general types file.
       if (!matchedBundlePath) {

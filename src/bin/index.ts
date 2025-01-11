@@ -317,7 +317,7 @@ async function run(args: CliArgs) {
   }
 
   if (watch) {
-    logger.log(`Watching project ${cwd}...`)
+    logger.log(`Watching changes in the project directory...`)
   }
 
   try {

@@ -1,15 +1,9 @@
 import { join } from 'path'
-import { assertContainFiles, createIntegrationTest } from '../../testing-utils'
+import { assertContainFiles, createJob } from '../../testing-utils'
 
 describe('integration monorepo-composite-no-incremental', () => {
+  const { distDir } = createJob({ directory: join(__dirname, 'packages', 'a') })
   it('should succeed the build', async () => {
-    await createIntegrationTest(
-      {
-        directory: join(__dirname, 'packages', 'a'),
-      },
-      async ({ distDir }) => {
-        await assertContainFiles(distDir, ['index.js', 'index.d.ts'])
-      },
-    )
+    await assertContainFiles(distDir, ['index.js', 'index.d.ts'])
   })
 })

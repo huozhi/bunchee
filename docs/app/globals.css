@@ -42,7 +42,8 @@ pre > code {
   color: #333;
 }
 
-a, a:visited {
+a,
+a:visited {
   color: #333;
 }
 a:hover {

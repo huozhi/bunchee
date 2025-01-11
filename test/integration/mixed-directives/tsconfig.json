@@ -2,5 +2,6 @@
   "compilerOptions": {
     "jsx": "react-jsx",
     "target": "ES2022"
-  }
+  },
+  "exclude": ["*.test.ts"]
 }

@@ -9,7 +9,7 @@
     "baseUrl": "..",
     "paths": {
       "bunchee": ["./src/index.ts"],
-      "testing-utils": ["./test/testing-utils/index.ts"],
+      "testing-utils": ["./test/testing-utils/index.ts"]
     }
   },
   "include": [
