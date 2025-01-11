@@ -83,12 +83,6 @@ export function createSyncTest<T>({
     distFile = path.join(fixturesDir, args[outputIndex + 1])
   }
 
-  const baseInfo = {
-    dir: directory,
-    distDir,
-    distFile,
-  }
-
   let result = undefined
   const resultProxy = new Proxy(
     {},

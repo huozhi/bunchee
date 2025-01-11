@@ -4,6 +4,7 @@
     "module": "ESNext",
     "target": "ESNext",
     "strict": false,
+    "noUnusedLocals": false,
     "jsx": "preserve",
     "baseUrl": "..",
     "paths": {
