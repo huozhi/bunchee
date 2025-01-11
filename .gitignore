@@ -9,3 +9,4 @@ test/**/*.js.map
 test/**/tsconfig.json
 !test/**/node_modules
 .next
+.vscode

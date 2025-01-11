@@ -1,4 +1,4 @@
-import { memoizeByKey } from '../../src/lib/memoize'
+import { memoizeByKey } from './memoize'
 
 describe('memoize', () => {
   it('should memoize the function by default based on arg', () => {

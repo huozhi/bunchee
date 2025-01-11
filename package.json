@@ -13,6 +13,7 @@
     "docs:dev": "next dev docs",
     "docs:build": "next build docs",
     "clean": "rm -rf ./dist",
+    "new-test": "node ./scripts/new-test.js",
     "typecheck": "tsc --noEmit && tsc -p test/tsconfig.json --noEmit",
     "prepare-release": "pnpm clean && pnpm build",
     "publish-local": "pnpm prepare-release && pnpm test && pnpm publish",
@@ -108,7 +109,7 @@
     "prettier": "^3.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "typescript": "^5.6.2"
+    "typescript": "^5.7.2"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,md,json,yml,yaml}": "prettier --write"
@@ -127,7 +128,8 @@
     },
     "testPathIgnorePatterns": [
       "/node_modules/",
-      "<rootDir>/test/integration/.*/*src"
+      "<rootDir>/test/integration/.*/*src",
+      "<rootDir>/test/fixtures"
     ],
     "testTimeout": 60000
   },

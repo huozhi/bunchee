@@ -3,10 +3,18 @@
   "compilerOptions": {
     "module": "ESNext",
     "target": "ESNext",
+    "strict": false,
     "baseUrl": "..",
     "paths": {
-      "bunchee": ["./src/index.ts"]
+      "bunchee": ["./src/index.ts"],
+      "testing-utils": ["./test/integration/utils.ts"]
     }
   },
-  "include": ["./**/*.test.ts", "../src/**/*.test.ts"]
+  "include": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "../src/**/*.test.ts",
+    "../src/**/*.test.tsx"
+  ],
+  "references": [{ "path": "../tsconfig.json" }]
 }
