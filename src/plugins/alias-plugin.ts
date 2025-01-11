@@ -50,7 +50,11 @@ function findJsBundlePathCallback(
     if (!fallback) {
       return false
     } else {
-      return fallback.some((name) => conditionNames.has(name))
+      return fallback.some(
+        (name) =>
+          // is bundle condition but not types
+          conditionNames.has(name) && !conditionNames.has('types'),
+      )
     }
   } else {
     return match
