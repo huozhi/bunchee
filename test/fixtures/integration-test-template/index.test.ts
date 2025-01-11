@@ -1,4 +1,4 @@
-import { createIntegrationTest, assertContainFiles } from 'testing-utils'
+import { createIntegrationTest, assertContainFiles } from '../../testing-utils'
 
 describe('integration - <name>', () => {
   it('should work', async () => {

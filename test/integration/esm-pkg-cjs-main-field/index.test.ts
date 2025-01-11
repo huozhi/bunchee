@@ -1,4 +1,4 @@
-import { createIntegrationTest, assertContainFiles } from 'testing-utils'
+import { createIntegrationTest, assertContainFiles } from '../../testing-utils'
 
 describe('integration esm-pkg-cjs-main-field', () => {
   it('should work with ESM package with CJS main field ', async () => {

@@ -3,7 +3,7 @@ import {
   createIntegrationTest,
   getChunkFileNamesFromLog,
   stripANSIColor,
-} from 'testing-utils'
+} from '../../testing-utils'
 
 describe('integration multi-types', () => {
   it('should contain files', async () => {

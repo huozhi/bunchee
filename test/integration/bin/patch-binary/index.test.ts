@@ -2,7 +2,7 @@ import {
   createIntegrationTest,
   assertContainFiles,
   assertFilesContent,
-} from 'testing-utils'
+} from '../../../testing-utils'
 
 describe('integration bin/patch-binary', () => {
   it('should patch binary directive', async () => {

@@ -1,4 +1,4 @@
-import { assertContainFiles, createIntegrationTest } from 'testing-utils'
+import { assertContainFiles, createIntegrationTest } from '../../testing-utils'
 
 describe('integration - ts-exports-types', () => {
   it('should generate proper assets', async () => {

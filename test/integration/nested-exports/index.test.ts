@@ -1,4 +1,4 @@
-import { assertFilesContent, createIntegrationTest } from 'testing-utils'
+import { assertFilesContent, createIntegrationTest } from '../../testing-utils'
 
 describe('integration nested-exports', () => {
   it('should work with nested path in exports', async () => {

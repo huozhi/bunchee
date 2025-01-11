@@ -5,7 +5,7 @@ import {
   createIntegrationTest,
   deleteFile,
   stripANSIColor,
-} from 'testing-utils'
+} from '../../testing-utils'
 
 describe('integration prepare-ts', () => {
   beforeAll(async () => {

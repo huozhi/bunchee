@@ -1,6 +1,6 @@
 import { promises as fsp } from 'fs'
 import { join } from 'path'
-import { assertContainFiles, createIntegrationTest } from 'testing-utils'
+import { assertContainFiles, createIntegrationTest } from '../../testing-utils'
 
 describe('integration shared-entry', () => {
   it('should split shared module into one chunk layer', async () => {

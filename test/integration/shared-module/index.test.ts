@@ -2,7 +2,7 @@ import {
   assertFilesContent,
   createIntegrationTest,
   getFileNamesFromDirectory,
-} from 'testing-utils'
+} from '../../testing-utils'
 
 describe('integration shared-module', () => {
   it('should split shared module into one chunk layer', async () => {

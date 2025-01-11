@@ -1,4 +1,7 @@
-import { createIntegrationTest, getFileNamesFromDirectory } from 'testing-utils'
+import {
+  createIntegrationTest,
+  getFileNamesFromDirectory,
+} from '../../testing-utils'
 
 describe('integration server-components', () => {
   it('should generate proper assets for each exports', async () => {

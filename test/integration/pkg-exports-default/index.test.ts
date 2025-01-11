@@ -1,6 +1,6 @@
 import { promises as fsp } from 'fs'
 import { join } from 'path'
-import { assertContainFiles, createIntegrationTest } from 'testing-utils'
+import { assertContainFiles, createIntegrationTest } from '../../testing-utils'
 
 describe('integration pkg-exports-default', () => {
   it('should generate proper assets with js', async () => {

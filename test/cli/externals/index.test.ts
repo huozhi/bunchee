@@ -1,5 +1,5 @@
 import fs from 'fs'
-import { createCliTest } from 'testing-utils'
+import { createCliTest } from '../../testing-utils'
 
 describe('cli', () => {
   it(`cli external should work properly`, async () => {

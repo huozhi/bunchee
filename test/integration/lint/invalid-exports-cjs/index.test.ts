@@ -1,4 +1,4 @@
-import { createIntegrationTest } from 'testing-utils'
+import { createIntegrationTest } from '../../../testing-utils'
 
 describe('integration invalid-exports-cjs', () => {
   it('should warn on invalid exports as CJS', async () => {

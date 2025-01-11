@@ -1,4 +1,4 @@
-import { assertFilesContent, createIntegrationTest } from 'testing-utils'
+import { assertFilesContent, createIntegrationTest } from '../../testing-utils'
 
 describe('integration shared-module', () => {
   it('should split shared module into one chunk layer', async () => {

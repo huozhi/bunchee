@@ -1,6 +1,6 @@
 import { promises as fsp } from 'fs'
 import { join } from 'path'
-import { createIntegrationTest } from 'testing-utils'
+import { createIntegrationTest } from '../../testing-utils'
 
 describe('integration server-components-same-layer', () => {
   it('should generate proper assets for each exports', async () => {

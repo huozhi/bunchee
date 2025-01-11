@@ -1,4 +1,4 @@
-import { assertFilesContent, createIntegrationTest } from 'testing-utils'
+import { assertFilesContent, createIntegrationTest } from '../../testing-utils'
 
 describe('integration - shared-module-with-suffix', () => {
   it('should alias correctly for the shared module with special suffix', async () => {

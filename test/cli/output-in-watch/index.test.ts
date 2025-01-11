@@ -1,4 +1,4 @@
-import { createCliTest } from 'testing-utils'
+import { createCliTest } from '../../testing-utils'
 
 describe('cli', () => {
   it(`cli output-in-watch should work properly`, async () => {

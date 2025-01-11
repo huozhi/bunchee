@@ -2,7 +2,7 @@ import {
   assertContainFiles,
   assertFilesContent,
   createIntegrationTest,
-} from 'testing-utils'
+} from '../../testing-utils'
 
 describe('integration - ts-allow-js', () => {
   it('should generate proper assets', async () => {

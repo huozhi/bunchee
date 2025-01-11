@@ -1,4 +1,4 @@
-import { createIntegrationTest, assertFilesContent } from 'testing-utils'
+import { createIntegrationTest, assertFilesContent } from '../../testing-utils'
 
 describe('integration entry-index-index', () => {
   it('should work with index file inside index directory', async () => {

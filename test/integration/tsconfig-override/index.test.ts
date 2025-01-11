@@ -1,4 +1,4 @@
-import { assertFilesContent, createIntegrationTest } from 'testing-utils'
+import { assertFilesContent, createIntegrationTest } from '../../testing-utils'
 
 describe('integration tsconfig-override', () => {
   it('should use es5 output in build without override', async () => {

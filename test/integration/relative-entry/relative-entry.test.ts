@@ -1,4 +1,4 @@
-import { assertFilesContent, createIntegrationTest } from 'testing-utils'
+import { assertFilesContent, createIntegrationTest } from '../../testing-utils'
 
 describe('integration relative-entry', () => {
   it('should generate proper assets for each exports', async () => {

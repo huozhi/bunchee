@@ -2,7 +2,7 @@ import {
   assertFilesContent,
   createIntegrationTest,
   isWindows,
-} from 'testing-utils'
+} from '../../../testing-utils'
 
 describe('integration bin/multi-path', () => {
   // TODO: handle the transform error on windows

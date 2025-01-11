@@ -1,5 +1,5 @@
 import { readFile } from 'fs/promises'
-import { createIntegrationTest } from 'testing-utils'
+import { createIntegrationTest } from '../../testing-utils'
 
 describe('integration externals', () => {
   it('should handle externals', async () => {

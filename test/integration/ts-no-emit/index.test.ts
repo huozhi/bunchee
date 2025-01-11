@@ -2,7 +2,7 @@ import {
   assertContainFiles,
   assertFilesContent,
   createIntegrationTest,
-} from 'testing-utils'
+} from '../../testing-utils'
 
 describe('integration ts-no-emit', () => {
   it('should succeed the build', async () => {

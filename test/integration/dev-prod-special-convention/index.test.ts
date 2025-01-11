@@ -1,4 +1,4 @@
-import { createIntegrationTest, assertFilesContent } from 'testing-utils'
+import { createIntegrationTest, assertFilesContent } from '../../testing-utils'
 
 describe('integration dev-prod-special-convention', () => {
   it('should work with dev prod and special optimize conditions', async () => {

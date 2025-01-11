@@ -5,7 +5,7 @@ import {
   assertContainFiles,
   assertFilesContent,
   createIntegration,
-} from 'testing-utils'
+} from '../../testing-utils'
 import { existsSync } from 'fs'
 
 describe('integration - no-clean flag', () => {

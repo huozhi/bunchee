@@ -1,7 +1,7 @@
 import fs from 'fs'
 import fsp from 'fs/promises'
 import { join } from 'path'
-import { createCliTest, deleteFile } from 'testing-utils'
+import { createCliTest, deleteFile } from '../../testing-utils'
 
 describe('cli', () => {
   const dir = __dirname

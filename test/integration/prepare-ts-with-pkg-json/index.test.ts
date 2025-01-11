@@ -4,7 +4,7 @@ import {
   assertContainFiles,
   createIntegrationTest,
   deleteFile,
-} from 'testing-utils'
+} from '../../testing-utils'
 
 describe('integration prepare-ts-with-pkg-json', () => {
   const dir = __dirname

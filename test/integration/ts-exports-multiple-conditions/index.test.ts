@@ -2,7 +2,7 @@ import {
   assertContainFiles,
   createIntegrationTest,
   assertFilesContent,
-} from 'testing-utils'
+} from '../../testing-utils'
 
 describe('integration - ts-exports-multiple-conditions', () => {
   it('should generate proper assets', async () => {

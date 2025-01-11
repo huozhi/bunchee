@@ -1,4 +1,7 @@
-import { createIntegrationTest, getFileNamesFromDirectory } from 'testing-utils'
+import {
+  createIntegrationTest,
+  getFileNamesFromDirectory,
+} from '../../testing-utils'
 
 describe('integration shared-module-ts-esm', () => {
   it('should contain correct type file path of shared chunks', async () => {
