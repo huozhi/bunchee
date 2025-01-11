@@ -1,4 +1,4 @@
-import { createIntegration, assertFilesContent } from '../utils'
+import { createIntegration, assertFilesContent } from 'testing-utils'
 
 describe('integration multi-exports', () => {
   const { dir } = createIntegration({

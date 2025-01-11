@@ -1,5 +1,5 @@
 import fs from 'fs'
-import { createCliTest } from '../utils'
+import { createCliTest } from 'testing-utils'
 
 describe('cli', () => {
   it(`cli es2020-target should work properly`, async () => {

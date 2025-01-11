@@ -2,7 +2,7 @@ import {
   assertFilesContent,
   createIntegrationTest,
   getFileNamesFromDirectory,
-} from '../utils'
+} from 'testing-utils'
 
 describe('integration - tsconfig-override', () => {
   it('should not generate js types paths if not specified', async () => {

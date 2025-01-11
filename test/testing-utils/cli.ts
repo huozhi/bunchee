@@ -1,8 +1,4 @@
-import {
-  createTest,
-  executeBunchee,
-  type ExcuteBuncheeResult,
-} from '../testing-utils'
+import { createTest, executeBunchee, type ExcuteBuncheeResult } from './shared'
 
 export async function createCliTest(
   {

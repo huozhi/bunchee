@@ -1,5 +1,5 @@
 import { join } from 'path'
-import { assertContainFiles, createIntegrationTest } from '../utils'
+import { assertContainFiles, createIntegrationTest } from 'testing-utils'
 
 describe('integration monorepo-composite-no-incremental', () => {
   it('should succeed the build', async () => {

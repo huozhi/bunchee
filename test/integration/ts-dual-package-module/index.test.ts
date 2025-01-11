@@ -1,4 +1,4 @@
-import { createIntegrationTest, assertContainFiles } from '../utils'
+import { createIntegrationTest, assertContainFiles } from 'testing-utils'
 
 describe('integration ts-dual-package-module', () => {
   it('should ensure generated assets', async () => {

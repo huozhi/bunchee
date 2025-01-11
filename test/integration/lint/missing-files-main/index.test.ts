@@ -1,4 +1,4 @@
-import { createIntegrationTest } from '../../utils'
+import { createIntegrationTest } from 'testing-utils'
 
 describe('integration - lint - missing-files-main', () => {
   it('should warn on missing files', async () => {

@@ -1,6 +1,6 @@
 import { join } from 'path'
 import { existsSync } from 'fs'
-import { createIntegrationTest } from '../utils'
+import { createIntegrationTest } from 'testing-utils'
 
 describe('integration ts-error', () => {
   it('should error when ts is not properly resolved', async () => {

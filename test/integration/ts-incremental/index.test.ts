@@ -3,7 +3,7 @@ import {
   assertContainFiles,
   assertFilesContent,
   createIntegrationTest,
-} from '../utils'
+} from 'testing-utils'
 import { join } from 'path'
 
 describe('integration - ts-incremental', () => {

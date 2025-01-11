@@ -1,5 +1,5 @@
 import fs from 'fs'
-import { createCliTest } from '../utils'
+import { createCliTest } from 'testing-utils'
 
 describe('cli', () => {
   it(`cli cjs-relative-imports should work properly`, async () => {

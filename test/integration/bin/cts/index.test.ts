@@ -1,4 +1,4 @@
-import { assertFilesContent, createIntegrationTest } from '../../utils'
+import { assertFilesContent, createIntegrationTest } from 'testing-utils'
 
 describe('integration bin/cts', () => {
   it('should work with bin as .cts extension', async () => {

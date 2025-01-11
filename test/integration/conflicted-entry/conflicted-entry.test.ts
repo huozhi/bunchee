@@ -1,4 +1,4 @@
-import { createIntegrationTest } from '../utils'
+import { createIntegrationTest } from 'testing-utils'
 
 describe('integration - conflicted-entry', () => {
   it('should error on conflicted entries', async () => {

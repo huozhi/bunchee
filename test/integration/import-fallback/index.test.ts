@@ -1,5 +1,5 @@
 import { readFile } from 'fs/promises'
-import { createIntegrationTest } from '../utils'
+import { createIntegrationTest } from 'testing-utils'
 
 describe('integration import fallback', () => {
   it('should handle import fallback', async () => {

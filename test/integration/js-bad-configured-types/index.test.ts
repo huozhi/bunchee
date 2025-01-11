@@ -1,4 +1,4 @@
-import { createIntegrationTest } from '../utils'
+import { createIntegrationTest } from 'testing-utils'
 
 describe('integration js-bad-configured-types', () => {
   it('should error when types is not correctly configured', async () => {

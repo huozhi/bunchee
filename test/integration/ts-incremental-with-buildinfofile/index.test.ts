@@ -4,7 +4,7 @@ import {
   assertContainFiles,
   assertFilesContent,
   createIntegrationTest,
-} from '../utils'
+} from 'testing-utils'
 
 describe('integration - ts-incremental-with-buildinfofile', () => {
   it('should generate proper assets', async () => {

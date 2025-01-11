@@ -1,4 +1,4 @@
-import { createIntegrationTest, assertFilesContent } from '../utils'
+import { createIntegrationTest, assertFilesContent } from 'testing-utils'
 
 describe('integration edge-variable', () => {
   it('should work with edge export condition', async () => {

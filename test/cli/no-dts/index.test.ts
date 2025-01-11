@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { createCliTest } from '../utils'
+import { createCliTest } from 'testing-utils'
 
 describe('cli', () => {
   it(`cli no-dts option should work properly`, async () => {

@@ -1,14 +1,10 @@
 import { glob } from 'glob'
-import {
-  createTest,
-  executeBunchee,
-  type ExcuteBuncheeResult,
-} from '../testing-utils'
+import { createTest, executeBunchee, type ExcuteBuncheeResult } from './shared'
 
 function normalizePath(filePath: string) {
   return filePath.replace(/\\/g, '/')
 }
-export * from '../testing-utils'
+export * from './helpers'
 
 type IntegrationTestOptions = {
   args?: string[]
@@ -16,6 +12,8 @@ type IntegrationTestOptions = {
   abortTimeout?: number
   directory: string
 }
+
+export { createCliTest } from './cli'
 
 export async function createIntegrationTest(
   { args, options, abortTimeout, directory }: IntegrationTestOptions,
