@@ -35,7 +35,6 @@ export const runtimeExportConventionsFallback = new Map<string, string[]>([
   // ESM only runtime
   ['workerd', ['import', 'default']],
   ['edge-light', ['import', 'default']],
-  ['browser', ['import', 'default']],
   // Fallback to default when unsure
   ['electron', ['default']],
   ['react-server', ['default']],
