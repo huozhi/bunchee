@@ -4,6 +4,7 @@
     "module": "ESNext",
     "target": "ESNext",
     "strict": false,
+    "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
       "bunchee": ["../src/index.ts"],
@@ -11,8 +12,6 @@
     }
   },
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
     "../src/**/*.test.ts",
     "../src/**/*.test.tsx"
   ],
