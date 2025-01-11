@@ -37,6 +37,17 @@ export function assertContainFiles(dir: string, filePaths: string[]) {
 
 type FunctionCondition = (content: string) => Boolean
 
+export async function getFileContents(dir: string, filePaths?: string[]) {
+  const results: Record<string, string> = {}
+  const files = filePaths || (await fsp.readdir(dir))
+  for (const file of files) {
+    const fullPath = path.resolve(dir, file)
+    const content = await fsp.readFile(fullPath, { encoding: 'utf-8' })
+    results[file] = content
+  }
+  return results
+}
+
 export async function assertFilesContent(
   dir: string,
   conditionMap: Record<string, RegExp | string | FunctionCondition>,

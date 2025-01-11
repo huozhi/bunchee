@@ -248,6 +248,10 @@ export async function buildInputConfig(
           }),
           commonjs({
             exclude: bundleConfig.external || null,
+            // Deal with mixed ESM and CJS modules, such as calling require() in ESM.
+            // For relative paths, the module will be bundled;
+            // For external libraries, the module will not be bundled.
+            transformMixedEsModules: true,
           }),
         ]
   ).filter(isNotNull<Plugin>)

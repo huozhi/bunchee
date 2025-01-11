@@ -8,7 +8,6 @@ import {
 function normalizePath(filePath: string) {
   return filePath.replace(/\\/g, '/')
 }
-
 export * from '../testing-utils'
 
 type IntegrationTestOptions = {
