@@ -54,6 +54,65 @@ export async function createTest<T>(
   return build
 }
 
+export function createSyncTest<T>({
+  args,
+  options,
+  directory,
+  abortTimeout,
+  run,
+}: {
+  args: string[]
+  options: { env?: NodeJS.ProcessEnv }
+  directory: string
+  abortTimeout?: number
+  run: (
+    args: string[],
+    options: { env?: NodeJS.ProcessEnv },
+    processOptions?: { abortTimeout?: number },
+  ) => Promise<T>
+}): CreateTestResultExtra & { job: T } {
+  const fixturesDir = directory
+  const distDir = path.join(fixturesDir, './dist')
+  let distFile = ''
+
+  if (!args.includes('--cwd')) {
+    args.push('--cwd', fixturesDir)
+  }
+  const outputIndex = args.indexOf('-o')
+  if (outputIndex !== -1) {
+    distFile = path.join(fixturesDir, args[outputIndex + 1])
+  }
+
+  let result = undefined
+  const resultProxy = new Proxy(
+    {},
+    {
+      get(_, key) {
+        return result?.[key] ?? null
+      },
+    },
+  ) as any
+
+  beforeAll(async () => {
+    // execute the job
+    result = await run(args, options, { abortTimeout })
+  })
+  afterAll(async () => {
+    if (!process.env.TEST_NOT_CLEANUP) {
+      await removeDirectory(distDir)
+    }
+  })
+
+  return {
+    get job() {
+      return resultProxy
+    },
+    distDir,
+    distFile,
+    dir: directory,
+  }
+}
+
 export type ExcuteBuncheeResult = {
   code: number | null
   signal: NodeJS.Signals | null
