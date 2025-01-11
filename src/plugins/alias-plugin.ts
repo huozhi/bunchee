@@ -34,6 +34,9 @@ function findJsBundlePathCallback(
   const hasFormatCond =
     conditionNames.has('import') || conditionNames.has('require')
 
+  // Check if the format condition is matched:
+  // if there's condition existed, check if the format condition is matched;
+  // if there's no condition, just return true, assuming format doesn't matter;
   const isMatchedFormat = hasFormatCond ? conditionNames.has(formatCond) : true
 
   const isMatchedConditionWithFormat =
