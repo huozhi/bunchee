@@ -1,5 +1,5 @@
 import { assertContainFiles, stripANSIColor } from '../../testing-utils'
-import { createIntegrationTest } from '../utils'
+import { createIntegrationTest } from '../../testing-utils'
 import * as console from 'node:console'
 
 describe('integration stage3-decorator', () => {

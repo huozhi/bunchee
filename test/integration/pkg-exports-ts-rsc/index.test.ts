@@ -1,4 +1,4 @@
-import { assertFilesContent, createIntegrationTest } from '../utils'
+import { assertFilesContent, createIntegrationTest } from '../../testing-utils'
 
 describe('integration pkg-exports-ts-rsc', () => {
   it('should generate proper assets for rsc condition with ts', async () => {

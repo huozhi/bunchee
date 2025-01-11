@@ -1,4 +1,4 @@
-import { createIntegrationTest, assertFilesContent } from '../utils'
+import { createIntegrationTest, assertFilesContent } from '../../testing-utils'
 
 describe('browserslist', () => {
   it('should work with basic JSX format', async () => {

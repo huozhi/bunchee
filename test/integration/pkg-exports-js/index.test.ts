@@ -1,4 +1,4 @@
-import { assertContainFiles, createIntegrationTest } from '../utils'
+import { assertContainFiles, createIntegrationTest } from '../../testing-utils'
 
 describe('integration pkg-exports-js', () => {
   it('should generate proper assets with js', async () => {

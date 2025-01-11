@@ -1,4 +1,4 @@
-import { createIntegrationTest } from '../../utils'
+import { createIntegrationTest } from '../../../testing-utils'
 
 describe('integration invalid-exports-esm', () => {
   it('should warn on invalid exports as ESM', async () => {

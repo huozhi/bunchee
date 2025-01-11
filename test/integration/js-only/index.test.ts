@@ -1,4 +1,4 @@
-import { createIntegrationTest, existsFile } from '../utils'
+import { createIntegrationTest, existsFile } from '../../testing-utils'
 
 describe('integration js-only', () => {
   beforeEach(() => {

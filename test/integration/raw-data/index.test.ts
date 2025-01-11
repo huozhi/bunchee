@@ -1,5 +1,5 @@
 import { existsSync } from 'fs'
-import { assertFilesContent, createIntegrationTest } from '../utils'
+import { assertFilesContent, createIntegrationTest } from '../../testing-utils'
 import { join } from 'path'
 
 describe('integration - raw-data', () => {

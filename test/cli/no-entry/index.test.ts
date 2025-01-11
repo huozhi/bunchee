@@ -1,4 +1,4 @@
-import { createCliTest } from '../utils'
+import { createCliTest } from '../../testing-utils'
 
 describe('cli', () => {
   it(`cli no-entry should work properly`, async () => {

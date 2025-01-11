@@ -1,4 +1,4 @@
-import { createIntegrationTest, stripANSIColor } from '../utils'
+import { createIntegrationTest, stripANSIColor } from '../../testing-utils'
 
 const getOutputSizeColumnIndex = (line: string): number => {
   let match

@@ -4,7 +4,7 @@ import {
   assertFilesContent,
   getFileNamesFromDirectory,
   isWindows,
-} from '../../utils'
+} from '../../../testing-utils'
 
 describe('integration bin/single-path', () => {
   // TODO: handle the transform error on windows

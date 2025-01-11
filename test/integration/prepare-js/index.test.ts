@@ -4,7 +4,7 @@ import {
   assertContainFiles,
   createIntegrationTest,
   stripANSIColor,
-} from '../utils'
+} from '../../testing-utils'
 
 describe('integration prepare-js', () => {
   const dir = __dirname

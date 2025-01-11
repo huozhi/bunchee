@@ -1,4 +1,4 @@
-import { assertFilesContent, createIntegrationTest } from '../utils'
+import { assertFilesContent, createIntegrationTest } from '../../testing-utils'
 
 describe('integration - ts-import-json-exports-condition', () => {
   it('should output correct bundles and types import json with export condition', async () => {

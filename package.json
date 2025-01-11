@@ -119,8 +119,7 @@
       "node_modules"
     ],
     "moduleNameMapper": {
-      "^bunchee$": "<rootDir>/src/index.ts",
-      "^testing-utils$": "<rootDir>/test/integration/utils.ts"
+      "^bunchee$": "<rootDir>/src/index.ts"
     },
     "transform": {
       "^.+\\.(t|j)sx?$": [

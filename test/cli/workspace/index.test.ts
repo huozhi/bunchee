@@ -1,5 +1,5 @@
 import fs from 'fs'
-import { createCliTest } from '../utils'
+import { createCliTest } from '../../testing-utils'
 import path from 'path'
 
 describe('cli', () => {

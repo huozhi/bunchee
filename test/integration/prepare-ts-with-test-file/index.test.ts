@@ -1,6 +1,10 @@
 import fsp from 'fs/promises'
 import { join } from 'path'
-import { assertContainFiles, createIntegrationTest, deleteFile } from '../utils'
+import {
+  assertContainFiles,
+  createIntegrationTest,
+  deleteFile,
+} from '../../testing-utils'
 
 describe('integration prepare-ts-with-test-file', () => {
   const dir = __dirname
