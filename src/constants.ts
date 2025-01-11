@@ -35,15 +35,16 @@ export const runtimeExportConventionsFallback = new Map<string, string[]>([
   // ESM only runtime
   ['workerd', ['import', 'default']],
   ['edge-light', ['import', 'default']],
-  ['browser', ['import', 'default']],
-
-  // it could be CJS or ESM
+  // Fallback to default when unsure
   ['electron', ['default']],
   ['react-server', ['default']],
   ['react-native', ['default']],
   ['node', ['default']],
   ['deno', ['default']],
   ['bun', ['default']],
+  ['development', ['default']],
+  ['production', ['default']],
+  ['browser', ['import', 'require', 'default']],
 ])
 export const optimizeConventions = new Set(['development', 'production'])
 export const specialExportConventions = new Set([

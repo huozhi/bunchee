@@ -44,7 +44,7 @@ type FunctionCondition = (content: string) => Boolean
 
 export async function getFileContents(dir: string, filePaths?: string[]) {
   const results: Record<string, string> = {}
-  const files = filePaths || (await fsp.readdir(dir))
+  const files = filePaths || (await fsp.readdir(dir, { recursive: true }))
   for (const file of files) {
     const fullPath = path.resolve(dir, file)
     const content = await fsp.readFile(fullPath, { encoding: 'utf-8' })

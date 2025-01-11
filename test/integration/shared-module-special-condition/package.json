@@ -1,0 +1,13 @@
+{
+  "name": "shared-module-special-condition",
+  "main": "./dist/index.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "development": "./dist/index.development.js",
+      "production": "./dist/index.production.js",
+      "browser": "./dist/index.browser.js"
+    }
+  }
+}

@@ -26,7 +26,7 @@ function findJsBundlePathCallback(
     conditionNames: Set<string>
   },
   specialCondition: string,
-) {
+): boolean {
   const hasBundle = bundlePath != null
   const formatCond = format === 'cjs' ? 'require' : 'import'
 
@@ -34,6 +34,9 @@ function findJsBundlePathCallback(
   const hasFormatCond =
     conditionNames.has('import') || conditionNames.has('require')
 
+  // Check if the format condition is matched:
+  // if there's condition existed, check if the format condition is matched;
+  // if there's no condition, just return true, assuming format doesn't matter;
   const isMatchedFormat = hasFormatCond ? conditionNames.has(formatCond) : true
 
   const isMatchedConditionWithFormat =
@@ -50,7 +53,16 @@ function findJsBundlePathCallback(
     if (!fallback) {
       return false
     } else {
-      return fallback.some((name) => conditionNames.has(name))
+      // Match its own condition first,
+      // e.g. when import utils.js in index.js
+      // In output: index.browser.js should match util.browser.js, fallback to util.js
+      // The last guard condition is to ensure bundle condition but not types file.
+      return (
+        isMatchedFormat &&
+        (conditionNames.has(specialCondition) ||
+          fallback.some((name) => conditionNames.has(name))) &&
+        !conditionNames.has('types')
+      )
     }
   } else {
     return match
