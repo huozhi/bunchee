@@ -9,8 +9,6 @@ function normalizePath(filePath: string) {
   return filePath.replace(/\\/g, '/')
 }
 
-export * from '../testing-utils'
-
 type IntegrationTestOptions = {
   args?: string[]
   options?: { env?: NodeJS.ProcessEnv }

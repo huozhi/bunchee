@@ -4,15 +4,15 @@
     "module": "ESNext",
     "target": "ESNext",
     "strict": false,
-    "baseUrl": "..",
+    "baseUrl": ".",
     "paths": {
-      "bunchee": ["./src/index.ts"],
-      "testing-utils": ["./test/integration/utils.ts"]
+      "bunchee": ["../src/index.ts"],
+      "testing-utils": ["./integration/utils.ts"]
     }
   },
   "include": [
-    "**/*.test.ts",
-    "**/*.test.tsx",
+    "**/*.ts",
+    "**/*.tsx",
     "../src/**/*.test.ts",
     "../src/**/*.test.tsx"
   ],
