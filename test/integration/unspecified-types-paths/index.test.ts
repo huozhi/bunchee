@@ -1,7 +1,10 @@
-import fs from 'fs'
-import { assertFilesContent, createIntegrationTest } from '../utils'
+import {
+  assertFilesContent,
+  createIntegrationTest,
+  getFileNamesFromDirectory,
+} from '../utils'
 
-describe('integration tsconfig-override', () => {
+describe('integration - tsconfig-override', () => {
   it('should not generate js types paths if not specified', async () => {
     await createIntegrationTest(
       {
@@ -12,8 +15,11 @@ describe('integration tsconfig-override', () => {
           './dist/subpath/nested.js': 'subpath/nested',
           './dist/subpath/nested.cjs': 'subpath/nested',
         })
-        const subpathTypes = await import(`${dir}/dist/index.js`)
-        expect(fs.existsSync(subpathTypes)).toBe(false)
+        // No types files should be generated
+        expect(await getFileNamesFromDirectory(dir)).toEqual([
+          'dist/subpath/nested.cjs',
+          'dist/subpath/nested.js',
+        ])
       },
     )
   })

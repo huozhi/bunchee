@@ -1,4 +1,8 @@
-import { createIntegrationTest, assertFilesContent } from '../utils'
+import {
+  createIntegrationTest,
+  assertFilesContent,
+  getFileContents,
+} from '../utils'
 
 describe('integration esm-shims', () => {
   it('should work with ESM shims', async () => {
@@ -15,7 +19,6 @@ describe('integration esm-shims', () => {
           'const __dirname = __node_cjsPath.dirname(__filename)'
 
         await assertFilesContent(distDir, {
-          'require.mjs': requirePolyfill,
           'filename.mjs': filenamePolyfill,
           'dirname.mjs': dirnamePolyfill,
           'custom-require.mjs': (code) => !code.includes(requirePolyfill),
@@ -24,6 +27,11 @@ describe('integration esm-shims', () => {
           'dirname.js': /__dirname/,
           'custom-require.js': (code) => !code.includes(requirePolyfill),
         })
+
+        const contents = await getFileContents(distDir, ['require.mjs'])
+        expect(contents['require.mjs']).not.toContain(requirePolyfill)
+        expect(contents['require.mjs']).toContain('function getRequireModule')
+        expect(contents['require.mjs']).toContain('import.meta.url')
       },
     )
   })

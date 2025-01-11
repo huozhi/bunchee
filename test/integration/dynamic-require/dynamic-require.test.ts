@@ -1,5 +1,5 @@
 import fs from 'fs'
-import { createIntegrationTest, getFileNamesFromDirectory } from 'testing-utils'
+import { createIntegrationTest, getFileNamesFromDirectory } from '../utils'
 
 describe('integration - dynamic-require', () => {
   it('should work', async () => {

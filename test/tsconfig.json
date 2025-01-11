@@ -5,15 +5,20 @@
     "target": "ESNext",
     "strict": false,
     "jsx": "preserve",
-    "baseUrl": ".",
+    "baseUrl": "..",
     "paths": {
-      "bunchee": ["../src/index.ts"],
-      "testing-utils": ["./integration/utils.ts"]
+      "bunchee": ["./src/index.ts"]
     }
   },
   "include": [
-    "../src/**/*.test.ts",
-    "../src/**/*.test.tsx"
+    "./test/**/*.test.ts",
+    "./test**/*.test.tsx",
+    // TODO: group those internal utils
+    "./test/utils/*",
+    "./test/testing-utils.ts",
+    "./test/integration/utils.ts",
+    "./src/**/*.test.ts",
+    "./src/**/*.test.tsx"
   ],
   "references": [{ "path": "../tsconfig.json" }]
 }
