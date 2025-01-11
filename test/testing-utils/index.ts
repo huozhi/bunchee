@@ -1,5 +1,10 @@
 import { glob } from 'glob'
-import { createTest, executeBunchee, type ExcuteBuncheeResult } from './shared'
+import {
+  createSyncTest,
+  createTest,
+  executeBunchee,
+  type ExcuteBuncheeResult,
+} from './shared'
 
 function normalizePath(filePath: string) {
   return filePath.replace(/\\/g, '/')
@@ -15,6 +20,10 @@ type IntegrationTestOptions = {
 
 export { createCliTest } from './cli'
 
+/**
+ * @deprecated
+ * Use createJob instead
+ */
 export async function createIntegrationTest(
   { args, options, abortTimeout, directory }: IntegrationTestOptions,
   testFn?: Parameters<typeof createTest<ExcuteBuncheeResult>>[1],
@@ -29,6 +38,22 @@ export async function createIntegrationTest(
     },
     testFn,
   )
+}
+
+/** Sync testing helper */
+export function createJob({
+  args,
+  options,
+  abortTimeout,
+  directory,
+}: IntegrationTestOptions) {
+  return createSyncTest<ExcuteBuncheeResult>({
+    args: args ?? [],
+    options: options ?? {},
+    abortTimeout,
+    directory,
+    run: executeBunchee,
+  })
 }
 
 export function createIntegration(

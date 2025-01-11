@@ -1,15 +1,12 @@
-import { createIntegrationTest, assertContainFiles } from '../../testing-utils'
+import { createJob, assertContainFiles } from '../../testing-utils'
 
 describe('integration basic-jsx', () => {
+  const { job, distDir } = createJob({
+    directory: __dirname,
+  })
   it('should work with basic JSX format', async () => {
-    await createIntegrationTest(
-      {
-        directory: __dirname,
-      },
-      ({ distDir, stderr, stdout }) => {
-        expect(stderr + stdout).not.toContain('(swc plugin)')
-        assertContainFiles(distDir, ['index.js', 'index.mjs'])
-      },
-    )
+    const { stdout, stderr } = job
+    expect(stderr + stdout).not.toContain('(swc plugin)')
+    assertContainFiles(distDir, ['index.js', 'index.mjs'])
   })
 })

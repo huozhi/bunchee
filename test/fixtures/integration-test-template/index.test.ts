@@ -1,14 +1,10 @@
-import { createIntegrationTest, assertContainFiles } from '../../testing-utils'
+import { createJob, assertContainFiles } from '../../testing-utils'
 
 describe('integration - <name>', () => {
+  const { distDir } = createJob({
+    directory: __dirname,
+  })
   it('should work', async () => {
-    await createIntegrationTest(
-      {
-        directory: __dirname,
-      },
-      ({ distDir }) => {
-        assertContainFiles(distDir, ['index.js'])
-      },
-    )
+    assertContainFiles(distDir, ['index.js'])
   })
 })
