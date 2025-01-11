@@ -57,7 +57,7 @@ class A {
     constructor(){
         Object.defineProperty(this, _x, {
             writable: true,
-            value: void 0
+            value: undefined
         });
         _class_private_field_loose_base(this, _x)[_x] = 1;
         this.getX = ()=>{

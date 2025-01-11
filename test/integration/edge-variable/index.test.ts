@@ -9,7 +9,7 @@ describe('integration edge-variable', () => {
       async ({ distDir }) => {
         assertFilesContent(distDir, {
           'index.js': /typeof EdgeRuntime/,
-          'index.edge.js': /typeof "edge-runtime"/,
+          'index.edge.js': /const variable = \"string\"/, // typeof "edge-runtime"
         })
       },
     )
