@@ -14,8 +14,11 @@
   </a>
 </p>
 
-**bunchee** is a zero configuration bundler makes bundling JS/TS library effortless. It's built on top of Rollup and SWC ⚡️, allowing you to focus on writing code and generating multiple bundles (CommonJS or ESModule) at the same time.
-It uses the standard exports configuration in `package.json` as the only source of truth, and uses entry file conventions to match your exports and build them into bundles.
+---
+
+**bunchee** is a zero-configuration bundler designed to streamline package building by adhering to the `exports` field in your **package.json**. Powered by Rollup and SWC ⚡️, it generates output based on your config, supporting both CommonJS and ESModules.
+
+By using the standard `exports` configuration as the single source of truth, **bunchee** automatically aligns entry file conventions with your exports, ensuring seamless and efficient builds.
 
 ## Quick Start
 
@@ -70,6 +73,31 @@ The output format will based on the exports condition and also the file extensio
 
 > [!NOTE]
 > All the `dependencies` and `peerDependencies` will be marked as external automatically and not included in the bundle. If you want to include them in the bundle, you can use the `--no-external` option.
+
+### Output Formats
+
+**bunchee** detects the format of each entry-point based on export condition type or the file extension. It supports the following output formats:
+
+| `package.json` Field | Output format                    |
+| -------------------- | -------------------------------- |
+| `main`               | Default                          |
+| `types`              | TypeScript declaration           |
+| `exports`            | Default                          |
+| `exports.require`    | CommonJS                         |
+| `exports.import`     | Default                          |
+| `exports.types`      | TypeScript declaration of export |
+| `bin`                | Default                          |
+| `bin.<name>`         | Default                          |
+
+The **Default** output format is determined by the file extension:
+
+| File Extension | Output format                                                                                                                                                                           |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.js`          | Determined by `package.json#type`, CommonJS by default                                                                                                                                  |
+| `.cjs`         | [CommonJS](https://nodejs.org/api/packages.html#:~:text=Files%20ending%20with%20.cjs%20are%20always%20loaded%20as%20CommonJS%20regardless%20of%20the%20nearest%20parent%20package.json) |
+| `.mjs`         | [ECMAScript Modules](https://nodejs.org/api/modules.html#the-mjs-extension)                                                                                                             |
+
+### Package Setup & Lint
 
 #### Prepare Package
 
@@ -238,7 +266,7 @@ For instance:
 }
 ```
 
-### Executables
+### Build CLI
 
 To build executable files with the `bin` field in package.json, `bunchee` requires you to create the `bin` directory under `src` directory. The source file matching will be same as the entry files convention.
 
@@ -280,7 +308,7 @@ This will match the `bin` field in package.json as:
 
 > Note: For multiple `bin` files, the filename should match the key name in the `bin` field.
 
-### Server Components
+### Server Components Directives
 
 `bunchee` supports to build server components and server actions with library directives like `"use client"` or `"use server"`. It will generate the corresponding chunks for client and server that scope the client and server boundaries properly.
 Then when the library is integrated to an app such as Next.js, app bundler can transform the client components and server actions correctly and maximum the benefits.
