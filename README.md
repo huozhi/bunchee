@@ -39,14 +39,14 @@ mkdir src && touch ./src/index.ts && touch package.json
 
 Add the exports in `package.json`.
 
-```json
+```json5
 {
-  "name": "coffee",
-  "type": "module",
-  "main": "./dist/index.js",
-  "scripts": {
-    "build": "bunchee"
-  }
+  name: 'coffee',
+  type: 'module',
+  main: './dist/index.js',
+  scripts: {
+    build: 'bunchee',
+  },
 }
 ```
 
@@ -71,26 +71,26 @@ Here's a example of entry files and exports configuration:
 | `src/lite.ts`        | `"./lite"`             |
 | `src/react/index.ts` | `"./react"`            |
 
-```json
+```json5
 {
-  "name": "coffee",
-  "scripts": {
-    "build": "bunchee"
+  name: 'coffee',
+  scripts: {
+    build: 'bunchee',
   },
-  "type": "module",
-  "exports": {
+  type: 'module',
+  exports: {
     // entry: ./src/index.ts
-    ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+    '.': {
+      import: './dist/index.js',
+      require: './dist/index.cjs',
     },
 
     // entry: ./src/lite.ts
-    "./lite": "./dist/lite.js",
+    './lite': './dist/lite.js',
 
     // entry: ./src/react/index.ts
-    "./react": "./dist/react.js"
-  }
+    './react': './dist/react.js',
+  },
 }
 ```
 
@@ -121,20 +121,20 @@ The **Default** output format is determined by the file extension:
 
 The `dependencies` and `peerDependencies` will be marked as externalized and wont be included in the bundle. If you want to include them in the bundle, you can use the `--no-external` option. Or you can import the `devDependencies` in your source code to bundle them.
 
-```json
+```json5
 {
   // Externalized
-  "dependencies": {
+  dependencies: {
     /* ... */
   },
-  "peerDependencies": {
+  peerDependencies: {
     /* ... */
   },
 
   // Bundled
-  "devDependencies": {
+  devDependencies: {
     /* ... */
-  }
+  },
 }
 ```
 
@@ -144,13 +144,13 @@ For exports condition like `react-native`, `react-server` and `edge-light` as th
 
 For instance:
 
-```json
+```json5
 {
-  "exports": {
-    "react-server": "./dist/react-server.mjs",
-    "edge-light": "./dist/edge-light.mjs",
-    "import": "./dist/index.mjs"
-  }
+  exports: {
+    'react-server': './dist/react-server.mjs',
+    'edge-light': './dist/edge-light.mjs',
+    import: './dist/index.mjs',
+  },
 }
 ```
 
@@ -158,12 +158,12 @@ For instance:
 
 `bunchee` supports both TypeScript `paths` config and Node.js [`imports field`](https://nodejs.org/api/packages.html#subpath-imports) in `package.json` for path aliasing. It will resolve the path alias to the correct file path. If you're using modern TypeScript versions, you can also directly configure the `imports` field in `package.json` and it will work as a charm.
 
-```json
+```json5
 // package.json
 {
-  "imports": {
-    "#util": "./src/utils.ts"
-  }
+  imports: {
+    '#util': './src/utils.ts',
+  },
 }
 ```
 
@@ -181,9 +181,9 @@ For example:
 
 This will match the `bin` field in package.json as:
 
-```json
+```json5
 {
-  "bin": "./dist/bin.js"
+  bin: './dist/bin.js',
 }
 ```
 
@@ -198,12 +198,12 @@ For multiple executable files, you can create multiple files under the `bin` dir
 
 This will match the `bin` field in package.json as:
 
-```json
+```json5
 {
-  "bin": {
-    "foo": "./dist/bin/a.js",
-    "bar": "./dist/bin/b.js"
-  }
+  bin: {
+    foo: './dist/bin/a.js',
+    bar: './dist/bin/b.js',
+  },
 }
 ```
 
@@ -347,17 +347,17 @@ Or you can checkout the following cases to configure your package.json.
 
 Then use use the [exports field in package.json](https://nodejs.org/api/packages.html#exports-sugar) to configure different conditions and leverage the same functionality as other bundlers, such as webpack. The exports field allows you to define multiple conditions.
 
-```json
+```json5
 {
-  "files": ["dist"],
-  "type": "module",
-  "exports": {
-    ".": "./dist/es/index.js",
-    "./react": "./dist/es/react.js"
+  files: ['dist'],
+  type: 'module',
+  exports: {
+    '.': './dist/es/index.js',
+    './react': './dist/es/react.js',
   },
-  "scripts": {
-    "build": "bunchee"
-  }
+  scripts: {
+    build: 'bunchee',
+  },
 }
 ```
 
@@ -368,24 +368,24 @@ Then use use the [exports field in package.json](https://nodejs.org/api/packages
 
 If you're build a TypeScript library, separate the types from the main entry file and specify the types path in package.json. Types exports need to stay on the top of each export with `types` condition, and you can use `default` condition for the JS bundle file.
 
-```json
+```json5
 {
-  "files": ["dist"],
-  "type": "module",
-  "main": "./dist/index.js",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+  files: ['dist'],
+  type: 'module',
+  main: './dist/index.js',
+  exports: {
+    '.': {
+      types: './dist/index.d.ts',
+      default: './dist/index.js',
     },
-    "./react": {
-      "types": "./dist/react/index.d.ts",
-      "default": "./dist/react/index.js"
-    }
+    './react': {
+      types: './dist/react/index.d.ts',
+      default: './dist/react/index.js',
+    },
   },
-  "scripts": {
-    "build": "bunchee"
-  }
+  scripts: {
+    build: 'bunchee',
+  },
 }
 ```
 
@@ -397,26 +397,26 @@ If you're using TypeScript with Node 10 and Node 16 module resolution, you can u
 
 _NOTE_: When you're using `.mjs` or `.cjs` extensions with TypeScript and modern module resolution (above node16), TypeScript will require specific type declaration files like `.d.mts` or `.d.cts` to match the extension. `bunchee` can automatically generate them to match the types to match the condition and extensions.
 
-```json
+```json5
 {
-  "files": ["dist"],
-  "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    "import": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+  files: ['dist'],
+  type: 'module',
+  main: './dist/index.js',
+  module: './dist/index.js',
+  types: './dist/index.d.ts',
+  exports: {
+    import: {
+      types: './dist/index.d.ts',
+      default: './dist/index.js',
     },
-    "require": {
-      "types": "./dist/index.d.cts",
-      "default": "./dist/index.cjs"
-    }
+    require: {
+      types: './dist/index.d.cts',
+      default: './dist/index.cjs',
+    },
   },
-  "scripts": {
-    "build": "bunchee"
-  }
+  scripts: {
+    build: 'bunchee',
+  },
 }
 ```
 
@@ -459,12 +459,12 @@ This will match the export name `"react-server"` and `"edge-light"` then use the
 
 `process.env.NODE_ENV` is injected by default if present that you don't need to manually inject yourself. If you need to separate the development build and production build, `bunchee` provides different export conditions for development and production mode with `development` and `production` export conditions.
 
-```json
+```json5
 {
-  "exports": {
-    "development": "./dist/index.development.js",
-    "production": "./dist/index.production.js"
-  }
+  exports: {
+    development: './dist/index.development.js',
+    production: './dist/index.production.js',
+  },
 }
 ```
 
@@ -547,14 +547,14 @@ To target a range of browsers, you can use the `browserslist` field in `package.
 
 For example:
 
-```json
+```json5
 {
-  "browserslist": [
-    "last 1 version",
-    "> 1%",
-    "maintained node versions",
-    "not dead"
-  ]
+  browserslist: [
+    'last 1 version',
+    '> 1%',
+    'maintained node versions',
+    'not dead',
+  ],
 }
 ```
 
