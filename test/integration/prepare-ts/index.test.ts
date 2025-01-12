@@ -21,6 +21,22 @@ describe('integration prepare-ts', () => {
   it('should contain files', async () => {
     const { stdout } = job
     await assertContainFiles(dir, ['package.json', 'tsconfig.json'])
+
+    const tsconfig = await fsp.readFile(join(dir, './tsconfig.json'), 'utf-8')
+
+    expect(tsconfig).toMatchInlineSnapshot(`
+      "{
+        "compilerOptions": {
+          "target": "ES2022",
+          "module": "ESNext",
+          "moduleResolution": "bundler"
+        },
+        "include": [
+          "src"
+        ]
+      }"
+    `)
+
     const pkgJson = JSON.parse(
       await fsp.readFile(join(dir, './package.json'), 'utf-8'),
     )

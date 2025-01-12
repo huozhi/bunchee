@@ -77,9 +77,11 @@ export const tsExtensions = new Set(['ts', 'tsx', 'cts', 'mts'])
 
 export const DEFAULT_TS_CONFIG = {
   compilerOptions: {
+    target: 'ES2022',
     module: 'ESNext',
     moduleResolution: 'bundler',
   },
+  include: ['src'],
 }
 
 export const BINARY_TAG = '$binary'
