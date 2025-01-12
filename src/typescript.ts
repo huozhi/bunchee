@@ -4,7 +4,7 @@ import { promises as fsp } from 'fs'
 import { Module } from 'module'
 import pc from 'picocolors'
 import { exit, fileExists } from './utils'
-import { memoizeByKey } from './lib/memoize'
+import { memoize } from './lib/memoize'
 import { DEFAULT_TS_CONFIG } from './constants'
 import { logger } from './logger'
 
@@ -38,14 +38,23 @@ function resolveTypescript(cwd: string): typeof import('typescript') {
   return ts
 }
 
+export const resolveTsConfigPath = memoize(
+  (
+    cwd: string,
+    tsconfigFileName: string | undefined = 'tsconfig.json',
+  ): string | undefined => {
+    let tsConfigPath: string | undefined
+    tsConfigPath = resolve(cwd, tsconfigFileName)
+    return fileExists(tsConfigPath) ? tsConfigPath : undefined
+  },
+)
+
 function resolveTsConfigHandler(
   cwd: string,
-  tsconfig = 'tsconfig.json',
+  tsConfigPath: string | undefined,
 ): null | TypescriptOptions {
   let tsCompilerOptions: CompilerOptions = {}
-  let tsConfigPath: string | undefined
-  tsConfigPath = resolve(cwd, tsconfig)
-  if (fileExists(tsConfigPath)) {
+  if (tsConfigPath) {
     // Use the original ts handler to avoid memory leak
     const ts = resolveTypescript(cwd)
     const basePath = tsConfigPath ? dirname(tsConfigPath) : cwd
@@ -64,7 +73,7 @@ function resolveTsConfigHandler(
   }
 }
 
-export const resolveTsConfig = memoizeByKey(resolveTsConfigHandler)()
+export const resolveTsConfig = memoize(resolveTsConfigHandler)
 
 export async function convertCompilerOptions(cwd: string, json: any) {
   // Use the original ts handler to avoid memory leak

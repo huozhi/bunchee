@@ -1,6 +1,6 @@
 type CacheKeyResolver = string | ((...args: any[]) => string)
 
-const memoize = <T extends (...args: any[]) => any>(
+const createMemoize = <T extends (...args: any[]) => any>(
   fn: T,
   cacheKey?: CacheKeyResolver, // if you need specify a cache key
   cacheArg?: Map<string, ReturnType<T>>,
@@ -24,5 +24,8 @@ const memoize = <T extends (...args: any[]) => any>(
 
 export const memoizeByKey = <T extends (...args: any[]) => any>(fn: T) => {
   const cache = new Map<string, ReturnType<T>>()
-  return (cacheKey?: CacheKeyResolver) => memoize(fn, cacheKey, cache)
+  return (cacheKey?: CacheKeyResolver) => createMemoize(fn, cacheKey, cache)
 }
+
+export const memoize = <T extends (...args: any[]) => any>(fn: T) =>
+  createMemoize(fn)

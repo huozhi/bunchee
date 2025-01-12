@@ -4,6 +4,7 @@ describe('integration - tsconfig-override - default', () => {
   const { distDir } = createJob({
     directory: __dirname,
   })
+
   it('should use es5 output in build without override', async () => {
     await assertFilesContent(distDir, {
       ['index.js']: (content) => {
@@ -16,7 +17,7 @@ describe('integration - tsconfig-override - default', () => {
 describe('integration - tsconfig-override - customized', () => {
   const { distDir } = createJob({
     directory: __dirname,
-    args: ['--tsconfig', 'tsconfig.override.json'],
+    args: ['--tsconfig', 'tsconfig.build.json'],
   })
 
   it('should use es8 output in build', async () => {

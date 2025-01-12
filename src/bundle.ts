@@ -8,6 +8,7 @@ import fs from 'fs'
 import { resolve } from 'path'
 import { createOutputState } from './plugins/output-state-plugin'
 import {
+  fileExists,
   getPackageMeta,
   getSourcePathFromExportPath,
   isTypescriptFile,
@@ -17,6 +18,7 @@ import type { BuildContext } from './types'
 import {
   TypescriptOptions,
   resolveTsConfig,
+  resolveTsConfigPath,
   writeDefaultTsconfig,
 } from './typescript'
 import { collectEntriesFromParsedExports } from './entries'
@@ -59,8 +61,10 @@ async function bundle(
   const inputFile = cliEntryPath
   const isFromCli = Boolean(cliEntryPath)
 
-  let tsConfig = resolveTsConfig(cwd, options.tsconfig)
+  const tsConfigPath = resolveTsConfigPath(cwd, options.tsconfig)
+  let tsConfig = resolveTsConfig(cwd, tsConfigPath)
   let hasTsConfig = Boolean(tsConfig?.tsConfigPath)
+
   const defaultTsOptions: TypescriptOptions = {
     tsConfigPath: tsConfig?.tsConfigPath,
     tsCompilerOptions: tsConfig?.tsCompilerOptions || {},
@@ -132,10 +136,16 @@ async function bundle(
   const hasTypeScriptFiles = Object.values(entries).some((entry) =>
     isTypescriptFile(entry.source),
   )
+  // If there's no tsconfig, create one.
   if (hasTypeScriptFiles && !hasTsConfig) {
-    const tsConfigPath = resolve(cwd, 'tsconfig.json')
-    defaultTsOptions.tsConfigPath = tsConfigPath
-    await writeDefaultTsconfig(tsConfigPath)
+    // Check if tsconfig.json exists in the project first.
+    // If not, create one with default settings.
+    // Otherwise, use the existing one.
+    const defaultTsConfigPath = resolve(cwd, 'tsconfig.json')
+    if (!fileExists(defaultTsConfigPath)) {
+      defaultTsOptions.tsConfigPath = defaultTsConfigPath
+      await writeDefaultTsconfig(defaultTsConfigPath)
+    }
     hasTsConfig = true
   }
 
