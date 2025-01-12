@@ -56,23 +56,43 @@ Add the exports in `package.json`.
 npm run build
 ```
 
+## Usage
+
+### Entry Files
+
 Then files in `src` folders will be treated as entry files and match the export names in package.json.
 Simply like Node.js module resolution, each export name will match the file in `src/` directory.
 
-For example:
+Here's a example of entry files and exports configuration:
 
-- `src/index.ts` will match the exports name `"."` or the only main export.
-- `src/lite.ts` will match the exports name `"./lite"`.
-- `src/react/index.ts` will match the exports name `"./react"`.
+| **File**             | **Exports Name**       |
+| -------------------- | ---------------------- |
+| `src/index.ts`       | `"."` (default export) |
+| `src/lite.ts`        | `"./lite"`             |
+| `src/react/index.ts` | `"./react"`            |
 
-Now just run `npm run build` (or `pnpm build` / `yarn build`) if you're using these package managers, `bunchee` will find the entry files and build them.
-The output format will based on the exports condition and also the file extension. Given an example:
+```json
+{
+  "name": "coffee",
+  "scripts": {
+    "build": "bunchee"
+  },
+  "type": "module",
+  "exports": {
+    // entry: ./src/index.ts
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
 
-- It's CommonJS for `require` and ESM for `import` based on the exports condition.
-- It's CommonJS for `.js` and ESM for `.mjs` based on the extension regardless the exports condition. Then for export condition like "node" you could choose the format with your extension.
+    // entry: ./src/lite.ts
+    "./lite": "./dist/lite.js",
 
-> [!NOTE]
-> All the `dependencies` and `peerDependencies` will be marked as external automatically and not included in the bundle. If you want to include them in the bundle, you can use the `--no-external` option.
+    // entry: ./src/react/index.ts
+    "./react": "./dist/react.js"
+  }
+}
+```
 
 ### Output Formats
 
@@ -97,158 +117,26 @@ The **Default** output format is determined by the file extension:
 | `.cjs`         | [CommonJS](https://nodejs.org/api/packages.html#:~:text=Files%20ending%20with%20.cjs%20are%20always%20loaded%20as%20CommonJS%20regardless%20of%20the%20nearest%20parent%20package.json) |
 | `.mjs`         | [ECMAScript Modules](https://nodejs.org/api/modules.html#the-mjs-extension)                                                                                                             |
 
-### Package Setup & Lint
+### External Dependencies
 
-#### Prepare Package
-
-```sh
-# Use bunchee to prepare package.json configuration
-npm exec bunchee prepare
-# "If you're using other package manager such as pnpm"
-# pnpm bunchee prepare
-
-# "Or use with npx"
-# npx bunchee@latest prepare
-```
-
-Or you can checkout the following cases to configure your package.json.
-
-<details>
-  <summary>JavaScript ESModule</summary>
-
-Then use use the [exports field in package.json](https://nodejs.org/api/packages.html#exports-sugar) to configure different conditions and leverage the same functionality as other bundlers, such as webpack. The exports field allows you to define multiple conditions.
+The `dependencies` and `peerDependencies` will be marked as externalized and wont be included in the bundle. If you want to include them in the bundle, you can use the `--no-external` option. Or you can import the `devDependencies` in your source code to bundle them.
 
 ```json
 {
-  "files": ["dist"],
-  "type": "module",
-  "exports": {
-    ".": "./dist/es/index.js",
-    "./react": "./dist/es/react.js"
+  // Externalized
+  "dependencies": {
+    /* ... */
   },
-  "scripts": {
-    "build": "bunchee"
+  "peerDependencies": {
+    /* ... */
+  },
+
+  // Bundled
+  "devDependencies": {
+    /* ... */
   }
 }
 ```
-
-</details>
-
-<details>
-  <summary>TypeScript</summary>
-
-If you're build a TypeScript library, separate the types from the main entry file and specify the types path in package.json. Types exports need to stay on the top of each export with `types` condition, and you can use `default` condition for the JS bundle file.
-
-```json
-{
-  "files": ["dist"],
-  "type": "module",
-  "main": "./dist/index.js",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./react": {
-      "types": "./dist/react/index.d.ts",
-      "default": "./dist/react/index.js"
-    }
-  },
-  "scripts": {
-    "build": "bunchee"
-  }
-}
-```
-
-</details>
-
-<details>
-  <summary>Hybrid (CJS & ESM) Module Resolution with TypeScript</summary>
-If you're using TypeScript with Node 10 and Node 16 module resolution, you can use the `types` field in package.json to specify the types path. Then `bunchee` will generate the types file with the same extension as the main entry file.
-
-_NOTE_: When you're using `.mjs` or `.cjs` extensions with TypeScript and modern module resolution (above node16), TypeScript will require specific type declaration files like `.d.mts` or `.d.cts` to match the extension. `bunchee` can automatically generate them to match the types to match the condition and extensions.
-
-```json
-{
-  "files": ["dist"],
-  "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    "import": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "require": {
-      "types": "./dist/index.d.cts",
-      "default": "./dist/index.cjs"
-    }
-  },
-  "scripts": {
-    "build": "bunchee"
-  }
-}
-```
-
-</details>
-
-#### Lint Package
-
-`lint` command will check the package.json configuration is valid or not, it can valid few things like:
-
-- if the entry files are matched with the exports conditions.
-- if the entry files are matched with the exports paths.
-
-```sh
-# Use bunchee to lint if the package.json configuration is valid
-npm exec bunchee lint
-```
-
-## Usage
-
-### File Conventions
-
-While `exports` field is becoming the standard of exporting in node.js, bunchee also supports to build multiple exports all in one command.
-
-Provide entry files with the name (`[name].[ext]`) that matches the exported name from exports field in package.json. For instance:
-
-- `<cwd>/src/index.ts` will match `"."` export name or the if there's only one main export.
-- `<cwd>/src/lite.ts` will match `"./lite"` export name.
-
-The build script can be just `bunchee` without configure any input sources for each exports. Of course you can still specify other arguments as you need.
-Briefly, the entry files from `src/` folder will do matching with `exports` conditions from `package.json` and build them into bundles.
-
-Assuming you have default export package as `"."` and subpath export `"./lite"` with different exports condition listed in package.json
-
-```json
-{
-  "name": "example",
-  "scripts": {
-    "build": "bunchee"
-  },
-  "type": "module",
-  "exports": {
-    "./lite": "./dist/lite.js",
-    ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    }
-  }
-}
-```
-
-Then you need to add two entry files `index.ts` and `lite.ts` in project root directory to match the export name `"."` and `"./lite"`, bunchee will associate these entry files with export names then use them as input source and output paths information.
-
-```
-- my-lib/
-  |- src/
-    |- lite.ts
-    |- index.ts
-  |- package.json
-```
-
-It will also look up for `index.<ext>` file under the directory having the name of the export path. For example, if you have `"./lite": "./dist/lite.js"` in exports field, then it will look up for `./lite/index.js` as the entry file as well.
 
 ### Multiple Runtime
 
@@ -266,7 +154,20 @@ For instance:
 }
 ```
 
-### Build CLI
+### Path Alias
+
+`bunchee` supports both TypeScript `paths` config and Node.js [`imports field`](https://nodejs.org/api/packages.html#subpath-imports) in `package.json` for path aliasing. It will resolve the path alias to the correct file path. If you're using modern TypeScript versions, you can also directly configure the `imports` field in `package.json` and it will work as a charm.
+
+```json
+// package.json
+{
+  "imports": {
+    "#util": "./src/utils.ts"
+  }
+}
+```
+
+### Binary CLI
 
 To build executable files with the `bin` field in package.json, `bunchee` requires you to create the `bin` directory under `src` directory. The source file matching will be same as the entry files convention.
 
@@ -426,6 +327,112 @@ bunchee --no-external
 ```
 
 This will include all dependencies within your output bundle.
+
+#### Prepare Package
+
+```sh
+# Use bunchee to prepare package.json configuration
+npm exec bunchee prepare
+# "If you're using other package manager such as pnpm"
+# pnpm bunchee prepare
+
+# "Or use with npx"
+# npx bunchee@latest prepare
+```
+
+Or you can checkout the following cases to configure your package.json.
+
+<details>
+  <summary>JavaScript ESModule</summary>
+
+Then use use the [exports field in package.json](https://nodejs.org/api/packages.html#exports-sugar) to configure different conditions and leverage the same functionality as other bundlers, such as webpack. The exports field allows you to define multiple conditions.
+
+```json
+{
+  "files": ["dist"],
+  "type": "module",
+  "exports": {
+    ".": "./dist/es/index.js",
+    "./react": "./dist/es/react.js"
+  },
+  "scripts": {
+    "build": "bunchee"
+  }
+}
+```
+
+</details>
+
+<details>
+  <summary>TypeScript</summary>
+
+If you're build a TypeScript library, separate the types from the main entry file and specify the types path in package.json. Types exports need to stay on the top of each export with `types` condition, and you can use `default` condition for the JS bundle file.
+
+```json
+{
+  "files": ["dist"],
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "default": "./dist/react/index.js"
+    }
+  },
+  "scripts": {
+    "build": "bunchee"
+  }
+}
+```
+
+</details>
+
+<details>
+  <summary>Hybrid (CJS & ESM) Module Resolution with TypeScript</summary>
+If you're using TypeScript with Node 10 and Node 16 module resolution, you can use the `types` field in package.json to specify the types path. Then `bunchee` will generate the types file with the same extension as the main entry file.
+
+_NOTE_: When you're using `.mjs` or `.cjs` extensions with TypeScript and modern module resolution (above node16), TypeScript will require specific type declaration files like `.d.mts` or `.d.cts` to match the extension. `bunchee` can automatically generate them to match the types to match the condition and extensions.
+
+```json
+{
+  "files": ["dist"],
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "import": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "require": {
+      "types": "./dist/index.d.cts",
+      "default": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "bunchee"
+  }
+}
+```
+
+</details>
+
+#### Lint Package
+
+`lint` command will check the package.json configuration is valid or not, it can valid few things like:
+
+- if the entry files are matched with the exports conditions.
+- if the entry files are matched with the exports paths.
+
+```sh
+# Use bunchee to lint if the package.json configuration is valid
+npm exec bunchee lint
+```
 
 ### Environment Variables
 
