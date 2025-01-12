@@ -1,9 +1,9 @@
 import fs from 'fs'
-import { createCliJob } from '../../testing-utils'
+import { runCli } from '../../testing-utils'
 
 describe('cli', () => {
   it(`cli basic should work properly`, async () => {
-    const { code, distFile } = await createCliJob({
+    const { code, distFile } = await runCli({
       directory: __dirname,
       args: ['hello.js', '-o', 'dist/hello.bundle.js'],
     })
@@ -12,7 +12,7 @@ describe('cli', () => {
   })
 
   it(`cli format should work properly`, async () => {
-    const { code, distFile } = await createCliJob({
+    const { code, distFile } = await runCli({
       directory: __dirname,
       args: ['hello.js', '-f', 'cjs', '-o', 'dist/hello.cjs'],
     })
@@ -24,7 +24,7 @@ describe('cli', () => {
   })
 
   it(`cli compress should work properly`, async () => {
-    const { code, distFile } = await createCliJob({
+    const { code, distFile } = await runCli({
       directory: __dirname,
       args: ['hello.js', '-m', '-o', 'dist/hello.bundle.min.js'],
     })
@@ -36,7 +36,7 @@ describe('cli', () => {
   })
 
   it(`cli sourcemap should work properly`, async () => {
-    const { code, distFile } = await createCliJob({
+    const { code, distFile } = await runCli({
       directory: __dirname,
       args: ['hello.js', '--sourcemap', '-o', 'dist/hello.js'],
     })
@@ -51,7 +51,7 @@ describe('cli', () => {
   })
 
   it(`cli minified with sourcemap should work properly`, async () => {
-    const { code, distFile } = await createCliJob({
+    const { code, distFile } = await runCli({
       directory: __dirname,
       args: ['hello.js', '-m', '--sourcemap', '-o', 'dist/hello.js'],
     })

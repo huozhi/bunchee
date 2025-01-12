@@ -1,9 +1,9 @@
 import fs from 'fs'
-import { createCliJob } from '../../testing-utils'
+import { runCli } from '../../testing-utils'
 
 describe('cli', () => {
   it(`cli external should work properly`, async () => {
-    const { code, distFile } = await createCliJob({
+    const { code, distFile } = await runCli({
       directory: __dirname,
       args: [
         'with-externals.js',
@@ -21,7 +21,7 @@ describe('cli', () => {
   })
 
   it(`cli no-externals should work properly`, async () => {
-    const { code, distFile } = await createCliJob({
+    const { code, distFile } = await runCli({
       directory: __dirname,
       args: [
         'with-externals.js',

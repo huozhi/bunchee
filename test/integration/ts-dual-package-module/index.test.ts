@@ -1,15 +1,10 @@
-import { createIntegrationTest, assertContainFiles } from '../../testing-utils'
+import { createJob, assertContainFiles } from '../../testing-utils'
 
 describe('integration ts-dual-package-module', () => {
+  const { distDir } = createJob({ directory: __dirname })
+
   it('should ensure generated assets', async () => {
-    await createIntegrationTest(
-      {
-        directory: __dirname,
-      },
-      async ({ distDir }) => {
-        const distFiles = ['index.js', 'index.cjs']
-        assertContainFiles(distDir, distFiles)
-      },
-    )
+    const distFiles = ['index.js', 'index.cjs']
+    assertContainFiles(distDir, distFiles)
   })
 })

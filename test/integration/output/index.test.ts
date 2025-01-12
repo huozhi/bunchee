@@ -1,4 +1,4 @@
-import { createIntegrationTest, stripANSIColor } from '../../testing-utils'
+import { createJob, stripANSIColor } from '../../testing-utils'
 
 const getOutputSizeColumnIndex = (line: string): number => {
   let match
@@ -9,77 +9,71 @@ const getOutputSizeColumnIndex = (line: string): number => {
 }
 
 describe('integration output', () => {
+  const { job } = createJob({ directory: __dirname })
+
   it('should match output with exports', async () => {
-    await createIntegrationTest(
-      {
-        directory: __dirname,
-      },
-      async ({ stdout }) => {
-        /*
-        output:
-  
-        Exports          File                        Size
-        cli (bin)        dist/cli.js                 103 B
-        .                dist/index.js               42 B
-        . (react-server) dist/index.react-server.js  55 B
-        ./foo            dist/foo.js                 103 B
-        */
+    /*
+    output:
 
-        const lines = stripANSIColor(stdout).split('\n')
-        const [tableHeads, ...restLines] = lines
-        const cliLine = restLines.find((line) => line.includes('cli'))!
-        const indexLine = restLines.find(
-          (line) => line.includes('. ') && !line.includes('react-server'),
-        )!
-        const indexReactServerLine = restLines.find((line) =>
-          line.includes('. (react-server)'),
-        )!
-        const fooLine = restLines.find((line) => line.includes('./foo'))!
+    Exports          File                        Size
+    cli (bin)        dist/cli.js                 103 B
+    .                dist/index.js               42 B
+    . (react-server) dist/index.react-server.js  55 B
+    ./foo            dist/foo.js                 103 B
+    */
 
-        expect(tableHeads).toContain('Exports')
-        expect(tableHeads).toContain('File')
-        expect(tableHeads).toContain('Size')
+    const { stdout } = job
+    const lines = stripANSIColor(stdout).split('\n')
+    const [tableHeads, ...restLines] = lines
+    const cliLine = restLines.find((line) => line.includes('cli'))!
+    const indexLine = restLines.find(
+      (line) => line.includes('. ') && !line.includes('react-server'),
+    )!
+    const indexReactServerLine = restLines.find((line) =>
+      line.includes('. (react-server)'),
+    )!
+    const fooLine = restLines.find((line) => line.includes('./foo'))!
 
-        expect(cliLine).toContain('cli (bin)')
-        expect(cliLine).toContain('dist/cli.js')
+    expect(tableHeads).toContain('Exports')
+    expect(tableHeads).toContain('File')
+    expect(tableHeads).toContain('Size')
 
-        expect(indexLine).toContain('.')
-        expect(indexLine).toContain('dist/index.js')
+    expect(cliLine).toContain('cli (bin)')
+    expect(cliLine).toContain('dist/cli.js')
 
-        expect(indexReactServerLine).toContain('. (react-server)')
-        expect(indexReactServerLine).toContain('dist/index.react-server.js')
+    expect(indexLine).toContain('.')
+    expect(indexLine).toContain('dist/index.js')
 
-        expect(fooLine).toContain('./foo')
-        expect(fooLine).toContain('dist/foo.js')
+    expect(indexReactServerLine).toContain('. (react-server)')
+    expect(indexReactServerLine).toContain('dist/index.react-server.js')
 
-        const [exportsIndex, fileIndex, sizeIndex] = [
-          tableHeads.indexOf('Exports'),
-          tableHeads.indexOf('File'),
-          tableHeads.indexOf('Size'),
-        ]
+    expect(fooLine).toContain('./foo')
+    expect(fooLine).toContain('dist/foo.js')
 
-        expect(cliLine.indexOf('cli (bin)')).toEqual(exportsIndex)
-        expect(cliLine.indexOf('dist/cli.js')).toEqual(fileIndex)
-        expect(getOutputSizeColumnIndex(cliLine)).toEqual(sizeIndex)
+    const [exportsIndex, fileIndex, sizeIndex] = [
+      tableHeads.indexOf('Exports'),
+      tableHeads.indexOf('File'),
+      tableHeads.indexOf('Size'),
+    ]
 
-        expect(indexLine.indexOf('.')).toEqual(exportsIndex)
-        expect(indexLine.indexOf('dist/index.js')).toEqual(fileIndex)
-        expect(getOutputSizeColumnIndex(indexLine)).toEqual(sizeIndex)
+    expect(cliLine.indexOf('cli (bin)')).toEqual(exportsIndex)
+    expect(cliLine.indexOf('dist/cli.js')).toEqual(fileIndex)
+    expect(getOutputSizeColumnIndex(cliLine)).toEqual(sizeIndex)
 
-        expect(indexReactServerLine.indexOf('. (react-server)')).toEqual(
-          exportsIndex,
-        )
-        expect(
-          indexReactServerLine.indexOf('dist/index.react-server.js'),
-        ).toEqual(fileIndex)
-        expect(getOutputSizeColumnIndex(indexReactServerLine)).toEqual(
-          sizeIndex,
-        )
+    expect(indexLine.indexOf('.')).toEqual(exportsIndex)
+    expect(indexLine.indexOf('dist/index.js')).toEqual(fileIndex)
+    expect(getOutputSizeColumnIndex(indexLine)).toEqual(sizeIndex)
 
-        expect(fooLine.indexOf('./foo')).toEqual(exportsIndex)
-        expect(fooLine.indexOf('dist/foo.js')).toEqual(fileIndex)
-        expect(getOutputSizeColumnIndex(fooLine)).toEqual(sizeIndex)
-      },
+    expect(indexReactServerLine.indexOf('. (react-server)')).toEqual(
+      exportsIndex,
     )
+    expect(indexReactServerLine.indexOf('dist/index.react-server.js')).toEqual(
+      fileIndex,
+    )
+    expect(getOutputSizeColumnIndex(indexReactServerLine)).toEqual(sizeIndex)
+
+    expect(fooLine.indexOf('./foo')).toEqual(exportsIndex)
+    expect(fooLine.indexOf('dist/foo.js')).toEqual(fileIndex)
+    expect(getOutputSizeColumnIndex(fooLine)).toEqual(sizeIndex)
   })
 })

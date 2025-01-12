@@ -3,7 +3,7 @@ import { CreateTestResultExtra, removeDirectory } from './helpers'
 import path from 'path'
 import * as debug from './debug'
 
-export async function createTest<T>(
+export async function createAsyncTest<T>(
   {
     args,
     options,
@@ -70,17 +70,12 @@ export function createSyncTest<T>({
     options: { env?: NodeJS.ProcessEnv },
     processOptions?: { abortTimeout?: number },
   ) => Promise<T>
-}): CreateTestResultExtra & { job: T } {
+}): Omit<CreateTestResultExtra, 'distFile'> & { job: T } {
   const fixturesDir = directory
   const distDir = path.join(fixturesDir, './dist')
-  let distFile = ''
 
   if (!args.includes('--cwd')) {
     args.push('--cwd', fixturesDir)
-  }
-  const outputIndex = args.indexOf('-o')
-  if (outputIndex !== -1) {
-    distFile = path.join(fixturesDir, args[outputIndex + 1])
   }
 
   let result = undefined
@@ -108,7 +103,6 @@ export function createSyncTest<T>({
       return resultProxy
     },
     distDir,
-    distFile,
     dir: directory,
   }
 }

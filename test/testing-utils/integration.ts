@@ -1,25 +1,28 @@
 import {
-  createAsyncTest,
+  createSyncTest,
   executeBunchee,
   type ExcuteBuncheeResult,
 } from './shared'
 
-export async function runCli({
-  args,
-  options,
-  abortTimeout,
-  directory,
-}: {
+type IntegrationTestOptions = {
   args?: string[]
   options?: { env?: NodeJS.ProcessEnv }
   abortTimeout?: number
   directory: string
-}) {
-  return await createAsyncTest<ExcuteBuncheeResult>({
-    directory,
+}
+
+/** Sync testing helper */
+export function createJob({
+  args,
+  options,
+  abortTimeout,
+  directory,
+}: IntegrationTestOptions) {
+  return createSyncTest<ExcuteBuncheeResult>({
     args: args ?? [],
     options: options ?? {},
     abortTimeout,
+    directory,
     run: executeBunchee,
   })
 }

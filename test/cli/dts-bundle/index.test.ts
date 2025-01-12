@@ -1,7 +1,7 @@
 import fs from 'fs'
 import fsp from 'fs/promises'
 import { join } from 'path'
-import { createCliJob, deleteFile } from '../../testing-utils'
+import { runCli, deleteFile } from '../../testing-utils'
 
 describe('cli', () => {
   const dir = __dirname
@@ -16,7 +16,7 @@ describe('cli', () => {
   })
 
   it(`cli dts-bundle option should work properly`, async () => {
-    const { code, distFile } = await createCliJob({
+    const { code, distFile } = await runCli({
       directory: __dirname,
       args: ['./base.ts', '-o', 'dist/base.js', '--dts-bundle'],
     })
@@ -27,7 +27,7 @@ describe('cli', () => {
   })
 
   it(`cli dts-bundle option should not bundle dts without dts-bundle`, async () => {
-    const { code, distFile } = await createCliJob({
+    const { code, distFile } = await runCli({
       directory: __dirname,
       args: ['./base.ts', '-o', 'dist/base.js'],
     })
@@ -42,7 +42,7 @@ describe('cli', () => {
       join(dir, './package.json'),
       '{ "name": "prepare-ts-with-pkg-json", "dependencies": { "@swc/types": "*" } }',
     )
-    const { code, distFile } = await createCliJob({
+    const { code, distFile } = await runCli({
       directory: __dirname,
       args: ['./base.ts', '-o', 'dist/base.js'],
     })

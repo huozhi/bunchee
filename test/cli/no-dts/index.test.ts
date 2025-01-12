@@ -1,9 +1,9 @@
 import fs from 'fs'
 import path from 'path'
-import { createCliJob } from '../../testing-utils'
+import { runCli } from '../../testing-utils'
 
 test(`cli no-dts option should work properly`, async () => {
-  const { code, distFile } = await createCliJob({
+  const { code, distFile } = await runCli({
     directory: __dirname,
     args: ['./base.ts', '-o', 'dist/base.js', '--no-dts'],
   })

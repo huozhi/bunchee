@@ -1,40 +1,36 @@
 import {
+  createJob,
   assertFilesContent,
-  createIntegrationTest,
   getChunkFileNamesFromLog,
   stripANSIColor,
 } from '../../testing-utils'
 
 describe('integration multi-types', () => {
+  const { distDir, job } = createJob({ directory: __dirname })
+
   it('should contain files', async () => {
-    await createIntegrationTest(
-      {
-        directory: __dirname,
-      },
-      async ({ distDir, stdout }) => {
-        const contentsRegex = {
-          'index.js': /'index'/,
-          // types
-          'index.d.ts': `declare const index`,
-          'index.d.mts': `declare const index`,
-          'index.d.cts': `declare const index`,
-        }
+    const { stdout } = job
+    const contentsRegex = {
+      'index.js': /'index'/,
+      // types
+      'index.d.ts': `declare const index`,
+      'index.d.mts': `declare const index`,
+      'index.d.cts': `declare const index`,
+    }
 
-        await assertFilesContent(distDir, contentsRegex)
+    await assertFilesContent(distDir, contentsRegex)
 
-        const log = `\
-          dist/index.cjs
-          dist/index.js
-          dist/index.mjs
-          dist/index.d.mts
-          dist/index.d.cts
-        `
+    const log = `\
+      dist/index.cjs
+      dist/index.js
+      dist/index.mjs
+      dist/index.d.mts
+      dist/index.d.cts
+    `
 
-        const rawStdout = stripANSIColor(stdout)
-        getChunkFileNamesFromLog(log).forEach((chunk: string) => {
-          expect(rawStdout).toContain(chunk)
-        })
-      },
-    )
+    const rawStdout = stripANSIColor(stdout)
+    getChunkFileNamesFromLog(log).forEach((chunk: string) => {
+      expect(rawStdout).toContain(chunk)
+    })
   })
 })

@@ -1,4 +1,4 @@
-import { createIntegrationTest, stripANSIColor } from '../../testing-utils'
+import { createJob, stripANSIColor } from '../../testing-utils'
 
 const getOutputSizeColumnIndex = (line: string): number => {
   let match
@@ -9,36 +9,32 @@ const getOutputSizeColumnIndex = (line: string): number => {
 }
 
 describe('integration output-short', () => {
+  const { job } = createJob({ directory: __dirname })
+
   it('should match output with exports', async () => {
-    await createIntegrationTest(
-      {
-        directory: __dirname,
-      },
-      async ({ stdout }) => {
-        /*
-        output:
-  
-        Exports File          Size
-        .       dist/index.js 30 B
-        */
-        const [tableHeads, indexLine] = stripANSIColor(stdout).split('\n')
-        expect(tableHeads).toContain('Exports')
-        expect(tableHeads).toContain('File')
-        expect(tableHeads).toContain('Size')
+    const { stdout } = job
+    /*
+    output:
 
-        expect(indexLine).toContain('.')
-        expect(indexLine).toContain('dist/index.js')
+    Exports File          Size
+    .       dist/index.js 30 B
+    */
+    const [tableHeads, indexLine] = stripANSIColor(stdout).split('\n')
+    expect(tableHeads).toContain('Exports')
+    expect(tableHeads).toContain('File')
+    expect(tableHeads).toContain('Size')
 
-        const [exportsIndex, fileIndex, sizeIndex] = [
-          tableHeads.indexOf('Exports'),
-          tableHeads.indexOf('File'),
-          tableHeads.indexOf('Size'),
-        ]
+    expect(indexLine).toContain('.')
+    expect(indexLine).toContain('dist/index.js')
 
-        expect(indexLine.indexOf('.')).toEqual(exportsIndex)
-        expect(indexLine.indexOf('dist/index.js')).toEqual(fileIndex)
-        expect(getOutputSizeColumnIndex(indexLine)).toEqual(sizeIndex)
-      },
-    )
+    const [exportsIndex, fileIndex, sizeIndex] = [
+      tableHeads.indexOf('Exports'),
+      tableHeads.indexOf('File'),
+      tableHeads.indexOf('Size'),
+    ]
+
+    expect(indexLine.indexOf('.')).toEqual(exportsIndex)
+    expect(indexLine.indexOf('dist/index.js')).toEqual(fileIndex)
+    expect(getOutputSizeColumnIndex(indexLine)).toEqual(sizeIndex)
   })
 })

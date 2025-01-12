@@ -4,7 +4,7 @@ import { execSync } from 'child_process'
 import {
   assertContainFiles,
   assertFilesContent,
-  createIntegration,
+  createJob,
 } from '../../testing-utils'
 import { existsSync } from 'fs'
 
@@ -16,7 +16,7 @@ describe('integration - no-clean flag', () => {
     await fsp.writeFile(join(distDir, 'no-clean.json'), '{}')
   })
 
-  createIntegration({
+  createJob({
     directory: __dirname,
     args: ['--no-clean'],
   })
@@ -41,7 +41,7 @@ describe('integration - no-clean default', () => {
     await fsp.writeFile(join(distDir, 'no-clean.json'), '{}')
   })
 
-  createIntegration({
+  createJob({
     directory: __dirname,
   })
 

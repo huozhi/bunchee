@@ -1,15 +1,10 @@
-import { assertContainFiles, createIntegrationTest } from '../../testing-utils'
+import { assertContainFiles, createJob } from '../../testing-utils'
 
 describe('integration pkg-exports-js', () => {
+  const { distDir } = createJob({ directory: __dirname })
+
   it('should generate proper assets with js', async () => {
-    await createIntegrationTest(
-      {
-        directory: __dirname,
-      },
-      async ({ distDir }) => {
-        const distFiles = ['index.cjs', 'index.mjs', 'index.esm.js']
-        assertContainFiles(distDir, distFiles)
-      },
-    )
+    const distFiles = ['index.cjs', 'index.mjs', 'index.esm.js']
+    assertContainFiles(distDir, distFiles)
   })
 })

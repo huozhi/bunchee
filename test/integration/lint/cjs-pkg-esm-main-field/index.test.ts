@@ -1,17 +1,14 @@
-import { createIntegrationTest } from '../../../testing-utils'
+import { createJob } from '../../../testing-utils'
 
 describe('integration cjs-pkg-esm-main-field', () => {
+  const { job } = createJob({
+    directory: __dirname,
+    args: ['lint'],
+  })
   it('should warn if main field with .mjs extension in CJS package', async () => {
-    await createIntegrationTest(
-      {
-        args: ['lint'],
-        directory: __dirname,
-      },
-      ({ stderr }) => {
-        expect(stderr).toContain(
-          'Cannot export `main` field with .mjs extension in CJS package, only .js extension is allowed',
-        )
-      },
+    const { stderr } = job
+    expect(stderr).toContain(
+      'Cannot export `main` field with .mjs extension in CJS package, only .js extension is allowed',
     )
   })
 })

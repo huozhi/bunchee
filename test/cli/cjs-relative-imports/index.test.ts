@@ -1,8 +1,8 @@
 import fs from 'fs'
-import { createCliJob } from '../../testing-utils'
+import { runCli } from '../../testing-utils'
 
 test(`cli cjs-relative-imports should work properly`, async () => {
-  const { code, distFile } = await createCliJob({
+  const { code, distFile } = await runCli({
     directory: __dirname,
     args: ['index.js', '-o', 'dist/index.js'],
   })
