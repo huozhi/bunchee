@@ -1,6 +1,1 @@
-{
-  "compilerOptions": {
-    "module": "ESNext",
-    "moduleResolution": "bundler"
-  }
-}
+{ "compilerOptions": { "target": "es5" } }
