@@ -18,7 +18,7 @@ type IntegrationTestOptions = {
   directory: string
 }
 
-export { createCliTest } from './cli'
+export { createCliJob } from './cli'
 
 /**
  * @deprecated
