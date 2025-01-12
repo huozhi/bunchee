@@ -7,5 +7,6 @@
     {
       "path": "./packages/a"
     }
-  ]
+  ],
+  "exclude": ["*.test.ts"]
 }

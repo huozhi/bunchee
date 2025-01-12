@@ -1,15 +1,10 @@
-import { createIntegrationTest, assertContainFiles } from '../../testing-utils'
+import { createJob, assertContainFiles } from '../../testing-utils'
 
 describe('integration esm-pkg-cjs-main-field', () => {
+  const { distDir } = createJob({ directory: __dirname })
+
   it('should work with ESM package with CJS main field ', async () => {
-    await createIntegrationTest(
-      {
-        directory: __dirname,
-      },
-      async ({ distDir }) => {
-        const distFiles = ['index.cjs', 'index.mjs']
-        assertContainFiles(distDir, distFiles)
-      },
-    )
+    const distFiles = ['index.cjs', 'index.mjs']
+    assertContainFiles(distDir, distFiles)
   })
 })

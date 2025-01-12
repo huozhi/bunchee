@@ -1,18 +1,13 @@
 import { readFile } from 'fs/promises'
-import { createIntegrationTest } from '../../testing-utils'
+import { createJob } from '../../testing-utils'
 
 describe('integration externals', () => {
+  const { distDir } = createJob({ directory: __dirname })
+
   it('should handle externals', async () => {
-    await createIntegrationTest(
-      {
-        directory: __dirname,
-      },
-      async ({ distDir }) => {
-        const distFile = `${distDir}/index.js`
-        const content = await readFile(distFile, { encoding: 'utf-8' })
-        expect(content).toMatch(/['"]peer-dep['"]/)
-        expect(content).toMatch(/['"]peer-dep-meta['"]/)
-      },
-    )
+    const distFile = `${distDir}/index.js`
+    const content = await readFile(distFile, { encoding: 'utf-8' })
+    expect(content).toMatch(/['"]peer-dep['"]/)
+    expect(content).toMatch(/['"]peer-dep-meta['"]/)
   })
 })

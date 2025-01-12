@@ -1,10 +1,6 @@
 import fsp from 'fs/promises'
 import { join } from 'path'
-import {
-  assertContainFiles,
-  createIntegrationTest,
-  deleteFile,
-} from '../../testing-utils'
+import { assertContainFiles, createJob, deleteFile } from '../../testing-utils'
 
 describe('integration prepare-ts-with-test-file', () => {
   const dir = __dirname
@@ -12,23 +8,19 @@ describe('integration prepare-ts-with-test-file', () => {
     await deleteFile(join(dir, './package.json'))
     await deleteFile(join(dir, './tsconfig.json'))
   })
+  createJob({
+    args: ['prepare'],
+    directory: __dirname,
+  })
   it('should contain files', async () => {
-    await createIntegrationTest(
-      {
-        args: ['prepare'],
-        directory: __dirname,
-      },
-      async ({ dir }) => {
-        assertContainFiles(dir, ['package.json'])
-        const pkgJson = JSON.parse(
-          await fsp.readFile(join(dir, './package.json'), 'utf-8'),
-        )
-        expect(pkgJson.files).toContain('dist')
-        expect(pkgJson.main).toBe('./dist/es/index.js')
-        expect(pkgJson.module).toBe('./dist/es/index.js')
-        expect(Object.keys(pkgJson.exports)).toEqual(['.'])
-        expect(Object.keys(pkgJson.exports['.'])).not.toContain('./test')
-      },
+    assertContainFiles(dir, ['package.json'])
+    const pkgJson = JSON.parse(
+      await fsp.readFile(join(dir, './package.json'), 'utf-8'),
     )
+    expect(pkgJson.files).toContain('dist')
+    expect(pkgJson.main).toBe('./dist/es/index.js')
+    expect(pkgJson.module).toBe('./dist/es/index.js')
+    expect(Object.keys(pkgJson.exports)).toEqual(['.'])
+    expect(Object.keys(pkgJson.exports['.'])).not.toContain('./test')
   })
 })

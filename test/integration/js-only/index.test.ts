@@ -1,6 +1,6 @@
-import { createIntegrationTest, existsFile } from '../../testing-utils'
+import { createJob, existsFile } from '../../testing-utils'
 
-describe('integration js-only', () => {
+describe('integration - js-only', () => {
   beforeEach(() => {
     // Mock the 'typescript' module to throw an error on import
     jest.mock('typescript', () => {
@@ -13,15 +13,11 @@ describe('integration js-only', () => {
     jest.resetModules() // Reset the module registry to ensure clean state
     jest.clearAllMocks() // Clear mocks after each test
   })
+
+  const { distDir } = createJob({ directory: __dirname })
+
   it('should work with js only project', async () => {
-    await createIntegrationTest(
-      {
-        directory: __dirname,
-      },
-      async ({ distDir }) => {
-        const distFile = `${distDir}/index.js`
-        expect(await existsFile(distFile)).toBe(true)
-      },
-    )
+    const distFile = `${distDir}/index.js`
+    expect(await existsFile(distFile)).toBe(true)
   })
 })

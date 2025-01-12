@@ -1,10 +1,10 @@
 import fs from 'fs'
-import { createCliJob } from '../../testing-utils'
+import { runCli } from '../../testing-utils'
 import path from 'path'
 
 describe('cli', () => {
   it(`cli workspace should work properly`, async () => {
-    const { code, distDir } = await createCliJob({
+    const { code, distDir } = await runCli({
       directory: __dirname,
       args: ['./index.ts'],
     })

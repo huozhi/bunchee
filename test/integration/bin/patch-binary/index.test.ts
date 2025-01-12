@@ -1,22 +1,16 @@
 import {
-  createIntegrationTest,
   assertContainFiles,
   assertFilesContent,
+  createJob,
 } from '../../../testing-utils'
 
 describe('integration bin/patch-binary', () => {
+  const { distDir } = createJob({ directory: __dirname })
   it('should patch binary directive', async () => {
-    await createIntegrationTest(
-      {
-        directory: __dirname,
-      },
-      async ({ distDir }) => {
-        const distFiles = ['bin.js']
-        await assertContainFiles(distDir, distFiles)
-        await assertFilesContent(distDir, {
-          'bin.js': "#!/usr/bin/env node\nconsole.log('Hello, world!');",
-        })
-      },
-    )
+    const distFiles = ['bin.js']
+    await assertContainFiles(distDir, distFiles)
+    await assertFilesContent(distDir, {
+      'bin.js': "#!/usr/bin/env node\nconsole.log('Hello, world!');",
+    })
   })
 })

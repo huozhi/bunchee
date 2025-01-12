@@ -1,8 +1,8 @@
 import fs from 'fs'
-import { createCliJob } from '../../testing-utils'
+import { runCli } from '../../testing-utils'
 
 test(`cli es2020-target should work properly`, async () => {
-  const { code, distFile } = await createCliJob({
+  const { code, distFile } = await runCli({
     directory: __dirname,
     args: ['es2020.ts', '--target', 'es2020', '-o', 'dist/es2020.js'],
   })

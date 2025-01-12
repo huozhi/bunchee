@@ -1,7 +1,7 @@
-import { createIntegration, assertFilesContent } from '../../testing-utils'
+import { createJob, assertFilesContent } from '../../testing-utils'
 
 describe('integration multi-exports', () => {
-  const { dir } = createIntegration({
+  const { dir } = createJob({
     directory: __dirname,
   })
   it('should work with multi exports condition', async () => {

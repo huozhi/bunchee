@@ -1,16 +1,14 @@
-import { createIntegrationTest } from '../../../testing-utils'
+import { createJob } from '../../../testing-utils'
 
 describe('integration - lint - missing-files-exports', () => {
+  const { job } = createJob({
+    directory: __dirname,
+    args: ['lint'],
+  })
+
   it('should warn on missing files', async () => {
-    await createIntegrationTest(
-      {
-        args: ['lint'],
-        directory: __dirname,
-      },
-      async ({ stderr }) => {
-        expect(stderr).toContain('Missing files in package.json')
-        expect(stderr).toContain('foo/index.js')
-      },
-    )
+    const { stderr } = job
+    expect(stderr).toContain('Missing files in package.json')
+    expect(stderr).toContain('foo/index.js')
   })
 })

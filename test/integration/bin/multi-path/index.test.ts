@@ -1,6 +1,6 @@
 import {
   assertFilesContent,
-  createIntegrationTest,
+  createJob,
   isWindows,
 } from '../../../testing-utils'
 
@@ -10,17 +10,13 @@ describe('integration bin/multi-path', () => {
     it('skip test on windows', () => {})
     return
   }
+  const { distDir } = createJob({
+    directory: __dirname,
+  })
   it('should work with bin as multi path', async () => {
-    await createIntegrationTest(
-      {
-        directory: __dirname,
-      },
-      async ({ distDir }) => {
-        await assertFilesContent(distDir, {
-          'bin/a.js': '#!/usr/bin/env node',
-          'bin/b.js': '#!/usr/bin/env node',
-        })
-      },
-    )
+    await assertFilesContent(distDir, {
+      'bin/a.js': '#!/usr/bin/env node',
+      'bin/b.js': '#!/usr/bin/env node',
+    })
   })
 })

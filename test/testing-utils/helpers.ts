@@ -3,6 +3,7 @@ import fsp from 'fs/promises'
 import path from 'path'
 import * as debug from './debug'
 
+// TODO: remove distFIle, since it's only available in runCli
 export type CreateTestResultExtra = {
   dir: string
   distDir: string

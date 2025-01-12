@@ -1,7 +1,7 @@
-import { createCliJob } from '../../testing-utils'
+import { runCli } from '../../testing-utils'
 
 test(`cli no-entry should work properly`, async () => {
-  const { code, stderr } = await createCliJob({
+  const { code, stderr } = await runCli({
     directory: __dirname,
   })
   expect(

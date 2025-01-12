@@ -1,28 +1,22 @@
 import { assertContainFiles, stripANSIColor } from '../../testing-utils'
-import { createIntegrationTest } from '../../testing-utils'
-import * as console from 'node:console'
+import { createJob } from '../../testing-utils'
 
 describe('integration stage3-decorator', () => {
+  const { distDir, job } = createJob({ directory: __dirname })
+
   it('should build success when enable decorator', async () => {
-    await createIntegrationTest(
-      {
-        directory: __dirname,
-      },
-      async ({ distDir, stdout, stderr }) => {
-        console.log(distDir, stdout, stderr)
-        const distFiles = ['index.js', 'index.d.ts']
+    const { stdout } = job
+    const distFiles = ['index.js', 'index.d.ts']
 
-        await assertContainFiles(distDir, distFiles)
+    await assertContainFiles(distDir, distFiles)
 
-        const log = `\
-        dist/index.d.ts
-        dist/index.js`
+    const log = `\
+    dist/index.d.ts
+    dist/index.js`
 
-        const rawStdout = stripANSIColor(stdout)
-        log.split('\n').forEach((line: string) => {
-          expect(rawStdout).toContain(line.trim())
-        })
-      },
-    )
+    const rawStdout = stripANSIColor(stdout)
+    log.split('\n').forEach((line: string) => {
+      expect(rawStdout).toContain(line.trim())
+    })
   })
 })

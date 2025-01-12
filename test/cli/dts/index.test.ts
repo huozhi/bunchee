@@ -1,10 +1,10 @@
 import fs from 'fs'
 import path from 'path'
-import { createCliJob } from '../../testing-utils'
+import { runCli } from '../../testing-utils'
 
 describe('cli', () => {
   it(`cli dts should work properly`, async () => {
-    const { code, distFile } = await createCliJob({
+    const { code, distFile } = await runCli({
       directory: __dirname,
       args: ['./input.ts', '-o', 'dist/output.js'],
     })
