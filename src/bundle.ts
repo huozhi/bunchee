@@ -143,9 +143,9 @@ async function bundle(
     // Otherwise, use the existing one.
     const defaultTsConfigPath = resolve(cwd, 'tsconfig.json')
     if (!fileExists(defaultTsConfigPath)) {
-      defaultTsOptions.tsConfigPath = defaultTsConfigPath
       await writeDefaultTsconfig(defaultTsConfigPath)
     }
+    defaultTsOptions.tsConfigPath = defaultTsConfigPath
     hasTsConfig = true
   }
 
