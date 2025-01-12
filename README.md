@@ -187,13 +187,17 @@ This will match the `bin` field in package.json as:
 }
 ```
 
-For multiple executable files, you can create multiple files under the `bin` directory.
+If you have multiple binaries, you can create multiple files under the `bin` directory. Check the below example for more details.
+
+<details>
+  <summary>Multiple Binaries</summary>
+
+For named executable files, you can create multiple files under the `bin` directory.
 
 ```bash
 |- src/
   |- bin/
-    |- foo.ts
-    |- bar.ts
+
 ```
 
 This will match the `bin` field in package.json as:
@@ -207,19 +211,19 @@ This will match the `bin` field in package.json as:
 }
 ```
 
+</details>
+
 > Note: For multiple `bin` files, the filename should match the key name in the `bin` field.
 
-### Server Components Directives
+### Server Components
 
-`bunchee` supports to build server components and server actions with library directives like `"use client"` or `"use server"`. It will generate the corresponding chunks for client and server that scope the client and server boundaries properly.
-Then when the library is integrated to an app such as Next.js, app bundler can transform the client components and server actions correctly and maximum the benefits.
-
-If you're using `"use client"` or `"use server"` in entry file, then it will be preserved on top and the dist file of that entry will become a client component.
-If you're using `"use client"` or `"use server"` in a file that used as a dependency for an entry, then that file containing directives be split into a separate chunk and hoist the directives to the top of the chunk.
+**bunchee** supports building React Server Components and Server Actions with directives like `"use client"` or `"use server"`. It generates separate chunks for the server or client boundaries. When integrated to framework like Next.js, it can correctly handles the boundaries with the split chunks.
 
 ### Shared Modules
 
-In some cases, you may need to share code across multiple bundles without promoting them to separate entries or exports. These modules should be bundled into shared chunks that can be reused by various bundles. By convention, files or directories **prefixed with an underscore** (`_<name>.<ext>` or `_<name>/**`) are treated as **shared modules**. They're private and not exposed publicly as entry points or exports. Testing, mocking related files are ignored. e.g. `_foo/a.test.ts` will not be treated as shared module.
+Sometimes, you may want to share a chunk across multiple bundles without promoting it to separate entries or exports, such as single instance of React context module, shared utils, etc. In these cases, **shared modules** will help you achieve the goal. Files or directories **prefixed with an underscore** (`_<name>.<ext>` or `_<name>/**`) will be treated as **shared modules**.
+
+These conventions are kept private and are not going to be treat as shared modules or entry points. For example, test or mock files like `_foo/a.test.ts` will be ignored and not included as shared modules.
 
 <details>
   <summary>Shared Utils Example</summary>
@@ -280,37 +284,22 @@ This convention keeps shared modules private while enabling efficient bundling a
 
 #### CLI Options
 
-`bunchee` CLI provides few options to create different bundles or generating types.
+`bunchee` CLI provides few options to create different bundles or generating types. Call `bunchee --help` to see the help information in the terminal.
 
-- Output (`-o <file>`): Specify output filename.
-- Format (`-f <format>`): Set output format (default: `'esm'`).
-- External (`--external <dep,>`): Specifying extra external dependencies, by default it is the list of `dependencies` and `peerDependencies` from `package.json`. Values are separate by comma.
-- Target (`--target <target>`): Set ECMAScript target (default: `'es2015'`).
-- Runtime (`--runtime <runtime>`): Set build runtime (default: `'browser'`).
-- Environment (`--env <env,>`): Define environment variables. (default: `[]`, separate by comma)
-- Working Directory (`--cwd <cwd>`): Set current working directory where containing `package.json`.
-- Minify (`-m`): Compress output.
-- Watch (`-w`): Watch for source file changes.
-- No Clean(`--no-clean`): Do not clean the dist folder before building. (default: `false`)
-- TSConfig (`--tsconfig <path>`): Specify the path to the TypeScript configuration file. (default: `tsconfig.json`)
-- Bundle Types (`--dts-bundle`): Bundle type declaration files. (default: `false`)
+Here are the available options for the CLI:
 
 ```sh
 cd <project-root-dir>
 
-# specifying input, output and format
+# Build based on the package.json configuration
+bunchee --runtime node -o ./dist/bundle.js
+bunchee -f esm -o --target es2022 ./dist/bundle.esm.js
 
-bunchee ./src/index.js -f cjs -o ./dist/bundle.js
-bunchee ./src/index.js -f esm -o ./dist/bundle.esm.js
-
-# build node.js library, or change target to es2019
-bunchee ./src/index.js --runtime node --target es2019
+# Specify the input source file
+bunchee ./src/foo.ts -o ./dist/foo.js
 ```
 
 #### Specifying extra external dependencies
-
-By default, `bunchee` will mark all the `dependencies` and `peerDependencies` as externals so you don't need to pass them as CLI args.
-But if there's any dependency that used but not in the dependency list and you want to mark as external, you can use the `--external` option to specify them.
 
 ```sh
 bunchee --external=dep1,dep2,dep3
