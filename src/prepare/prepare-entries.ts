@@ -1,5 +1,5 @@
 import { existsSync } from 'fs'
-import { glob } from 'glob'
+import { glob } from 'tinyglobby'
 import {
   BINARY_TAG,
   PRIVATE_GLOB_PATTERN,
@@ -28,13 +28,11 @@ export async function collectSourceEntries(sourceFolderPath: string) {
 
   const binMatches = await glob(binPattern, {
     cwd: sourceFolderPath,
-    nodir: true,
     ignore: [PRIVATE_GLOB_PATTERN, TESTS_GLOB_PATTERN], // ignore private entries
   })
 
   const srcMatches = await glob(srcPattern, {
     cwd: sourceFolderPath,
-    nodir: true,
     ignore: [PRIVATE_GLOB_PATTERN, TESTS_GLOB_PATTERN], // ignore private entries
   })
 

@@ -1,7 +1,7 @@
 import { existsSync } from 'fs'
 import fsp from 'fs/promises'
 import path, { posix } from 'path'
-import { glob } from 'glob'
+import { glob } from 'tinyglobby'
 import { getExportTypeFromFile, type ParsedExportsInfo } from './exports'
 import { PackageMetadata, type Entries, ExportPaths } from './types'
 import { logger } from './logger'
@@ -302,7 +302,6 @@ export async function collectSourceEntriesByExportPath(
 
   const entryFiles = await glob(entryFilesPatterns, {
     cwd: dirPath,
-    nodir: true,
     ignore: PRIVATE_GLOB_PATTERN,
   })
 
@@ -403,7 +402,6 @@ export async function collectSourceEntriesFromExportPaths(
   const privatePattern = `**/_*{,/*}{,{.${suffixPattern}}}.{${extPattern}}`
   const privateFiles = await glob(privatePattern, {
     cwd: sourceFolderPath,
-    nodir: true,
     ignore: TESTS_GLOB_PATTERN,
   })
 
