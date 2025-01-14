@@ -85,12 +85,12 @@ describe('integration prepare-ts', () => {
     expect(stripANSIColor(stdout)).toMatchInlineSnapshot(`
       "Detected using TypeScript but tsconfig.json is missing, created a tsconfig.json for you.
       Discovered binaries entries:
-        ./cmd: cmd.ts
         ./cli: cli.ts
+        ./cmd: cmd.ts
       Discovered exports entries:
+        ./foo: foo.ts
         .    : index.ts
         .    : index.react-server.ts
-        ./foo: foo.ts
       ✓ Configured \`exports\` in package.json
       "
     `)

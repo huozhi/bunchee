@@ -51,8 +51,8 @@ describe('integration prepare-js', () => {
       "Discovered binaries entries:
         ./$binary: bin.js
       Discovered exports entries:
-        .    : index.js
         ./foo: foo.js
+        .    : index.js
       ✓ Configured \`exports\` in package.json
       "
     `)
