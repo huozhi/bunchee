@@ -1,4 +1,4 @@
-import { glob } from 'tinyglobby'
+import { glob } from 'fast-glob'
 
 function normalizePath(filePath: string) {
   return filePath.replace(/\\/g, '/')

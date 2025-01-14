@@ -89,8 +89,8 @@ describe('integration prepare-ts', () => {
         ./cmd: cmd.ts
       Discovered exports entries:
         ./foo: foo.ts
-        .    : index.react-server.ts
         .    : index.ts
+        .    : index.react-server.ts
       ✓ Configured \`exports\` in package.json
       "
     `)

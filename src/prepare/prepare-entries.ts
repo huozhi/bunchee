@@ -1,5 +1,5 @@
 import { existsSync } from 'fs'
-import { glob } from 'tinyglobby'
+import { glob } from 'fast-glob'
 import {
   BINARY_TAG,
   PRIVATE_GLOB_PATTERN,
