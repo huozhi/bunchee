@@ -355,7 +355,7 @@ Then use use the [exports field in package.json](https://nodejs.org/api/packages
 <details>
   <summary>TypeScript</summary>
 
-If you're build a TypeScript library, separate the types from the main entry file and specify the types path in package.json. Types exports need to stay on the top of each export with `types` condition, and you can use `default` condition for the JS bundle file.
+If you're building a TypeScript library, separate the types from the main entry file and specify the types path in package.json. Types exports need to stay on the top of each export with `types` condition, and you can use `default` condition for the JS bundle file.
 
 ```json5
 {
