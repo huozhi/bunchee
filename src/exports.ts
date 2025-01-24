@@ -330,9 +330,9 @@ export function getExportTypeFromFile(
   const exportType = isEsmExt
     ? 'import'
     : isCjsExt
-    ? 'require'
-    : isESModule
-    ? 'import'
-    : 'require'
+      ? 'require'
+      : isESModule
+        ? 'import'
+        : 'require'
   return exportType
 }

@@ -32,8 +32,8 @@ export async function buildOutputConfigs(
     cwd,
     dts
       ? bundleConfig.file!
-      : exportCondition.export.types ??
-          getExportFileTypePath(bundleConfig.file!),
+      : (exportCondition.export.types ??
+          getExportFileTypePath(bundleConfig.file!)),
   )
   const typesDir = dirname(dtsFile)
   const jsDir = dirname(absoluteOutputFile!)
@@ -61,10 +61,10 @@ export async function buildOutputConfigs(
       const ext = dts
         ? 'd.ts'
         : isCjsFormat && isEsmPkg
-        ? 'cjs'
-        : !isCjsFormat && !isEsmPkg
-        ? 'mjs'
-        : 'js'
+          ? 'cjs'
+          : !isCjsFormat && !isEsmPkg
+            ? 'mjs'
+            : 'js'
       return '[name]-[hash].' + ext
     },
     // By default in rollup, when creating multiple chunks, transitive imports of entry chunks
