@@ -41,11 +41,11 @@ Add the exports in `package.json`.
 
 ```json5
 {
-  "name":"coffee",
-  "type":"module",
-  "main":"./dist/index.js",
-  "scripts":{
-    "build":"bunchee"
+  "name": "coffee",
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "bunchee"
   }
 }
 ```

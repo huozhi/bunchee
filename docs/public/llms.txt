@@ -1,0 +1,71 @@
+# Bunchee - A Zero-config JavaScript Bundler
+bunchee is a zero-config JavaScript bundler designed to create optimized Node.js and browser-friendly packages. It focuses on simplicity, speed, and developer-friendly defaults, making it an excellent choice for bundling modern JavaScript libraries.
+
+## Key Features
+- **Zero Configuration**: Bundles projects with sensible defaults out of the box.
+- **Tree Shaking**: Removes unused code to produce smaller bundles.
+- **TypeScript Support**: Handles `.ts` and `.tsx` files seamlessly.
+- **ESM and CJS Outputs**: Generates dual modules to support modern and legacy environments.
+- **Source Maps**: Includes inline or external source maps for easier debugging.
+- **CSS/JSON Asset Bundling**: Automatically processes non-JavaScript assets for compatibility.
+- **Fast Build Times**: Built with optimized tooling for rapid iteration.
+
+## Installation
+Install bunchee as a development dependency in your project:
+```bash
+npm install --save-dev bunchee
+```
+
+
+## Usage
+### Build
+Build a project:
+```sh
+mkdir src && touch ./src/index.ts && touch package.json
+```
+
+Add the exports in `package.json`.
+```json
+{
+  "name": "coffee",
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "bunchee"
+  }
+}
+```
+
+Run build:
+```sh
+npm run build
+```
+
+### CLI
+Bundle a JavaScript or TypeScript entry file:
+```bash
+bunchee src/index.js --output dist/bundle.js
+```
+
+### API
+Use bunchee programmatically in your Node.js scripts:
+```javascript
+const bunchee = require('bunchee');
+
+bunchee.bundle({
+  input: 'src/index.js',
+  output: 'dist/bundle.js',
+});
+```
+
+## Example Configuration
+Although bunchee requires no config, you can customize options via CLI flags or programmatically:
+- Specify input and output files
+- Enable/disable source maps
+- Choose output formats (ESM, CJS)
+
+## Contributions
+Contributions are welcome! Check out the repository's [issues](https://github.com/huozhi/bunchee/issues) and [contributing guidelines](https://github.com/huozhi/bunchee/blob/main/CONTRIBUTING.md) for more information.
+
+## License
+bunchee is open-source and available under the [MIT License](https://github.com/huozhi/bunchee/blob/main/LICENSE).
