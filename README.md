@@ -499,8 +499,8 @@ hello world
 
 output
 
-```
-export default "hello world"
+```js
+export default 'hello world'
 ```
 
 ### Node.js API
