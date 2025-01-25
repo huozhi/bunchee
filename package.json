@@ -7,7 +7,6 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "test": "vitest run",
-    "test:ci": "pnpm test -- --ci",
     "test:update": "TEST_UPDATE_SNAPSHOT=1 pnpm test",
     "test:post": "cross-env POST_BUILD=1 pnpm test test/compile.test.ts test/integration.test.ts",
     "docs:dev": "next dev docs",

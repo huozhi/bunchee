@@ -49,7 +49,7 @@ jobs:
       - name: Test
         shell: cmd
         run: |
-          pnpm test:ci || exit /b 1
+          pnpm test || exit /b 1
           pnpm test:post || exit /b 1
 
   install_and_test:
@@ -91,7 +91,7 @@ jobs:
 
       - name: Test
         run: |
-          pnpm test:ci
+          pnpm test
           pnpm test:post
 
   release:
