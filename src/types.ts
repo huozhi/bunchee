@@ -58,6 +58,12 @@ type BundleConfig = {
      * @experimental
      */
     onBuildEnd?: (assetJobs: any) => void
+
+    /*
+     * This hook is called when the build errors
+     * @experimental
+     */
+    onBuildError?: (assetJob: any) => void
   }
 }
 

@@ -11,6 +11,7 @@ import { bundle } from '../../src/index'
 import { prepare } from '../prepare'
 import { RollupWatcher } from 'rollup'
 import { logOutputState } from '../plugins/output-state-plugin'
+import { normalizeError } from '../lib/normalize-error'
 
 const helpMessage = `
 Usage: bunchee [options]
@@ -310,10 +311,15 @@ async function run(args: CliArgs) {
     }
   }
 
+  function onBuildError(error: Error) {
+    logError(error)
+  }
+
   let buildError: any
   bundleConfig._callbacks = {
     onBuildStart,
     onBuildEnd,
+    onBuildError,
   }
 
   if (watch) {
@@ -406,12 +412,9 @@ function logWatcherBuildTime(result: RollupWatcher[], spinner: Spinner) {
   })
 }
 
-function logError(error: any) {
-  if (!error) return
-  // logging source code in format
-  if (error.frame) {
-    process.stderr.write(error.frame + '\n')
-  }
+function logError(err: unknown) {
+  const error = normalizeError(err)
+  logger.error(error)
 }
 
 main().catch(exit)

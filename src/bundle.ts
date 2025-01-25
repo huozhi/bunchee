@@ -173,13 +173,18 @@ async function bundle(
   const generateTypes = hasTsConfig && options.dts !== false
   const rollupJobsOptions: BundleJobOptions = { isFromCli, generateTypes }
 
-  const assetJobs = await createAssetRollupJobs(
-    options,
-    buildContext,
-    rollupJobsOptions,
-  )
+  try {
+    const assetJobs = await createAssetRollupJobs(
+      options,
+      buildContext,
+      rollupJobsOptions,
+    )
 
-  options._callbacks?.onBuildEnd?.(assetJobs)
+    options._callbacks?.onBuildEnd?.(assetJobs)
+  } catch (error) {
+    options._callbacks?.onBuildError?.(error)
+    return Promise.reject(error)
+  }
 }
 
 export default bundle
