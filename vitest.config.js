@@ -14,7 +14,8 @@ export default defineConfig({
       '**/test/fixtures/**',
     ],
     // Test timeout
-    testTimeout: 60000,
+    testTimeout: 60 * 1000,
+    hookTimeout: 20 * 1000,
   },
   resolve: {
     conditions: ['import', 'default'], // Prefer ES modules if available

@@ -29,10 +29,11 @@ export function validateEntryFiles(entryFiles: string[]) {
       .slice(0, -path.extname(filePath).length)
       .replace(/\\/g, '/')
     const segments = filePathWithoutExt.split('/')
-    const lastSegment = segments.pop() || ''
 
-    if (lastSegment !== 'index' && lastSegment !== '') {
-      segments.push(lastSegment)
+    let lastSegment = segments[segments.length - 1]
+    while (lastSegment && (lastSegment === 'index' || lastSegment === '')) {
+      segments.pop()
+      lastSegment = segments[segments.length - 1]
     }
     const fileBasePath = segments.join('/')
 

@@ -40,7 +40,7 @@ describe('validateEntryFiles', () => {
       validateEntryFiles(['index.js', 'index/index.ts']),
     ).toThrowError('Conflicted entry files found for entries: .')
   })
-  it.only('should throw error if the normalized base names are same', () => {
+  it('should throw error if the normalized base names are same', () => {
     expect(() => validateEntryFiles(['foo/index.jsx', 'foo.ts'])).toThrowError(
       'Conflicted entry files found for entries: ./foo',
     )
