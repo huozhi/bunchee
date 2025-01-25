@@ -15,6 +15,7 @@ import {
   BundleJobOptions,
 } from './types'
 import { removeOutputDir } from './utils'
+import { normalizeError } from './lib/normalize-error'
 
 export async function createAssetRollupJobs(
   options: BundleConfig,
@@ -44,7 +45,12 @@ export async function createAssetRollupJobs(
     bundleOrWatch(options, rollupConfig),
   )
 
-  return await Promise.all(rollupJobs)
+  try {
+    return await Promise.all(rollupJobs)
+  } catch (err: unknown) {
+    const error = normalizeError(err)
+    throw error
+  }
 }
 
 async function bundleOrWatch(

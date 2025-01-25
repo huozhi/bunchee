@@ -1,0 +1,4 @@
+{
+  "name": "compile-error",
+  "main": "./dist/index.js"
+}
