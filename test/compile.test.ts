@@ -1,9 +1,9 @@
+import { expect, it } from 'vitest'
 import fs, { promises as fsp } from 'fs'
 import { resolve, dirname, extname } from 'path'
 import { existsFile, fullExtension } from './testing-utils'
 
 const assetPath = process.env.POST_BUILD ? '..' : '../src/index.ts'
-const bundle = require(assetPath).bundle
 
 const baseUnitTestDir = resolve(__dirname, 'compile')
 const unitTestDirs = fs.readdirSync(baseUnitTestDir)
@@ -82,6 +82,8 @@ for (const unitName of unitTestDirs) {
       format: (pkgJson.main ? 'cjs' : 'esm') as 'cjs' | 'esm',
       noClean: true,
     }
+
+    const bundle = (await import(assetPath)).bundle
 
     // build dist file and minified file
     await bundle(inputFileName, { ...baseOptions, file: distFile })

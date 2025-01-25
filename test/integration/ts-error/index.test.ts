@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { join } from 'path'
 import { existsSync } from 'fs'
 import { createJob } from '../../testing-utils'

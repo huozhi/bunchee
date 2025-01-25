@@ -1,3 +1,4 @@
+import { expect, test } from 'vitest'
 import { runCli } from '../../testing-utils'
 
 test('cli - output-in-watch', async () => {

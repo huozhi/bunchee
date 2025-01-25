@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { createJob } from '../../testing-utils'
 
 describe('integration js-bad-configured-types', () => {

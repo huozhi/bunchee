@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { getFileContents, createJob } from '../../testing-utils'
 
 describe('integration - mixed-directives', () => {

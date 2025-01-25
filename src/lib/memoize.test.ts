@@ -1,8 +1,9 @@
+import { describe, expect, it, vi } from 'vitest'
 import { memoizeByKey } from './memoize'
 
 describe('memoize', () => {
   it('should memoize the function by default based on arg', () => {
-    const fn = jest.fn((a: number, b: number) => a + b)
+    const fn = vi.fn((a: number, b: number) => a + b)
     const memoized = memoizeByKey(fn)()
     expect(memoized(1, 2)).toBe(3)
     expect(memoized(1, 2)).toBe(3)
@@ -12,7 +13,7 @@ describe('memoize', () => {
   })
 
   it('should memoize based on the string key resolver', () => {
-    const fn = jest.fn((a: number, b: number) => a + b)
+    const fn = vi.fn((a: number, b: number) => a + b)
     const memoized = memoizeByKey(fn)('key')
     expect(memoized(1, 2)).toBe(3)
     expect(memoized(1, 2)).toBe(3)

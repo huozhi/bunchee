@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { createJob, getFileContents } from '../../testing-utils'
 
 describe('integration - shared-module-special-condition', () => {

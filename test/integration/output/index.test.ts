@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { createJob, stripANSIColor } from '../../testing-utils'
 
 const getOutputSizeColumnIndex = (line: string): number => {

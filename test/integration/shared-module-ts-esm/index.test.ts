@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { createJob, getFileNamesFromDirectory } from '../../testing-utils'
 
 describe('integration shared-module-ts-esm', () => {

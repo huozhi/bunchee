@@ -1,3 +1,4 @@
+import { describe, it } from 'vitest'
 import { assertContainFiles, createJob } from '../../testing-utils'
 
 describe('integration - ts-exports-types', () => {

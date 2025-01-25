@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import fs from 'fs'
 import { runCli } from '../../testing-utils'
 import path from 'path'

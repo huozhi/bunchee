@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { GLOBAL_REQUIRE_REGEX } from './esm-shim'
 
 describe('require regex', () => {

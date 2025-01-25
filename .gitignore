@@ -7,6 +7,7 @@ yalc.lock
 test/**/*.js.map
 .DS_Store
 test/**/tsconfig.json
+test/**/*.d.*
 !test/**/node_modules
 .next
 .vscode

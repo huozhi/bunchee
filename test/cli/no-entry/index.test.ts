@@ -1,3 +1,4 @@
+import { expect, test } from 'vitest'
 import { runCli } from '../../testing-utils'
 
 test(`cli no-entry should work properly`, async () => {

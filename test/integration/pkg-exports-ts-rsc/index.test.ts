@@ -1,3 +1,4 @@
+import { describe, it } from 'vitest'
 import { assertFilesContent, createJob } from '../../testing-utils'
 
 describe('integration pkg-exports-ts-rsc', () => {

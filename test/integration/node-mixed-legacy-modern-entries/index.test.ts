@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { createJob, assertContainFiles } from '../../testing-utils'
 
 describe('node-mixed-legacy-modern-entries', () => {

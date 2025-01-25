@@ -1,3 +1,4 @@
+import { describe, it } from 'vitest'
 import { createJob, assertFilesContent } from '../../testing-utils'
 
 describe('integration dev-prod-special-convention', () => {
@@ -10,7 +11,6 @@ describe('integration dev-prod-special-convention', () => {
       'index.development.mjs': /'index.default'/,
       'index.production.js': /'index.default'/,
       'index.production.mjs': /'index.default'/,
-      // In jest the NODE_ENV is set to test
       'index.js': /'index.default'/,
       'index.mjs': /'index.default'/,
     })

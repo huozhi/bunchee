@@ -1,4 +1,6 @@
 // Import from generated files instead of using tsconfig alias
+import { describe, it } from 'vitest'
+
 import { bundle, type BundleConfig } from './index'
 
 describe('types', () => {

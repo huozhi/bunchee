@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest'
 import { assertContainFiles, stripANSIColor } from '../../testing-utils'
 import { createJob } from '../../testing-utils'
 

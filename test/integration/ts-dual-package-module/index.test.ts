@@ -1,3 +1,4 @@
+import { describe, it } from 'vitest'
 import { createJob, assertContainFiles } from '../../testing-utils'
 
 describe('integration ts-dual-package-module', () => {

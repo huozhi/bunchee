@@ -6,10 +6,10 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "test": "jest --env node",
+    "test": "vitest run",
     "test:ci": "pnpm test -- --ci",
     "test:update": "TEST_UPDATE_SNAPSHOT=1 pnpm test",
-    "test:post": "cross-env POST_BUILD=1 pnpm jest test/compile.test.ts test/integration.test.ts",
+    "test:post": "cross-env POST_BUILD=1 pnpm test test/compile.test.ts test/integration.test.ts",
     "docs:dev": "next dev docs",
     "docs:build": "next build docs",
     "clean": "rm -rf ./dist",
@@ -92,10 +92,8 @@
   "devDependencies": {
     "@huozhi/testing-package": "1.0.0",
     "@swc-node/register": "^1.10.9",
-    "@swc/jest": "^0.2.37",
     "@swc/types": "^0.1.17",
     "@types/clean-css": "^4.2.11",
-    "@types/jest": "29.0.0",
     "@types/node": "^22.9.3",
     "@types/picomatch": "^3.0.1",
     "@types/react": "19.0.1",
@@ -103,36 +101,17 @@
     "bunchee": "link:./",
     "cross-env": "^7.0.3",
     "husky": "^9.0.11",
-    "jest": "29.7.0",
     "lint-staged": "^15.2.2",
     "next": "^15.0.4",
     "picocolors": "^1.0.0",
     "prettier": "3.4.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.4"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,md,json,yml,yaml}": "prettier --write"
-  },
-  "jest": {
-    "moduleDirectories": [
-      "node_modules"
-    ],
-    "moduleNameMapper": {
-      "^bunchee$": "<rootDir>/src/index.ts"
-    },
-    "transform": {
-      "^.+\\.(t|j)sx?$": [
-        "@swc/jest"
-      ]
-    },
-    "testPathIgnorePatterns": [
-      "/node_modules/",
-      "<rootDir>/test/integration/.*/*src",
-      "<rootDir>/test/fixtures"
-    ],
-    "testTimeout": 60000
   },
   "packageManager": "pnpm@9.4.0"
 }

@@ -1,3 +1,4 @@
+import { afterAll, beforeAll } from 'vitest'
 import { fork } from 'child_process'
 import { CreateTestResultExtra, removeDirectory } from './helpers'
 import path from 'path'

@@ -1,3 +1,4 @@
+import { describe, it } from 'vitest'
 import { createJob, assertFilesContent } from '../../testing-utils'
 
 describe('integration dev-prod-convention', () => {
