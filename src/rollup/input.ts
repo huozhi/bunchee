@@ -147,6 +147,7 @@ export async function buildInputConfig(
   } as const
 
   const hasBrowserslistConfig = !!(browserslistConfig && !hasSpecifiedTsTarget)
+  const sourceMap = bundleConfig.sourcemap
   const swcOptions = {
     jsc: {
       ...(!hasSpecifiedTsTarget &&
@@ -162,11 +163,11 @@ export async function buildInputConfig(
       ...(shouldMinify && {
         minify: {
           ...swcMinifyOptions,
-          sourceMap: bundleConfig.sourcemap,
+          sourceMap: sourceMap,
         },
       }),
     },
-    sourceMaps: bundleConfig.sourcemap,
+    sourceMaps: sourceMap,
     inlineSourcesContent: false,
     isModule: true,
     ...(hasBrowserslistConfig && {

@@ -51,7 +51,7 @@ export async function buildOutputConfigs(
     interop: 'auto',
     freeze: false,
     strict: false,
-    sourcemap: bundleConfig.sourcemap,
+    sourcemap: bundleConfig.sourcemap && !dts,
     manualChunks: createSplitChunks(
       pluginContext.moduleDirectiveLayerMap,
       entryFiles,
