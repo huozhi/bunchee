@@ -9,9 +9,12 @@ export { runCli } from './cli'
 export { createJob } from './integration'
 
 export async function getFileNamesFromDirectory(directory: string) {
-  const files = await glob(['**/*.{,c,m}js', '**/*.{,c,m}d.ts'], {
-    cwd: directory,
-  })
+  const files = await glob(
+    ['**/*.{,c,m}js', '**/*.{,c,m}d.ts', '**/*.{,c,m}js.map'],
+    {
+      cwd: directory,
+    },
+  )
 
   return files.sort().map((file) => normalizePath(file))
 }

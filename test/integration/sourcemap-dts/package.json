@@ -1,0 +1,11 @@
+{
+  "name": "sourcemap-dts",
+  "main": "./dist/index.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  }
+}

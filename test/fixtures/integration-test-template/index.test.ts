@@ -1,11 +1,12 @@
 import { describe, it } from 'vitest'
-import { createJob, assertContainFiles } from '../../testing-utils'
+import { createJob, getFileNamesFromDirectory } from '../../testing-utils'
 
 describe('integration - <name>', () => {
   const { distDir } = createJob({
     directory: __dirname,
   })
   it('should work', async () => {
-    assertContainFiles(distDir, ['index.js'])
+    const files = getFileNamesFromDirectory(distDir)
+    // expect(files).toEqual([])
   })
 })
