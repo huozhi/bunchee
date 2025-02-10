@@ -1,0 +1,34 @@
+{
+  "name": "exports-order",
+  "type": "module",
+  "exports": {
+    ".": {
+      "edge-light": {
+        "types": "./dist/index.edge-light.d.ts",
+        "default": "./dist/index.edge-light.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      },
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
+    },
+    "./a": {
+      "edge-light": {
+        "types": "./dist/a.edge-light.d.ts",
+        "default": "./dist/a.edge-light.js"
+      },
+      "require": {
+        "types": "./dist/a.d.cts",
+        "default": "./dist/a.cjs"
+      },
+      "import": {
+        "types": "./dist/a.d.ts",
+        "default": "./dist/a.js"
+      }
+    }
+  }
+}
