@@ -35,7 +35,7 @@ Options:
   --runtime <runtime>    build runtime (nodejs, browser). default: browser
   --env <env>            inlined process env variables, separate by comma. default: NODE_ENV
   --cwd <cwd>            specify current working directory
-  --sourcemap            enable sourcemap generation, default: false
+  --sourcemap            enable sourcemap generation
   --no-dts               do not generate types, default: undefined
   --tsconfig             path to tsconfig file, default: tsconfig.json
   --dts-bundle           bundle type declaration files, default: false
@@ -108,7 +108,7 @@ async function parseCliArgs(argv: string[]) {
     })
     .option('sourcemap', {
       type: 'boolean',
-      default: false,
+      default: undefined,
       description: 'enable sourcemap generation',
     })
     .option('env', {
@@ -194,6 +194,12 @@ async function parseCliArgs(argv: string[]) {
     env: args['env'],
     tsconfig: args['tsconfig'],
   }
+
+  // When minify is enabled, sourcemap should be enabled by default, unless explicitly opted out
+  if (parsedArgs.minify && typeof args['sourcemap'] === 'undefined') {
+    parsedArgs.sourcemap = true
+  }
+
   return parsedArgs
 }
 
