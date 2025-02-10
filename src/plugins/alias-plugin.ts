@@ -135,9 +135,22 @@ export function aliasEntries({
         })?.bundlePath
       }
     } else {
-      matchedBundlePath = exportMapEntries.find((item) => {
-        return findJsBundlePathCallback(item, specialCondition)
-      })?.bundlePath
+      matchedBundlePath = exportMapEntries
+        .sort(
+          // always put special condition after the general condition (default, cjs, esm)
+          (a, b) => {
+            if (a.conditionNames.has(specialCondition)) {
+              return -1
+            }
+            if (b.conditionNames.has(specialCondition)) {
+              return 1
+            }
+            return 0
+          },
+        )
+        .find((item) => {
+          return findJsBundlePathCallback(item, specialCondition)
+        })?.bundlePath
     }
 
     if (matchedBundlePath) {
