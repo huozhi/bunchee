@@ -25,11 +25,8 @@ function findJsBundlePathCallback(
     bundlePath: string
     conditionNames: Set<string>
   },
-  specialCondition: string | null,
+  specialCondition: string,
 ): boolean {
-  if (!specialCondition) {
-    specialCondition = 'default'
-  }
   const hasBundle = bundlePath != null
   const formatCond = format === 'cjs' ? 'require' : 'import'
 
@@ -126,7 +123,7 @@ export function aliasEntries({
       })
       .sort((a, b) => {
         // Always put special condition after the general condition (default, cjs, esm)
-        if (specialCondition) {
+        if (specialCondition !== 'default') {
           if (a.conditionNames.has(specialCondition)) {
             return -1
           } else if (b.conditionNames.has(specialCondition)) {
