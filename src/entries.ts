@@ -237,7 +237,7 @@ function getExportTypeFromExportTypesArray(types: string[]): string {
 export function getSpecialExportTypeFromConditionNames(
   conditionNames: Set<string>,
 ): string {
-  let exportType = 'default'
+  let exportType: string = 'default'
   conditionNames.forEach((value) => {
     if (specialExportConventions.has(value)) {
       exportType = value
