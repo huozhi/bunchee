@@ -25,8 +25,11 @@ function findJsBundlePathCallback(
     bundlePath: string
     conditionNames: Set<string>
   },
-  specialCondition: string,
+  specialCondition: string | null,
 ): boolean {
+  if (!specialCondition) {
+    specialCondition = 'default'
+  }
   const hasBundle = bundlePath != null
   const formatCond = format === 'cjs' ? 'require' : 'import'
 
@@ -110,13 +113,36 @@ export function aliasEntries({
     getSpecialExportTypeFromConditionNames(conditionNames)
   for (const [, exportCondition] of Object.entries(entries)) {
     const exportDistMaps = exportCondition.export
-    const exportMapEntries = Object.entries(exportDistMaps).map(
-      ([composedKey, bundlePath]) => ({
-        conditionNames: new Set(composedKey.split('.')),
-        bundlePath,
-        format,
-      }),
-    )
+    const exportMapEntries = Object.entries(exportDistMaps)
+      .map(([composedKey, bundlePath]) => {
+        const conditionNames = new Set(composedKey.split('.'))
+        return {
+          conditionNames,
+          bundlePath,
+          format,
+          isFallback:
+            conditionNames.size === 1 && conditionNames.has('default'),
+        }
+      })
+      .sort((a, b) => {
+        // Always put special condition after the general condition (default, cjs, esm)
+        if (specialCondition) {
+          if (a.conditionNames.has(specialCondition)) {
+            return -1
+          } else if (b.conditionNames.has(specialCondition)) {
+            return 1
+          }
+        }
+        // Always put default condition at the end.
+        // In the case of cjs resolves default(esm)
+        if (a.isFallback) {
+          return 1
+        }
+        if (b.isFallback) {
+          return -1
+        }
+        return 0
+      })
 
     let matchedBundlePath: string | undefined
     if (dts) {
@@ -135,22 +161,9 @@ export function aliasEntries({
         })?.bundlePath
       }
     } else {
-      matchedBundlePath = exportMapEntries
-        .sort(
-          // always put special condition after the general condition (default, cjs, esm)
-          (a, b) => {
-            if (a.conditionNames.has(specialCondition)) {
-              return -1
-            }
-            if (b.conditionNames.has(specialCondition)) {
-              return 1
-            }
-            return 0
-          },
-        )
-        .find((item) => {
-          return findJsBundlePathCallback(item, specialCondition)
-        })?.bundlePath
+      matchedBundlePath = exportMapEntries.find((item) => {
+        return findJsBundlePathCallback(item, specialCondition)
+      })?.bundlePath
     }
 
     if (matchedBundlePath) {
