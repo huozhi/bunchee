@@ -70,11 +70,11 @@ export async function assertFilesContent(
       })
 
       if (condition instanceof RegExp) {
-        expect(content, `File ${file}`).toMatch(condition)
+        expect(content).toMatch(condition)
       } else if (typeof condition === 'string') {
-        expect(content, `File ${file}`).toContain(condition)
+        expect(content).toContain(condition)
       } else if (typeof condition === 'function') {
-        expect(condition(content), `File ${file}`).toBe(true)
+        expect(condition(content)).toBe(true)
       }
     },
   )

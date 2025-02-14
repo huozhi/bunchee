@@ -236,13 +236,11 @@ function getExportTypeFromExportTypesArray(types: string[]): string {
 
 export function getSpecialExportTypeFromConditionNames(
   conditionNames: Set<string>,
-): 'default' | ({} & string) {
+): string {
   let exportType = 'default'
   conditionNames.forEach((value) => {
     if (specialExportConventions.has(value)) {
       exportType = value
-    } else if (value === 'import' || value === 'require' || value === 'types') {
-      // exportType = value
     }
   })
   return exportType

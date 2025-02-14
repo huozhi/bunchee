@@ -26,7 +26,7 @@ function findJsBundlePathCallback(
     conditionNames: Set<string>
   },
   specialCondition: string,
-  defaultFormat: 'esm' | 'cjs',
+  isESMPkg: boolean,
 ): boolean {
   const hasBundle = bundlePath != null
   const formatCond = format === 'cjs' ? 'require' : 'import'
@@ -40,20 +40,24 @@ function findJsBundlePathCallback(
   // if there's no condition, just return true, assuming format doesn't matter;
   const isMatchedFormat = hasFormatCond ? conditionNames.has(formatCond) : true
 
-  const isDefaultMatch =
-    conditionNames.size === 1 && conditionNames.has('default')
-      ? defaultFormat === format
-      : true
+  // If there's only default condition, and the format is matched
+  const isDefaultOnlyCondition =
+    conditionNames.size === 1 &&
+    conditionNames.has('default') &&
+    bundlePath.endsWith('.js') &&
+    (isESMPkg ? 'esm' : 'cjs') === format
+
   const isMatchedConditionWithFormat =
     conditionNames.has(specialCondition) ||
-    (!conditionNames.has('default') && hasNoSpecialCondition(conditionNames))
+    (!conditionNames.has('default') && hasNoSpecialCondition(conditionNames)) ||
+    isDefaultOnlyCondition
 
   const match =
     isMatchedConditionWithFormat &&
     !isTypesCondName &&
     hasBundle &&
-    isMatchedFormat &&
-    isDefaultMatch
+    isMatchedFormat
+
   if (!match) {
     const fallback = runtimeExportConventionsFallback.get(specialCondition)
     if (!fallback) {
@@ -99,7 +103,7 @@ export function aliasEntries({
   entry: sourceFilePath,
   conditionNames,
   entries,
-  defaultFormat,
+  isESMPkg,
   format,
   dts,
   cwd,
@@ -107,8 +111,7 @@ export function aliasEntries({
   entry: string
   entries: Entries
   format: OutputOptions['format']
-  // when encounter 'default' condition, use this format as default
-  defaultFormat: 'esm' | 'cjs'
+  isESMPkg: boolean
   conditionNames: Set<string>
   dts: boolean
   cwd: string
@@ -122,31 +125,29 @@ export function aliasEntries({
     const exportMapEntries = Object.entries(exportDistMaps)
       .map(([composedKey, bundlePath]) => {
         const conditionNames = new Set(composedKey.split('.'))
+
         return {
           conditionNames,
           bundlePath,
           format,
-          isFallback:
+          isDefaultCondition:
             conditionNames.size === 1 && conditionNames.has('default'),
         }
       })
-      .sort((a, b) => {
+      .sort((condA, condB) => {
         // Always put special condition after the general condition (default, cjs, esm)
-        if (a.conditionNames.has(specialCondition)) {
-          return -1
-        } else if (b.conditionNames.has(specialCondition)) {
-          return 1
+        const specialCondCompare =
+          Number(condA.conditionNames.has(specialCondition)) -
+          Number(condB.conditionNames.has(specialCondition))
+
+        if (specialCondCompare !== 0) {
+          return specialCondCompare
         }
 
         // Always put default condition at the end.
-        // In the case of cjs resolves default(esm)
-        if (a.isFallback) {
-          return 1
-        }
-        if (b.isFallback) {
-          return -1
-        }
-        return 0
+        return (
+          Number(condA.isDefaultCondition) - Number(condB.isDefaultCondition)
+        )
       })
 
     let matchedBundlePath: string | undefined
@@ -167,7 +168,7 @@ export function aliasEntries({
       }
     } else {
       matchedBundlePath = exportMapEntries.find((item) => {
-        return findJsBundlePathCallback(item, specialCondition, defaultFormat)
+        return findJsBundlePathCallback(item, specialCondition, isESMPkg)
       })?.bundlePath
     }
 
