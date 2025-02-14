@@ -7,20 +7,22 @@
         "types": "./dist/a.d.cts",
         "default": "./dist/a.cjs"
       },
-      "default": {
+      "import": {
         "types": "./dist/a.d.ts",
         "default": "./dist/a.js"
-      }
+      },
+      "default": "./dist/a.js"
     },
     "./b": {
       "require": {
         "types": "./dist/b.d.cts",
         "default": "./dist/b.cjs"
       },
-      "default": {
+      "import": {
         "types": "./dist/b.d.ts",
         "default": "./dist/b.js"
-      }
+      },
+      "default": "./dist/b.js"
     }
   },
   "private": true
