@@ -26,6 +26,7 @@ function findJsBundlePathCallback(
     conditionNames: Set<string>
   },
   specialCondition: string,
+  defaultFormat: 'esm' | 'cjs',
 ): boolean {
   const hasBundle = bundlePath != null
   const formatCond = format === 'cjs' ? 'require' : 'import'
@@ -39,6 +40,10 @@ function findJsBundlePathCallback(
   // if there's no condition, just return true, assuming format doesn't matter;
   const isMatchedFormat = hasFormatCond ? conditionNames.has(formatCond) : true
 
+  const isDefaultMatch =
+    conditionNames.size === 1 && conditionNames.has('default')
+      ? defaultFormat === format
+      : true
   const isMatchedConditionWithFormat =
     conditionNames.has(specialCondition) ||
     (!conditionNames.has('default') && hasNoSpecialCondition(conditionNames))
@@ -47,7 +52,8 @@ function findJsBundlePathCallback(
     isMatchedConditionWithFormat &&
     !isTypesCondName &&
     hasBundle &&
-    isMatchedFormat
+    isMatchedFormat &&
+    isDefaultMatch
   if (!match) {
     const fallback = runtimeExportConventionsFallback.get(specialCondition)
     if (!fallback) {
@@ -93,6 +99,7 @@ export function aliasEntries({
   entry: sourceFilePath,
   conditionNames,
   entries,
+  defaultFormat,
   format,
   dts,
   cwd,
@@ -100,6 +107,8 @@ export function aliasEntries({
   entry: string
   entries: Entries
   format: OutputOptions['format']
+  // when encounter 'default' condition, use this format as default
+  defaultFormat: 'esm' | 'cjs'
   conditionNames: Set<string>
   dts: boolean
   cwd: string
@@ -123,13 +132,12 @@ export function aliasEntries({
       })
       .sort((a, b) => {
         // Always put special condition after the general condition (default, cjs, esm)
-        if (specialCondition !== 'default') {
-          if (a.conditionNames.has(specialCondition)) {
-            return -1
-          } else if (b.conditionNames.has(specialCondition)) {
-            return 1
-          }
+        if (a.conditionNames.has(specialCondition)) {
+          return -1
+        } else if (b.conditionNames.has(specialCondition)) {
+          return 1
         }
+
         // Always put default condition at the end.
         // In the case of cjs resolves default(esm)
         if (a.isFallback) {
@@ -159,7 +167,7 @@ export function aliasEntries({
       }
     } else {
       matchedBundlePath = exportMapEntries.find((item) => {
-        return findJsBundlePathCallback(item, specialCondition)
+        return findJsBundlePathCallback(item, specialCondition, defaultFormat)
       })?.bundlePath
     }
 
