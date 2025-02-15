@@ -21,8 +21,15 @@ describe('integration - default-default-export-different-ext', () => {
     ])
 
     const contents = await getFileContents(distDir)
-    expect(contents['a.cjs']).toMatchInlineSnapshot(`
-      "var b_cjs = require('./b.cjs');
+    // TODO: add to contents
+    for (const file in contents) {
+      if (file.includes('.d.')) {
+        delete contents[file]
+      }
+    }
+    expect(contents).toMatchInlineSnapshot(`
+      {
+        "a.cjs": "var b_cjs = require('./b.cjs');
 
       const a = 'a';
 
@@ -33,23 +40,28 @@ describe('integration - default-default-export-different-ext', () => {
       		get: function () { return b_cjs[k]; }
       	});
       });
-      "
-    `)
-    expect(contents['a.js']).toMatchInlineSnapshot(`
-      "export * from './b.js';
+      ",
+        "a.js": "export * from './b.js';
 
       const a = 'a';
 
       export { a };
-      "
-    `)
-    expect(contents['c.cjs']).toMatchInlineSnapshot(`
-      "var a_cjs = require('./a.cjs');
+      ",
+        "b.cjs": "const b = 'b';
+
+      exports.b = b;
+      ",
+        "b.js": "const b = 'b';
+
+      export { b };
+      ",
+        "c.cjs": "var a_cjs = require('./a.cjs');
 
       const c = \`c\${a_cjs.a}\`;
 
       exports.c = c;
-      "
+      ",
+      }
     `)
   })
 })
