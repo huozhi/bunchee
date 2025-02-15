@@ -1,0 +1,32 @@
+{
+  "name": "default-default-esm",
+  "type": "module",
+  "exports": {
+    "./a": {
+      "import": {
+        "types": "./dist/a.d.ts",
+        "default": "./dist/a.js"
+      },
+      "require": {
+        "types": "./dist/a.d.cts",
+        "default": "./dist/a.cjs"
+      },
+      "default": "./dist/a.cjs"
+    },
+    "./b": {
+      "import": {
+        "types": "./dist/b.d.ts",
+        "default": "./dist/b.js"
+      },
+      "require": {
+        "types": "./dist/b.d.cts",
+        "default": "./dist/b.cjs"
+      },
+      "default": "./dist/b.cjs"
+    },
+    "./c": {
+      "default": "./dist/c.cjs"
+    }
+  },
+  "private": true
+}

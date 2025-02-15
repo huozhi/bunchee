@@ -194,6 +194,7 @@ export async function buildInputConfig(
     entry,
     entries,
     format: aliasFormat,
+    isESMPkg: isESModulePackage(pkg.type),
     conditionNames: new Set(currentConditionNames.split('.')),
     dts,
     cwd,

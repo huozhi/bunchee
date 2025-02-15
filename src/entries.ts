@@ -241,8 +241,6 @@ export function getSpecialExportTypeFromConditionNames(
   conditionNames.forEach((value) => {
     if (specialExportConventions.has(value)) {
       exportType = value
-    } else if (value === 'import' || value === 'require' || value === 'types') {
-      // exportType = value
     }
   })
   return exportType

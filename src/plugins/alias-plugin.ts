@@ -26,6 +26,7 @@ function findJsBundlePathCallback(
     conditionNames: Set<string>
   },
   specialCondition: string,
+  isESMPkg: boolean,
 ): boolean {
   const hasBundle = bundlePath != null
   const formatCond = format === 'cjs' ? 'require' : 'import'
@@ -37,6 +38,20 @@ function findJsBundlePathCallback(
   // Check if the format condition is matched:
   // if there's condition existed, check if the format condition is matched;
   // if there's no condition, just return true, assuming format doesn't matter;
+  const bundleFormat = bundlePath.endsWith('.mjs')
+    ? 'esm'
+    : bundlePath.endsWith('.cjs')
+      ? 'cjs'
+      : isESMPkg
+        ? 'esm'
+        : 'cjs'
+
+  // If there's only default condition, and the format is matched
+  const isDefaultOnlyCondition =
+    conditionNames.size === 1 && conditionNames.has('default')
+      ? bundleFormat === format
+      : true
+
   const isMatchedFormat = hasFormatCond ? conditionNames.has(formatCond) : true
 
   const isMatchedConditionWithFormat =
@@ -47,7 +62,9 @@ function findJsBundlePathCallback(
     isMatchedConditionWithFormat &&
     !isTypesCondName &&
     hasBundle &&
-    isMatchedFormat
+    isMatchedFormat &&
+    isDefaultOnlyCondition
+
   if (!match) {
     const fallback = runtimeExportConventionsFallback.get(specialCondition)
     if (!fallback) {
@@ -59,9 +76,9 @@ function findJsBundlePathCallback(
       // The last guard condition is to ensure bundle condition but not types file.
       return (
         isMatchedFormat &&
+        !isTypesCondName &&
         (conditionNames.has(specialCondition) ||
-          fallback.some((name) => conditionNames.has(name))) &&
-        !conditionNames.has('types')
+          fallback.some((name) => conditionNames.has(name)))
       )
     }
   } else {
@@ -93,6 +110,7 @@ export function aliasEntries({
   entry: sourceFilePath,
   conditionNames,
   entries,
+  isESMPkg,
   format,
   dts,
   cwd,
@@ -100,6 +118,7 @@ export function aliasEntries({
   entry: string
   entries: Entries
   format: OutputOptions['format']
+  isESMPkg: boolean
   conditionNames: Set<string>
   dts: boolean
   cwd: string
@@ -111,11 +130,17 @@ export function aliasEntries({
   for (const [, exportCondition] of Object.entries(entries)) {
     const exportDistMaps = exportCondition.export
     const exportMapEntries = Object.entries(exportDistMaps).map(
-      ([composedKey, bundlePath]) => ({
-        conditionNames: new Set(composedKey.split('.')),
-        bundlePath,
-        format,
-      }),
+      ([composedKey, bundlePath]) => {
+        const conditionNames = new Set(composedKey.split('.'))
+
+        return {
+          conditionNames,
+          bundlePath,
+          format,
+          isDefaultCondition:
+            conditionNames.size === 1 && conditionNames.has('default'),
+        }
+      },
     )
 
     let matchedBundlePath: string | undefined
@@ -135,22 +160,25 @@ export function aliasEntries({
         })?.bundlePath
       }
     } else {
-      matchedBundlePath = exportMapEntries
-        .sort(
-          // always put special condition after the general condition (default, cjs, esm)
-          (a, b) => {
-            if (a.conditionNames.has(specialCondition)) {
-              return -1
-            }
-            if (b.conditionNames.has(specialCondition)) {
-              return 1
-            }
-            return 0
-          },
+      const orderedExportConditions = exportMapEntries.sort((condA, condB) => {
+        const bHasSpecialCond = condB.conditionNames.has(specialCondition)
+        const aHasSpecialCond = condA.conditionNames.has(specialCondition)
+        if (bHasSpecialCond || aHasSpecialCond) {
+          const specialCompare =
+            Number(bHasSpecialCond) - Number(aHasSpecialCond)
+          if (specialCompare !== 0) {
+            return specialCompare
+          }
+        }
+
+        // Always put default condition at the end.
+        return (
+          Number(condA.isDefaultCondition) - Number(condB.isDefaultCondition)
         )
-        .find((item) => {
-          return findJsBundlePathCallback(item, specialCondition)
-        })?.bundlePath
+      })
+      matchedBundlePath = orderedExportConditions.find((item) => {
+        return findJsBundlePathCallback(item, specialCondition, isESMPkg)
+      })?.bundlePath
     }
 
     if (matchedBundlePath) {
