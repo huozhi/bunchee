@@ -7,7 +7,7 @@ import {
   specialExportConventions,
   runtimeExportConventionsFallback,
 } from '../constants'
-import { isPrivateExportPath, normalizePath } from '../utils'
+import { normalizePath } from '../utils'
 
 function hasNoSpecialCondition(conditionNames: Set<string>) {
   return [...conditionNames].every(
