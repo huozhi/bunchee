@@ -38,25 +38,33 @@ function findJsBundlePathCallback(
   // Check if the format condition is matched:
   // if there's condition existed, check if the format condition is matched;
   // if there's no condition, just return true, assuming format doesn't matter;
-  const isMatchedFormat = hasFormatCond ? conditionNames.has(formatCond) : true
+
+  const expectedFormat =
+    // ?
+    isESMPkg ? 'esm' : 'cjs'
+  // bundlePath.endsWith('.js')
+  //   : bundlePath.endsWith('.mjs') ? 'esm'
+  //   : bundlePath.endsWith('.cjs') ? 'cjs'
+  //   : null
 
   // If there's only default condition, and the format is matched
   const isDefaultOnlyCondition =
-    conditionNames.size === 1 &&
-    conditionNames.has('default') &&
-    bundlePath.endsWith('.js') &&
-    (isESMPkg ? 'esm' : 'cjs') === format
+    conditionNames.size === 1 && conditionNames.has('default')
+      ? expectedFormat === format
+      : true
+
+  const isMatchedFormat = hasFormatCond ? conditionNames.has(formatCond) : true
 
   const isMatchedConditionWithFormat =
     conditionNames.has(specialCondition) ||
-    (!conditionNames.has('default') && hasNoSpecialCondition(conditionNames)) ||
-    isDefaultOnlyCondition
+    (!conditionNames.has('default') && hasNoSpecialCondition(conditionNames))
 
   const match =
     isMatchedConditionWithFormat &&
     !isTypesCondName &&
     hasBundle &&
-    isMatchedFormat
+    isMatchedFormat &&
+    isDefaultOnlyCondition
 
   if (!match) {
     const fallback = runtimeExportConventionsFallback.get(specialCondition)
@@ -135,13 +143,13 @@ export function aliasEntries({
         }
       })
       .sort((condA, condB) => {
-        // Always put special condition after the general condition (default, cjs, esm)
-        const specialCondCompare =
-          Number(condA.conditionNames.has(specialCondition)) -
-          Number(condB.conditionNames.has(specialCondition))
+        const bHasSpecialCond = condB.conditionNames.has(specialCondition)
+        const aHasSpecialCond = condA.conditionNames.has(specialCondition)
 
-        if (specialCondCompare !== 0) {
-          return specialCondCompare
+        if (aHasSpecialCond) {
+          return -1
+        } else if (bHasSpecialCond) {
+          return 1
         }
 
         // Always put default condition at the end.
