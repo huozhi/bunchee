@@ -46,16 +46,16 @@ describe('integration exports-order', () => {
       export { foo };
       "
     `)
-    // FIXME: the cjs alias is wrong
+
     expect(contents['index.cjs']).toMatchInlineSnapshot(`
-      "var a_edgeLight_js = require('./a.edge-light.js');
+      "var a_cjs = require('./a.cjs');
 
 
 
-      Object.keys(a_edgeLight_js).forEach(function (k) {
+      Object.keys(a_cjs).forEach(function (k) {
       	if (k !== 'default' && !Object.prototype.hasOwnProperty.call(exports, k)) Object.defineProperty(exports, k, {
       		enumerable: true,
-      		get: function () { return a_edgeLight_js[k]; }
+      		get: function () { return a_cjs[k]; }
       	});
       });
       "
@@ -65,7 +65,7 @@ describe('integration exports-order', () => {
       "
     `)
     expect(contents['index.js']).toMatchInlineSnapshot(`
-      "export * from './a.edge-light.js';
+      "export * from './a.js';
       "
     `)
   })
