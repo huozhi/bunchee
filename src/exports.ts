@@ -13,11 +13,7 @@ import {
   normalizePath,
 } from './utils'
 import { baseNameWithoutExtension } from './util/file-path'
-import {
-  BINARY_TAG,
-  dtsExtensionsMap,
-  runtimeExportConventions,
-} from './constants'
+import { BINARY_TAG, dtsExtensionsMap } from './constants'
 import { OutputOptions } from 'rollup'
 
 export function getPackageTypings(pkg: PackageMetadata) {
@@ -75,12 +71,7 @@ function collectExportPath(
         exportValue,
         exportCondition,
       ]
-      addToExportDistMap(
-        exportToDist,
-        currentPath,
-        [outputConditionPair],
-        runtimeExportConventions.has(exportType) ? exportType : undefined,
-      )
+      addToExportDistMap(exportToDist, currentPath, [outputConditionPair])
     } else {
       exportInfo.push([exportValue, exportCondition])
     }
@@ -124,10 +115,9 @@ function addToExportDistMap(
   exportToDist: ParsedExportsInfo,
   exportPath: string,
   outputConditionPairs: [string, string][],
-  specialExportType?: string,
 ) {
   const fullPath = mapExportFullPath(exportPath)
-  // + (specialExportType ? '.' + specialExportType : '')
+
   const existingExportInfo = exportToDist.get(fullPath)
   if (!existingExportInfo) {
     exportToDist.set(fullPath, outputConditionPairs)

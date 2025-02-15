@@ -95,6 +95,7 @@ export async function collectEntriesFromParsedExports(
       }
 
       if (!entries[entryExportPath]) {
+        // Create a new entry
         entries[entryExportPath] = {
           source: sourceFile,
           name: normalizedExportPath,
@@ -408,7 +409,6 @@ export async function collectSourceEntriesFromExportPaths(
     const exportPath = sourceFilenameToExportFullPath(file)
     const isEsmPkg = isESModulePackage(pkg.type)
 
-    // const specialItems: [string, string][] = []
     const specialExportType = getSpecialExportTypeFromSourcePath(file)
     const normalizedExportPath = stripSpecialCondition(exportPath)
     const isSpecialExport = specialExportType !== 'default'

@@ -1,5 +1,5 @@
 import { OutputOptions, Plugin } from 'rollup'
-import { Entries } from '../types'
+import { Entries, ParsedExportCondition } from '../types'
 import { posix } from 'path'
 import { posixRelativify } from '../lib/format'
 import { getSpecialExportTypeFromConditionNames } from '../entries'
@@ -55,8 +55,10 @@ function findJsBundlePathCallback(
   const isMatchedFormat = hasFormatCond ? conditionNames.has(formatCond) : true
 
   const isMatchedConditionWithFormat =
-    conditionNames.has(specialCondition) ||
-    (!conditionNames.has('default') && hasNoSpecialCondition(conditionNames))
+    // Has matched special condition
+    (specialCondition !== 'default' && conditionNames.has(specialCondition)) ||
+    // Match normal condition
+    hasNoSpecialCondition(conditionNames)
 
   const match =
     isMatchedConditionWithFormat &&
@@ -77,7 +79,8 @@ function findJsBundlePathCallback(
       return (
         isMatchedFormat &&
         !isTypesCondName &&
-        (conditionNames.has(specialCondition) ||
+        ((specialCondition !== 'default' &&
+          conditionNames.has(specialCondition)) ||
           fallback.some((name) => conditionNames.has(name)))
       )
     }
@@ -108,7 +111,7 @@ function findTypesFileCallback({
 // Alias entry key to dist bundle path
 export function aliasEntries({
   entry: sourceFilePath,
-  conditionNames,
+  exportCondition,
   entries,
   isESMPkg,
   format,
@@ -119,16 +122,22 @@ export function aliasEntries({
   entries: Entries
   format: OutputOptions['format']
   isESMPkg: boolean
-  conditionNames: Set<string>
+  exportCondition: ParsedExportCondition
   dts: boolean
   cwd: string
 }): Plugin {
+  const currentConditionNames = new Set(
+    Object.keys(exportCondition.export)[0].split('.'),
+  )
+
   // <imported source file path>: <relative path to source's bundle>
   const sourceToRelativeBundleMap = new Map<string, string>()
-  const specialCondition =
-    getSpecialExportTypeFromConditionNames(conditionNames)
+  let specialCondition = getSpecialExportTypeFromConditionNames(
+    currentConditionNames,
+  )
   for (const [, exportCondition] of Object.entries(entries)) {
     const exportDistMaps = exportCondition.export
+
     const exportMapEntries = Object.entries(exportDistMaps).map(
       ([composedKey, bundlePath]) => {
         const conditionNames = new Set(composedKey.split('.'))
@@ -160,23 +169,7 @@ export function aliasEntries({
         })?.bundlePath
       }
     } else {
-      const orderedExportConditions = exportMapEntries.sort((condA, condB) => {
-        const bHasSpecialCond = condB.conditionNames.has(specialCondition)
-        const aHasSpecialCond = condA.conditionNames.has(specialCondition)
-        if (bHasSpecialCond || aHasSpecialCond) {
-          const specialCompare =
-            Number(bHasSpecialCond) - Number(aHasSpecialCond)
-          if (specialCompare !== 0) {
-            return specialCompare
-          }
-        }
-
-        // Always put default condition at the end.
-        return (
-          Number(condA.isDefaultCondition) - Number(condB.isDefaultCondition)
-        )
-      })
-      matchedBundlePath = orderedExportConditions.find((item) => {
+      matchedBundlePath = exportMapEntries.find((item) => {
         return findJsBundlePathCallback(item, specialCondition, isESMPkg)
       })?.bundlePath
     }
