@@ -1,5 +1,5 @@
 'use strict';
-import { c as client } from './client-client-Cm06vGwQ.mjs';
+import { c as client } from './client-12s-Cm06vGwQ.mjs';
 
 var input = (()=>{
     return client();

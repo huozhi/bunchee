@@ -95,7 +95,7 @@
     "@types/clean-css": "^4.2.11",
     "@types/node": "^22.9.3",
     "@types/picomatch": "^3.0.1",
-    "@types/react": "19.0.1",
+    "@types/react": "^19.0.9",
     "@types/yargs": "^17.0.33",
     "bunchee": "link:./",
     "cross-env": "^7.0.3",

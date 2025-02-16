@@ -10,10 +10,10 @@ describe('integration server-components', () => {
     expect(jsFiles).toEqual([
       'index.cjs',
       'index.js',
-      'mod_actions-server-B2kXJwqw.cjs',
-      'mod_actions-server-DSdgX-jM.js',
-      'mod_client-client-BO96FYFA.js',
-      'mod_client-client-DAeHkA4H.cjs',
+      'mod_actions-12x-B2kXJwqw.cjs',
+      'mod_actions-12x-DSdgX-jM.js',
+      'mod_client-12s-BO96FYFA.js',
+      'mod_client-12s-DAeHkA4H.cjs',
       'ui.cjs',
       'ui.js',
     ])

@@ -10,7 +10,7 @@ import { logger } from './logger'
 
 export type TypescriptOptions = {
   tsConfigPath: string | undefined
-  tsCompilerOptions: CompilerOptions
+  tsCompilerOptions: CompilerOptions | undefined
 }
 
 let hasLoggedTsWarning = false
