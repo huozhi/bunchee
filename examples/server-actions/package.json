@@ -2,13 +2,19 @@
   "name": "server-actions-example",
   "type": "module",
   "exports": {
-    "./inline": "./dist/inline.js",
-    "./client": "./dist/client.js"
+    "./inline": {
+      "types": "./dist/inline.d.ts",
+      "default": "./dist/inline.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "default": "./dist/client.js"
+    }
   },
   "devDependencies": {
-    "@types/react": "*"
+    "@types/react": "latest"
   },
-  "dependencies": {
-    "react": "*"
+  "peerDependencies": {
+    "react": "^18 || ^19"
   }
 }

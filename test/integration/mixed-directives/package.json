@@ -2,11 +2,16 @@
   "name": "mixed-directives",
   "type": "module",
   "exports": {
-    "./inline": "./dist/inline.js",
-    "./client": "./dist/client.js"
+    "./inline": {
+      "types": "./dist/inline.d.ts",
+      "default": "./dist/inline.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "default": "./dist/client.js"
+    }
   },
   "dependencies": {
-    "react": "*",
-    "react-dom": "*"
+    "react": "*"
   }
 }

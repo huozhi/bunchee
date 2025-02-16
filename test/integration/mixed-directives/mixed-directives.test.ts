@@ -17,6 +17,12 @@ describe('integration - mixed-directives', () => {
 
       export { action1 as a };
       ",
+        "client.d.ts": "import * as react_jsx_runtime from 'react/jsx-runtime';
+
+      declare function Page(): react_jsx_runtime.JSX.Element;
+
+      export { Page as default };
+      ",
         "client.js": "'use client';
       import { jsx } from 'react/jsx-runtime';
       import { a as action1 } from './action-12x-DOTFC6td.js';
@@ -27,6 +33,12 @@ describe('integration - mixed-directives', () => {
               children: "Action 1"
           });
       }
+
+      export { Page as default };
+      ",
+        "inline.d.ts": "import * as react_jsx_runtime from 'react/jsx-runtime';
+
+      declare function Page(): react_jsx_runtime.JSX.Element;
 
       export { Page as default };
       ",
