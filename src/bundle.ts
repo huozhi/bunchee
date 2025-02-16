@@ -68,7 +68,7 @@ async function bundle(
 
   const defaultTsOptions: TypescriptOptions = {
     tsConfigPath: tsConfig?.tsConfigPath,
-    tsCompilerOptions: tsConfig?.tsCompilerOptions || {},
+    tsCompilerOptions: tsConfig?.tsCompilerOptions,
   }
 
   // Handle single entry file

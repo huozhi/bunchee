@@ -24,7 +24,7 @@ function getModuleLayer(moduleMeta: CustomPluginOptions): string | undefined {
 
 // dependencyGraphMap: Map<subModuleId, Set<entryParentId>>
 export function createSplitChunks(
-  dependencyGraphMap: Map<string, Set<[string, string]>>,
+  dependencyGraphMap: Map<string, Set<[string, string | undefined]>>,
   entryFiles: Set<string>,
 ): GetManualChunk {
   // If there's existing chunk being splitted, and contains a layer { <id>: <chunkGroup> }

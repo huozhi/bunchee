@@ -44,13 +44,13 @@ async function createDtsPlugin(
   cwd: string,
 ) {
   const enableIncrementalWithoutBuildInfo =
-    tsCompilerOptions.incremental && !tsCompilerOptions.tsBuildInfoFile
+    tsCompilerOptions?.incremental && !tsCompilerOptions?.tsBuildInfoFile
   const incrementalOptions = enableIncrementalWithoutBuildInfo
     ? {
         incremental: false,
       }
     : undefined
-  const compositeOptions = tsCompilerOptions.composite
+  const compositeOptions = tsCompilerOptions?.composite
     ? {
         composite: false,
       }
@@ -69,7 +69,7 @@ async function createDtsPlugin(
       // resolving types from <reference> from node_modules
       preserveSymlinks: false,
       target: 'ESNext',
-      ...(!tsCompilerOptions.jsx
+      ...(!tsCompilerOptions?.jsx
         ? {
             jsx: 'react-jsx',
           }
@@ -137,7 +137,9 @@ export async function buildInputConfig(
 
   const { useTypeScript } = buildContext
   const { runtime, target: jscTarget, minify: shouldMinify } = bundleConfig
-  const hasSpecifiedTsTarget = Boolean(tsCompilerOptions.target && tsConfigPath)
+  const hasSpecifiedTsTarget = Boolean(
+    tsCompilerOptions?.target && tsConfigPath,
+  )
 
   const swcParserConfig: import('@swc/types').ParserConfig = {
     syntax: useTypeScript ? 'typescript' : 'ecmascript',
