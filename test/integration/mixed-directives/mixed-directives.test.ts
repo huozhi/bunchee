@@ -10,7 +10,7 @@ describe('integration - mixed-directives', () => {
 
     expect(fileContents).toMatchInlineSnapshot(`
       {
-        "action-server-DOTFC6td.js": "'use server';
+        "action-12x-DOTFC6td.js": "'use server';
       async function action1() {
           return 'action1';
       }
@@ -19,7 +19,7 @@ describe('integration - mixed-directives', () => {
       ",
         "client.js": "'use client';
       import { jsx } from 'react/jsx-runtime';
-      import { a as action1 } from './action-server-DOTFC6td.js';
+      import { a as action1 } from './action-12x-DOTFC6td.js';
 
       function Page() {
           return /*#__PURE__*/ jsx("button", {
