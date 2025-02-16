@@ -39,6 +39,7 @@ Options:
   --no-dts               do not generate types, default: undefined
   --tsconfig             path to tsconfig file, default: tsconfig.json
   --dts-bundle           bundle type declaration files, default: false
+  --success <cmd>     run command after build success
 `
 
 function help() {
@@ -135,6 +136,10 @@ async function parseCliArgs(argv: string[]) {
       type: 'boolean',
       description: 'auto setup package.json for building',
     })
+    .option('success', {
+      type: 'string',
+      description: 'run command after build success',
+    })
     .command(
       'prepare',
       'auto configure package.json exports for building',
@@ -193,6 +198,7 @@ async function parseCliArgs(argv: string[]) {
     clean: args['clean'] !== false,
     env: args['env'],
     tsconfig: args['tsconfig'],
+    onSuccess: args['success'],
   }
 
   // When minify is enabled, sourcemap should be enabled by default, unless explicitly opted out
@@ -222,6 +228,7 @@ async function run(args: CliArgs) {
     env,
     clean,
     tsconfig,
+    onSuccess,
   } = args
   const cwd = args.cwd || process.cwd()
   const file = args.file ? path.resolve(cwd, args.file) : undefined
@@ -243,6 +250,7 @@ async function run(args: CliArgs) {
     env: env?.split(',') || [],
     clean,
     tsconfig,
+    onSuccess,
   }
 
   const cliEntry = source ? path.resolve(cwd, source) : ''

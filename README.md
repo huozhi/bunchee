@@ -282,7 +282,7 @@ This convention keeps shared modules private while enabling efficient bundling a
 
 ### CLI
 
-#### CLI Options
+#### Options
 
 `bunchee` CLI provides few options to create different bundles or generating types. Call `bunchee --help` to see the help information in the terminal.
 
@@ -316,6 +316,14 @@ bunchee --no-external
 ```
 
 This will include all dependencies within your output bundle.
+
+#### Build Successful Command
+
+A command to be executed after a build is successful can be specified using the `--success` option, which is useful for development watching mode:
+
+```sh
+bunchee --watch --success "node ./dist/index.js"
+```
 
 #### Prepare Package
 

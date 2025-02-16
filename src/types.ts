@@ -44,6 +44,7 @@ type BundleConfig = {
   pkg?: PackageMetadata
   clean?: boolean
   tsconfig?: string
+  onSuccess?: string | (() => void | Promise<void>)
 
   // hooks
   /*
@@ -107,6 +108,7 @@ type CliArgs = {
   prepare?: boolean
   clean?: boolean
   tsconfig?: string
+  onSuccess?: string
 }
 
 type BundleOptions = BundleConfig

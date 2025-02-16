@@ -23,6 +23,7 @@ import {
 } from './typescript'
 import { collectEntriesFromParsedExports } from './entries'
 import { createAssetRollupJobs } from './rollup-job'
+import { spawn } from 'child_process'
 
 function assignDefault(
   options: BundleConfig,
@@ -46,7 +47,7 @@ function hasMultiEntryExport(exportPaths: object): boolean {
 
 async function bundle(
   cliEntryPath: string,
-  { cwd: _cwd, ...options }: BundleConfig = {},
+  { cwd: _cwd, onSuccess, ...options }: BundleConfig = {},
 ): Promise<void> {
   const cwd = resolve(process.cwd(), _cwd || '')
   assignDefault(options, 'format', 'esm')
@@ -181,6 +182,24 @@ async function bundle(
     )
 
     options._callbacks?.onBuildEnd?.(assetJobs)
+
+    // Finished building successfully
+    if (onSuccess) {
+      if (typeof onSuccess === 'string') {
+        const successProg = spawn(onSuccess, {
+          shell: true,
+          stdio: 'inherit',
+          cwd,
+        })
+        successProg.on('exit', (code) => {
+          if (code) {
+            process.exitCode = code
+          }
+        })
+      } else {
+        await onSuccess()
+      }
+    }
   } catch (error) {
     options._callbacks?.onBuildError?.(error)
     return Promise.reject(error)
