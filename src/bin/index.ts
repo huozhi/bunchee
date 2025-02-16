@@ -12,7 +12,6 @@ import { prepare } from '../prepare'
 import { RollupWatcher } from 'rollup'
 import { logOutputState } from '../plugins/output-state-plugin'
 import { normalizeError } from '../lib/normalize-error'
-import { spawn } from 'child_process'
 
 const helpMessage = `
 Usage: bunchee [options]
@@ -251,6 +250,7 @@ async function run(args: CliArgs) {
     env: env?.split(',') || [],
     clean,
     tsconfig,
+    onSuccess,
   }
 
   const cliEntry = source ? path.resolve(cwd, source) : ''
@@ -366,19 +366,6 @@ async function run(args: CliArgs) {
     spinner.stop()
   } else {
     spinner.stop(`bunchee ${version} build completed`)
-  }
-
-  if (onSuccess) {
-    const successProg = spawn(onSuccess, {
-      shell: true,
-      stdio: 'inherit',
-      cwd,
-    })
-    successProg.on('exit', (code) => {
-      if (code) {
-        process.exitCode = code
-      }
-    })
   }
 }
 

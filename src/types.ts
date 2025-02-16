@@ -44,6 +44,7 @@ type BundleConfig = {
   pkg?: PackageMetadata
   clean?: boolean
   tsconfig?: string
+  onSuccess?: string | (() => void | Promise<void>)
 
   // hooks
   /*
