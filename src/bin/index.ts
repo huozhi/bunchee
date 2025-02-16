@@ -12,7 +12,7 @@ import { prepare } from '../prepare'
 import { RollupWatcher } from 'rollup'
 import { logOutputState } from '../plugins/output-state-plugin'
 import { normalizeError } from '../lib/normalize-error'
-import { exec, spawn } from 'child_process'
+import { spawn } from 'child_process'
 
 const helpMessage = `
 Usage: bunchee [options]
@@ -40,6 +40,7 @@ Options:
   --no-dts               do not generate types, default: undefined
   --tsconfig             path to tsconfig file, default: tsconfig.json
   --dts-bundle           bundle type declaration files, default: false
+  --success <cmd>     run command after build success
 `
 
 function help() {
@@ -136,7 +137,7 @@ async function parseCliArgs(argv: string[]) {
       type: 'boolean',
       description: 'auto setup package.json for building',
     })
-    .option('on-success', {
+    .option('success', {
       type: 'string',
       description: 'run command after build success',
     })
@@ -198,7 +199,7 @@ async function parseCliArgs(argv: string[]) {
     clean: args['clean'] !== false,
     env: args['env'],
     tsconfig: args['tsconfig'],
-    onSuccess: args['on-success'],
+    onSuccess: args['success'],
   }
 
   // When minify is enabled, sourcemap should be enabled by default, unless explicitly opted out

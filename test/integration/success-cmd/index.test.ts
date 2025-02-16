@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import { createJob } from '../../testing-utils'
 
-describe('integration - on-success', () => {
+describe('integration - success arg', () => {
   const { job } = createJob({
     directory: __dirname,
-    args: ['--on-success', 'node dist/index.js'],
+    args: ['--success', 'node dist/index.js'],
   })
 
   it('should work', async () => {
     console.log(job.stdout + job.stderr)
     expect(job.code).toBe(0)
-    expect(job.stdout).toContain('Log from --on-success')
+    expect(job.stdout).toContain('Log from --success')
   })
 })
