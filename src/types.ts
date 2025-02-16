@@ -107,6 +107,7 @@ type CliArgs = {
   prepare?: boolean
   clean?: boolean
   tsconfig?: string
+  onSuccess?: string
 }
 
 type BundleOptions = BundleConfig

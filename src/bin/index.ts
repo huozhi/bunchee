@@ -12,6 +12,7 @@ import { prepare } from '../prepare'
 import { RollupWatcher } from 'rollup'
 import { logOutputState } from '../plugins/output-state-plugin'
 import { normalizeError } from '../lib/normalize-error'
+import { exec, spawn } from 'child_process'
 
 const helpMessage = `
 Usage: bunchee [options]
@@ -135,6 +136,10 @@ async function parseCliArgs(argv: string[]) {
       type: 'boolean',
       description: 'auto setup package.json for building',
     })
+    .option('on-success', {
+      type: 'string',
+      description: 'run command after build success',
+    })
     .command(
       'prepare',
       'auto configure package.json exports for building',
@@ -193,6 +198,7 @@ async function parseCliArgs(argv: string[]) {
     clean: args['clean'] !== false,
     env: args['env'],
     tsconfig: args['tsconfig'],
+    onSuccess: args['on-success'],
   }
 
   // When minify is enabled, sourcemap should be enabled by default, unless explicitly opted out
@@ -222,6 +228,7 @@ async function run(args: CliArgs) {
     env,
     clean,
     tsconfig,
+    onSuccess,
   } = args
   const cwd = args.cwd || process.cwd()
   const file = args.file ? path.resolve(cwd, args.file) : undefined
@@ -358,6 +365,19 @@ async function run(args: CliArgs) {
     spinner.stop()
   } else {
     spinner.stop(`bunchee ${version} build completed`)
+  }
+
+  if (onSuccess) {
+    const successProg = spawn(onSuccess, {
+      shell: true,
+      stdio: 'inherit',
+      cwd,
+    })
+    successProg.on('exit', (code) => {
+      if (code) {
+        process.exitCode = code
+      }
+    })
   }
 }
 
