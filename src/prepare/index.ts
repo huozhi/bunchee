@@ -260,6 +260,6 @@ export async function prepare(cwd: string): Promise<void> {
     }
   }
 
-  await fsp.writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2))
+  await fsp.writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n')
   logger.info('Configured `exports` in package.json')
 }
