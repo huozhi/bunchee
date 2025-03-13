@@ -31,6 +31,10 @@ export function createSplitChunks(
   const splitChunksGroupMap = new Map<string, string>()
 
   return function splitChunks(id, ctx) {
+    if (/[\\/]node_modules[\\/]\@swc[\\/]helper/.test(id)) {
+      return 'cc' // common chunk
+    }
+
     const moduleInfo = ctx.getModuleInfo(id)
     if (!moduleInfo) {
       return
@@ -57,9 +61,6 @@ export function createSplitChunks(
           dependencyGraphMap.get(subId)!.add([id, moduleLayer])
         }
       }
-    }
-
-    if (!isEntry) {
     }
 
     // If current module has a layer, and it's not an entry
