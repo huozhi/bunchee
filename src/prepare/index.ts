@@ -252,8 +252,11 @@ export async function prepare(cwd: string): Promise<void> {
       } else {
         // Update existing exports
         Object.keys(pkgExports).forEach((exportName) => {
-          if (pkgJson.exports[exportName]) {
-            pkgJson.exports[exportName] = pkgExports[exportName]
+          pkgJson.exports[exportName] = {
+            // Apply the new export conditions
+            ...pkgJson.exports[exportName],
+            // Keep the existing export conditions
+            ...pkgJson.exports[exportName],
           }
         })
       }
