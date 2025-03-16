@@ -157,7 +157,7 @@ export async function buildInputConfig(
           target: jscTarget,
         }),
       loose: true, // Use loose mode
-      externalHelpers: false,
+      externalHelpers: true,
       parser: swcParserConfig,
       transform: {
         decoratorVersion: '2022-03',

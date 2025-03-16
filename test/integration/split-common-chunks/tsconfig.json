@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "ES2016",
+    "module": "ESNext",
+    "moduleResolution": "bundler"
+  },
+  "include": [
+    "src"
+  ]
+}
