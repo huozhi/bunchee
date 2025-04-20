@@ -6,7 +6,7 @@ describe('integration - <name>', () => {
     directory: __dirname,
   })
   it('should work', async () => {
-    const files = getFileNamesFromDirectory(distDir)
+    const files = await getFileNamesFromDirectory(distDir)
     // expect(files).toEqual([])
   })
 })
