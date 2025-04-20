@@ -63,7 +63,7 @@ export async function getFileContents(dir: string, filePaths?: string[]) {
         continue
       }
       const content = await fsp.readFile(fullPath, { encoding: 'utf-8' })
-      results[file] = content
+      results[file.replace(/\\/, '/')] = content
     }
   }
   return results
