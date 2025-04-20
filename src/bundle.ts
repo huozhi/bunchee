@@ -24,6 +24,7 @@ import {
 import { collectEntriesFromParsedExports } from './entries'
 import { createAssetRollupJobs } from './rollup-job'
 import { spawn } from 'child_process'
+import { logger } from './logger'
 
 function assignDefault(
   options: BundleConfig,
@@ -116,10 +117,12 @@ async function bundle(
       const err = new Error(`Entry file "${cliEntryPath}" does not exist`)
       err.name = 'NOT_EXISTED'
       return Promise.reject(err)
-    } else if (cwd) {
+    } else {
+      // Check if the project directory exists
       const hasProjectDir =
-        fs.existsSync(cwd) && (await fsp.stat(cwd)).isDirectory()
-      if (!hasProjectDir) {
+        cwd && fs.existsSync(cwd) && (await fsp.stat(cwd)).isDirectory()
+      // Error if the project directory does not exist
+      if (cwd && !hasProjectDir) {
         const err = new Error(`Project directory "${cwd}" does not exist`)
         err.name = 'NOT_EXISTED'
         return Promise.reject(err)
@@ -133,6 +136,18 @@ async function bundle(
     pkg,
     inputFile,
   )
+
+  // Collect and log missing entries for defined exports
+  const missingEntries = [...parsedExportsInfo.keys()].filter(
+    (key) => !entries[key] && key !== './package.json',
+  )
+  if (missingEntries.length > 0) {
+    logger.warn(
+      `The following exports are defined in package.json but missing source files:\n${missingEntries
+        .map((name) => `⨯ ${name}`)
+        .join('\n')}\n`,
+    )
+  }
 
   const hasTypeScriptFiles = Object.values(entries).some((entry) =>
     isTypescriptFile(entry.source),
