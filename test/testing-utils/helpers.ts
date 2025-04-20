@@ -49,8 +49,22 @@ export async function getFileContents(dir: string, filePaths?: string[]) {
   const files = filePaths || (await fsp.readdir(dir, { recursive: true }))
   for (const file of files) {
     const fullPath = path.resolve(dir, file)
-    const content = await fsp.readFile(fullPath, { encoding: 'utf-8' })
-    results[file] = content
+    // check if fullpath is a directory
+    const isDir = (await fsp.stat(fullPath)).isDirectory()
+    if (isDir) {
+      // recursively get file contents
+      const subDirContents = await getFileContents(fullPath)
+      Object.assign(results, subDirContents)
+      continue
+    } else {
+      // check if file is a file
+      const isFile = (await fsp.stat(fullPath)).isFile()
+      if (!isFile) {
+        continue
+      }
+      const content = await fsp.readFile(fullPath, { encoding: 'utf-8' })
+      results[file] = content
+    }
   }
   return results
 }
