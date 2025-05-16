@@ -35,9 +35,12 @@ export async function createAssetRollupJobs(
     : []
   const allConfigs = assetsConfigs.concat(typesConfigs)
 
-  for (const config of allConfigs) {
-    if (options.clean && !isFromCli) {
-      await removeOutputDir(config.output, buildContext.cwd)
+  // When it's production build (non watch mode), we need to remove the output directory
+  if (!options.watch) {
+    for (const config of allConfigs) {
+      if (options.clean && !isFromCli) {
+        await removeOutputDir(config.output, buildContext.cwd)
+      }
     }
   }
 
