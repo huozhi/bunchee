@@ -81,15 +81,16 @@ async function createDtsPlugin(
       ...compositeOptions,
     })
 
-  const dtsPlugin = (
-    require('rollup-plugin-dts') as typeof import('rollup-plugin-dts')
-  ).default({
+  const { dts: dtsPlugin } = await import('rolldown-plugin-dts')
+
+  return dtsPlugin({
     tsconfig: tsConfigPath,
     compilerOptions: overrideResolvedTsOptions,
-    respectExternal,
+    emitDtsOnly: true,
+    // respectExternal,
   })
 
-  return dtsPlugin
+  // return dtsPlugin
 }
 
 const memoizeDtsPluginByKey = memoizeByKey(createDtsPlugin)
@@ -219,6 +220,7 @@ export async function buildInputConfig(
       bundleConfig.dts && bundleConfig.dts.respectExternal,
       cwd,
     )
+    // @ts-ignore
     typesPlugins.push(dtsPlugin)
   }
 
@@ -257,7 +259,9 @@ export async function buildInputConfig(
             transformMixedEsModules: true,
           }),
         ]
-  ).filter(isNotNull<Plugin>)
+  )
+    // @ts-ignore
+    .filter(isNotNull<Plugin>)
 
   return {
     input: entry,

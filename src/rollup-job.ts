@@ -33,7 +33,7 @@ export async function createAssetRollupJobs(
         isFromCli,
       })
     : []
-  const allConfigs = assetsConfigs.concat(typesConfigs)
+  const allConfigs = assetsConfigs // .concat(typesConfigs)
 
   for (const config of allConfigs) {
     if (options.clean && !isFromCli) {
@@ -45,7 +45,14 @@ export async function createAssetRollupJobs(
     bundleOrWatch(options, rollupConfig),
   )
 
+  const rolldownJobs = typesConfigs.map((rollupConfig) => {
+    console.log('rolldown')
+    const { build: rolldownBuild } = require('rolldown')
+    return rolldownBuild(rollupConfig as any)
+  })
+
   try {
+    await Promise.all(rolldownJobs)
     return await Promise.all(rollupJobs)
   } catch (err: unknown) {
     const error = normalizeError(err)
