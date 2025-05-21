@@ -221,7 +221,7 @@ export async function buildInputConfig(
       cwd,
     )
     // @ts-ignore
-    typesPlugins.push(dtsPlugin)
+    typesPlugins.push(...dtsPlugin)
   }
 
   const plugins: Plugin[] = (
@@ -259,15 +259,15 @@ export async function buildInputConfig(
             transformMixedEsModules: true,
           }),
         ]
-  )
-    // @ts-ignore
     .filter(isNotNull<Plugin>)
+  )
 
   return {
     input: entry,
-    external(id: string) {
-      return externals.some((name) => id === name || id.startsWith(name + '/'))
-    },
+    external: externals, //.concat(externals.map(name => new RegExp(`^${name}(/.*)?$`))),
+    // external(id: string) {
+    //   return externals.some((name) => id === name || id.startsWith(name + '/'))
+    // },
     plugins,
     treeshake: 'recommended',
     onwarn(warning, warn) {

@@ -6,7 +6,7 @@ import {
   rollup,
   watch as rollupWatch,
 } from 'rollup'
-
+import { build as rolldownBuild } from 'rolldown'
 import { buildEntryConfig } from './build-config'
 import {
   BuildContext,
@@ -33,21 +33,22 @@ export async function createAssetRollupJobs(
         isFromCli,
       })
     : []
-  const allConfigs = assetsConfigs // .concat(typesConfigs)
+  // const allConfigs = assetsConfigs // .concat(typesConfigs)
 
-  for (const config of allConfigs) {
+  for (const config of assetsConfigs) {
     if (options.clean && !isFromCli) {
       await removeOutputDir(config.output, buildContext.cwd)
     }
   }
 
-  const rollupJobs = allConfigs.map((rollupConfig) =>
+  const rollupJobs = assetsConfigs.map((rollupConfig) =>
     bundleOrWatch(options, rollupConfig),
   )
 
   const rolldownJobs = typesConfigs.map((rollupConfig) => {
     console.log('rolldown')
-    const { build: rolldownBuild } = require('rolldown')
+    // const { build: rolldownBuild } = require('rolldown')
+    console.log('rollupConfig', rollupConfig)
     return rolldownBuild(rollupConfig as any)
   })
 
