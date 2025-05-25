@@ -224,50 +224,58 @@ export async function buildInputConfig(
     typesPlugins.push(...dtsPlugin)
   }
 
-  const plugins: Plugin[] = (
-    dts
-      ? typesPlugins
-      : [
-          ...commonPlugins,
-          preserveDirectives(),
-          aliasPlugin,
-          inlineCss({ exclude: /node_modules/ }),
-          rawContent({ exclude: /node_modules/ }),
-          isBinEntry && prependShebang(entry),
-          replace({
-            values: inlineDefinedValues,
-            preventAssignment: true,
-          }),
-          nodeResolve({
-            preferBuiltins: runtime === 'node',
-            extensions: nodeResolveExtensions,
-          }),
-          bundleConfig.format === 'esm' && esmShim(),
-          wasm(),
-          swc({
-            include: availableESExtensionsRegex,
-            exclude: 'node_modules',
-            // Use `false` to disable retrieving tsconfig.json
-            tsconfig: tsConfigPath ?? false,
-            ...swcOptions,
-          }),
-          commonjs({
-            exclude: bundleConfig.external || null,
-            // Deal with mixed ESM and CJS modules, such as calling require() in ESM.
-            // For relative paths, the module will be bundled;
-            // For external libraries, the module will not be bundled.
-            transformMixedEsModules: true,
-          }),
-        ]
-    .filter(isNotNull<Plugin>)
-  )
+  const plugins: Plugin[] = dts
+    ? typesPlugins
+    : [
+        ...commonPlugins,
+        preserveDirectives(),
+        aliasPlugin,
+        inlineCss({ exclude: /node_modules/ }),
+        rawContent({ exclude: /node_modules/ }),
+        isBinEntry && prependShebang(entry),
+        replace({
+          values: inlineDefinedValues,
+          preventAssignment: true,
+        }),
+        nodeResolve({
+          preferBuiltins: runtime === 'node',
+          extensions: nodeResolveExtensions,
+        }),
+        bundleConfig.format === 'esm' && esmShim(),
+        wasm(),
+        swc({
+          include: availableESExtensionsRegex,
+          exclude: 'node_modules',
+          // Use `false` to disable retrieving tsconfig.json
+          tsconfig: tsConfigPath ?? false,
+          ...swcOptions,
+        }),
+        commonjs({
+          exclude: bundleConfig.external || null,
+          // Deal with mixed ESM and CJS modules, such as calling require() in ESM.
+          // For relative paths, the module will be bundled;
+          // For external libraries, the module will not be bundled.
+          transformMixedEsModules: true,
+        }),
+      ].filter(isNotNull<Plugin>)
 
   return {
     input: entry,
-    external: externals, //.concat(externals.map(name => new RegExp(`^${name}(/.*)?$`))),
-    // external(id: string) {
-    //   return externals.some((name) => id === name || id.startsWith(name + '/'))
-    // },
+    external(id: string) {
+      if (id.includes('rolldown')) {
+        console.log('id', id)
+      }
+      if (/node_modules/.test(id)) {
+        return true
+      }
+      if (id.startsWith('@rolldown')) {
+        return true
+      }
+      if (id.endsWith('fsevents.node')) {
+        return true
+      }
+      return externals.some((name) => id === name || id.startsWith(name + '/'))
+    },
     plugins,
     treeshake: 'recommended',
     onwarn(warning, warn) {

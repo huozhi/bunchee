@@ -33,7 +33,6 @@ export async function createAssetRollupJobs(
         isFromCli,
       })
     : []
-  // const allConfigs = assetsConfigs // .concat(typesConfigs)
 
   for (const config of assetsConfigs) {
     if (options.clean && !isFromCli) {
@@ -45,11 +44,31 @@ export async function createAssetRollupJobs(
     bundleOrWatch(options, rollupConfig),
   )
 
-  const rolldownJobs = typesConfigs.map((rollupConfig) => {
-    console.log('rolldown')
-    // const { build: rolldownBuild } = require('rolldown')
-    console.log('rollupConfig', rollupConfig)
-    return rolldownBuild(rollupConfig as any)
+  const rolldownJobs = typesConfigs.map((rolldownConfig) => {
+    const external = rolldownConfig.input.external
+    // delete rolldownConfig.input.external
+    rolldownConfig.input.external = undefined
+    // @ts-ignore migrate external
+    rolldownConfig.external = external
+    const plugins = rolldownConfig.input.plugins
+    // delete rolldownConfig.input.plugins
+    rolldownConfig.input.plugins = undefined
+    // @ts-ignore migrate plugins
+    rolldownConfig.plugins = plugins
+    const onwarn = rolldownConfig.input.onwarn
+    rolldownConfig.input.onwarn = undefined
+    // @ts-ignore migrate onwarn
+    rolldownConfig.onwarn = onwarn
+
+    // @ts-ignore migrate input
+    rolldownConfig.input = rolldownConfig.input.input
+    // migrate output
+    delete rolldownConfig.output.manualChunks
+    delete rolldownConfig.output.interop
+    delete rolldownConfig.output.freeze
+    delete rolldownConfig.output.strict
+
+    return rolldownBuild(rolldownConfig as any)
   })
 
   try {
