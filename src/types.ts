@@ -84,8 +84,14 @@ type PackageMetadata = {
   browserslist?: BrowserslistConfig
 }
 
-type BuncheeRollupConfig = {
-  input: InputOptions
+type CustomRollupInputOptions = Pick<
+  InputOptions,
+  'external' | 'plugins' | 'treeshake' | 'onwarn'
+> & {
+  input: string
+}
+
+type BuncheeRollupConfig = CustomRollupInputOptions & {
   output: OutputOptions
 }
 
@@ -165,4 +171,5 @@ export type {
   BundleJobOptions,
   bundleEntryOptions,
   BrowserslistConfig,
+  CustomRollupInputOptions,
 }

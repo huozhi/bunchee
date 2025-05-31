@@ -6,7 +6,7 @@ import type {
   ParsedExportCondition,
   bundleEntryOptions,
 } from './types'
-import type { InputOptions, OutputOptions } from 'rollup'
+import type { OutputOptions } from 'rollup'
 
 import path, { resolve, join } from 'path'
 import {
@@ -79,10 +79,7 @@ async function buildRollupConfigs(
   exportCondition: ParsedExportCondition,
   buildContext: BuildContext,
   dts: boolean,
-): Promise<{
-  input: InputOptions
-  output: OutputOptions
-}> {
+): Promise<BuncheeRollupConfig> {
   const inputOptions = await buildInputConfig(
     entry,
     bundleConfig,
@@ -98,8 +95,14 @@ async function buildRollupConfigs(
     dts,
   )
 
+  const { input, external, plugins, treeshake, onwarn } = inputOptions
+
   return {
-    input: inputOptions,
+    input,
+    external,
+    plugins,
+    treeshake,
+    onwarn,
     output: outputOptions,
   }
 }
