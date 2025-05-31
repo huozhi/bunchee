@@ -1,6 +1,11 @@
-import { InputOptions, Plugin } from 'rollup'
+import { Plugin } from 'rollup'
 import { type Options as SwcOptions } from '@swc/core'
-import { BuildContext, BundleOptions, ParsedExportCondition } from '../types'
+import {
+  BuildContext,
+  BundleOptions,
+  CustomRollupInputOptions,
+  ParsedExportCondition,
+} from '../types'
 import { isBinExportPath, isESModulePackage, isNotNull } from '../utils'
 import { normalizeExportPath } from '../entries'
 import { getDefinedInlineVariables } from '../env'
@@ -100,7 +105,7 @@ export async function buildInputConfig(
   exportCondition: ParsedExportCondition,
   buildContext: BuildContext,
   dts: boolean,
-): Promise<InputOptions> {
+): Promise<CustomRollupInputOptions> {
   const {
     entries,
     pkg,

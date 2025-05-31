@@ -66,16 +66,19 @@ async function bundleOrWatch(
   return runBundle(rollupConfig)
 }
 
-function runBundle({ input, output }: BuncheeRollupConfig) {
-  return rollup(input).then((bundle: RollupBuild) => {
+function runBundle({ output, ...restOptions }: BuncheeRollupConfig) {
+  return rollup(restOptions).then((bundle: RollupBuild) => {
     return bundle.write(output)
   }, catchErrorHandler)
 }
 
-function runWatch({ input, output }: BuncheeRollupConfig): RollupWatcher {
+function runWatch({
+  output,
+  ...restOptions
+}: BuncheeRollupConfig): RollupWatcher {
   const watchOptions: RollupWatchOptions[] = [
     {
-      ...input,
+      ...restOptions,
       output: output,
       watch: {
         exclude: ['node_modules/**'],
