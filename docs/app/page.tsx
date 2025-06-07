@@ -3,7 +3,7 @@ import React from 'react'
 export default function Page() {
   return (
     <div className="root">
-      <nav className="flex items-center justify-between sticky top-0 z-1 bg-[#f9f9f9] border-b border-gray-200">
+      <nav className="flex items-center justify-between sticky top-0 z-1 bg-[#f9f9f9]">
         <h1 className="title">Bunchee</h1>
         <div className="link">
           <a href="https://github.com/huozhi/bunchee#bunchee">{`README.md ↗`}</a>
