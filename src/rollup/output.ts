@@ -44,6 +44,7 @@ export async function buildOutputConfigs(
 
   const outputOptions: OutputOptions = {
     name: pkg.name || name,
+    extend: true,
     dir: dts ? typesDir : jsDir,
     format,
     exports: 'named',
