@@ -42,6 +42,20 @@ export async function buildOutputConfigs(
     Object.values(entries).map((entry) => entry.source),
   )
 
+  // By default, respect the original bunchee sourcemap option
+  let sourcemap: boolean = !!bundleConfig.sourcemap
+
+  // If it's typescript, checking if declaration map is enabled,
+  // otherwise we don't enable sourcemap for type files.
+  // cases:
+  // sourcemap (✓) + declarationMap (✓) => sourcemap for dts
+  // sourcemap (✗) + declarationMap (✓) => sourcemap for dts
+  // sourcemap (✓) + declarationMap (✗) => no sourcemap for dts
+  // sourcemap (✗) + declarationMap (✗) => no sourcemap for dts
+  if (dts) {
+    sourcemap = !!tsCompilerOptions?.declarationMap
+  }
+
   const outputOptions: OutputOptions = {
     name: pkg.name || name,
     extend: true,
@@ -52,7 +66,7 @@ export async function buildOutputConfigs(
     interop: 'auto',
     freeze: false,
     strict: false,
-    sourcemap: bundleConfig.sourcemap && !dts,
+    sourcemap,
     manualChunks: createSplitChunks(
       pluginContext.moduleDirectiveLayerMap,
       entryFiles,
