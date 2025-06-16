@@ -10,7 +10,12 @@ export { createJob } from './integration'
 
 export async function getFileNamesFromDirectory(directory: string) {
   const files = await glob(
-    ['**/*.{,c,m}js', '**/*.{,c,m}d.ts', '**/*.{,c,m}js.map'],
+    [
+      '**/*.{,c,m}js',
+      '**/*.{,c,m}d.ts',
+      '**/*.{,c,m}js.map',
+      '**/*.d.{,c,m}ts.map',
+    ],
     {
       cwd: directory,
     },
