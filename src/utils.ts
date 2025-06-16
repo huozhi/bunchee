@@ -48,12 +48,6 @@ export function fileExists(filePath: string) {
   return fs.existsSync(filePath)
 }
 
-const toCamelCase = (str: string): string => {
-  return str
-    .replace(/[-_]+(.)?/g, (_, c) => (c ? c.toUpperCase() : ''))
-    .replace(/^[A-Z]/, (c) => c.toLowerCase())
-}
-
 // . -> pkg name
 // ./lite -> <pkg name>/lite
 export function getExportPath(
@@ -61,7 +55,7 @@ export function getExportPath(
   cwd: string,
   exportName?: string,
 ) {
-  const name = toCamelCase(pkg.name || path.basename(cwd))
+  const name = pkg.name || path.basename(cwd)
   if (exportName === '.' || !exportName) return name
   return path.join(name, exportName)
 }
