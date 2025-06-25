@@ -1,4 +1,4 @@
-import { glob } from 'fast-glob'
+import { glob } from 'tinyglobby'
 
 function normalizePath(filePath: string) {
   return filePath.replace(/\\/g, '/')
@@ -18,6 +18,7 @@ export async function getFileNamesFromDirectory(directory: string) {
     ],
     {
       cwd: directory,
+      expandDirectories: false,
     },
   )
 
