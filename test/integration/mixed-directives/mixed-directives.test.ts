@@ -17,12 +17,12 @@ describe('integration - mixed-directives', () => {
 
       export { action1 as a };
       ",
-        "client.d.ts": "import * as react_jsx_runtime from 'react/jsx-runtime';
+        "client.d.ts": "import * as react0 from "react";
 
-      declare function Page(): react_jsx_runtime.JSX.Element;
-
-      export { Page as default };
-      ",
+      //#region test/integration/mixed-directives/src/client.d.ts
+      declare function Page(): react0.JSX.Element;
+      //#endregion
+      export { Page as default };",
         "client.js": "'use client';
       import { jsx } from 'react/jsx-runtime';
       import { a as action1 } from './action-12x-DOTFC6td.js';
@@ -36,12 +36,12 @@ describe('integration - mixed-directives', () => {
 
       export { Page as default };
       ",
-        "inline.d.ts": "import * as react_jsx_runtime from 'react/jsx-runtime';
+        "inline.d.ts": "import * as react0 from "react";
 
-      declare function Page(): react_jsx_runtime.JSX.Element;
-
-      export { Page as default };
-      ",
+      //#region test/integration/mixed-directives/src/inline.d.ts
+      declare function Page(): react0.JSX.Element;
+      //#endregion
+      export { Page as default };",
         "inline.js": "import { jsx } from 'react/jsx-runtime';
       import ClientComponent from 'client-component';
 

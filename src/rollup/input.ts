@@ -55,8 +55,10 @@ async function createDtsPlugin(
         incremental: false,
       }
     : undefined
+  // For rolldown-plugin-dts, preserve composite setting for proper project handling
   const compositeOptions = tsCompilerOptions?.composite
     ? {
+        // Keep composite true for rolldown-plugin-dts to handle project references
         composite: false,
       }
     : undefined
@@ -81,17 +83,27 @@ async function createDtsPlugin(
       // error TS5074: Option '--incremental' can only be specified using tsconfig, emitting to single
       // file or when option '--tsBuildInfoFile' is specified.
       ...incrementalOptions,
-      // error TS6379: Composite projects may not disable incremental compilation.
+      // For rolldown-plugin-dts, preserve composite for project references
       ...compositeOptions,
+      // Rolldown requires composite to be false
+      composite: false,
     })
 
-  const dtsPlugin = (
-    require('rollup-plugin-dts') as typeof import('rollup-plugin-dts')
-  ).default({
-    tsconfig: tsConfigPath,
+  const { dts } =
+    require('rolldown-plugin-dts') as typeof import('rolldown-plugin-dts')
+  const dtsPlugin = dts({
+    cwd: cwd,
+    // Use false to let the plugin handle tsconfig resolution on its own
+    tsconfig: false,
     compilerOptions: overrideResolvedTsOptions,
-    respectExternal,
-  })
+    resolve: respectExternal,
+    // Disable incremental to avoid composite project circular dependency issues
+    incremental: false,
+    parallel: true,
+    emitDtsOnly: true,
+    // Use isolated declarations for better performance and avoid tsc issues
+    // isolatedDeclarations: true,
+  }) as Plugin[]
 
   return dtsPlugin
 }
@@ -223,7 +235,7 @@ export async function buildInputConfig(
       bundleConfig.dts && bundleConfig.dts.respectExternal,
       cwd,
     )
-    typesPlugins.push(dtsPlugin)
+    typesPlugins.push(...dtsPlugin)
   }
 
   const plugins: Plugin[] = (

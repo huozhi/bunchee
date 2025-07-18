@@ -34,7 +34,7 @@ describe('cli', () => {
     })
     const typeFile = distFile.replace('.js', '.d.ts')
     expect(fs.existsSync(typeFile)).toBe(true)
-    expect(fs.readFileSync(typeFile, 'utf-8')).toContain("from '@swc/types';")
+    expect(fs.readFileSync(typeFile, 'utf-8')).toContain(`from "@swc/types";`)
     expect(code).toBe(0)
   })
 
@@ -49,7 +49,7 @@ describe('cli', () => {
     })
     const typeFile = distFile.replace('.js', '.d.ts')
     expect(fs.existsSync(typeFile)).toBe(true)
-    expect(fs.readFileSync(typeFile, 'utf-8')).toContain("from '@swc/types';")
+    expect(fs.readFileSync(typeFile, 'utf-8')).toContain(`from "@swc/types";`)
     expect(code).toBe(0)
   })
 })

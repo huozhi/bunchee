@@ -22,7 +22,7 @@ import {
   writeDefaultTsconfig,
 } from './typescript'
 import { collectEntriesFromParsedExports } from './entries'
-import { createAssetRollupJobs } from './rollup-job'
+import { createAssetAndTypeJobs } from './rollup-job'
 import { spawn } from 'child_process'
 import { logger } from './logger'
 
@@ -190,7 +190,7 @@ async function bundle(
   const rollupJobsOptions: BundleJobOptions = { isFromCli, generateTypes }
 
   try {
-    const assetJobs = await createAssetRollupJobs(
+    const assetJobs = await createAssetAndTypeJobs(
       options,
       buildContext,
       rollupJobsOptions,

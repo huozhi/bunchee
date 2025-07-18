@@ -16,40 +16,45 @@ import {
 } from './types'
 import { removeOutputDir } from './utils'
 import { normalizeError } from './lib/normalize-error'
+import { createRolldownDtsJobs } from './rolldown-job'
 
-export async function createAssetRollupJobs(
+export async function createAssetAndTypeJobs(
   options: BundleConfig,
   buildContext: BuildContext,
   bundleJobOptions: BundleJobOptions,
 ) {
   const { isFromCli, generateTypes } = bundleJobOptions
+
+  // Generate assets using rollup
   const assetsConfigs = await buildEntryConfig(options, buildContext, {
     dts: false,
     isFromCli,
   })
-  const typesConfigs = generateTypes
-    ? await buildEntryConfig(options, buildContext, {
-        dts: true,
-        isFromCli,
-      })
-    : []
-  const allConfigs = assetsConfigs.concat(typesConfigs)
 
   // When it's production build (non watch mode), we need to remove the output directory
   if (!options.watch) {
-    for (const config of allConfigs) {
+    for (const config of assetsConfigs) {
       if (options.clean && !isFromCli) {
         await removeOutputDir(config.output, buildContext.cwd)
       }
     }
   }
 
-  const rollupJobs = allConfigs.map((rollupConfig) =>
+  const rollupJobs = assetsConfigs.map((rollupConfig) =>
     bundleOrWatch(options, rollupConfig),
   )
 
+  // Generate types using rolldown
+  const rolldownJobs = generateTypes
+    ? createRolldownDtsJobs(options, buildContext, bundleJobOptions)
+    : Promise.resolve([])
+
   try {
-    return await Promise.all(rollupJobs)
+    const [assetResults, typeResults] = await Promise.all([
+      Promise.all(rollupJobs),
+      rolldownJobs,
+    ])
+    return [...assetResults, ...typeResults]
   } catch (err: unknown) {
     const error = normalizeError(err)
     throw error
