@@ -2,6 +2,7 @@ import {
   build as rolldownBuild,
   type RolldownOutput,
   type RolldownOptions,
+  type OutputOptions as RolldownOutputOptions,
 } from 'rolldown'
 import type {
   BuildContext,
@@ -11,7 +12,6 @@ import type {
 } from './types'
 import { buildEntryConfig } from './build-config'
 import { removeOutputDir } from './utils'
-import { normalizeError } from './lib/normalize-error'
 
 export async function createRolldownDtsJobs(
   options: BundleConfig,
@@ -39,19 +39,17 @@ export async function createRolldownDtsJobs(
   }
 
   const rolldownJobs = typesConfigs.map((rollupConfig) => {
-    rollupConfig.output.inlineDynamicImports = true
+    // remove incompatible options
     delete rollupConfig.output.chunkFileNames
     delete rollupConfig.output.manualChunks
+    delete rollupConfig.output.interop
+    delete rollupConfig.output.freeze
+    delete rollupConfig.output.strict
 
     return bundleRolldown(rollupConfig)
   })
 
-  try {
-    return await Promise.all(rolldownJobs)
-  } catch (err: unknown) {
-    const error = normalizeError(err)
-    throw error
-  }
+  return await Promise.all(rolldownJobs)
 }
 
 async function bundleRolldown(
@@ -74,24 +72,13 @@ async function bundleRolldown(
     onwarn: restOptions.onwarn,
   }
 
-  try {
-    // rolldownBuild takes input and output options together
-    const buildOptions = {
-      ...rolldownOptions,
-      output: {
-        // file: outputFile,
-        dir: output.dir,
-        // inlineDynamicImports: true,
-        format: output.format as any,
-        sourcemap: output.sourcemap,
-      },
-    }
-
-    return await rolldownBuild(buildOptions)
-  } catch (error: any) {
-    // Handle rolldown specific errors
-    const err = new Error(error.message)
-    err.stack = error.stack
-    throw err
+  const buildOptions = {
+    ...rolldownOptions,
+    output: {
+      ...(output as unknown as RolldownOutputOptions),
+      inlineDynamicImports: true, // Force single file output
+    },
   }
+
+  return await rolldownBuild(buildOptions)
 }

@@ -14,7 +14,7 @@ export default defineConfig({
       '**/test/fixtures/**',
     ],
     // Test timeout
-    testTimeout: 60 * 1000,
+    // testTimeout: 60 * 1000,
     hookTimeout: 20 * 1000,
   },
   resolve: {

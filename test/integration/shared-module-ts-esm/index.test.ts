@@ -13,6 +13,7 @@ describe('integration shared-module-ts-esm', () => {
       'cjs/index.d.ts',
       'cjs/index.js',
       'es/index.mjs',
+      'es/index.d.mts',
     ])
   })
 })

@@ -9,15 +9,16 @@ describe('integration multi-exports', () => {
     const contents = await getFileContents(distDir)
     expect(contents).toMatchInlineSnapshot(`
       {
-        "cjs/index.d.cts": "import { Foo } from '../../foo/cjs/index.cjs';
-
+        "cjs/index.d.ts": "//#region test/integration/multi-exports-ts/src/foo.d.ts
+      declare const foo = "foo";
+      type Foo = typeof foo;
+      //#endregion
+      //#region test/integration/multi-exports-ts/src/index.d.ts
       declare const index = "index";
       declare const fooIndex = "foo";
       type FooIndex = Foo;
-
-      export { fooIndex, index };
-      export type { FooIndex };
-      ",
+      //#endregion
+      export { FooIndex, fooIndex, index };",
         "cjs/index.js": "var index_js = require('../../foo/cjs/index.js');
 
       const index = 'index';
@@ -26,15 +27,16 @@ describe('integration multi-exports', () => {
       exports.fooIndex = fooIndex;
       exports.index = index;
       ",
-        "es/index.d.mts": "import { Foo } from '../../foo/es/index.mjs';
-
+        "es/index.d.ts": "//#region test/integration/multi-exports-ts/src/foo.d.ts
+      declare const foo = "foo";
+      type Foo = typeof foo;
+      //#endregion
+      //#region test/integration/multi-exports-ts/src/index.d.ts
       declare const index = "index";
       declare const fooIndex = "foo";
       type FooIndex = Foo;
-
-      export { fooIndex, index };
-      export type { FooIndex };
-      ",
+      //#endregion
+      export { FooIndex, fooIndex, index };",
         "es/index.mjs": "import { foo } from '../../foo/es/index.mjs';
 
       const index = 'index';
@@ -42,24 +44,16 @@ describe('integration multi-exports', () => {
 
       export { fooIndex, index };
       ",
-        "index.d.cts": "import { Foo } from '../../foo/cjs/index.cjs';
-
+        "index.d.ts": "//#region test/integration/multi-exports-ts/src/foo.d.ts
+      declare const foo = "foo";
+      type Foo = typeof foo;
+      //#endregion
+      //#region test/integration/multi-exports-ts/src/index.d.ts
       declare const index = "index";
       declare const fooIndex = "foo";
       type FooIndex = Foo;
-
-      export { fooIndex, index };
-      export type { FooIndex };
-      ",
-        "index.d.mts": "import { Foo } from '../../foo/es/index.mjs';
-
-      declare const index = "index";
-      declare const fooIndex = "foo";
-      type FooIndex = Foo;
-
-      export { fooIndex, index };
-      export type { FooIndex };
-      ",
+      //#endregion
+      export { FooIndex, fooIndex, index };",
         "index.js": "var index_js = require('../../foo/cjs/index.js');
 
       const index = 'index';
@@ -75,20 +69,20 @@ describe('integration multi-exports', () => {
 
       export { fooIndex, index };
       ",
-        "types.d.ts": "type SharedType = {
-          value: string;
+        "types.d.ts": "//#region test/integration/multi-exports-ts/src/types.d.ts
+      type SharedType = {
+        value: string;
       };
-
-      export type { SharedType };
-      ",
+      //#endregion
+      export { SharedType };",
         "types.js": "
       ",
-        "types/types.d.ts": "type SharedType = {
-          value: string;
+        "types/types.d.ts": "//#region test/integration/multi-exports-ts/src/types.d.ts
+      type SharedType = {
+        value: string;
       };
-
-      export type { SharedType };
-      ",
+      //#endregion
+      export { SharedType };",
         "types/types.js": "
       ",
       }

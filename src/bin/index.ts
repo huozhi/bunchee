@@ -300,7 +300,7 @@ async function run(args: CliArgs) {
   function onBuildStart(buildContext: BuildContext) {
     initialBuildContext = buildContext
     if (!watch) {
-      // spinner.start()
+      spinner.start()
     }
   }
 
@@ -377,7 +377,6 @@ async function main() {
     error = err
   }
   if (error || !params) {
-    // if (!error) help()
     return exit(error as Error)
   }
   if ('cmd' in params) {
@@ -394,7 +393,7 @@ function logWatcherBuildTime(result: RollupWatcher[], spinner: Spinner) {
     function start() {
       if (watcherCounter === 0) {
         startTime = performance.now()
-        // spinner.start()
+        spinner.start()
       }
       watcherCounter++
     }

@@ -15,7 +15,6 @@ import {
   BundleJobOptions,
 } from './types'
 import { removeOutputDir } from './utils'
-import { normalizeError } from './lib/normalize-error'
 import { createRolldownDtsJobs } from './rolldown-job'
 
 export async function createAssetAndTypeJobs(
@@ -45,20 +44,15 @@ export async function createAssetAndTypeJobs(
   )
 
   // Generate types using rolldown
-  const rolldownJobs = generateTypes
+  const rolldownJobsPromises = generateTypes
     ? createRolldownDtsJobs(options, buildContext, bundleJobOptions)
     : Promise.resolve([])
 
-  try {
-    const [assetResults, typeResults] = await Promise.all([
-      Promise.all(rollupJobs),
-      rolldownJobs,
-    ])
-    return [...assetResults, ...typeResults]
-  } catch (err: unknown) {
-    const error = normalizeError(err)
-    throw error
-  }
+  const [assetResults, typeResults] = await Promise.all([
+    Promise.all(rollupJobs),
+    rolldownJobsPromises,
+  ])
+  return [...assetResults, ...typeResults]
 }
 
 async function bundleOrWatch(

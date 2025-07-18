@@ -94,12 +94,10 @@ async function createDtsPlugin(
   const dtsPlugin = dts({
     cwd: cwd,
     // Use false to let the plugin handle tsconfig resolution on its own
-    tsconfig: false,
     compilerOptions: overrideResolvedTsOptions,
     resolve: respectExternal,
     // Disable incremental to avoid composite project circular dependency issues
     incremental: false,
-    parallel: true,
     emitDtsOnly: true,
     // Use isolated declarations for better performance and avoid tsc issues
     // isolatedDeclarations: true,
