@@ -1,0 +1,6 @@
+{
+  "git": {
+    "deploymentEnabled": true
+  },
+  "ignoreCommand": "bash ./scripts/should-deploy-docs.sh"
+}
