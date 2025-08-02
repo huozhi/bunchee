@@ -4,13 +4,9 @@ function* generator() {
     yield 1;
 }
 function asyncFunc() {
-    return _asyncFunc.apply(this, arguments);
-}
-function _asyncFunc() {
-    _asyncFunc = _async_to_generator(function*() {
+    return _async_to_generator(function*() {
         yield new Promise((r)=>r(1));
-    });
-    return _asyncFunc.apply(this, arguments);
+    })();
 }
 var _x = /*#__PURE__*/ _class_private_field_loose_key("_x");
 class A {

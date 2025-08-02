@@ -17,6 +17,6 @@
     "forceConsistentCasingInFileNames": true
   },
   "references": [{ "path": "./test/tsconfig.json" }],
-  "include": ["src", "**/*.json"],
+  "include": ["src/**/*", "**/*.json"],
   "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx"]
 }
