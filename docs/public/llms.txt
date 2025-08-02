@@ -8,6 +8,7 @@ bunchee is a zero-config JavaScript bundler designed to create optimized Node.js
 - **ESM and CJS Outputs**: Generates dual modules to support modern and legacy environments.
 - **Source Maps**: Includes inline or external source maps for easier debugging.
 - **CSS/JSON Asset Bundling**: Automatically processes non-JavaScript assets for compatibility.
+- **Raw File Imports**: Import any file as string content using `.txt`/`.data` extensions or `?raw` query parameter.
 - **Fast Build Times**: Built with optimized tooling for rapid iteration.
 
 ## Installation
@@ -63,6 +64,21 @@ Although bunchee requires no config, you can customize options via CLI flags or 
 - Specify input and output files
 - Enable/disable source maps
 - Choose output formats (ESM, CJS)
+
+## Asset Handling
+### Text Files
+Import files as string content using `.txt` or `.data` extensions:
+```javascript
+import data from './content.txt'  // Imports as string
+```
+
+### Raw Imports
+Import any file as raw text using the `?raw` query parameter:
+```javascript
+import readme from './README.md?raw'    // Markdown as string
+import config from './config.json?raw'  // JSON as string (not parsed)
+import styles from './styles.css?raw'   // CSS as string
+```
 
 ## Contributions
 Contributions are welcome! Check out the repository's [issues](https://github.com/huozhi/bunchee/issues) and [contributing guidelines](https://github.com/huozhi/bunchee/blob/main/CONTRIBUTING.md) for more information.
