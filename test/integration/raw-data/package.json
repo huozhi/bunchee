@@ -1,4 +1,5 @@
 {
+  "name": "raw-data",
   "type": "module",
   "exports": "./dist/index.js"
 }
