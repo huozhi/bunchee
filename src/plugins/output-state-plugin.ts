@@ -124,10 +124,14 @@ function logOutputState(stats: SizeStats) {
     .flat(1)
     .map(([filename]) => filename.length)
   const maxFilenameLength = Math.max(...allFileNameLengths)
-  const statsArray = [...stats.entries()].sort(([a], [b]) => {
-    const comp = normalizeExportPath(a).length - normalizeExportPath(b).length
-    return comp === 0 ? a.localeCompare(b) : comp
-  })
+  const statsArray = [...stats.entries()]
+    // filter out empty file states.
+    // e.g. if you're building a file that does not listed in the exports, or there's no exports condition.
+    .filter(([, fileStates]) => fileStates.length > 0)
+    .sort(([a], [b]) => {
+      const comp = normalizeExportPath(a).length - normalizeExportPath(b).length
+      return comp === 0 ? a.localeCompare(b) : comp
+    })
 
   const maxLengthOfExportName = Math.max(
     ...statsArray.map(([exportName]) => normalizeExportName(exportName).length),
