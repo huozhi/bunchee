@@ -1,6 +1,6 @@
 import { type FilterPattern, createFilter } from '@rollup/pluginutils'
 import type { Plugin } from 'rollup'
-import { readFileSync } from 'fs'
+import { readFile } from 'fs/promises'
 
 export function rawContent({ exclude }: { exclude: FilterPattern }): Plugin {
   const filter = createFilter(['**/*.data', '**/*.txt'], exclude)
@@ -22,14 +22,18 @@ export function rawContent({ exclude }: { exclude: FilterPattern }): Plugin {
       return null
     },
 
-    load(id) {
+    async load(id) {
       // Handle ?raw query parameter - read the actual file without the query
       if (id.includes('?raw')) {
         const cleanId = id.split('?')[0]
         try {
-          return readFileSync(cleanId, 'utf-8')
+          const content = await readFile(cleanId, 'utf-8')
+          // Normalize line endings only on Windows: convert \r\n to \n
+          return process.platform === 'win32'
+            ? content.replace(/\r\n/g, '\n')
+            : content
         } catch (error) {
-          this.error(`Failed to read file: ${cleanId}`)
+          this.error(`[bunchee] failed to read file: ${cleanId}`)
         }
       }
       return null
@@ -41,8 +45,11 @@ export function rawContent({ exclude }: { exclude: FilterPattern }): Plugin {
       const cleanId = isRawQuery ? id.split('?')[0] : id
 
       if (filter(cleanId) || isRawQuery) {
+        // Normalize line endings only on Windows for .txt and .data files
+        const normalizedCode =
+          process.platform === 'win32' ? code.replace(/\r\n/g, '\n') : code
         return {
-          code: `const data = ${JSON.stringify(code)};\nexport default data;`,
+          code: `const data = ${JSON.stringify(normalizedCode)};\nexport default data;`,
           map: null,
         }
       }
