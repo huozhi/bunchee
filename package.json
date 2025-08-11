@@ -67,7 +67,7 @@
     "clean-css": "^5.3.3",
     "fast-glob": "^3.3.3",
     "magic-string": "^0.30.17",
-    "ora": "^8.0.1",
+    "nanospinner": "^1.2.2",
     "picomatch": "^4.0.2",
     "pretty-bytes": "^5.6.0",
     "rollup": "^4.46.2",
