@@ -2,178 +2,132 @@ import React from 'react'
 
 export default function Page() {
   return (
-    <div className="root">
-      <nav className="flex items-center justify-between sticky top-0 z-1 bg-[#f9f9f9]">
-        <h1 className="title">Bunchee</h1>
-        <div className="link">
-          <a href="https://github.com/huozhi/bunchee#bunchee">{`README.md ↗`}</a>
+    <div>
+      <div className="mx-auto max-w-[600px] px-4 pt-6">
+        <div className="flex items-center justify-between border-b border-black/10 px-4 py-2">
+          <div className="text-xs text-black/60">{'📦'}</div>
+          <a
+            href="https://github.com/huozhi/bunchee#bunchee"
+            className="text-xs text-teal-300 hover:underline"
+          >
+            README.md ↗
+          </a>
         </div>
-      </nav>
-      <BlurMirror />
+        <TerminalBody />
+        <div className=""></div>
+        <footer className="mx-auto max-w-4xl px-4 py-2 text-xs text-black/40">
+          <p>huozhi © {new Date().getFullYear()}</p>
+        </footer>
+      </div>
+    </div>
+  )
+}
 
-      <main>
-        <div className="mt-2">
-          <p>
-            {`Zero-config bundler for JS/TS packages, package.json as configuration.`}
-          </p>
-        </div>
-
-        <h2 className="text-2xl font-semibold mb-4 sticky">Installation</h2>
-        <pre className="code-block">
-          <code>{`npm install --save-dev bunchee typescript`}</code>
-        </pre>
-
-        <h2 className="text-2xl font-semibold mb-4 sticky">Features</h2>
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <h3 className="font-medium mb-2">🚀 Zero Configuration</h3>
-            <p className="text-sm text-gray-600">
-              You already have package.json exports, why need another config?
-            </p>
-          </div>
-          <div>
-            <h3 className="font-medium mb-2">📦 Multiple Formats</h3>
-            <p className="text-sm text-gray-600">
-              Supports ESM, CommonJS, and TypeScript declarations
-            </p>
-          </div>
-          <div>
-            <h3 className="font-medium mb-2">⚡ Fast Builds</h3>
-            <p className="text-sm text-gray-600">
-              Powered by Rollup and SWC for optimal performance
-            </p>
-          </div>
-          <div>
-            <h3 className="font-medium mb-2">🎯 Simple & Smart</h3>
-            <p className="text-sm text-gray-600">
-              Automatically externalization dependencies, lint package.json.
-              Works with monorepos.
-            </p>
-          </div>
-        </div>
-
-        <h2 className="text-2xl font-semibold mb-4">Configuration</h2>
-        <p>
-          Create entry files of your library and{' '}
-          <code className="code--inline">package.json</code>.
-        </p>
-
-        <pre className="code-block">
-          <code>
-            {`$ cd ./coffee
-$ mkdir src && touch ./src/index.ts`}
-          </code>
-        </pre>
-
-        <p>
-          Add the exports in <code className="code--inline">package.json</code>.
-        </p>
-
-        <pre className="code-block">
-          <code>
-            {`{
+function TerminalBody() {
+  return (
+    <div className="terminal-grid-bg py-4 sm:py-6">
+      <Intro />
+      <BlockSpacer />
+      <Prompt>npm install --save-dev bunchee typescript</Prompt>
+      <BlockSpacer />
+      <Prompt>cat package.json</Prompt>
+      <CodeBlock>
+        {`{
   "name": "coffee",
   "type": "module",
   "main": "./dist/index.js",
-  "scripts": {
-    "build": "bunchee"
-  }
+  "scripts": { "build": "bunchee" }
 }`}
-          </code>
-        </pre>
-
-        <h3 className="font-semibold mb-4">Build</h3>
-        <pre className="code-block">
-          <code>{`$ npm run build`}</code>
-        </pre>
-
-        <h3 className="font-semibold mb-4">Output</h3>
-        <pre className="code-block">
-          <code>
-            {`$ Exports  File             Size
-$ .        dist/index.js    5.6 kB`}
-          </code>
-        </pre>
-
-        <div className="mt-8 mb-8">
-          <h1 className="text-2xl font-semibold mb-4">Learn</h1>
-          <h2 className="font-semibold mb-2">Entry & Convention</h2>
-          <p className="mb-4">
-            Files in <code className="bg-gray-100 px-1 rounded">src/</code>{' '}
-            folder match export names in package.json:
-          </p>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="border border-gray-300 px-4 py-2 text-left">
-                    File
-                  </th>
-                  <th className="border border-gray-300 px-4 py-2 text-left">
-                    Export Name
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="border border-gray-300 px-4 py-2">
-                    <code>src/index.ts</code>
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    <code>"."</code> (default)
-                  </td>
-                </tr>
-                <tr>
-                  <td className="border border-gray-300 px-4 py-2">
-                    <code>src/lite.ts</code>
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    <code>"./lite"</code>
-                  </td>
-                </tr>
-                <tr>
-                  <td className="border border-gray-300 px-4 py-2">
-                    <code>src/react/index.ts</code>
-                  </td>
-                  <td className="border border-gray-300 px-4 py-2">
-                    <code>"./react"</code>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <h2 className="font-semibold mt-8 mb-2">Directives</h2>
-          <p className="mb-4">
-            Bunchee can manage multiple directives such as{' '}
-            <code>{'"use client"'}</code>, <code>{'"use server"'}</code>, or{' '}
-            <code>{'"use cache"'}</code> and automatically split your code into
-            different chunks and preserve the directives properly. Release
-            yourself from thinking of the bundling mess.
-          </p>
-        </div>
-      </main>
-
-      <Footer />
+      </CodeBlock>
+      <BlockSpacer />
+      <Prompt>npm run build</Prompt>
+      <CodeBlock>{`Exports  File             Size
+.        dist/index.js    5.6 kB`}</CodeBlock>
+      <BlockSpacer />
+      <Comment># Features</Comment>
+      <Comment> - Zero config, smart externals, and TS declarations</Comment>
+      <Comment> - Works great for monorepos</Comment>
+      <BlockSpacer />
+      <div className="my-2 h-px bg-white/10" />
+      <BlockSpacer />
+      <TerminalLearn />
+      <BlockSpacer />
     </div>
   )
 }
 
-function BlurMirror() {
+function Intro() {
   return (
-    <div className="sticky h-[60px] top-[60px] inset-0 blur-mirror">
-      {/* blur mirror layer */}
-      <div className="absolute w-full h-full bg-white/30 backdrop-blur-3xl opacity-60 pointer-events-none" />
-      {/* linear gradient layer */}
-      <div className="absolute w-full h-full bg-gradient-to-r opacity-50 pointer-events-none blur-xl rounded-b-4xl blur-mirror-color" />
+    <div className="text-sm leading-relaxed px-4">
+      <div className="mb-1 text-[#000]">
+        <h1 className="font-bold">bunchee</h1>
+      </div>
+      <div className="text-black/80">
+        Zero-config bundler for JS/TS packages — use your package.json as the
+        config.
+      </div>
     </div>
   )
 }
 
-function Footer() {
+function BlockSpacer() {
+  return <div className="h-4" />
+}
+
+function Prompt({
+  children,
+  className = '',
+  caret = false,
+}: {
+  children: React.ReactNode
+  className?: string
+  caret?: boolean
+}) {
   return (
-    <footer>
-      <p>huozhi © {new Date().getFullYear()}</p>
-    </footer>
+    <div className={`flex items-center text-sm ${className}`}>
+      <span className="text-black/40 mr-2">{`➜`}</span>
+      <span className="text-[#000]">~/project</span>
+      <span className="ml-2 text-black">$</span>
+      <span className="ml-2">
+        <span className="text-black/60">{children}</span>
+        {caret && (
+          <span className="ml-1 inline-block h-4 w-2 translate-y-[1px] bg-white/70 align-middle caret" />
+        )}
+      </span>
+    </div>
+  )
+}
+
+function Output({ children }: { children: React.ReactNode }) {
+  return <div className="pl-6 text-sm text-black/70">{children}</div>
+}
+
+function Comment({ children }: { children: React.ReactNode }) {
+  return <div className="pl-6 text-sm text-black/90">{children}</div>
+}
+
+function CodeBlock({ children }: { children: React.ReactNode }) {
+  return (
+    <pre className="ml-4 mt-2 rounded-md bg-[#f5e6d4] text-[12px] leading-relaxed text-black/80">
+      <code className="px-3 block">{children}</code>
+    </pre>
+  )
+}
+
+function TerminalLearn() {
+  return (
+    <div>
+      <Comment># Learn</Comment>
+      <Comment>## Entry & Convention</Comment>
+      <Output>Files in src/ folder match export names in package.json:</Output>
+      <CodeBlock>
+        {`+--------------------------+---------------------+\n| File                     | Export Name         |\n+--------------------------+---------------------+\n| src/index.ts             | "." (default)       |\n| src/lite.ts              | "./lite"            |\n| src/react/index.ts       | "./react"           |\n+--------------------------+---------------------+`}
+      </CodeBlock>
+      <BlockSpacer />
+      <Comment>## Directives</Comment>
+      <Output>
+        {`Bunchee can manage multiple directives such as "use client", "use server", or "use cache" and automatically split your code into different chunks and preserve the directives properly.`}
+      </Output>
+    </div>
   )
 }

@@ -17,10 +17,10 @@ import './globals.css'
 
 export default function Layout({ children }) {
   return (
-    <html>
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        {children}
-      </body>
+    <html
+      className={`bg-[#f2ece5] text-[#000] font-mono ${geistSans.variable} ${geistMono.variable}`}
+    >
+      <body className={`h-[full] min-h-screen`}>{children}</body>
     </html>
   )
 }

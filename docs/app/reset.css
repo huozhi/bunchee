@@ -38,28 +38,11 @@ h6 {
 
 /** Styles */
 body {
-  font-family:
-    var(--font-geist-sans),
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    Segoe UI,
-    Roboto,
-    Helvetica Neue,
-    Arial,
-    Noto Sans,
-    sans-serif,
-    Apple Color Emoji,
-    Segoe UI Emoji,
-    Segoe UI Symbol,
-    Noto Color Emoji;
+  font-family: var(--font-mono);
   font-feature-settings: 'liga', 'clig', 'calt';
   font-variant: common-ligatures contextual;
   letter-spacing: -0.01em;
   font-size: 16px;
-  color: #111;
-  background-color: #f9f9f9;
-  padding: 1rem;
   line-height: 1.5;
 }
 
@@ -77,7 +60,6 @@ h2 {
 p,
 pre {
   margin-bottom: 0.75rem;
-  /* width: 600px; */
   max-width: 100%;
 }
 
@@ -93,34 +75,28 @@ a:hover {
 }
 
 code {
-  font-family: var(--font-geist-mono), menlo, 'Courier New', Courier, monospace;
+  font-family: var(--font-mono);
   letter-spacing: 0;
-  padding: 0.2em 0.3em;
   border-radius: 3px;
   font-size: 0.95em;
 }
 
 pre {
   display: inline-block;
-  background-color: #f4f4f4;
   border-radius: 3px;
-  padding: 0.3em 0;
   width: 600px;
   max-width: 100%;
   white-space: pre-wrap;
 }
 
 pre code {
-  padding: 0;
   background: none;
   border-radius: 0;
 }
 
 footer {
-  margin-top: 2rem;
   padding-top: 1rem;
   border-top: 1px solid #ddd;
-  width: 600px;
   max-width: 100%;
 }
 
@@ -141,8 +117,7 @@ li {
 }
 
 nav,
-main,
-footer {
+main {
   padding: 0 0.5rem;
 }
 
