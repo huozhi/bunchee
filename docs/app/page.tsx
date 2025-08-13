@@ -25,7 +25,7 @@ export default function Page() {
 
 function TerminalBody() {
   return (
-    <div className="terminal-grid-bg py-4 sm:py-6">
+    <div className="terminal-grid-bg py-4 flex flex-col items-stretch">
       <Intro />
       <BlockSpacer />
       <Prompt>npm install --save-dev bunchee typescript</Prompt>
@@ -40,7 +40,7 @@ function TerminalBody() {
 }`}
       </CodeBlock>
       <BlockSpacer />
-      <Prompt>npm run build</Prompt>
+      <Prompt caret>npm run build</Prompt>
       <CodeBlock>{`Exports  File             Size
 .        dist/index.js    5.6 kB`}</CodeBlock>
       <BlockSpacer />
@@ -84,14 +84,14 @@ function Prompt({
   caret?: boolean
 }) {
   return (
-    <div className={`flex items-center text-sm ${className}`}>
+    <div className={`flex text-sm ${className}`}>
       <span className="text-black/40 mr-2">{`➜`}</span>
       <span className="text-[#000]">~/project</span>
       <span className="ml-2 text-black">$</span>
-      <span className="ml-2">
+      <span className="ml-2 inline-flex items-center">
         <span className="text-black/60">{children}</span>
         {caret && (
-          <span className="ml-1 inline-block h-4 w-2 translate-y-[1px] bg-white/70 align-middle caret" />
+          <span className="ml-1 inline-block h-4 w-2 translate-y-[1px] bg-[#000]/70 align-middle caret" />
         )}
       </span>
     </div>

@@ -84,7 +84,6 @@ code {
 pre {
   display: inline-block;
   border-radius: 3px;
-  width: 600px;
   max-width: 100%;
   white-space: pre-wrap;
 }
@@ -136,7 +135,6 @@ main {
   border-radius: 5px;
   margin-top: 1rem;
   margin-bottom: 1rem;
-  /* width: 600px; */
   max-width: 100%;
   overflow-x: auto;
   color: #507a99;
