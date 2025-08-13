@@ -15,7 +15,7 @@ export default function Page() {
         </div>
         <TerminalBody />
         <div className=""></div>
-        <footer className="mx-auto max-w-4xl px-4 py-2 text-xs text-black/40">
+        <footer className="mx-auto max-w-4xl px-6 py-2 text-xs text-black/40">
           <p>huozhi © {new Date().getFullYear()}</p>
         </footer>
       </div>
@@ -109,7 +109,7 @@ function Comment({ children }: { children: React.ReactNode }) {
 function CodeBlock({ children }: { children: React.ReactNode }) {
   return (
     <pre className="ml-4 mt-2 rounded-md bg-[#f5e6d4] text-[12px] leading-relaxed text-black/80">
-      <code className="px-3 block">{children}</code>
+      <code className="px-3 py-2 block">{children}</code>
     </pre>
   )
 }
