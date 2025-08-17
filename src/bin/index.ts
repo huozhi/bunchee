@@ -12,6 +12,7 @@ import { prepare } from '../prepare'
 import { RollupWatcher } from 'rollup'
 import { logOutputState } from '../plugins/output-state-plugin'
 import { normalizeError } from '../lib/normalize-error'
+import { createSpinner } from 'nanospinner'
 
 const helpMessage = `
 Usage: bunchee [options]
@@ -258,18 +259,15 @@ async function run(args: CliArgs) {
   // lint package by default
   await lint(cwd)
 
-  const { default: ora } = await import('ora')
-
-  const oraInstance = process.stdout.isTTY
-    ? ora({
-        text: 'Building...\n\n',
+  const spinnerInstance = process.stdout.isTTY
+    ? createSpinner('Building...\n\n', {
         color: 'green',
       })
     : {
         start: () => {},
         stop: () => {},
         clear: () => {},
-        stopAndPersist: () => {},
+        success: () => {},
         isSpinning: false,
       }
 
@@ -279,19 +277,19 @@ async function run(args: CliArgs) {
   }
 
   function startSpinner() {
-    oraInstance.start()
+    spinnerInstance.start()
   }
 
   function stopSpinner(text?: string) {
-    if (oraInstance.isSpinning) {
-      oraInstance.clear()
+    if (spinnerInstance.isSpinning) {
+      spinnerInstance.clear()
       if (text) {
-        oraInstance.stopAndPersist({
-          symbol: '✔',
+        spinnerInstance.success({
+          mark: '✔',
           text,
         })
       } else {
-        oraInstance.stop()
+        spinnerInstance.stop()
       }
     }
   }
