@@ -1,4 +1,5 @@
 import React from 'react'
+import { TerminalAnimation } from './terminal-animation'
 
 export default function Page() {
   return (
@@ -36,17 +37,27 @@ function TerminalBody() {
   "name": "coffee",
   "type": "module",
   "main": "./dist/index.js",
-  "scripts": { "build": "bunchee" }
+  "scripts": {
+    "build": "bunchee"
+  }
 }`}
       </CodeBlock>
       <BlockSpacer />
-      <Prompt caret>npm run build</Prompt>
-      <CodeBlock>{`Exports  File             Size
-.        dist/index.js    5.6 kB`}</CodeBlock>
+      <TerminalAnimation
+        text="npm run build"
+        logs={`Exports  File             Size\n.        dist/index.js    5.6 kB`}
+      />
       <BlockSpacer />
-      <Comment># Features</Comment>
-      <Comment> - Zero config, smart externals, and TS declarations</Comment>
-      <Comment> - Works great for monorepos</Comment>
+      <MarkdownTitle title="# Why bunchee?" />
+      <Comment> - Zero config - package.json as config</Comment>
+      <Comment> - Auto-generates TypeScript declarations</Comment>
+      <Comment> - Supports ESM, CJS, or dual packages</Comment>
+      <Comment> - Tree-shakeable and monorepo friendly</Comment>
+      <BlockSpacer />
+      <MarkdownTitle title="# Perfect for" />
+      <Comment> - npm packages and component libraries</Comment>
+      <Comment> - Node.js tools, CLI apps, and utilities</Comment>
+      <Comment> - Monorepo workspaces with shared packages</Comment>
       <BlockSpacer />
       <div className="my-2 h-px bg-white/10" />
       <BlockSpacer />
@@ -103,13 +114,32 @@ function Output({ children }: { children: React.ReactNode }) {
 }
 
 function Comment({ children }: { children: React.ReactNode }) {
-  return <div className="pl-6 text-sm text-black/90">{children}</div>
+  return <div className="pl-2 text-sm text-black/80">{children}</div>
+}
+
+function MarkdownTitle({ title }: { title: string }) {
+  const match = title.match(/^(#+)\s+(.+)$/)
+  if (match) {
+    const [, hashes, titleText] = match
+    return (
+      <div className="pl-2 text-sm">
+        <span className="text-black/40">{hashes} </span>
+        <span className="text-black/90 font-bold">{titleText}</span>
+      </div>
+    )
+  }
+  return (
+    <div className="pl-2 text-sm">
+      <span className="text-black/40"># </span>
+      <span className="text-black/90 font-bold">{title}</span>
+    </div>
+  )
 }
 
 function CodeBlock({ children }: { children: React.ReactNode }) {
   return (
-    <pre className="ml-4 mt-2 rounded-md bg-[#f5e6d4] text-[12px] leading-relaxed text-black/80">
-      <code className="px-3 py-2 block">{children}</code>
+    <pre className="mt-2 w-full block rounded-md bg-[#f5e6d4] text-[12px] leading-relaxed text-black/80">
+      <code className="px-3 py-2 block w-full select-none">{children}</code>
     </pre>
   )
 }
@@ -117,14 +147,14 @@ function CodeBlock({ children }: { children: React.ReactNode }) {
 function TerminalLearn() {
   return (
     <div>
-      <Comment># Learn</Comment>
-      <Comment>## Entry & Convention</Comment>
+      <MarkdownTitle title="# Learn" />
+      <MarkdownTitle title="## Entry & Convention" />
       <Output>Files in src/ folder match export names in package.json:</Output>
       <CodeBlock>
         {`+--------------------------+---------------------+\n| File                     | Export Name         |\n+--------------------------+---------------------+\n| src/index.ts             | "." (default)       |\n| src/lite.ts              | "./lite"            |\n| src/react/index.ts       | "./react"           |\n+--------------------------+---------------------+`}
       </CodeBlock>
       <BlockSpacer />
-      <Comment>## Directives</Comment>
+      <MarkdownTitle title="## Directives" />
       <Output>
         {`Bunchee can manage multiple directives such as "use client", "use server", or "use cache" and automatically split your code into different chunks and preserve the directives properly.`}
       </Output>
