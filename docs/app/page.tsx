@@ -1,5 +1,6 @@
 import React from 'react'
 import { TerminalAnimation } from './terminal-animation'
+import { SlotMachineText } from './slot-machine-text'
 
 export default function Page() {
   return (
@@ -31,9 +32,9 @@ function TerminalBody() {
       <BlockSpacer />
       <Prompt>npm install --save-dev bunchee typescript</Prompt>
       <BlockSpacer />
-      <Prompt>cat package.json</Prompt>
-      <CodeBlock>
-        {`{
+      <TerminalAnimation
+        text="cat package.json"
+        logs={`{
   "name": "coffee",
   "type": "module",
   "main": "./dist/index.js",
@@ -41,11 +42,14 @@ function TerminalBody() {
     "build": "bunchee"
   }
 }`}
-      </CodeBlock>
+      />
       <BlockSpacer />
       <TerminalAnimation
         text="npm run build"
         logs={`Exports  File             Size\n.        dist/index.js    5.6 kB`}
+        spinnerText="Building"
+        lineByLine
+        delay={1200}
       />
       <BlockSpacer />
       <MarkdownTitle title="# Why bunchee?" />
@@ -71,7 +75,9 @@ function Intro() {
   return (
     <div className="text-sm leading-relaxed px-4">
       <div className="mb-1 text-[#000]">
-        <h1 className="font-bold">bunchee</h1>
+        <h1 className="font-bold">
+          <SlotMachineText text="bunchee" />
+        </h1>
       </div>
       <div className="text-black/80">
         Zero-config bundler for JS/TS packages — use your package.json as the

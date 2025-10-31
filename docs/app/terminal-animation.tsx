@@ -5,13 +5,20 @@ export function TerminalAnimation({
   text,
   logs,
   spinner = 'ora',
+  lineByLine = false,
+  spinnerText,
+  delay = 0,
 }: {
   text: string
   logs: string
   spinner?: 'ora' | 'line' | 'dots' | 'blocks'
+  lineByLine?: boolean
+  spinnerText?: string
+  delay?: number
 }) {
   const command = text
 
+  const [started, setStarted] = useState(delay === 0)
   const [typedLength, setTypedLength] = useState(0)
   const [phase, setPhase] = useState<
     'typing' | 'waitingEnter' | 'spinning' | 'showingLogs'
@@ -28,6 +35,7 @@ export function TerminalAnimation({
   const [spinIndex, setSpinIndex] = useState(0)
 
   const resetAnimation = () => {
+    setStarted(delay === 0)
     setTypedLength(0)
     setPhase('typing')
     setReveal(false)
@@ -35,8 +43,15 @@ export function TerminalAnimation({
     setSpinIndex(0)
   }
 
+  // Handle delay before starting animation
   useEffect(() => {
-    if (phase !== 'typing') return
+    if (delay === 0 || started) return
+    const timeoutId = setTimeout(() => setStarted(true), delay)
+    return () => clearTimeout(timeoutId)
+  }, [delay, started])
+
+  useEffect(() => {
+    if (phase !== 'typing' || !started) return
     const id = setInterval(() => {
       setTypedLength((n) => {
         const next = n + 1
@@ -49,11 +64,14 @@ export function TerminalAnimation({
       })
     }, 25)
     return () => clearInterval(id)
-  }, [phase, command.length])
+  }, [phase, command.length, started])
 
   useEffect(() => {
     if (phase === 'waitingEnter') {
-      const id = setTimeout(() => setPhase('spinning'), 500)
+      const id = setTimeout(() => {
+        // Skip spinning phase if no spinnerText is provided
+        setPhase(spinnerText ? 'spinning' : 'showingLogs')
+      }, 500)
       return () => clearTimeout(id)
     }
     if (phase === 'spinning') {
@@ -69,6 +87,13 @@ export function TerminalAnimation({
     }
     if (phase === 'showingLogs') {
       const logLines = logs.split('\n')
+      if (!lineByLine) {
+        // Show all lines at once
+        setRevealedCount(logLines.length)
+        setReveal(true)
+        return
+      }
+      // Line-by-line reveal
       const timer = setInterval(() => {
         setRevealedCount((n) => {
           const next = n + 1
@@ -82,7 +107,7 @@ export function TerminalAnimation({
       }, 180)
       return () => clearInterval(timer)
     }
-  }, [phase, logs, spinFrames.length])
+  }, [phase, logs, spinFrames.length, lineByLine, spinnerText])
 
   return (
     <div>
@@ -109,7 +134,7 @@ export function TerminalAnimation({
                   (phase === 'showingLogs' ? Math.max(1, revealedCount) : 0)
             const content =
               phase === 'spinning' && idx === 0
-                ? `Building ${spinFrames[spinIndex]}`
+                ? `${spinnerText} ${spinFrames[spinIndex]}`
                 : line
             return (
               <div key={idx} className={isVisible ? '' : 'opacity-0'}>
