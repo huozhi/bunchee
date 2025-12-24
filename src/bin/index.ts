@@ -41,7 +41,7 @@ Options:
   --tsconfig             path to tsconfig file, default: tsconfig.json
   --dts-bundle           bundle type declaration files, default: false
   --success <cmd>     run command after build success
-  --experimental-tsgo    use TypeScript-Go compiler for type generation (experimental)
+  --tsgo                use TypeScript-Go compiler for type generation
 `
 
 function help() {
@@ -142,10 +142,9 @@ async function parseCliArgs(argv: string[]) {
       type: 'string',
       description: 'run command after build success',
     })
-    .option('experimental-tsgo', {
+    .option('tsgo', {
       type: 'boolean',
-      description:
-        'use TypeScript-Go compiler for type generation (experimental)',
+      description: 'use TypeScript-Go compiler for type generation',
     })
     .command(
       'prepare',
@@ -206,7 +205,7 @@ async function parseCliArgs(argv: string[]) {
     env: args['env'],
     tsconfig: args['tsconfig'],
     onSuccess: args['success'],
-    experimentalTsgo: args['experimental-tsgo'],
+    tsgo: args['tsgo'],
   }
 
   // When minify is enabled, sourcemap should be enabled by default, unless explicitly opted out
@@ -259,7 +258,7 @@ async function run(args: CliArgs) {
     clean,
     tsconfig,
     onSuccess,
-    experimentalTsgo: args.experimentalTsgo,
+    tsgo: args.tsgo,
   }
 
   const cliEntry = source ? path.resolve(cwd, source) : ''

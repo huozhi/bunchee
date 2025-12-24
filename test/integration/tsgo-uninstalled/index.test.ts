@@ -7,7 +7,7 @@ describe('integration - tsgo uninstalled', () => {
   it('should warn when ts-go is not installed and fallback to regular TypeScript', async () => {
     const { code, stderr } = await runCli({
       directory: __dirname,
-      args: ['--experimental-tsgo'],
+      args: ['--tsgo'],
     })
 
     expect(code).toBe(0)
@@ -25,7 +25,7 @@ describe('integration - tsgo uninstalled', () => {
       stderr.includes('Could not load TypeScript-Go compiler') ||
       stderr.includes('TypeScript-Go compiler not found') ||
       stderr.includes(
-        '--experimental-tsgo flag was specified but @typescript/native-preview is not installed',
+        '--tsgo flag was specified but @typescript/native-preview is not installed',
       )
 
     expect(hasWarning).toBe(true)

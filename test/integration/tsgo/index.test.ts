@@ -62,7 +62,7 @@ describe('integration - tsgo', () => {
 
     const { code, distFile, stderr } = await runCli({
       directory: TEST_DIR,
-      args: ['--experimental-tsgo'],
+      args: ['--tsgo'],
     })
 
     expect(code).toBe(0)
@@ -77,7 +77,7 @@ describe('integration - tsgo', () => {
     expect(stderr).not.toMatch(/Could not load TypeScript-Go compiler/)
     expect(stderr).not.toMatch(/TypeScript-Go compiler not found/)
     expect(stderr).not.toMatch(/@typescript\/native-preview is not installed/)
-    expect(stderr).not.toMatch(/--experimental-tsgo flag was specified but/)
+    expect(stderr).not.toMatch(/--tsgo flag was specified but/)
 
     // Verify the type file was generated correctly
     const typeContent = readFileSync(typeFile, 'utf-8')

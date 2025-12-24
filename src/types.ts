@@ -45,7 +45,7 @@ type BundleConfig = {
   clean?: boolean
   tsconfig?: string
   onSuccess?: string | (() => void | Promise<void>)
-  experimentalTsgo?: boolean
+  tsgo?: boolean
 
   // hooks
   /*
@@ -116,7 +116,7 @@ type CliArgs = {
   clean?: boolean
   tsconfig?: string
   onSuccess?: string
-  experimentalTsgo?: boolean
+  tsgo?: boolean
 }
 
 type BundleOptions = BundleConfig

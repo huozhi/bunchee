@@ -7,7 +7,7 @@ describe('cli tsgo', () => {
   it('should warn when ts-go is not installed', async () => {
     const { code, distFile, stderr } = await runCli({
       directory: __dirname,
-      args: ['./input.ts', '-o', 'dist/output.js', '--experimental-tsgo'],
+      args: ['./input.ts', '-o', 'dist/output.js', '--tsgo'],
     })
     const typeFile = distFile.replace('.js', '.d.ts')
 
@@ -22,7 +22,7 @@ describe('cli tsgo', () => {
       stderr.includes('Could not load TypeScript-Go compiler') ||
       stderr.includes('TypeScript-Go compiler not found') ||
       stderr.includes(
-        '--experimental-tsgo flag was specified but @typescript/native-preview is not installed',
+        '--tsgo flag was specified but @typescript/native-preview is not installed',
       )
     expect(hasWarning).toBe(true)
     expect(stderr).toMatch(/TypeScript-Go|@typescript\/native-preview/)

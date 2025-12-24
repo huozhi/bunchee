@@ -64,7 +64,7 @@ async function bundle(
   const inputFile = cliEntryPath
   const isFromCli = Boolean(cliEntryPath)
 
-  const useTsGo = options.experimentalTsgo === true
+  const useTsGo = options.tsgo === true
   const tsConfigPath = resolveTsConfigPath(cwd, options.tsconfig)
   let tsConfig = resolveTsConfig(cwd, tsConfigPath, useTsGo)
   let hasTsConfig = Boolean(tsConfig?.tsConfigPath)
@@ -75,7 +75,7 @@ async function bundle(
     tsgoInstance = resolveTsGo(cwd)
     if (!tsgoInstance) {
       logger.warn(
-        '--experimental-tsgo flag was specified but @typescript/native-preview is not installed. Falling back to regular TypeScript compiler.',
+        '--tsgo flag was specified but @typescript/native-preview is not installed. Falling back to regular TypeScript compiler.',
       )
     }
   }

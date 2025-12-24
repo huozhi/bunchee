@@ -12,6 +12,6 @@
     "typescript": "^5.0"
   },
   "scripts": {
-    "build": "bunchee --experimental-tsgo"
+    "build": "bunchee --tsgo"
   }
 }
