@@ -52,9 +52,9 @@ function resolveTypescript(
     if (tsgo) {
       return tsgo
     }
-    // Fallback to regular TypeScript if ts-go is not available
-    logger.warn(
-      'TypeScript-Go compiler not found, falling back to regular TypeScript compiler.',
+    // Error if ts-go is requested but not available
+    exit(
+      'TypeScript-Go compiler not found. Please install @typescript/native-preview as a dev dependency: pnpm add -D @typescript/native-preview',
     )
   }
 

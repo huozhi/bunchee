@@ -4,33 +4,29 @@ import path from 'path'
 import { runCli } from '../../testing-utils'
 
 describe('cli tsgo', () => {
-  it('should warn when ts-go is not installed', async () => {
-    const { code, distFile, stderr } = await runCli({
+  it('should error when ts-go is not installed', async () => {
+    const { code, stderr } = await runCli({
       directory: __dirname,
       args: ['./input.ts', '-o', 'dist/output.js', '--tsgo'],
     })
-    const typeFile = distFile.replace('.js', '.d.ts')
 
-    expect(code).toBe(0)
-    expect(path.basename(distFile)).toBe('output.js')
-    expect(path.basename(typeFile)).toBe('output.d.ts')
-    expect(fs.existsSync(distFile)).toBe(true)
-    expect(fs.existsSync(typeFile)).toBe(true)
+    // Should exit with error code
+    expect(code).not.toBe(0)
 
-    // MUST show warnings when ts-go is NOT installed
-    const hasWarning =
-      stderr.includes('Could not load TypeScript-Go compiler') ||
+    // Should NOT generate files when ts-go is not available
+    const distFile = path.join(__dirname, 'dist', 'output.js')
+    const typeFile = path.join(__dirname, 'dist', 'output.d.ts')
+    expect(fs.existsSync(distFile)).toBe(false)
+    expect(fs.existsSync(typeFile)).toBe(false)
+
+    // MUST show error when ts-go is NOT installed
+    const hasError =
       stderr.includes('TypeScript-Go compiler not found') ||
       stderr.includes(
         '--tsgo flag was specified but @typescript/native-preview is not installed',
-      )
-    expect(hasWarning).toBe(true)
+      ) ||
+      stderr.includes('@typescript/native-preview')
+    expect(hasError).toBe(true)
     expect(stderr).toMatch(/TypeScript-Go|@typescript\/native-preview/)
-
-    // Verify type file content
-    const typeContent = fs.readFileSync(typeFile, 'utf-8')
-    expect(typeContent).toMatch(
-      /function\s+(add|multiply)|export\s+function|declare\s+function/,
-    )
   })
 })

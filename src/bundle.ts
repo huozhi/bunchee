@@ -8,6 +8,7 @@ import fs from 'fs'
 import { resolve } from 'path'
 import { createOutputState } from './plugins/output-state-plugin'
 import {
+  exit,
   fileExists,
   getPackageMeta,
   getSourcePathFromExportPath,
@@ -65,20 +66,21 @@ async function bundle(
   const isFromCli = Boolean(cliEntryPath)
 
   const useTsGo = options.tsgo === true
-  const tsConfigPath = resolveTsConfigPath(cwd, options.tsconfig)
-  let tsConfig = resolveTsConfig(cwd, tsConfigPath, useTsGo)
-  let hasTsConfig = Boolean(tsConfig?.tsConfigPath)
 
-  // Check if ts-go is available when requested
+  // Check if ts-go is available when requested (before resolving tsconfig)
   let tsgoInstance: typeof import('typescript') | null = null
   if (useTsGo) {
     tsgoInstance = resolveTsGo(cwd)
     if (!tsgoInstance) {
-      logger.warn(
-        '--tsgo flag was specified but @typescript/native-preview is not installed. Falling back to regular TypeScript compiler.',
+      exit(
+        '--tsgo flag was specified but @typescript/native-preview is not installed. Please install it as a dev dependency: pnpm add -D @typescript/native-preview',
       )
     }
   }
+
+  const tsConfigPath = resolveTsConfigPath(cwd, options.tsconfig)
+  let tsConfig = resolveTsConfig(cwd, tsConfigPath, useTsGo)
+  let hasTsConfig = Boolean(tsConfig?.tsConfigPath)
 
   const defaultTsOptions: TypescriptOptions = {
     tsConfigPath: tsConfig?.tsConfigPath,

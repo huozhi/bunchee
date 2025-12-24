@@ -263,6 +263,17 @@ async function run(args: CliArgs) {
 
   const cliEntry = source ? path.resolve(cwd, source) : ''
 
+  // Check if ts-go is available when requested (before any build operations)
+  if (args.tsgo) {
+    try {
+      require.resolve('@typescript/native-preview', { paths: [cwd] })
+    } catch {
+      exit(
+        '--tsgo flag was specified but @typescript/native-preview is not installed. Please install it as a dev dependency: pnpm add -D @typescript/native-preview',
+      )
+    }
+  }
+
   // lint package by default
   await lint(cwd)
 
@@ -436,4 +447,7 @@ function logError(err: unknown) {
   logger.error(error)
 }
 
-main().catch(exit)
+main().catch((error) => {
+  logError(error)
+  process.exit(1)
+})

@@ -327,7 +327,7 @@ To use TypeScript-Go for type generation, use the `--tsgo` flag:
 bunchee --tsgo
 ```
 
-**Note**: This requires `@typescript/native-preview` to be installed as a dev dependency. If it's not installed, bunchee will automatically fall back to the regular TypeScript compiler and show a warning.
+**Note**: This requires `@typescript/native-preview` to be installed as a dev dependency. If it's not installed, bunchee will exit with an error.
 
 ```sh
 pnpm add -D bunchee @typescript/native-preview

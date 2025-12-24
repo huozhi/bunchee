@@ -15,9 +15,9 @@ import { type OutputOptions } from 'rollup'
 import { posixRelativify } from './lib/format'
 import { baseNameWithoutExtension } from './util/file-path'
 
-export function exit(err: string | Error) {
+export function exit(err: string | Error): never {
   logger.error(err)
-  process.exit(1)
+  throw typeof err === 'string' ? new Error(err) : err
 }
 
 export const formatDuration = (duration: number) =>

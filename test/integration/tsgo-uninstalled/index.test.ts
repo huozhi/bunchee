@@ -4,37 +4,31 @@ import { existsSync, readFileSync } from 'fs'
 import { runCli } from '../../testing-utils'
 
 describe('integration - tsgo uninstalled', () => {
-  it('should warn when ts-go is not installed and fallback to regular TypeScript', async () => {
+  it('should error when ts-go is not installed', async () => {
     const { code, stderr } = await runCli({
       directory: __dirname,
       args: ['--tsgo'],
     })
 
-    expect(code).toBe(0)
+    // Should exit with error code
+    expect(code).not.toBe(0)
     const distDir = join(__dirname, 'dist')
     const distFile = join(distDir, './index.js')
     const typeFile = join(distDir, './index.d.ts')
 
-    // Should still generate files (fallback to regular TypeScript)
-    expect(existsSync(distFile)).toBe(true)
-    expect(existsSync(typeFile)).toBe(true)
+    // Should NOT generate files when ts-go is not available
+    expect(existsSync(distFile)).toBe(false)
+    expect(existsSync(typeFile)).toBe(false)
 
-    // MUST show warning about ts-go not being installed
-    // Check for all possible warning messages
-    const hasWarning =
-      stderr.includes('Could not load TypeScript-Go compiler') ||
+    // MUST show error about ts-go not being installed
+    const hasError =
       stderr.includes('TypeScript-Go compiler not found') ||
       stderr.includes(
         '--tsgo flag was specified but @typescript/native-preview is not installed',
-      )
+      ) ||
+      stderr.includes('@typescript/native-preview')
 
-    expect(hasWarning).toBe(true)
+    expect(hasError).toBe(true)
     expect(stderr).toMatch(/TypeScript-Go|@typescript\/native-preview/)
-
-    // Verify the type file was generated correctly
-    // rollup-plugin-dts may transform the output, so check for interface/function names
-    const typeContent = readFileSync(typeFile, 'utf-8')
-    expect(typeContent).toMatch(/interface\s+User|export\s+interface\s+User/)
-    expect(typeContent).toMatch(/function\s+greet|export\s+function\s+greet/)
   })
 })
