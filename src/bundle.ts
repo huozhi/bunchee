@@ -8,6 +8,7 @@ import fs from 'fs'
 import { resolve } from 'path'
 import { createOutputState } from './plugins/output-state-plugin'
 import {
+  exit,
   fileExists,
   getPackageMeta,
   getSourcePathFromExportPath,
@@ -20,6 +21,7 @@ import {
   resolveTsConfig,
   resolveTsConfigPath,
   writeDefaultTsconfig,
+  resolveTsGo,
 } from './typescript'
 import { collectEntriesFromParsedExports } from './entries'
 import { createAssetRollupJobs } from './rollup-job'
@@ -63,8 +65,21 @@ async function bundle(
   const inputFile = cliEntryPath
   const isFromCli = Boolean(cliEntryPath)
 
+  const useTsGo = options.tsgo === true
+
+  // Check if ts-go is available when requested (before resolving tsconfig)
+  let tsgoInstance: typeof import('typescript') | null = null
+  if (useTsGo) {
+    tsgoInstance = resolveTsGo(cwd)
+    if (!tsgoInstance) {
+      exit(
+        '--tsgo flag was specified but @typescript/native-preview is not installed. Please install it as a dev dependency: pnpm add -D @typescript/native-preview',
+      )
+    }
+  }
+
   const tsConfigPath = resolveTsConfigPath(cwd, options.tsconfig)
-  let tsConfig = resolveTsConfig(cwd, tsConfigPath)
+  let tsConfig = resolveTsConfig(cwd, tsConfigPath, useTsGo)
   let hasTsConfig = Boolean(tsConfig?.tsConfigPath)
 
   const defaultTsOptions: TypescriptOptions = {
@@ -159,7 +174,7 @@ async function bundle(
     // Otherwise, use the existing one.
     const defaultTsConfigPath = resolve(cwd, 'tsconfig.json')
     if (!fileExists(defaultTsConfigPath)) {
-      await writeDefaultTsconfig(defaultTsConfigPath)
+      await writeDefaultTsconfig(defaultTsConfigPath, useTsGo)
     }
     defaultTsOptions.tsConfigPath = defaultTsConfigPath
     hasTsConfig = true
@@ -171,12 +186,16 @@ async function bundle(
   }
 
   const outputState = createOutputState({ entries })
+  // Use ts-go if it was successfully resolved earlier
+  const useTsGoInContext = Boolean(useTsGo && hasTsConfig && tsgoInstance)
+
   const buildContext: BuildContext = {
     entries,
     pkg,
     cwd,
     tsOptions: defaultTsOptions,
     useTypeScript: hasTsConfig,
+    useTsGo: useTsGoInContext,
     browserslistConfig,
     pluginContext: {
       outputState,

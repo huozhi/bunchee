@@ -317,6 +317,23 @@ bunchee --no-external
 
 This will include all dependencies within your output bundle.
 
+#### TypeScript-Go Compiler
+
+TypeScript-Go (`@typescript/native-preview`) is a high-performance, Go-based implementation of the TypeScript compiler that can significantly speed up type declaration file generation.
+
+To use TypeScript-Go for type generation, use the `--tsgo` flag:
+
+```sh
+bunchee --tsgo
+```
+
+**Note**: This requires `@typescript/native-preview` to be installed as a dev dependency. If it's not installed, bunchee will exit with an error.
+
+```sh
+pnpm add -D bunchee @typescript/native-preview
+bunchee --tsgo
+```
+
 #### Build Successful Command
 
 A command to be executed after a build is successful can be specified using the `--success` option, which is useful for development watching mode:
@@ -364,6 +381,14 @@ Then use use the [exports field in package.json](https://nodejs.org/api/packages
   <summary>TypeScript</summary>
 
 If you're building a TypeScript library, separate the types from the main entry file and specify the types path in package.json. Types exports need to stay on the top of each export with `types` condition, and you can use `default` condition for the JS bundle file.
+
+**bunchee** supports using the TypeScript-Go compiler (`@typescript/native-preview`) for faster type generation. To enable it, use the `--tsgo` flag:
+
+```sh
+bunchee --tsgo
+```
+
+Note: This requires `@typescript/native-preview` to be installed as a dev dependency. If it's not installed, bunchee will fall back to the regular TypeScript compiler with a warning.
 
 ```json5
 {
@@ -545,6 +570,7 @@ await bundle(path.resolve('./src/index.ts'), {
   cwd: process.cwd(), // string
   clean: true, // boolean
   tsconfig: 'tsconfig.json', // string
+  tsgo: false, // Boolean - use TypeScript-Go compiler for type generation
 })
 ```
 

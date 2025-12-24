@@ -16,6 +16,7 @@
   "include": [
     "./**/*.test.ts",
     "./**/*.test.tsx",
+    "./**/helpers.ts",
     "./testing-utils",
     "../src/**/*.test.ts",
     "../src/**/*.test.tsx"

@@ -28,7 +28,7 @@ Options:
   -o, --output <file>    specify output filename
   -f, --format <format>  type of output (esm, amd, cjs, iife, umd, system), default: esm
   -h, --help             output usage information
-  
+
   --external <mod>       specify an external dependency, separate by comma
   --no-external          do not bundle external dependencies
   --no-clean             do not clean dist folder before building, default: false
@@ -41,6 +41,7 @@ Options:
   --tsconfig             path to tsconfig file, default: tsconfig.json
   --dts-bundle           bundle type declaration files, default: false
   --success <cmd>     run command after build success
+  --tsgo                use TypeScript-Go compiler for type generation
 `
 
 function help() {
@@ -141,6 +142,10 @@ async function parseCliArgs(argv: string[]) {
       type: 'string',
       description: 'run command after build success',
     })
+    .option('tsgo', {
+      type: 'boolean',
+      description: 'use TypeScript-Go compiler for type generation',
+    })
     .command(
       'prepare',
       'auto configure package.json exports for building',
@@ -200,6 +205,7 @@ async function parseCliArgs(argv: string[]) {
     env: args['env'],
     tsconfig: args['tsconfig'],
     onSuccess: args['success'],
+    tsgo: args['tsgo'],
   }
 
   // When minify is enabled, sourcemap should be enabled by default, unless explicitly opted out
@@ -252,9 +258,21 @@ async function run(args: CliArgs) {
     clean,
     tsconfig,
     onSuccess,
+    tsgo: args.tsgo,
   }
 
   const cliEntry = source ? path.resolve(cwd, source) : ''
+
+  // Check if ts-go is available when requested (before any build operations)
+  if (args.tsgo) {
+    try {
+      require.resolve('@typescript/native-preview', { paths: [cwd] })
+    } catch {
+      exit(
+        '--tsgo flag was specified but @typescript/native-preview is not installed. Please install it as a dev dependency: pnpm add -D @typescript/native-preview',
+      )
+    }
+  }
 
   // lint package by default
   await lint(cwd)
@@ -429,4 +447,7 @@ function logError(err: unknown) {
   logger.error(error)
 }
 
-main().catch(exit)
+main().catch((error) => {
+  logError(error)
+  process.exit(1)
+})

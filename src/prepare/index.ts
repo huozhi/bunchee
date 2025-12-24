@@ -146,7 +146,7 @@ export async function prepare(cwd: string): Promise<void> {
   if (hasTypeScriptFiles) {
     isUsingTs = true
     if (!fs.existsSync(tsConfigPath)) {
-      await writeDefaultTsconfig(tsConfigPath)
+      await writeDefaultTsconfig(tsConfigPath, false)
     }
   }
 
