@@ -20,6 +20,7 @@ import {
   resolveTsConfig,
   resolveTsConfigPath,
   writeDefaultTsconfig,
+  resolveTsGo,
 } from './typescript'
 import { collectEntriesFromParsedExports } from './entries'
 import { createAssetRollupJobs } from './rollup-job'
@@ -63,9 +64,21 @@ async function bundle(
   const inputFile = cliEntryPath
   const isFromCli = Boolean(cliEntryPath)
 
+  const useTsGo = options.experimentalTsgo === true
   const tsConfigPath = resolveTsConfigPath(cwd, options.tsconfig)
-  let tsConfig = resolveTsConfig(cwd, tsConfigPath)
+  let tsConfig = resolveTsConfig(cwd, tsConfigPath, useTsGo)
   let hasTsConfig = Boolean(tsConfig?.tsConfigPath)
+
+  // Check if ts-go is available when requested
+  let tsgoInstance: typeof import('typescript') | null = null
+  if (useTsGo) {
+    tsgoInstance = resolveTsGo(cwd)
+    if (!tsgoInstance) {
+      logger.warn(
+        '--experimental-tsgo flag was specified but @typescript/native-preview is not installed. Falling back to regular TypeScript compiler.',
+      )
+    }
+  }
 
   const defaultTsOptions: TypescriptOptions = {
     tsConfigPath: tsConfig?.tsConfigPath,
@@ -159,7 +172,7 @@ async function bundle(
     // Otherwise, use the existing one.
     const defaultTsConfigPath = resolve(cwd, 'tsconfig.json')
     if (!fileExists(defaultTsConfigPath)) {
-      await writeDefaultTsconfig(defaultTsConfigPath)
+      await writeDefaultTsconfig(defaultTsConfigPath, useTsGo)
     }
     defaultTsOptions.tsConfigPath = defaultTsConfigPath
     hasTsConfig = true
@@ -171,12 +184,16 @@ async function bundle(
   }
 
   const outputState = createOutputState({ entries })
+  // Use ts-go if it was successfully resolved earlier
+  const useTsGoInContext = Boolean(useTsGo && hasTsConfig && tsgoInstance)
+
   const buildContext: BuildContext = {
     entries,
     pkg,
     cwd,
     tsOptions: defaultTsOptions,
     useTypeScript: hasTsConfig,
+    useTsGo: useTsGoInContext,
     browserslistConfig,
     pluginContext: {
       outputState,

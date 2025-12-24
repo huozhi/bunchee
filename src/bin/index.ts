@@ -28,7 +28,7 @@ Options:
   -o, --output <file>    specify output filename
   -f, --format <format>  type of output (esm, amd, cjs, iife, umd, system), default: esm
   -h, --help             output usage information
-  
+
   --external <mod>       specify an external dependency, separate by comma
   --no-external          do not bundle external dependencies
   --no-clean             do not clean dist folder before building, default: false
@@ -41,6 +41,7 @@ Options:
   --tsconfig             path to tsconfig file, default: tsconfig.json
   --dts-bundle           bundle type declaration files, default: false
   --success <cmd>     run command after build success
+  --experimental-tsgo    use TypeScript-Go compiler for type generation (experimental)
 `
 
 function help() {
@@ -141,6 +142,11 @@ async function parseCliArgs(argv: string[]) {
       type: 'string',
       description: 'run command after build success',
     })
+    .option('experimental-tsgo', {
+      type: 'boolean',
+      description:
+        'use TypeScript-Go compiler for type generation (experimental)',
+    })
     .command(
       'prepare',
       'auto configure package.json exports for building',
@@ -200,6 +206,7 @@ async function parseCliArgs(argv: string[]) {
     env: args['env'],
     tsconfig: args['tsconfig'],
     onSuccess: args['success'],
+    experimentalTsgo: args['experimental-tsgo'],
   }
 
   // When minify is enabled, sourcemap should be enabled by default, unless explicitly opted out
@@ -252,6 +259,7 @@ async function run(args: CliArgs) {
     clean,
     tsconfig,
     onSuccess,
+    experimentalTsgo: args.experimentalTsgo,
   }
 
   const cliEntry = source ? path.resolve(cwd, source) : ''
