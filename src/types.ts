@@ -139,7 +139,7 @@ type BuildContext = {
   cwd: string
   tsOptions: TypescriptOptions
   useTypeScript: boolean
-  useTsGo?: boolean
+  useTsGo: boolean
   browserslistConfig: BrowserslistConfig | undefined
   pluginContext: {
     outputState: OutputState

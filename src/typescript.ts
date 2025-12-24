@@ -45,7 +45,7 @@ function resolveTsGo(cwd: string): typeof import('typescript') | null {
 
 function resolveTypescript(
   cwd: string,
-  useTsGo?: boolean,
+  useTsGo: boolean,
 ): typeof import('typescript') {
   if (useTsGo) {
     const tsgo = resolveTsGo(cwd)
@@ -95,7 +95,7 @@ export const resolveTsConfigPath = memoize(
 function resolveTsConfigHandler(
   cwd: string,
   tsConfigPath: string | undefined,
-  useTsGo?: boolean,
+  useTsGo: boolean,
 ): null | TypescriptOptions {
   let tsCompilerOptions: CompilerOptions = {}
   if (tsConfigPath) {
@@ -125,7 +125,7 @@ const resolveTsConfigCache = new Map<string, TypescriptOptions | null>()
 export function resolveTsConfig(
   cwd: string,
   tsConfigPath: string | undefined,
-  useTsGo?: boolean,
+  useTsGo: boolean,
 ): null | TypescriptOptions {
   const cacheKey = `${cwd}:${tsConfigPath || ''}:${useTsGo ? 'tsgo' : 'ts'}`
   if (resolveTsConfigCache.has(cacheKey)) {
@@ -139,7 +139,7 @@ export function resolveTsConfig(
 export async function convertCompilerOptions(
   cwd: string,
   json: any,
-  useTsGo?: boolean,
+  useTsGo: boolean,
 ) {
   // Use the original ts handler to avoid memory leak
   const ts = resolveTypescript(cwd, useTsGo)
@@ -148,7 +148,7 @@ export async function convertCompilerOptions(
 
 export async function writeDefaultTsconfig(
   tsConfigPath: string,
-  useTsGo?: boolean,
+  useTsGo: boolean,
 ) {
   await fsp.writeFile(
     tsConfigPath,

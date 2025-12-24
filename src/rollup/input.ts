@@ -47,7 +47,7 @@ async function createDtsPlugin(
   tsConfigPath: string | undefined,
   respectExternal: boolean | undefined,
   cwd: string,
-  useTsGo?: boolean,
+  useTsGo: boolean,
 ) {
   const enableIncrementalWithoutBuildInfo =
     tsCompilerOptions?.incremental && !tsCompilerOptions?.tsBuildInfoFile
