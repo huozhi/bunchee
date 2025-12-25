@@ -9,7 +9,7 @@ import {
   getSpecialExportTypeFromComposedExportPath,
   normalizeExportPath,
 } from '../entries'
-import fs from 'fs'
+import { createRequire } from 'module'
 import {
   isBinExportPath,
   isPrivateExportPath,
@@ -35,11 +35,14 @@ function hasSwcHelpersDeclared(pkg: PackageMetadata): boolean {
 }
 
 function isSwcHelpersInstalled(cwd: string): boolean {
-  // Only consider the project's own install. (In monorepos, a hoisted dependency
-  // might exist elsewhere, but the built package still needs a proper runtime dep.)
-  return fs.existsSync(
-    path.join(cwd, 'node_modules', '@swc', 'helpers', 'package.json'),
-  )
+  try {
+    // Use Node's resolver (supports pnpm/yarn PnP) and resolve from the user's project.
+    const req = createRequire(path.join(cwd, 'package.json'))
+    req.resolve('@swc/helpers/package.json')
+    return true
+  } catch {
+    return false
+  }
 }
 
 function createOutputState({
