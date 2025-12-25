@@ -1,6 +1,9 @@
 {
   "name": "swc-helpers-warning",
   "type": "module",
+  "dependencies": {
+    "@swc/helpers": "^0.5.17"
+  },
   "exports": {
     ".": {
       "import": "./dist/index.js"

@@ -10,10 +10,9 @@ import {
 describe('integration swc-helpers-warning', () => {
   const { job, distDir } = createJob({
     directory: __dirname,
-    args: ['--external', '@swc/helpers'],
   })
 
-  it('should warn when output references @swc/helpers but it is not declared', async () => {
+  it('should warn when output references @swc/helpers but it is not installed', async () => {
     const stderr = stripANSIColor(job.stderr)
     expect(stderr).toContain('Your build output imports "@swc/helpers"')
     expect(stderr).toContain('pnpm add @swc/helpers')
@@ -22,21 +21,28 @@ describe('integration swc-helpers-warning', () => {
 
     const output = fs.readFileSync(path.join(distDir, 'index.js'), 'utf-8')
     expect(output).toMatchInlineSnapshot(`
-      "import { _ } from '@swc/helpers/_/_async_to_generator';
-      import { _ as _$1 } from '@swc/helpers/_/_extends';
+      "import { _ } from '@swc/helpers/_/_apply_decs_2203_r';
       
-      function makeObject(value) {
-          return _(function*() {
-              yield Promise.resolve();
-              return _$1({
-                  value
-              }, value ? {
-                  extra: true
-              } : {});
-          })();
+      var _dec, _initProto;
+      function dec() {
+          return function() {};
       }
+      _dec = dec();
+      class Foo {
+          method() {}
+          constructor(){
+              _initProto(this);
+          }
+      }
+      ({ e: [_initProto] } = _(Foo, [
+          [
+              _dec,
+              2,
+              "method"
+          ]
+      ], []));
       
-      export { makeObject };
+      export { Foo };
       "
     `)
   })

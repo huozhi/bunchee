@@ -1,4 +1,8 @@
-export async function makeObject(value) {
-  await Promise.resolve()
-  return { value, ...(value ? { extra: true } : {}) }
+function dec() {
+  return function () {}
+}
+
+export class Foo {
+  @dec()
+  method() {}
 }

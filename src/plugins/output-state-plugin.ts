@@ -9,6 +9,7 @@ import {
   getSpecialExportTypeFromComposedExportPath,
   normalizeExportPath,
 } from '../entries'
+import fs from 'fs'
 import {
   isBinExportPath,
   isPrivateExportPath,
@@ -29,7 +30,15 @@ function hasSwcHelpersDeclared(pkg: PackageMetadata): boolean {
   return Boolean(
     pkg.dependencies?.['@swc/helpers'] ||
       pkg.peerDependencies?.['@swc/helpers'] ||
-      (pkg as any).optionalDependencies?.['@swc/helpers'],
+      pkg.optionalDependencies?.['@swc/helpers'],
+  )
+}
+
+function isSwcHelpersInstalled(cwd: string): boolean {
+  // Only consider the project's own install. (In monorepos, a hoisted dependency
+  // might exist elsewhere, but the built package still needs a proper runtime dep.)
+  return fs.existsSync(
+    path.join(cwd, 'node_modules', '@swc', 'helpers', 'package.json'),
   )
 }
 
@@ -111,16 +120,19 @@ function createOutputState({
           if (
             !hasWarnedAboutSwcHelpers &&
             swcHelpersImportFiles.size > 0 &&
-            !hasSwcHelpersDeclared(pkg)
+            !isSwcHelpersInstalled(cwd)
           ) {
             hasWarnedAboutSwcHelpers = true
             const exampleFiles = Array.from(swcHelpersImportFiles)
               .slice(0, 3)
               .join(', ')
+            const declaredHint = hasSwcHelpersDeclared(pkg)
+              ? ''
+              : ' (and add it to your dependencies)'
             logger.warn(
               [
-                `Your build output imports "@swc/helpers" but it's not declared in your package.json.`,
-                `Add it as a runtime dependency (e.g. "pnpm add @swc/helpers").`,
+                `Your build output imports "@swc/helpers" but it isn't installed in this project.`,
+                `Install it as a runtime dependency${declaredHint} (e.g. "pnpm add @swc/helpers").`,
                 exampleFiles ? `Detected in: ${exampleFiles}` : '',
               ]
                 .filter(Boolean)
