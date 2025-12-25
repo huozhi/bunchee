@@ -1,4 +1,4 @@
-import type { Plugin } from 'rollup'
+import type { OutputChunk, Plugin } from 'rollup'
 import { type Entries } from '../types'
 import path from 'path'
 import prettyBytes from 'pretty-bytes'
@@ -43,6 +43,15 @@ function isSwcHelpersInstalled(cwd: string): boolean {
   } catch {
     return false
   }
+}
+
+function chunkUsesSwcHelpers(chunk: OutputChunk): boolean {
+  // Prefer Rollup metadata over scanning code: this is fast and matches actual output deps.
+  // `imports` includes both internal chunk imports and external package imports.
+  const allImports = chunk.imports.concat(chunk.dynamicImports)
+  return allImports.some(
+    (id) => id === '@swc/helpers' || id.startsWith('@swc/helpers/'),
+  )
 }
 
 function createOutputState({
@@ -99,7 +108,7 @@ function createOutputState({
             if (chunk.type !== 'chunk') {
               return
             }
-            if (chunk.code.includes('@swc/helpers')) {
+            if (chunkUsesSwcHelpers(chunk)) {
               swcHelpersImportFiles.add(
                 normalizePath(path.relative(cwd, filePath)),
               )
