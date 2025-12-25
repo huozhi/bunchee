@@ -60,12 +60,14 @@ export function createSyncTest<T>({
   options,
   directory,
   abortTimeout,
+  hookTimeout,
   run,
 }: {
   args: string[]
   options: { env?: NodeJS.ProcessEnv }
   directory: string
   abortTimeout?: number
+  hookTimeout?: number
   run: (
     args: string[],
     options: { env?: NodeJS.ProcessEnv },
@@ -89,15 +91,21 @@ export function createSyncTest<T>({
     },
   ) as any
 
-  beforeAll(async () => {
-    // execute the job
-    result = await run(args, options, { abortTimeout })
-  })
-  afterAll(async () => {
-    if (!process.env.TEST_NOT_CLEANUP) {
-      await removeDirectory(distDir)
-    }
-  })
+  beforeAll(
+    async () => {
+      // execute the job
+      result = await run(args, options, { abortTimeout })
+    },
+    hookTimeout ? { timeout: hookTimeout } : undefined,
+  )
+  afterAll(
+    async () => {
+      if (!process.env.TEST_NOT_CLEANUP) {
+        await removeDirectory(distDir)
+      }
+    },
+    hookTimeout ? { timeout: hookTimeout } : undefined,
+  )
 
   return {
     get job() {

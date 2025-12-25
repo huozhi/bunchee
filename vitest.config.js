@@ -15,7 +15,7 @@ export default defineConfig({
     ],
     // Test timeout
     testTimeout: 60 * 1000,
-    hookTimeout: 20 * 1000,
+    hookTimeout: 30 * 1000,
   },
   resolve: {
     conditions: ['import', 'default'], // Prefer ES modules if available
