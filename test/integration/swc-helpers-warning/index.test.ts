@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import fs from 'fs'
+import path from 'path'
 import {
   createJob,
   assertContainFiles,
@@ -17,5 +19,25 @@ describe('integration swc-helpers-warning', () => {
     expect(stderr).toContain('pnpm add @swc/helpers')
 
     assertContainFiles(distDir, ['index.js'])
+
+    const output = fs.readFileSync(path.join(distDir, 'index.js'), 'utf-8')
+    expect(output).toMatchInlineSnapshot(`
+      "import { _ } from '@swc/helpers/_/_async_to_generator';
+      import { _ as _$1 } from '@swc/helpers/_/_extends';
+      
+      function makeObject(value) {
+          return _(function*() {
+              yield Promise.resolve();
+              return _$1({
+                  value
+              }, value ? {
+                  extra: true
+              } : {});
+          })();
+      }
+      
+      export { makeObject };
+      "
+    `)
   })
 })
