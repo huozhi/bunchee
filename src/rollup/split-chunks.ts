@@ -1,4 +1,4 @@
-import { type GetManualChunk } from 'rollup'
+import { type GetManualChunk, type GetModuleInfo } from 'rollup'
 import { type CustomPluginOptions } from 'rollup'
 import path from 'path'
 import { memoize } from '../lib/memoize'
@@ -20,6 +20,87 @@ function getModuleLayer(moduleMeta: CustomPluginOptions): string | undefined {
 
   const moduleLayer = directives[0]
   return moduleLayer ? hashTo3Char(moduleLayer) : undefined
+}
+
+/**
+ * Get the effective layer of a module by walking up the importer chain.
+ * A module inherits the layer of its importer if it doesn't have its own layer.
+ */
+function getEffectiveModuleLayer(
+  id: string,
+  getModuleInfo: GetModuleInfo,
+  visited: Set<string> = new Set(),
+): string | undefined {
+  if (visited.has(id)) {
+    return undefined
+  }
+  visited.add(id)
+
+  const moduleInfo = getModuleInfo(id)
+  if (!moduleInfo) {
+    return undefined
+  }
+
+  // If this module has its own layer, return it
+  const ownLayer = getModuleLayer(moduleInfo.meta)
+  if (ownLayer) {
+    return ownLayer
+  }
+
+  // Otherwise, inherit layer from importers
+  for (const importerId of moduleInfo.importers) {
+    const importerLayer = getEffectiveModuleLayer(
+      importerId,
+      getModuleInfo,
+      visited,
+    )
+    if (importerLayer) {
+      return importerLayer
+    }
+  }
+
+  return undefined
+}
+
+/**
+ * Check if a module is imported by modules with different boundary layers.
+ * Returns the set of unique layers if there are multiple, otherwise undefined.
+ */
+function getImporterLayers(
+  id: string,
+  getModuleInfo: GetModuleInfo,
+): Set<string> {
+  const moduleInfo = getModuleInfo(id)
+  if (!moduleInfo) {
+    return new Set()
+  }
+
+  const layers = new Set<string>()
+
+  for (const importerId of moduleInfo.importers) {
+    const importerInfo = getModuleInfo(importerId)
+    if (!importerInfo) {
+      continue
+    }
+
+    // Get the importer's own layer first
+    const importerOwnLayer = getModuleLayer(importerInfo.meta)
+    if (importerOwnLayer) {
+      layers.add(importerOwnLayer)
+    } else {
+      // If the importer doesn't have a layer, get its effective layer
+      const effectiveLayer = getEffectiveModuleLayer(
+        importerId,
+        getModuleInfo,
+        new Set([id]),
+      )
+      if (effectiveLayer) {
+        layers.add(effectiveLayer)
+      }
+    }
+  }
+
+  return layers
 }
 
 // dependencyGraphMap: Map<subModuleId, Set<entryParentId>>
@@ -60,6 +141,28 @@ export function createSplitChunks(
           }
           dependencyGraphMap.get(subId)!.add([id, moduleLayer])
         }
+      }
+    }
+
+    // Check if this module (without its own directive) is imported by multiple boundaries.
+    // If so, split it into a separate shared chunk to prevent boundary crossing issues.
+    if (!moduleLayer && !isEntry) {
+      const importerLayers = getImporterLayers(id, ctx.getModuleInfo)
+
+      // If this module is imported by modules with different layers (e.g., both client and server),
+      // split it into a separate chunk that can be safely imported by both boundaries.
+      if (importerLayers.size > 1) {
+        if (splitChunksGroupMap.has(id)) {
+          return splitChunksGroupMap.get(id)
+        }
+
+        const chunkName = path.basename(id, path.extname(id))
+        // Create a unique suffix based on all the layers that import this module
+        const layersSuffix = Array.from(importerLayers).sort().join('-')
+        const chunkGroup = `${chunkName}-${hashTo3Char(layersSuffix)}`
+
+        splitChunksGroupMap.set(id, chunkGroup)
+        return chunkGroup
       }
     }
 
