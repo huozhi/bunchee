@@ -23,6 +23,7 @@ import { rawContent } from '../plugins/raw-plugin'
 import { nativeAddon } from '../plugins/native-addon-plugin'
 import { aliasEntries } from '../plugins/alias-plugin'
 import { prependShebang } from '../plugins/prepend-shebang'
+import { swcHelpersWarningPlugin } from '../plugins/swc-helpers-warning-plugin'
 import { memoizeByKey } from '../lib/memoize'
 import { convertCompilerOptions, resolveTsGo } from '../typescript'
 import {
@@ -295,6 +296,8 @@ export async function buildInputConfig(
             // For external libraries, the module will not be bundled.
             transformMixedEsModules: true,
           }),
+          // If SWC emits @swc/helpers imports, warn when it's not installed.
+          swcHelpersWarningPlugin({ cwd, pkg }),
         ]
   ).filter(isNotNull<Plugin>)
 
