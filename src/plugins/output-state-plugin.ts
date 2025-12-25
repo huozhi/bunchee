@@ -15,6 +15,7 @@ import {
   isTypeFile,
   normalizePath,
 } from '../utils'
+import type { PackageMetadata } from '../types'
 
 // [filename, sourceFileName, size]
 type FileState = [string, string, number]
@@ -24,12 +25,28 @@ export type OutputState = ReturnType<typeof createOutputState>
 // Example: @foo/bar -> bar
 const removeScope = (exportPath: string) => exportPath.replace(/^@[^/]+\//, '')
 
-function createOutputState({ entries }: { entries: Entries }): {
+function hasSwcHelpersDeclared(pkg: PackageMetadata): boolean {
+  return Boolean(
+    pkg.dependencies?.['@swc/helpers'] ||
+      pkg.peerDependencies?.['@swc/helpers'] ||
+      (pkg as any).optionalDependencies?.['@swc/helpers'],
+  )
+}
+
+function createOutputState({
+  entries,
+  pkg,
+}: {
+  entries: Entries
+  pkg: PackageMetadata
+}): {
   plugin(cwd: string): Plugin
   getSizeStats(): SizeStats
 } {
   const sizeStats: SizeStats = new Map()
   const uniqFiles = new Set<string>()
+  const swcHelpersImportFiles = new Set<string>()
+  let hasWarnedAboutSwcHelpers = false
 
   function addSize({
     fileName,
@@ -70,6 +87,11 @@ function createOutputState({ entries }: { entries: Entries }): {
             if (chunk.type !== 'chunk') {
               return
             }
+            if (chunk.code.includes('@swc/helpers')) {
+              swcHelpersImportFiles.add(
+                normalizePath(path.relative(cwd, filePath)),
+              )
+            }
             if (!chunk.isEntry) {
               return
             }
@@ -85,6 +107,26 @@ function createOutputState({ entries }: { entries: Entries }): {
               exportPath,
             })
           })
+
+          if (
+            !hasWarnedAboutSwcHelpers &&
+            swcHelpersImportFiles.size > 0 &&
+            !hasSwcHelpersDeclared(pkg)
+          ) {
+            hasWarnedAboutSwcHelpers = true
+            const exampleFiles = Array.from(swcHelpersImportFiles)
+              .slice(0, 3)
+              .join(', ')
+            logger.warn(
+              [
+                `Your build output imports "@swc/helpers" but it's not declared in your package.json.`,
+                `Add it as a runtime dependency (e.g. "pnpm add @swc/helpers").`,
+                exampleFiles ? `Detected in: ${exampleFiles}` : '',
+              ]
+                .filter(Boolean)
+                .join('\n'),
+            )
+          }
         },
       }
     },

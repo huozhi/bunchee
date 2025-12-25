@@ -1,0 +1,9 @@
+{
+  "name": "swc-helpers-warning",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    }
+  }
+}

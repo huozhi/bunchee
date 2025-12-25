@@ -185,7 +185,7 @@ async function bundle(
     browserslistConfig = pkg.browserslist
   }
 
-  const outputState = createOutputState({ entries })
+  const outputState = createOutputState({ entries, pkg })
   // Use ts-go if it was successfully resolved earlier
   const useTsGoInContext = Boolean(useTsGo && hasTsConfig && tsgoInstance)
 
