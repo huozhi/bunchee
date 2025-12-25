@@ -62,7 +62,7 @@ function createExportCondition(
     }
   }
   return {
-    import: getDistPath(`${exportName}.mjs`),
+    import: getDistPath(`${exportName}.${esmExtension}`),
     require: getDistPath(`${exportName}.${cjsExtension}`),
   }
 }
@@ -99,7 +99,10 @@ function createExportConditionPair(
   return [normalizedExportPath, exportCond] as const
 }
 
-export async function prepare(cwd: string): Promise<void> {
+export async function prepare(
+  cwd: string,
+  options?: { esm?: boolean },
+): Promise<void> {
   const sourceFolder = path.resolve(cwd, SRC)
   if (!fs.existsSync(sourceFolder)) {
     logger.error(
@@ -151,7 +154,8 @@ export async function prepare(cwd: string): Promise<void> {
   }
 
   // Configure as ESM package by default if there's no package.json
-  if (!hasPackageJson) {
+  // OR if --esm flag is explicitly set
+  if (!hasPackageJson || options?.esm) {
     pkgJson.type = 'module'
   }
 
