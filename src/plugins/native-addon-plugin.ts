@@ -1,5 +1,4 @@
 import type { Plugin } from 'rollup'
-import { createFilter } from '@rollup/pluginutils'
 import { readFile } from 'fs/promises'
 import path from 'path'
 
@@ -12,7 +11,6 @@ const NATIVE_ADDON_SUFFIX = '\0native-addon:'
 export function nativeAddon(): Plugin {
   // Map from virtual module id to original absolute path
   const nativeAddonMap = new Map<string, string>()
-  const filter = createFilter(['**/*.node'])
 
   return {
     name: 'native-addon',
@@ -80,9 +78,9 @@ export default nativeAddon;
       }
     },
 
-    async generateBundle(options, bundle) {
+    async generateBundle() {
       // Copy all tracked native addon files to the output directory
-      for (const [virtualId, absolutePath] of nativeAddonMap) {
+      for (const [_, absolutePath] of nativeAddonMap) {
         const fileName = path.basename(absolutePath)
 
         try {
