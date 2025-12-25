@@ -1,4 +1,4 @@
-import type { OutputChunk, Plugin } from 'rollup'
+import type { Plugin } from 'rollup'
 import { type Entries } from '../types'
 import path from 'path'
 import prettyBytes from 'pretty-bytes'
@@ -9,14 +9,12 @@ import {
   getSpecialExportTypeFromComposedExportPath,
   normalizeExportPath,
 } from '../entries'
-import { createRequire } from 'module'
 import {
   isBinExportPath,
   isPrivateExportPath,
   isTypeFile,
   normalizePath,
 } from '../utils'
-import type { PackageMetadata } from '../types'
 
 // [filename, sourceFileName, size]
 type FileState = [string, string, number]
@@ -26,48 +24,12 @@ export type OutputState = ReturnType<typeof createOutputState>
 // Example: @foo/bar -> bar
 const removeScope = (exportPath: string) => exportPath.replace(/^@[^/]+\//, '')
 
-function hasSwcHelpersDeclared(pkg: PackageMetadata): boolean {
-  return Boolean(
-    pkg.dependencies?.['@swc/helpers'] ||
-      pkg.peerDependencies?.['@swc/helpers'] ||
-      pkg.optionalDependencies?.['@swc/helpers'],
-  )
-}
-
-function isSwcHelpersInstalled(cwd: string): boolean {
-  try {
-    // Use Node's resolver (supports pnpm/yarn PnP) and resolve from the user's project.
-    const req = createRequire(path.join(cwd, 'package.json'))
-    req.resolve('@swc/helpers/package.json')
-    return true
-  } catch {
-    return false
-  }
-}
-
-function chunkUsesSwcHelpers(chunk: OutputChunk): boolean {
-  // Prefer Rollup metadata over scanning code: this is fast and matches actual output deps.
-  // `imports` includes both internal chunk imports and external package imports.
-  const allImports = chunk.imports.concat(chunk.dynamicImports)
-  return allImports.some(
-    (id) => id === '@swc/helpers' || id.startsWith('@swc/helpers/'),
-  )
-}
-
-function createOutputState({
-  entries,
-  pkg,
-}: {
-  entries: Entries
-  pkg: PackageMetadata
-}): {
+function createOutputState({ entries }: { entries: Entries }): {
   plugin(cwd: string): Plugin
   getSizeStats(): SizeStats
 } {
   const sizeStats: SizeStats = new Map()
   const uniqFiles = new Set<string>()
-  const swcHelpersImportFiles = new Set<string>()
-  let hasWarnedAboutSwcHelpers = false
 
   function addSize({
     fileName,
@@ -108,11 +70,6 @@ function createOutputState({
             if (chunk.type !== 'chunk') {
               return
             }
-            if (chunkUsesSwcHelpers(chunk)) {
-              swcHelpersImportFiles.add(
-                normalizePath(path.relative(cwd, filePath)),
-              )
-            }
             if (!chunk.isEntry) {
               return
             }
@@ -128,29 +85,6 @@ function createOutputState({
               exportPath,
             })
           })
-
-          if (
-            !hasWarnedAboutSwcHelpers &&
-            swcHelpersImportFiles.size > 0 &&
-            !isSwcHelpersInstalled(cwd)
-          ) {
-            hasWarnedAboutSwcHelpers = true
-            const exampleFiles = Array.from(swcHelpersImportFiles)
-              .slice(0, 3)
-              .join(', ')
-            const declaredHint = hasSwcHelpersDeclared(pkg)
-              ? ''
-              : ' (and add it to your dependencies)'
-            logger.warn(
-              [
-                `Your build output imports "@swc/helpers" but it isn't installed in this project.`,
-                `Install it as a runtime dependency${declaredHint} (e.g. "pnpm add @swc/helpers").`,
-                exampleFiles ? `Detected in: ${exampleFiles}` : '',
-              ]
-                .filter(Boolean)
-                .join('\n'),
-            )
-          }
         },
       }
     },
