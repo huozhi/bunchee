@@ -20,6 +20,7 @@ import preserveDirectives from 'rollup-preserve-directives'
 import { esmShim } from '../plugins/esm-shim'
 import { inlineCss } from '../plugins/inline-css'
 import { rawContent } from '../plugins/raw-plugin'
+import { nativeAddon } from '../plugins/native-addon-plugin'
 import { aliasEntries } from '../plugins/alias-plugin'
 import { prependShebang } from '../plugins/prepend-shebang'
 import { memoizeByKey } from '../lib/memoize'
@@ -268,6 +269,7 @@ export async function buildInputConfig(
           aliasPlugin,
           inlineCss({ exclude: /node_modules/ }),
           rawContent({ exclude: /node_modules/ }),
+          nativeAddon(),
           isBinEntry && prependShebang(entry),
           replace({
             values: inlineDefinedValues,
