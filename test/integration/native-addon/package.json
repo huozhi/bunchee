@@ -1,0 +1,5 @@
+{
+  "name": "native-addon",
+  "type": "module",
+  "exports": "./dist/index.js"
+}
