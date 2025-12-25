@@ -234,12 +234,7 @@ export async function buildInputConfig(
     dts,
     cwd,
   })
-  const commonPlugins = [
-    json(),
-    sizePlugin,
-    // If SWC emits @swc/helpers imports, warn when it's not installed.
-    swcHelpersWarningPlugin({ cwd, pkg }),
-  ]
+  const commonPlugins = [json(), sizePlugin]
 
   const typesPlugins = [
     aliasPlugin,
@@ -301,6 +296,8 @@ export async function buildInputConfig(
             // For external libraries, the module will not be bundled.
             transformMixedEsModules: true,
           }),
+          // If SWC emits @swc/helpers imports, warn when it's not installed.
+          swcHelpersWarningPlugin({ cwd, pkg }),
         ]
   ).filter(isNotNull<Plugin>)
 

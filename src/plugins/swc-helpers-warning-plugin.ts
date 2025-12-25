@@ -67,7 +67,7 @@ export function swcHelpersWarningPlugin({
 
       logger.warn(
         [
-          `Your build output imports "@swc/helpers" but it isn't installed in this project.`,
+          `Your build output imports "@swc/helpers" due to transform, but it isn't installed in this project.`,
           `Install it as a runtime dependency${declaredHint} (e.g. "pnpm add @swc/helpers").`,
           exampleFiles ? `Detected in: ${exampleFiles}` : '',
         ]
