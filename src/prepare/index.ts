@@ -32,6 +32,7 @@ function createExportCondition(
   exportName: string,
   sourceFile: string,
   moduleType: string | undefined,
+  esmOnly: boolean = false,
 ) {
   const isTsSourceFile = isTypescriptFile(sourceFile)
   let cjsExtension: 'js' | 'cjs' = 'js'
@@ -44,14 +45,18 @@ function createExportCondition(
     exportName = 'index'
   }
   if (isTsSourceFile) {
+    const importCondition = {
+      types: getDistPath(
+        'es',
+        `${exportName}.${dtsExtensionsMap[esmExtension]}`,
+      ),
+      default: getDistPath('es', `${exportName}.${esmExtension}`),
+    }
+    if (esmOnly) {
+      return importCondition
+    }
     return {
-      import: {
-        types: getDistPath(
-          'es',
-          `${exportName}.${dtsExtensionsMap[esmExtension]}`,
-        ),
-        default: getDistPath('es', `${exportName}.${esmExtension}`),
-      },
+      import: importCondition,
       require: {
         types: getDistPath(
           'cjs',
@@ -61,8 +66,12 @@ function createExportCondition(
       },
     }
   }
+  const importPath = getDistPath(`${exportName}.${esmExtension}`)
+  if (esmOnly) {
+    return importPath
+  }
   return {
-    import: getDistPath(`${exportName}.mjs`),
+    import: importPath,
     require: getDistPath(`${exportName}.${cjsExtension}`),
   }
 }
@@ -71,6 +80,7 @@ function createExportConditionPair(
   exportName: string, // <export path>.<condition>
   sourceFile: string,
   moduleType: string | undefined,
+  esmOnly: boolean = false,
 ) {
   // <exportName>.<specialCondition>
   let specialCondition: Record<string, string> | undefined
@@ -95,11 +105,19 @@ function createExportConditionPair(
     return [normalizedExportPath, specialCondition] as const
   }
 
-  const exportCond = createExportCondition(exportName, sourceFile, moduleType)
+  const exportCond = createExportCondition(
+    exportName,
+    sourceFile,
+    moduleType,
+    esmOnly,
+  )
   return [normalizedExportPath, exportCond] as const
 }
 
-export async function prepare(cwd: string): Promise<void> {
+export async function prepare(
+  cwd: string,
+  options?: { esm?: boolean },
+): Promise<void> {
   const sourceFolder = path.resolve(cwd, SRC)
   if (!fs.existsSync(sourceFolder)) {
     logger.error(
@@ -151,7 +169,8 @@ export async function prepare(cwd: string): Promise<void> {
   }
 
   // Configure as ESM package by default if there's no package.json
-  if (!hasPackageJson) {
+  // OR if --esm flag is explicitly set
+  if (!hasPackageJson || options?.esm) {
     pkgJson.type = 'module'
   }
 
@@ -215,16 +234,30 @@ export async function prepare(cwd: string): Promise<void> {
     }
 
     const pkgExports: Record<string, any> = {}
+    const esmOnly = options?.esm === true
     for (const [exportName, sourceFilesMap] of exportsEntries.entries()) {
       for (const sourceFile of Object.values(sourceFilesMap)) {
         const [normalizedExportPath, conditions] = createExportConditionPair(
           exportName,
           sourceFile,
           pkgJson.type,
+          esmOnly,
         )
-        pkgExports[normalizedExportPath] = {
-          ...conditions,
-          ...pkgExports[normalizedExportPath],
+        // When esmOnly is true, conditions is either a string or an object with types/default (no import/require)
+        // When esmOnly is false, conditions is an object with import/require
+        if (
+          esmOnly ||
+          typeof conditions === 'string' ||
+          (typeof conditions === 'object' &&
+            conditions !== null &&
+            !('import' in conditions || 'require' in conditions))
+        ) {
+          pkgExports[normalizedExportPath] = conditions
+        } else {
+          pkgExports[normalizedExportPath] = {
+            ...conditions,
+            ...pkgExports[normalizedExportPath],
+          }
         }
       }
     }
@@ -233,15 +266,38 @@ export async function prepare(cwd: string): Promise<void> {
     if (exportsEntries.has('./index')) {
       const isESM = pkgJson.type === 'module'
       const mainExport = pkgExports['.']
-      const mainCondition = isESM ? 'import' : 'require'
-      pkgJson.main = isUsingTs
-        ? mainExport[mainCondition].default
-        : mainExport[mainCondition]
+      if (esmOnly) {
+        // When esmOnly is true, mainExport is either a string or an object with types/default
+        pkgJson.main = isUsingTs
+          ? typeof mainExport === 'object'
+            ? mainExport.default
+            : mainExport
+          : typeof mainExport === 'string'
+            ? mainExport
+            : mainExport.default
+        pkgJson.module = isUsingTs
+          ? typeof mainExport === 'object'
+            ? mainExport.default
+            : mainExport
+          : typeof mainExport === 'string'
+            ? mainExport
+            : mainExport.default
+        if (isUsingTs && typeof mainExport === 'object') {
+          pkgJson.types = mainExport.types
+        }
+      } else {
+        const mainCondition = isESM ? 'import' : 'require'
+        pkgJson.main = isUsingTs
+          ? mainExport[mainCondition].default
+          : mainExport[mainCondition]
 
-      pkgJson.module = isUsingTs ? mainExport.import.default : mainExport.import
+        pkgJson.module = isUsingTs
+          ? mainExport.import.default
+          : mainExport.import
 
-      if (isUsingTs) {
-        pkgJson.types = mainExport[mainCondition].types
+        if (isUsingTs) {
+          pkgJson.types = mainExport[mainCondition].types
+        }
       }
     }
 

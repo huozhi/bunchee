@@ -1,0 +1,13 @@
+{
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "bin": "./dist/bin/index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "exports": {
+    "./foo": "./dist/foo.js",
+    ".": "./dist/index.js"
+  }
+}
