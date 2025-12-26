@@ -39,6 +39,12 @@ describe('integration prepare-js-esm', () => {
       '.': './dist/index.js',
     })
 
+    // Verify additional setup for --esm
+    expect(pkgJson.scripts).toEqual({
+      build: 'bunchee',
+      prepublishOnly: 'npm run build',
+    })
+
     expect(stripANSIColor(stdout)).toMatchInlineSnapshot(`
       "Discovered binaries entries:
         ./$binary: bin.js
