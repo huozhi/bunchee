@@ -98,8 +98,6 @@ jobs:
           node-version: 20
           cache: pnpm
           registry-url: 'https://registry.npmjs.org'
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
