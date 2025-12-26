@@ -91,21 +91,15 @@ export function createSyncTest<T>({
     },
   ) as any
 
-  beforeAll(
-    async () => {
-      // execute the job
-      result = await run(args, options, { abortTimeout })
-    },
-    hookTimeout ? { timeout: hookTimeout } : undefined,
-  )
-  afterAll(
-    async () => {
-      if (!process.env.TEST_NOT_CLEANUP) {
-        await removeDirectory(distDir)
-      }
-    },
-    hookTimeout ? { timeout: hookTimeout } : undefined,
-  )
+  beforeAll(async () => {
+    // execute the job
+    result = await run(args, options, { abortTimeout })
+  }, hookTimeout)
+  afterAll(async () => {
+    if (!process.env.TEST_NOT_CLEANUP) {
+      await removeDirectory(distDir)
+    }
+  }, hookTimeout)
 
   return {
     get job() {
