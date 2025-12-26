@@ -7,13 +7,7 @@
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "exports": {
-    "./foo": {
-      "import": "./dist/foo.js",
-      "require": "./dist/foo.cjs"
-    },
-    ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    }
+    "./foo": "./dist/foo.js",
+    ".": "./dist/index.js"
   }
 }

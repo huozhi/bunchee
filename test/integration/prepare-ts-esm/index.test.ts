@@ -7,7 +7,7 @@ import {
   stripANSIColor,
 } from '../../testing-utils'
 
-describe('integration prepare-js-esm', () => {
+describe('integration prepare-ts-esm', () => {
   beforeAll(async () => {
     await fsp.writeFile(
       join(__dirname, './package.json'),
@@ -20,31 +20,38 @@ describe('integration prepare-js-esm', () => {
     args: ['prepare', '--esm'],
   })
 
-  it('should set type to module and use correct extensions', async () => {
+  it('should set type to module and use correct exports pattern with types', async () => {
     const { stdout } = job
-    await assertContainFiles(dir, ['package.json'])
+    await assertContainFiles(dir, ['package.json', 'tsconfig.json'])
     const pkgJson = JSON.parse(
       await fsp.readFile(join(dir, './package.json'), 'utf-8'),
     )
     // Verify type is set to module
     expect(pkgJson.type).toBe('module')
-    // With type: module, ESM uses .js, CJS uses .cjs
-    expect(pkgJson.main).toBe('./dist/index.js')
-    expect(pkgJson.module).toBe('./dist/index.js')
-    expect(pkgJson.types).toBeFalsy()
+    // With type: module and TypeScript, ESM uses .js, types use .d.ts
+    expect(pkgJson.main).toBe('./dist/es/index.js')
+    expect(pkgJson.module).toBe('./dist/es/index.js')
+    expect(pkgJson.types).toBe('./dist/es/index.d.ts')
     expect(pkgJson.files).toContain('dist')
     expect(pkgJson.bin).toBe('./dist/bin/index.js')
     expect(pkgJson.exports).toEqual({
-      './foo': './dist/foo.js',
-      '.': './dist/index.js',
+      './foo': {
+        types: './dist/es/foo.d.ts',
+        default: './dist/es/foo.js',
+      },
+      '.': {
+        types: './dist/es/index.d.ts',
+        default: './dist/es/index.js',
+      },
     })
 
     expect(stripANSIColor(stdout)).toMatchInlineSnapshot(`
-      "Discovered binaries entries:
-        ./$binary: bin.js
+      "Detected using TypeScript but tsconfig.json is missing, created a tsconfig.json for you.
+      Discovered binaries entries:
+        ./$binary: bin.ts
       Discovered exports entries:
-        ./foo: foo.js
-        .    : index.js
+        ./foo: foo.ts
+        .    : index.ts
       ✓ Configured \`exports\` in package.json
       "
     `)
