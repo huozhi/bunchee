@@ -9,5 +9,9 @@
   "exports": {
     "./foo": "./dist/foo.js",
     ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "bunchee",
+    "prepublishOnly": "npm run build"
   }
 }

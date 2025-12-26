@@ -114,6 +114,38 @@ function createExportConditionPair(
   return [normalizedExportPath, exportCond] as const
 }
 
+function detectPackageManager(cwd: string): 'pnpm' | 'npm' | 'yarn' {
+  if (fs.existsSync(path.join(cwd, 'pnpm-lock.yaml'))) {
+    return 'pnpm'
+  }
+  if (fs.existsSync(path.join(cwd, 'yarn.lock'))) {
+    return 'yarn'
+  }
+  if (fs.existsSync(path.join(cwd, 'package-lock.json'))) {
+    return 'npm'
+  }
+  // Default to npm if no lock file found
+  return 'npm'
+}
+
+function addBuildScripts(pkgJson: Record<string, any>, cwd: string): void {
+  if (!pkgJson.scripts) {
+    pkgJson.scripts = {}
+  }
+
+  const packageManager = detectPackageManager(cwd)
+  const buildCmd =
+    packageManager === 'pnpm' ? 'pnpm build' : `${packageManager} run build`
+
+  if (!pkgJson.scripts.build) {
+    pkgJson.scripts.build = 'bunchee'
+  }
+
+  if (!pkgJson.scripts.prepublishOnly) {
+    pkgJson.scripts.prepublishOnly = buildCmd
+  }
+}
+
 export async function prepare(
   cwd: string,
   options?: { esm?: boolean },
@@ -317,6 +349,11 @@ export async function prepare(
         })
       }
     }
+  }
+
+  // Additional setup when --esm flag is set
+  if (options?.esm) {
+    addBuildScripts(pkgJson, cwd)
   }
 
   await fsp.writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n')

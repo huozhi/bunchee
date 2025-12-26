@@ -45,9 +45,14 @@ describe('integration prepare-ts-esm', () => {
       },
     })
 
+    // Verify additional setup for --esm
+    expect(pkgJson.scripts).toEqual({
+      build: 'bunchee',
+      prepublishOnly: 'npm run build',
+    })
+
     expect(stripANSIColor(stdout)).toMatchInlineSnapshot(`
-      "Detected using TypeScript but tsconfig.json is missing, created a tsconfig.json for you.
-      Discovered binaries entries:
+      "Discovered binaries entries:
         ./$binary: bin.ts
       Discovered exports entries:
         ./foo: foo.ts
