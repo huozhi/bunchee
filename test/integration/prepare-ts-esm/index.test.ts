@@ -52,7 +52,8 @@ describe('integration prepare-ts-esm', () => {
     })
 
     expect(stripANSIColor(stdout)).toMatchInlineSnapshot(`
-      "Discovered binaries entries:
+      "Detected using TypeScript but tsconfig.json is missing, created a tsconfig.json for you.
+      Discovered binaries entries:
         ./$binary: bin.ts
       Discovered exports entries:
         ./foo: foo.ts
