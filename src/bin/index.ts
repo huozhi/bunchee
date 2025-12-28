@@ -5,7 +5,7 @@ import { hideBin } from 'yargs/helpers'
 import { performance } from 'perf_hooks'
 import { lint as lintPackage } from '../lint'
 import { exit, getPackageMeta, hasPackageJson } from '../utils'
-import { logger } from '../logger'
+import { logger, setActiveSpinner } from '../logger'
 import { version } from '../../package.json'
 import { bundle } from '../../src/index'
 import { prepare } from '../prepare'
@@ -276,6 +276,9 @@ async function run(args: CliArgs) {
         isSpinning: false,
       }
 
+  // Register spinner with logger so logs automatically pause the spinner
+  setActiveSpinner(spinnerInstance)
+
   const spinner: Spinner = {
     start: startSpinner,
     stop: stopSpinner,
@@ -370,6 +373,9 @@ async function run(args: CliArgs) {
   } else {
     spinner.stop(`bunchee ${version} build completed`)
   }
+
+  // Unregister spinner from logger
+  setActiveSpinner(null)
 }
 
 async function main() {
