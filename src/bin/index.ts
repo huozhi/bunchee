@@ -1,6 +1,5 @@
 import type { CliArgs, BundleConfig, BuildContext } from '../types'
 import path from 'path'
-import { Module } from 'module'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 import { performance } from 'perf_hooks'
@@ -42,7 +41,6 @@ Options:
   --tsconfig             path to tsconfig file, default: tsconfig.json
   --dts-bundle           bundle type declaration files, default: false
   --success <cmd>     run command after build success
-  --tsgo                use TypeScript-Go compiler for type generation
 `
 
 function help() {
@@ -143,10 +141,6 @@ async function parseCliArgs(argv: string[]) {
       type: 'string',
       description: 'run command after build success',
     })
-    .option('tsgo', {
-      type: 'boolean',
-      description: 'use TypeScript-Go compiler for type generation',
-    })
     .command(
       'prepare',
       'auto configure package.json exports for building',
@@ -211,7 +205,6 @@ async function parseCliArgs(argv: string[]) {
     env: args['env'],
     tsconfig: args['tsconfig'],
     onSuccess: args['success'],
-    tsgo: args['tsgo'],
   }
 
   // When minify is enabled, sourcemap should be enabled by default, unless explicitly opted out
@@ -264,23 +257,9 @@ async function run(args: CliArgs) {
     clean,
     tsconfig,
     onSuccess,
-    tsgo: args.tsgo,
   }
 
   const cliEntry = source ? path.resolve(cwd, source) : ''
-
-  // Check if ts-go is available when requested (before any build operations)
-  if (args.tsgo) {
-    try {
-      require.resolve('@typescript/native-preview', {
-        paths: (Module as any)._nodeModulePaths(cwd),
-      })
-    } catch {
-      exit(
-        '--tsgo flag was specified but @typescript/native-preview is not installed. Please install it as a dev dependency: pnpm add -D @typescript/native-preview',
-      )
-    }
-  }
 
   // lint package by default
   await lint(cwd)

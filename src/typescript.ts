@@ -14,50 +14,8 @@ export type TypescriptOptions = {
 }
 
 let hasLoggedTsWarning = false
-let hasLoggedTsGoWarning = false
 
-function resolveTsGo(cwd: string): typeof import('typescript') | null {
-  let tsgo
-  const m = new Module('', undefined)
-  m.paths = (Module as any)._nodeModulePaths(cwd)
-  try {
-    // Bun does not yet support the `Module` class properly.
-    if (typeof m?.require === 'undefined') {
-      const tsgoPath = require.resolve('@typescript/native-preview', {
-        paths: (Module as any)._nodeModulePaths(cwd),
-      })
-      tsgo = require(tsgoPath)
-    } else {
-      tsgo = m.require('@typescript/native-preview')
-    }
-    // ts-go exports the TypeScript API as default or named export
-    return tsgo.default || tsgo
-  } catch (e) {
-    if (!hasLoggedTsGoWarning) {
-      hasLoggedTsGoWarning = true
-      logger.warn(
-        'Could not load TypeScript-Go compiler. Make sure `@typescript/native-preview` is installed as a dev dependency.',
-      )
-    }
-    return null
-  }
-}
-
-function resolveTypescript(
-  cwd: string,
-  useTsGo: boolean,
-): typeof import('typescript') {
-  if (useTsGo) {
-    const tsgo = resolveTsGo(cwd)
-    if (tsgo) {
-      return tsgo
-    }
-    // Error if ts-go is requested but not available
-    exit(
-      'TypeScript-Go compiler not found. Please install @typescript/native-preview as a dev dependency: pnpm add -D @typescript/native-preview',
-    )
-  }
-
+function resolveTypescript(cwd: string): typeof import('typescript') {
   let ts
   const m = new Module('', undefined)
   m.paths = (Module as any)._nodeModulePaths(cwd)
@@ -97,12 +55,11 @@ export const resolveTsConfigPath = memoize(
 function resolveTsConfigHandler(
   cwd: string,
   tsConfigPath: string | undefined,
-  useTsGo: boolean,
 ): null | TypescriptOptions {
   let tsCompilerOptions: CompilerOptions = {}
   if (tsConfigPath) {
     // Use the original ts handler to avoid memory leak
-    const ts = resolveTypescript(cwd, useTsGo)
+    const ts = resolveTypescript(cwd)
     const basePath = tsConfigPath ? dirname(tsConfigPath) : cwd
     const tsconfigJSON = ts.readConfigFile(tsConfigPath, ts.sys.readFile).config
     tsCompilerOptions = ts.parseJsonConfigFileContent(
@@ -119,50 +76,36 @@ function resolveTsConfigHandler(
   }
 }
 
-// Note: We can't memoize resolveTsConfigHandler directly with useTsGo parameter
-// because memoize doesn't handle optional parameters well. Instead, we'll create
-// a wrapper that handles the memoization per useTsGo value.
 const resolveTsConfigCache = new Map<string, TypescriptOptions | null>()
 
 export function resolveTsConfig(
   cwd: string,
   tsConfigPath: string | undefined,
-  useTsGo: boolean,
 ): null | TypescriptOptions {
-  const cacheKey = `${cwd}:${tsConfigPath || ''}:${useTsGo ? 'tsgo' : 'ts'}`
+  const cacheKey = `${cwd}:${tsConfigPath || ''}`
   if (resolveTsConfigCache.has(cacheKey)) {
     return resolveTsConfigCache.get(cacheKey)!
   }
-  const result = resolveTsConfigHandler(cwd, tsConfigPath, useTsGo)
+  const result = resolveTsConfigHandler(cwd, tsConfigPath)
   resolveTsConfigCache.set(cacheKey, result)
   return result
 }
 
-export async function convertCompilerOptions(
-  cwd: string,
-  json: any,
-  useTsGo: boolean,
-) {
+export async function convertCompilerOptions(cwd: string, json: any) {
   // Use the original ts handler to avoid memory leak
-  const ts = resolveTypescript(cwd, useTsGo)
+  const ts = resolveTypescript(cwd)
   return ts.convertCompilerOptionsFromJson(json, './')
 }
 
-export async function writeDefaultTsconfig(
-  tsConfigPath: string,
-  useTsGo: boolean,
-) {
+export async function writeDefaultTsconfig(tsConfigPath: string) {
   await fsp.writeFile(
     tsConfigPath,
     JSON.stringify(DEFAULT_TS_CONFIG, null, 2),
     'utf-8',
   )
-  const compilerName = useTsGo ? 'TypeScript-Go' : 'TypeScript'
   logger.log(
-    `Detected using ${compilerName} but tsconfig.json is missing, created a ${pc.blue(
+    `Detected using TypeScript but tsconfig.json is missing, created a ${pc.blue(
       'tsconfig.json',
     )} for you.`,
   )
 }
-
-export { resolveTsGo }
