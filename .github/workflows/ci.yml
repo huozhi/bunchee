@@ -85,6 +85,7 @@ jobs:
     needs: [install_and_test]
     if: startsWith(github.ref, 'refs/tags/')
     permissions:
+      contents: read
       id-token: write
 
     steps:
@@ -112,9 +113,13 @@ jobs:
         run: |
           echo "Publishing to ${{ steps.determine_tag.outputs.tag }} tag"
           pnpm publish --tag ${{ steps.determine_tag.outputs.tag }} --no-git-checks --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish to latest
         if: steps.determine_tag.outputs.tag == ''
         run: |
           echo "Publishing to latest"
           pnpm publish --no-git-checks --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
