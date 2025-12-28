@@ -1,4 +1,5 @@
 import { Plugin } from 'rollup'
+import { Module } from 'module'
 import { type Options as SwcOptions } from '@swc/core'
 import {
   BuildContext,
@@ -100,7 +101,9 @@ async function createDtsPlugin(
     if (tsgo) {
       try {
         // First, try to resolve typescript to get its path
-        const tsPath = require.resolve('typescript', { paths: [cwd] })
+        const tsPath = require.resolve('typescript', {
+          paths: (Module as any)._nodeModulePaths(cwd),
+        })
         // Make ts-go available as 'typescript' for rollup-plugin-dts
         // This overrides the module cache so rollup-plugin-dts will use ts-go
         require.cache[tsPath] = {
