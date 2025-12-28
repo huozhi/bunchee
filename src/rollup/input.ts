@@ -1,5 +1,4 @@
 import { Plugin } from 'rollup'
-import { Module } from 'module'
 import { type Options as SwcOptions } from '@swc/core'
 import {
   BuildContext,
@@ -26,7 +25,7 @@ import { aliasEntries } from '../plugins/alias-plugin'
 import { prependShebang } from '../plugins/prepend-shebang'
 import { swcHelpersWarningPlugin } from '../plugins/swc-helpers-warning-plugin'
 import { memoizeByKey } from '../lib/memoize'
-import { convertCompilerOptions, resolveTsGo } from '../typescript'
+import { convertCompilerOptions } from '../typescript'
 import {
   availableESExtensionsRegex,
   disabledWarnings,
@@ -50,7 +49,6 @@ async function createDtsPlugin(
   tsConfigPath: string | undefined,
   respectExternal: boolean | undefined,
   cwd: string,
-  useTsGo: boolean,
 ) {
   const enableIncrementalWithoutBuildInfo =
     tsCompilerOptions?.incremental && !tsCompilerOptions?.tsBuildInfoFile
@@ -66,57 +64,28 @@ async function createDtsPlugin(
     : undefined
 
   const { options: overrideResolvedTsOptions }: any =
-    await convertCompilerOptions(
-      cwd,
-      {
-        declaration: true,
-        noEmit: false,
-        noEmitOnError: true,
-        emitDeclarationOnly: true,
-        checkJs: false,
-        skipLibCheck: true,
-        // preserveSymlinks should always be set to false to avoid issues with
-        // resolving types from <reference> from node_modules
-        preserveSymlinks: false,
-        target: 'ESNext',
-        ...(!tsCompilerOptions?.jsx
-          ? {
-              jsx: 'react-jsx',
-            }
-          : undefined),
-        // error TS5074: Option '--incremental' can only be specified using tsconfig, emitting to single
-        // file or when option '--tsBuildInfoFile' is specified.
-        ...incrementalOptions,
-        // error TS6379: Composite projects may not disable incremental compilation.
-        ...compositeOptions,
-      },
-      useTsGo,
-    )
-
-  // If useTsGo is enabled, we need to make ts-go available to rollup-plugin-dts
-  // rollup-plugin-dts uses require('typescript') internally, so we need to
-  // temporarily override the module cache to use ts-go
-  if (useTsGo) {
-    const tsgo = resolveTsGo(cwd)
-    if (tsgo) {
-      try {
-        // First, try to resolve typescript to get its path
-        const tsPath = require.resolve('typescript', {
-          paths: (Module as any)._nodeModulePaths(cwd),
-        })
-        // Make ts-go available as 'typescript' for rollup-plugin-dts
-        // This overrides the module cache so rollup-plugin-dts will use ts-go
-        require.cache[tsPath] = {
-          id: tsPath,
-          exports: tsgo,
-          loaded: true,
-        } as NodeModule
-      } catch (e) {
-        // If typescript cannot be resolved, we can't override it
-        // rollup-plugin-dts will try to require it and may fail
-      }
-    }
-  }
+    await convertCompilerOptions(cwd, {
+      declaration: true,
+      noEmit: false,
+      noEmitOnError: true,
+      emitDeclarationOnly: true,
+      checkJs: false,
+      skipLibCheck: true,
+      // preserveSymlinks should always be set to false to avoid issues with
+      // resolving types from <reference> from node_modules
+      preserveSymlinks: false,
+      target: 'ESNext',
+      ...(!tsCompilerOptions?.jsx
+        ? {
+            jsx: 'react-jsx',
+          }
+        : undefined),
+      // error TS5074: Option '--incremental' can only be specified using tsconfig, emitting to single
+      // file or when option '--tsBuildInfoFile' is specified.
+      ...incrementalOptions,
+      // error TS6379: Composite projects may not disable incremental compilation.
+      ...compositeOptions,
+    })
 
   const dtsPlugin = (
     require('rollup-plugin-dts') as typeof import('rollup-plugin-dts')
@@ -249,17 +218,12 @@ export async function buildInputConfig(
     // Each process should be unique
     // Each package build should be unique
     // Composing above factors into a unique cache key to retrieve the memoized dts plugin with tsconfigs
-    const uniqueProcessId =
-      'dts-plugin:' +
-      process.pid +
-      tsConfigPath +
-      (buildContext.useTsGo ? ':tsgo' : '')
+    const uniqueProcessId = 'dts-plugin:' + process.pid + tsConfigPath
     const dtsPlugin = await memoizeDtsPluginByKey(uniqueProcessId)(
       tsCompilerOptions,
       tsConfigPath,
       bundleConfig.dts && bundleConfig.dts.respectExternal,
       cwd,
-      buildContext.useTsGo,
     )
     typesPlugins.push(dtsPlugin)
   }

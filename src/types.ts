@@ -45,7 +45,6 @@ type BundleConfig = {
   clean?: boolean
   tsconfig?: string
   onSuccess?: string | (() => void | Promise<void>)
-  tsgo?: boolean
 
   // hooks
   /*
@@ -117,7 +116,6 @@ type CliArgs = {
   clean?: boolean
   tsconfig?: string
   onSuccess?: string
-  tsgo?: boolean
 }
 
 type BundleOptions = BundleConfig
@@ -140,7 +138,6 @@ type BuildContext = {
   cwd: string
   tsOptions: TypescriptOptions
   useTypeScript: boolean
-  useTsGo: boolean
   browserslistConfig: BrowserslistConfig | undefined
   pluginContext: {
     outputState: OutputState
