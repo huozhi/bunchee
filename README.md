@@ -323,10 +323,6 @@ TypeScript-Go (`@typescript/native-preview`) is a high-performance, Go-based imp
 
 To use TypeScript-Go for type generation, use the `--tsgo` flag:
 
-```sh
-bunchee --tsgo
-```
-
 **Note**: This requires `@typescript/native-preview` to be installed as a dev dependency. If it's not installed, bunchee will exit with an error.
 
 ```sh
