@@ -24,7 +24,7 @@ function resolveTsGo(cwd: string): typeof import('typescript') | null {
     // Bun does not yet support the `Module` class properly.
     if (typeof m?.require === 'undefined') {
       const tsgoPath = require.resolve('@typescript/native-preview', {
-        paths: [cwd],
+        paths: (Module as any)._nodeModulePaths(cwd),
       })
       tsgo = require(tsgoPath)
     } else {
@@ -64,7 +64,9 @@ function resolveTypescript(
   try {
     // Bun does not yet support the `Module` class properly.
     if (typeof m?.require === 'undefined') {
-      const tsPath = require.resolve('typescript', { paths: [cwd] })
+      const tsPath = require.resolve('typescript', {
+        paths: (Module as any)._nodeModulePaths(cwd),
+      })
       ts = require(tsPath)
     } else {
       ts = m.require('typescript')

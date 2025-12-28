@@ -1,5 +1,6 @@
 import type { CliArgs, BundleConfig, BuildContext } from '../types'
 import path from 'path'
+import { Module } from 'module'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 import { performance } from 'perf_hooks'
@@ -271,7 +272,9 @@ async function run(args: CliArgs) {
   // Check if ts-go is available when requested (before any build operations)
   if (args.tsgo) {
     try {
-      require.resolve('@typescript/native-preview', { paths: [cwd] })
+      require.resolve('@typescript/native-preview', {
+        paths: (Module as any)._nodeModulePaths(cwd),
+      })
     } catch {
       exit(
         '--tsgo flag was specified but @typescript/native-preview is not installed. Please install it as a dev dependency: pnpm add -D @typescript/native-preview',
