@@ -8,7 +8,6 @@ import fs from 'fs'
 import { resolve } from 'path'
 import { createOutputState } from './plugins/output-state-plugin'
 import {
-  exit,
   fileExists,
   getPackageMeta,
   getSourcePathFromExportPath,
