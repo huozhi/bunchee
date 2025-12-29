@@ -1,1 +1,1 @@
-export const Button = 'Button component'
+export const button = 'button component'

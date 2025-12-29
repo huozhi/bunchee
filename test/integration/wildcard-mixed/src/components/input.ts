@@ -1,1 +1,1 @@
-export const Input = 'Input component'
+export const input = 'input component'
