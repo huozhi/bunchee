@@ -1,5 +1,5 @@
-# Bunchee - A Zero-config JavaScript Bundler
-bunchee is a zero-config JavaScript bundler designed to create optimized Node.js and browser-friendly packages. It focuses on simplicity, speed, and developer-friendly defaults, making it an excellent choice for bundling modern JavaScript libraries.
+# bunchee
+bunchee is a zero-config TypeScript & JavaScript bundler designed to create optimized Node.js and browser-friendly packages. It focuses on simplicity, speed, and developer-friendly defaults, making it an excellent choice for bundling modern JavaScript libraries.
 
 ## Key Features
 - **Zero Configuration**: Bundles projects with sensible defaults out of the box.
@@ -9,6 +9,9 @@ bunchee is a zero-config JavaScript bundler designed to create optimized Node.js
 - **Source Maps**: Includes inline or external source maps for easier debugging.
 - **CSS/JSON Asset Bundling**: Automatically processes non-JavaScript assets for compatibility.
 - **Raw File Imports**: Import any file as string content using `.txt`/`.data` extensions or `?raw` query parameter.
+- **Server Components**: Supports React Server Components and Server Actions with `"use client"` and `"use server"` directives, automatically splitting code into separate chunks.
+- **Node Binary Support**: Builds executable CLI tools from `bin` field in package.json with automatic source file matching.
+- **Wildcard Exports**: Supports wildcard patterns in package.json exports field for dynamic subpath exports.
 - **Fast Build Times**: Built with optimized tooling for rapid iteration.
 
 ## Installation
@@ -79,6 +82,100 @@ import readme from './README.md?raw'    // Markdown as string
 import config from './config.json?raw'  // JSON as string (not parsed)
 import styles from './styles.css?raw'   // CSS as string
 ```
+
+## Server Components
+
+bunchee supports building React Server Components and Server Actions with directives like `"use client"` or `"use server"`. It automatically generates separate chunks for server or client boundaries, preserving the directives properly. When integrated with frameworks like Next.js, it correctly handles the boundaries with split chunks.
+
+Example:
+```javascript
+// src/client.tsx
+'use client'
+export function ClientComponent() {
+  return <div>Client Component</div>
+}
+
+// src/action.ts
+'use server'
+export async function serverAction() {
+  // Server action code
+}
+```
+
+bunchee will bundle these into separate chunks, maintaining the `"use client"` and `"use server"` directives in the output.
+
+## Node Binary Support
+
+bunchee supports building executable CLI tools using the `bin` field in package.json. Create a `bin` directory under `src` directory, and bunchee will automatically match the source files to the binary entries.
+
+### Single Binary
+```bash
+src/
+  bin/
+    index.ts
+```
+
+```json
+{
+  "bin": "./dist/bin.js"
+}
+```
+
+### Multiple Binaries
+For multiple executable files, create multiple files under the `bin` directory. The filename should match the key name in the `bin` field:
+
+```bash
+src/
+  bin/
+    foo.ts
+    bar.ts
+```
+
+```json
+{
+  "bin": {
+    "foo": "./dist/bin/foo.js",
+    "bar": "./dist/bin/bar.js"
+  }
+}
+```
+
+The source file matching follows the same convention as entry files, making it easy to build CLI tools alongside your library.
+
+## Wildcard Exports
+
+bunchee supports wildcard patterns in the package.json `exports` field, allowing you to dynamically export subpaths based on your source file structure.
+
+Example:
+```json
+{
+  "exports": {
+    "./features/*": "./dist/features/*.js"
+  }
+}
+```
+
+With source files like:
+```
+src/
+  features/
+    auth.ts
+    user.ts
+    settings.ts
+```
+
+bunchee will automatically expand the wildcard pattern to:
+```json
+{
+  "exports": {
+    "./features/auth": "./dist/features/auth.js",
+    "./features/user": "./dist/features/user.js",
+    "./features/settings": "./dist/features/settings.js"
+  }
+}
+```
+
+The wildcard pattern matches files in the `src` directory and automatically creates corresponding exports. This is useful for libraries that want to expose multiple subpath exports without manually maintaining the exports map.
 
 ## Contributions
 Contributions are welcome! Check out the repository's [issues](https://github.com/huozhi/bunchee/issues) and [contributing guidelines](https://github.com/huozhi/bunchee/blob/main/CONTRIBUTING.md) for more information.

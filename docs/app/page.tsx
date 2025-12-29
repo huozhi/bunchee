@@ -164,6 +164,35 @@ function TerminalLearn() {
       <Output>
         {`Bunchee can manage multiple directives such as "use client", "use server", or "use cache" and automatically split your code into different chunks and preserve the directives properly.`}
       </Output>
+      <BlockSpacer />
+      <MarkdownTitle title="## Wildcard Exports" />
+      <Output>
+        Use wildcard patterns in exports to dynamically export subpaths:
+      </Output>
+      <CodeBlock>
+        {`// package.json
+{
+  "exports": {
+    "./features/*": "./dist/features/*.js"
+  }
+}
+
+// Automatically expands to:
+// "./features/auth" -> "./dist/features/auth.js"
+// "./features/user" -> "./dist/features/user.js"`}
+      </CodeBlock>
+      <BlockSpacer />
+      <MarkdownTitle title="## Native Addon (.node) Support" />
+      <Output>
+        Import .node files - they'll be copied to output and loaded at runtime:
+      </Output>
+      <CodeBlock>
+        {`// src/index.js
+import addon from './native-addon.node'
+
+// The .node file is copied to dist/ and
+// the import is rewritten to load it at runtime`}
+      </CodeBlock>
     </div>
   )
 }

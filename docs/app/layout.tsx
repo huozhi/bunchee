@@ -12,7 +12,6 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 })
 
-import React from 'react'
 import './globals.css'
 
 export default function Layout({ children }) {
@@ -26,6 +25,6 @@ export default function Layout({ children }) {
 }
 
 export const metadata = {
-  title: 'Bunchee',
-  description: 'Zero-config bundler for npm packages',
+  title: 'bunchee',
+  description: 'Zero-config TypeScript & JavaScript library bundler',
 }
