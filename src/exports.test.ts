@@ -100,9 +100,9 @@ describe('parse-exports', () => {
     }
 
     const result = await parseExports(pkg)
-    expect(result.get('./index')).toEqual([['./dist/index.js', 'import']])
-    expect(result.get('./lite')).toEqual([['./dist/lite.js', 'import']])
-    expect(result.get('./utils')).toEqual([['./dist/utils.js', 'import']])
+    expect(result.get('./index')).toEqual([['./dist/index.js', 'default']])
+    expect(result.get('./lite')).toEqual([['./dist/lite.js', 'default']])
+    expect(result.get('./utils')).toEqual([['./dist/utils.js', 'default']])
   })
 
   it('should parse wildcard exports when cwd is provided', async () => {
@@ -270,8 +270,8 @@ describe('parse-exports', () => {
     const result = await parseExports(pkg, mockCwd)
 
     // Normal exports should work
-    expect(result.get('./index')).toEqual([['./dist/index.js', 'import']])
-    expect(result.get('./utils')).toEqual([['./dist/utils.js', 'import']])
+    expect(result.get('./index')).toEqual([['./dist/index.js', 'default']])
+    expect(result.get('./utils')).toEqual([['./dist/utils.js', 'default']])
 
     // Wildcard exports should be expanded
     expect(result.get('./features/foo')).toEqual([
