@@ -12,6 +12,11 @@ import {
   joinRelativePath,
   normalizePath,
 } from './utils'
+import {
+  hasWildcardPattern,
+  expandWildcardPattern,
+  substituteWildcardInPath,
+} from './wildcard'
 import { baseNameWithoutExtension } from './util/file-path'
 import { BINARY_TAG, dtsExtensionsMap } from './constants'
 import { OutputOptions } from 'rollup'
@@ -50,6 +55,102 @@ function constructFullExportCondition(
  * export path: -> [ output path, export type ]
  */
 export type ParsedExportsInfo = Map<string, [string, string][]>
+
+/**
+ * Process export value for wildcard patterns, substituting wildcards in output paths
+ */
+async function processWildcardExportValue(
+  exportValue: ExportCondition,
+  originalExportKey: string,
+  currentPath: string,
+  exportTypes: Set<string>,
+  exportToDist: ParsedExportsInfo,
+  matchedSubpath: string,
+) {
+  // End of searching, export value is file path.
+  // <export key>: <export value> (string)
+  if (typeof exportValue === 'string') {
+    const composedTypes = new Set(exportTypes)
+    const exportType = originalExportKey.startsWith('.')
+      ? 'default'
+      : originalExportKey
+    composedTypes.add(exportType)
+    const exportInfo = exportToDist.get(mapExportFullPath(currentPath))
+    const exportCondition = Array.from(composedTypes).join('.')
+
+    // Substitute wildcard in output path
+    const substitutedPath = substituteWildcardInPath(
+      exportValue,
+      matchedSubpath,
+    )
+
+    if (!exportInfo) {
+      const outputConditionPair: [string, string] = [
+        substitutedPath,
+        exportCondition,
+      ]
+      addToExportDistMap(exportToDist, currentPath, [outputConditionPair])
+    } else {
+      exportInfo.push([substitutedPath, exportCondition])
+    }
+    return
+  }
+
+  const exportKeys = Object.keys(exportValue)
+  for (const exportKey of exportKeys) {
+    // Clone the set to avoid modifying the parent set
+    const childExports = new Set(exportTypes)
+    // Normalize child export value to a map
+    const childExportValue = exportValue[exportKey]
+
+    // Substitute wildcard in nested string values
+    let processedChildValue: ExportCondition = childExportValue
+    if (typeof childExportValue === 'string') {
+      processedChildValue = substituteWildcardInPath(
+        childExportValue,
+        matchedSubpath,
+      )
+    } else if (
+      typeof childExportValue === 'object' &&
+      childExportValue !== null
+    ) {
+      // Recursively process nested objects
+      const processed: Record<string, ExportCondition | string> = {}
+      for (const [key, value] of Object.entries(childExportValue)) {
+        if (typeof value === 'string') {
+          processed[key] = substituteWildcardInPath(value, matchedSubpath)
+        } else if (value !== null && value !== undefined) {
+          processed[key] = value
+        }
+      }
+      processedChildValue = processed as ExportCondition
+    }
+
+    // Visit export path: ./subpath, ./subpath2, ...
+    if (exportKey.startsWith('.')) {
+      const childPath = joinRelativePath(currentPath, exportKey)
+      await processWildcardExportValue(
+        processedChildValue,
+        exportKey,
+        childPath,
+        childExports,
+        exportToDist,
+        matchedSubpath,
+      )
+    } else {
+      // Visit export type: import, require, ...
+      childExports.add(exportKey)
+      await processWildcardExportValue(
+        processedChildValue,
+        exportKey,
+        currentPath,
+        childExports,
+        exportToDist,
+        matchedSubpath,
+      )
+    }
+  }
+}
 
 function collectExportPath(
   exportValue: ExportCondition,
@@ -136,7 +237,10 @@ function addToExportDistMap(
  *  './index.react-server': { development: ..., default: ... }
  * }
  */
-export function parseExports(pkg: PackageMetadata): ParsedExportsInfo {
+export async function parseExports(
+  pkg: PackageMetadata,
+  cwd?: string,
+): Promise<ParsedExportsInfo> {
   const exportsField = pkg.exports ?? {}
   const bins = pkg.bin ?? {}
   const exportToDist: ParsedExportsInfo = new Map()
@@ -159,6 +263,28 @@ export function parseExports(pkg: PackageMetadata): ParsedExportsInfo {
       const exportValue = exportsField[exportKey]
       const exportTypes: Set<string> = new Set()
       const isExportPath = exportKey.startsWith('.')
+
+      // Handle wildcard patterns
+      if (isExportPath && hasWildcardPattern(exportKey) && cwd) {
+        // Expand wildcard pattern to concrete exports
+        const expanded = await expandWildcardPattern(exportKey, cwd)
+
+        for (const [concreteExportPath, matchedSubpath] of expanded) {
+          const childPath = joinRelativePath(currentPath, concreteExportPath)
+
+          // Process the export value and substitute wildcards in output paths
+          await processWildcardExportValue(
+            exportValue,
+            exportKey,
+            childPath,
+            exportTypes,
+            exportToDist,
+            matchedSubpath,
+          )
+        }
+        continue
+      }
+
       const childPath = isExportPath
         ? joinRelativePath(currentPath, exportKey)
         : currentPath

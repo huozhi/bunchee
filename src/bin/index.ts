@@ -4,7 +4,7 @@ import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 import { performance } from 'perf_hooks'
 import { lint as lintPackage } from '../lint'
-import { exit, getPackageMeta, hasPackageJson } from '../utils'
+import { exit, hasPackageJson } from '../utils'
 import { logger, setActiveSpinner } from '../logger'
 import { version } from '../../package.json'
 import { bundle } from '../../src/index'
@@ -49,10 +49,10 @@ function help() {
 
 async function lint(cwd: string) {
   // Not package.json detected, skip package linting
-  if (!(await hasPackageJson(cwd))) {
+  if (!hasPackageJson(cwd)) {
     return
   }
-  await lintPackage(await getPackageMeta(cwd))
+  await lintPackage(cwd)
 }
 
 async function parseCliArgs(argv: string[]) {

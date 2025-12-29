@@ -3,6 +3,7 @@ import { parseExports } from './exports'
 import { logger } from './logger'
 import { PackageMetadata } from './types'
 import {
+  getPackageMeta,
   hasCjsExtension,
   isESModulePackage,
   isTypeFile,
@@ -67,10 +68,11 @@ function validateFilesField(packageJson: PackageMetadata) {
   return state
 }
 
-export function lint(pkg: PackageMetadata) {
+export async function lint(cwd: string) {
+  const pkg = await getPackageMeta(cwd)
   const { name, main, exports } = pkg
   const isESM = isESModulePackage(pkg.type)
-  const parsedExports = parseExports(pkg)
+  const parsedExports = await parseExports(pkg, cwd)
 
   if (!name) {
     logger.warn('Missing package name')
