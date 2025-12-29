@@ -71,14 +71,15 @@ export async function expandWildcardPattern(
     return expanded
   }
 
+  // Parse the wildcard pattern to extract base path
+  const { basePath: parsedBasePath } = parseWildcardPattern(wildcardPattern)
+  // Remove leading "./" from parsed base path for glob matching
+  // "./features/*" -> "features"
+  const basePath = parsedBasePath.replace(/^\.\//, '').replace(/\/$/, '')
+
   // Convert wildcard pattern to glob pattern
   // "./features/*" -> "features/*"
   const cleanPattern = wildcardPattern.replace(/^\.\//, '')
-
-  // Extract the base path before the wildcard
-  // "features/*" -> "features"
-  const basePathParts = cleanPattern.split('*')
-  const basePath = basePathParts[0].replace(/\/$/, '')
 
   // Build glob pattern to match files
   // "features/*" -> "features/*.{js,ts,tsx,...}"
