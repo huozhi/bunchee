@@ -58,9 +58,12 @@ describe('parse-exports', () => {
 
     const result = await parseExports(pkg)
     const exports = result.get('./index')
-    expect(exports).toBeDefined()
-    expect(exports?.some(([path]) => path === './dist/index.mjs')).toBe(true)
-    expect(exports?.some(([path]) => path === './dist/index.cjs')).toBe(true)
+    expect(exports).toEqual(
+      expect.arrayContaining([
+        ['./dist/index.mjs', 'import'],
+        ['./dist/index.cjs', 'require'],
+      ]),
+    )
   })
 
   it('should parse exports with types condition', async () => {
@@ -77,19 +80,12 @@ describe('parse-exports', () => {
 
     const result = await parseExports(pkg)
     const exports = result.get('./index')
-    expect(exports).toBeDefined()
-    expect(
-      exports?.some(
-        ([path, type]) =>
-          path === './dist/index.d.ts' && type.includes('types'),
-      ),
-    ).toBe(true)
-    expect(
-      exports?.some(
-        ([path, type]) =>
-          path === './dist/index.js' && type.includes('default'),
-      ),
-    ).toBe(true)
+    expect(exports).toEqual(
+      expect.arrayContaining([
+        ['./dist/index.d.ts', 'types'],
+        ['./dist/index.js', 'default'],
+      ]),
+    )
   })
 
   it('should parse multiple export paths', async () => {
@@ -104,9 +100,9 @@ describe('parse-exports', () => {
     }
 
     const result = await parseExports(pkg)
-    expect(result.get('./index')).toBeDefined()
-    expect(result.get('./lite')).toBeDefined()
-    expect(result.get('./utils')).toBeDefined()
+    expect(result.get('./index')).toEqual([['./dist/index.js', 'import']])
+    expect(result.get('./lite')).toEqual([['./dist/lite.js', 'import']])
+    expect(result.get('./utils')).toEqual([['./dist/utils.js', 'import']])
   })
 
   it('should parse wildcard exports when cwd is provided', async () => {
@@ -134,19 +130,12 @@ describe('parse-exports', () => {
     )
 
     // Verify wildcard exports were expanded
-    expect(result.get('./features/foo')).toBeDefined()
-    expect(result.get('./features/bar')).toBeDefined()
-
-    // Verify wildcards were substituted in output paths
-    const fooExports = result.get('./features/foo')
-    expect(
-      fooExports?.some(([path]) => path === './dist/features/foo.js'),
-    ).toBe(true)
-
-    const barExports = result.get('./features/bar')
-    expect(
-      barExports?.some(([path]) => path === './dist/features/bar.js'),
-    ).toBe(true)
+    expect(result.get('./features/foo')).toEqual([
+      ['./dist/features/foo.js', 'default'],
+    ])
+    expect(result.get('./features/bar')).toEqual([
+      ['./dist/features/bar.js', 'default'],
+    ])
   })
 
   it('should not expand wildcard exports when cwd is not provided', async () => {
@@ -187,16 +176,13 @@ describe('parse-exports', () => {
     const result = await parseExports(pkg, mockCwd)
 
     const fooExports = result.get('./features/foo')
-    expect(fooExports).toBeDefined()
-    expect(
-      fooExports?.some(([path]) => path === './dist/features/foo.mjs'),
-    ).toBe(true)
-    expect(
-      fooExports?.some(([path]) => path === './dist/features/foo.cjs'),
-    ).toBe(true)
-    expect(
-      fooExports?.some(([path]) => path === './dist/features/foo.d.ts'),
-    ).toBe(true)
+    expect(fooExports).toEqual(
+      expect.arrayContaining([
+        ['./dist/features/foo.mjs', 'import'],
+        ['./dist/features/foo.cjs', 'require'],
+        ['./dist/features/foo.d.ts', 'types'],
+      ]),
+    )
   })
 
   it('should parse bin exports', async () => {
@@ -207,7 +193,7 @@ describe('parse-exports', () => {
     }
 
     const result = await parseExports(pkg)
-    expect(result.get('$binary')).toBeDefined()
+    expect(result.get('$binary')).toEqual([['./dist/bin/cli.js', 'import']])
   })
 
   it('should parse multiple bin exports', async () => {
@@ -221,8 +207,10 @@ describe('parse-exports', () => {
     }
 
     const result = await parseExports(pkg)
-    expect(result.get('$binary/cli')).toBeDefined()
-    expect(result.get('$binary/server')).toBeDefined()
+    expect(result.get('$binary/cli')).toEqual([['./dist/bin/cli.js', 'import']])
+    expect(result.get('$binary/server')).toEqual([
+      ['./dist/bin/server.js', 'import'],
+    ])
   })
 
   it('should parse main, module, and types fields', async () => {
@@ -282,11 +270,13 @@ describe('parse-exports', () => {
     const result = await parseExports(pkg, mockCwd)
 
     // Normal exports should work
-    expect(result.get('./index')).toBeDefined()
-    expect(result.get('./utils')).toBeDefined()
+    expect(result.get('./index')).toEqual([['./dist/index.js', 'import']])
+    expect(result.get('./utils')).toEqual([['./dist/utils.js', 'import']])
 
     // Wildcard exports should be expanded
-    expect(result.get('./features/foo')).toBeDefined()
+    expect(result.get('./features/foo')).toEqual([
+      ['./dist/features/foo.js', 'default'],
+    ])
   })
 
   it('should handle nested export conditions', async () => {
@@ -304,25 +294,12 @@ describe('parse-exports', () => {
 
     const result = await parseExports(pkg)
     const exports = result.get('./index')
-    expect(exports).toBeDefined()
-    expect(
-      exports?.some(
-        ([path, type]) =>
-          path === './dist/index.react-server.js' &&
-          type.includes('react-server'),
-      ),
-    ).toBe(true)
-    expect(
-      exports?.some(
-        ([path, type]) =>
-          path === './dist/index.edge-light.js' && type.includes('edge-light'),
-      ),
-    ).toBe(true)
-    expect(
-      exports?.some(
-        ([path, type]) =>
-          path === './dist/index.js' && type.includes('default'),
-      ),
-    ).toBe(true)
+    expect(exports).toEqual(
+      expect.arrayContaining([
+        ['./dist/index.react-server.js', 'react-server'],
+        ['./dist/index.edge-light.js', 'edge-light'],
+        ['./dist/index.js', 'default'],
+      ]),
+    )
   })
 })
