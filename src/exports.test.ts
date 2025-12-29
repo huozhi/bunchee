@@ -182,7 +182,7 @@ describe('parse-exports', () => {
     }
 
     const expanded = new Map([['./features/foo', 'foo']])
-    vi.spyOn(utils, 'expandWildcardPattern').mockResolvedValue(expanded)
+    vi.spyOn(wildcard, 'expandWildcardPattern').mockResolvedValue(expanded)
 
     const result = await parseExports(pkg, mockCwd)
 
@@ -236,10 +236,22 @@ describe('parse-exports', () => {
 
     const result = await parseExports(pkg)
     const exports = result.get('./index')
-    expect(exports).toBeDefined()
-    expect(exports?.some(([path]) => path === './dist/index.js')).toBe(true)
-    expect(exports?.some(([path]) => path === './dist/index.mjs')).toBe(true)
-    expect(exports?.some(([path]) => path === './dist/index.d.ts')).toBe(true)
+    expect(exports).toMatchInlineSnapshot(`
+      [
+        [
+          "./dist/index.js",
+          "import",
+        ],
+        [
+          "./dist/index.mjs",
+          "module",
+        ],
+        [
+          "./dist/index.d.ts",
+          "types",
+        ],
+      ]
+    `)
   })
 
   it('should handle common-js package type', async () => {
@@ -265,7 +277,7 @@ describe('parse-exports', () => {
     }
 
     const expanded = new Map([['./features/foo', 'foo']])
-    vi.spyOn(utils, 'expandWildcardPattern').mockResolvedValue(expanded)
+    vi.spyOn(wildcard, 'expandWildcardPattern').mockResolvedValue(expanded)
 
     const result = await parseExports(pkg, mockCwd)
 

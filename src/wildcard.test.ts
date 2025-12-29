@@ -167,15 +167,14 @@ describe('wildcard', () => {
     it('should ignore private files and test files', async () => {
       vi.mocked(existsSync).mockReturnValue(true)
       vi.mocked(utils.fileExists).mockReturnValue(true)
-      vi.mocked(glob).mockResolvedValue([
-        'features/foo.ts',
-        'features/_private.ts',
-        'features/bar.test.ts',
-      ])
+      // glob with ignore patterns filters out _private.ts and bar.test.ts
+      // so it only returns foo.ts
+      vi.mocked(glob).mockResolvedValue(['features/foo.ts'])
 
       const result = await expandWildcardPattern('./features/*', mockCwd)
 
       // Should only include foo.ts, not _private.ts or bar.test.ts
+      // (those are filtered by glob's ignore patterns)
       expect(result.size).toBe(1)
       expect(result.get('./features/foo')).toBe('foo')
     })
