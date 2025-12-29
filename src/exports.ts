@@ -11,10 +11,12 @@ import {
   isESModulePackage,
   joinRelativePath,
   normalizePath,
+} from './utils'
+import {
   hasWildcardPattern,
   expandWildcardPattern,
   substituteWildcardInPath,
-} from './utils'
+} from './wildcard'
 import { baseNameWithoutExtension } from './util/file-path'
 import { BINARY_TAG, dtsExtensionsMap } from './constants'
 import { OutputOptions } from 'rollup'

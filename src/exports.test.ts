@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import { parseExports } from './exports'
 import type { PackageMetadata } from './types'
-import * as utils from './utils'
+import * as wildcard from './wildcard'
 
 // Mock the file system operations
 vi.mock('fs', async () => {
@@ -26,7 +26,7 @@ describe('parse-exports', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Mock expandWildcardPattern
-    vi.spyOn(utils, 'expandWildcardPattern').mockResolvedValue(new Map())
+    vi.spyOn(wildcard, 'expandWildcardPattern').mockResolvedValue(new Map())
   })
 
   afterEach(() => {
@@ -123,12 +123,12 @@ describe('parse-exports', () => {
       ['./features/foo', 'foo'],
       ['./features/bar', 'bar'],
     ])
-    vi.spyOn(utils, 'expandWildcardPattern').mockResolvedValue(expanded)
+    vi.spyOn(wildcard, 'expandWildcardPattern').mockResolvedValue(expanded)
 
     const result = await parseExports(pkg, mockCwd)
 
     // Verify expandWildcardPattern was called
-    expect(utils.expandWildcardPattern).toHaveBeenCalledWith(
+    expect(wildcard.expandWildcardPattern).toHaveBeenCalledWith(
       './features/*',
       mockCwd,
     )
@@ -161,7 +161,7 @@ describe('parse-exports', () => {
     const result = await parseExports(pkg)
 
     // Should not call expandWildcardPattern when cwd is missing
-    expect(utils.expandWildcardPattern).not.toHaveBeenCalled()
+    expect(wildcard.expandWildcardPattern).not.toHaveBeenCalled()
 
     // Wildcard pattern should not be expanded
     expect(result.get('./features/foo')).toBeUndefined()
