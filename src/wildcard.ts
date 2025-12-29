@@ -74,58 +74,60 @@ export async function expandWildcardPattern(
     `${cleanPattern}/index.${extPattern}`,
   ]
 
+  let matches: string[] = []
   try {
-    const matches = await glob(globPatterns, {
+    matches = await glob(globPatterns, {
       cwd: sourceDir,
       ignore: [PRIVATE_GLOB_PATTERN, TESTS_GLOB_PATTERN],
       expandDirectories: false,
     })
-
-    for (const match of matches) {
-      // Extract the matched subpath
-      // "features/foo.ts" -> "foo"
-      // "features/bar/index.ts" -> "bar"
-      const relativePath = normalizePath(match)
-      const ext = path.extname(relativePath)
-      const withoutExt = relativePath.slice(0, -ext.length)
-
-      // Remove the base path to get just the matched part
-      // "features/foo" -> "foo" (when basePath is "features")
-      let matchedPart = withoutExt
-      if (basePath && matchedPart.startsWith(basePath + '/')) {
-        matchedPart = matchedPart.slice(basePath.length + 1)
-      } else if (basePath && matchedPart === basePath) {
-        // This shouldn't happen, but handle it
-        continue
-      }
-
-      // Handle index files
-      let matchedSubpath: string
-      if (matchedPart.endsWith('/index')) {
-        matchedSubpath = matchedPart.slice(0, -6) // Remove "/index"
-        // If there's still a path, take the last segment
-        const lastSlash = matchedSubpath.lastIndexOf('/')
-        matchedSubpath =
-          lastSlash >= 0 ? matchedSubpath.slice(lastSlash + 1) : matchedSubpath
-      } else {
-        // Take the first segment (what matches the *)
-        const firstSlash = matchedPart.indexOf('/')
-        matchedSubpath =
-          firstSlash >= 0 ? matchedPart.slice(0, firstSlash) : matchedPart
-      }
-
-      // Build the concrete export path
-      // "./features/*" + "foo" -> "./features/foo"
-      const concreteExportPath = basePath
-        ? `./${basePath}/${matchedSubpath}`
-        : `./${matchedSubpath}`
-
-      expanded.set(concreteExportPath, matchedSubpath)
-    }
   } catch (error) {
     logger.warn(
       `Failed to expand wildcard pattern ${wildcardPattern}: ${error}`,
     )
+    return expanded
+  }
+
+  for (const match of matches) {
+    // Extract the matched subpath
+    // "features/foo.ts" -> "foo"
+    // "features/bar/index.ts" -> "bar"
+    const relativePath = normalizePath(match)
+    const ext = path.extname(relativePath)
+    const withoutExt = relativePath.slice(0, -ext.length)
+
+    // Remove the base path to get just the matched part
+    // "features/foo" -> "foo" (when basePath is "features")
+    let matchedPart = withoutExt
+    if (basePath && matchedPart.startsWith(basePath + '/')) {
+      matchedPart = matchedPart.slice(basePath.length + 1)
+    } else if (basePath && matchedPart === basePath) {
+      // This shouldn't happen, but handle it
+      continue
+    }
+
+    // Handle index files
+    let matchedSubpath: string
+    if (matchedPart.endsWith('/index')) {
+      matchedSubpath = matchedPart.slice(0, -6) // Remove "/index"
+      // If there's still a path, take the last segment
+      const lastSlash = matchedSubpath.lastIndexOf('/')
+      matchedSubpath =
+        lastSlash >= 0 ? matchedSubpath.slice(lastSlash + 1) : matchedSubpath
+    } else {
+      // Take the first segment (what matches the *)
+      const firstSlash = matchedPart.indexOf('/')
+      matchedSubpath =
+        firstSlash >= 0 ? matchedPart.slice(0, firstSlash) : matchedPart
+    }
+
+    // Build the concrete export path
+    // "./features/*" + "foo" -> "./features/foo"
+    const concreteExportPath = basePath
+      ? `./${basePath}/${matchedSubpath}`
+      : `./${matchedSubpath}`
+
+    expanded.set(concreteExportPath, matchedSubpath)
   }
 
   return expanded
