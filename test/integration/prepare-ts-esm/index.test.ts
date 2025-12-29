@@ -4,6 +4,7 @@ import { join } from 'path'
 import {
   assertContainFiles,
   createJob,
+  deleteFile,
   stripANSIColor,
 } from '../../testing-utils'
 
@@ -13,6 +14,7 @@ describe('integration prepare-ts-esm', () => {
       join(__dirname, './package.json'),
       '{ "type": "commonjs" }',
     )
+    await deleteFile(join(__dirname, 'tsconfig.json'))
   })
 
   const { dir, job } = createJob({
