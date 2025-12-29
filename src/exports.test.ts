@@ -25,7 +25,8 @@ describe('parse-exports', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    // Mock expandWildcardPattern
+    // Set up default mock for expandWildcardPattern (returns empty map)
+    // This ensures the function is always a spy, even in tests that don't use it
     vi.spyOn(wildcard, 'expandWildcardPattern').mockResolvedValue(new Map())
   })
 
@@ -119,7 +120,7 @@ describe('parse-exports', () => {
       ['./features/foo', 'foo'],
       ['./features/bar', 'bar'],
     ])
-    vi.spyOn(wildcard, 'expandWildcardPattern').mockResolvedValue(expanded)
+    vi.mocked(wildcard.expandWildcardPattern).mockResolvedValue(expanded)
 
     const result = await parseExports(pkg, mockCwd)
 
@@ -171,7 +172,7 @@ describe('parse-exports', () => {
     }
 
     const expanded = new Map([['./features/foo', 'foo']])
-    vi.spyOn(wildcard, 'expandWildcardPattern').mockResolvedValue(expanded)
+    vi.mocked(wildcard.expandWildcardPattern).mockResolvedValue(expanded)
 
     const result = await parseExports(pkg, mockCwd)
 
@@ -265,7 +266,7 @@ describe('parse-exports', () => {
     }
 
     const expanded = new Map([['./features/foo', 'foo']])
-    vi.spyOn(wildcard, 'expandWildcardPattern').mockResolvedValue(expanded)
+    vi.mocked(wildcard.expandWildcardPattern).mockResolvedValue(expanded)
 
     const result = await parseExports(pkg, mockCwd)
 
