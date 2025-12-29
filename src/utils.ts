@@ -181,6 +181,9 @@ export const isTestFile = (filename: string): boolean =>
 
 export function joinRelativePath(...segments: string[]) {
   let result = path.join(...segments)
+  // Normalize to forward slashes for cross-platform compatibility
+  // Export paths in package.json always use POSIX-style paths
+  result = normalizePath(result)
   // If the first segment starts with '.', ensure the result does too.
   if (segments[0] === '.' && !result.startsWith('.')) {
     result = './' + result
