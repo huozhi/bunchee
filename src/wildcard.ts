@@ -41,20 +41,6 @@ export function substituteWildcardInPath(
 }
 
 /**
- * Extract the base path and wildcard segment from a wildcard pattern
- * Example: "./features/*" -> { basePath: "./features", wildcardSegment: "*" }
- */
-export function parseWildcardPattern(pattern: string): {
-  basePath: string
-  wildcardSegment: string
-} {
-  const parts = pattern.split('*')
-  const basePath = parts[0].replace(/\/$/, '') || '.'
-  const wildcardSegment = parts[1] || ''
-  return { basePath, wildcardSegment }
-}
-
-/**
  * Expand a wildcard export pattern by finding matching source files
  * Returns a map of concrete export paths to their matched subpaths
  * Example: "./features/*" with files ["foo.ts", "bar.ts"] in src/features/

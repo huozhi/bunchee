@@ -2,7 +2,6 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import {
   hasWildcardPattern,
   substituteWildcardInPath,
-  parseWildcardPattern,
   expandWildcardPattern,
   wildcardPatternToGlob,
 } from './wildcard'
@@ -78,32 +77,6 @@ describe('wildcard', () => {
       expect(
         substituteWildcardInPath('./dist/features/*/index.js', 'bar'),
       ).toBe('./dist/features/bar/index.js')
-    })
-  })
-
-  describe('parseWildcardPattern', () => {
-    it('should parse simple wildcard pattern', () => {
-      const result = parseWildcardPattern('./features/*')
-      expect(result.basePath).toBe('./features')
-      expect(result.wildcardSegment).toBe('')
-    })
-
-    it('should parse wildcard pattern with trailing segment', () => {
-      const result = parseWildcardPattern('./features/*/utils')
-      expect(result.basePath).toBe('./features')
-      expect(result.wildcardSegment).toBe('/utils')
-    })
-
-    it('should handle root level wildcard', () => {
-      const result = parseWildcardPattern('./*')
-      expect(result.basePath).toBe('.')
-      expect(result.wildcardSegment).toBe('')
-    })
-
-    it('should handle pattern ending with slash', () => {
-      const result = parseWildcardPattern('./features/*/')
-      expect(result.basePath).toBe('./features')
-      expect(result.wildcardSegment).toBe('/')
     })
   })
 
