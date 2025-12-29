@@ -94,6 +94,21 @@ Here's a example of entry files and exports configuration:
 }
 ```
 
+#### Wildcard Exports
+
+`bunchee` supports wildcard patterns in the `exports` field to automatically generate exports for multiple files:
+
+```json5
+{
+  "exports": {
+    ".": "./dist/index.js",
+    "./features/*": "./dist/features/*.js"
+  }
+}
+```
+
+This will automatically discover files in `src/features/` and generate exports like `./features/foo`, `./features/bar`, etc. The wildcard `*` is substituted in both the export path and output path.
+
 ### Output Formats
 
 **bunchee** detects the format of each entry-point based on export condition type or the file extension. It supports the following output formats:
@@ -214,6 +229,15 @@ This will match the `bin` field in package.json as:
 </details>
 
 > Note: For multiple `bin` files, the filename should match the key name in the `bin` field.
+
+### Native Addon (.node) Support
+
+`bunchee` supports bundling native Node.js addon files (`.node` binaries). When you import a `.node` file, it will be copied to the output directory and the import will be rewritten to load it at runtime.
+
+```js
+// src/index.js
+import addon from './native-addon.node'
+```
 
 ### Server Components
 
