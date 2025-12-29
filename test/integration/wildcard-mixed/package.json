@@ -1,0 +1,12 @@
+{
+  "name": "wildcard-mixed",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./utils": "./dist/utils.js",
+    "./lite": "./dist/lite.js",
+    "./features/foo": "./dist/features/foo.js",
+    "./features/*": "./dist/features/*.js",
+    "./components/*": "./dist/components/*.js"
+  }
+}

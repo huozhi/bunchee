@@ -52,7 +52,7 @@ async function lint(cwd: string) {
   if (!(await hasPackageJson(cwd))) {
     return
   }
-  await lintPackage(await getPackageMeta(cwd))
+  await lintPackage(await getPackageMeta(cwd), cwd)
 }
 
 async function parseCliArgs(argv: string[]) {

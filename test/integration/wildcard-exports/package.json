@@ -1,0 +1,8 @@
+{
+  "name": "wildcard-exports",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./features/*": "./dist/features/*.js"
+  }
+}

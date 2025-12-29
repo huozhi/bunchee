@@ -56,7 +56,7 @@ async function bundle(
   assignDefault(options, 'target', 'es2015')
 
   const pkg = await getPackageMeta(cwd)
-  const parsedExportsInfo = parseExports(pkg)
+  const parsedExportsInfo = await parseExports(pkg, cwd)
   const isMultiEntries = hasMultiEntryExport(parsedExportsInfo)
   const hasBin = Boolean(pkg.bin)
   // Original input file path, client path might change later
