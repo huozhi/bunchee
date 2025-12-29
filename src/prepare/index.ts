@@ -151,11 +151,16 @@ export async function prepare(
   options?: { esm?: boolean },
 ): Promise<void> {
   const sourceFolder = path.resolve(cwd, SRC)
+
+  // Create src/index.ts if src folder doesn't exist
   if (!fs.existsSync(sourceFolder)) {
-    logger.error(
-      `Source folder ${sourceFolder} does not exist. Cannot proceed to configure \`exports\` field.`,
+    await fsp.mkdir(sourceFolder, { recursive: true })
+    const indexPath = path.join(sourceFolder, 'index.ts')
+    await fsp.writeFile(
+      indexPath,
+      "export function index() {\n  return 'index'\n}\n",
+      'utf-8',
     )
-    process.exit(1)
   }
 
   let hasPackageJson = false
