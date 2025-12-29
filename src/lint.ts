@@ -3,6 +3,7 @@ import { parseExports } from './exports'
 import { logger } from './logger'
 import { PackageMetadata } from './types'
 import {
+  getPackageMeta,
   hasCjsExtension,
   isESModulePackage,
   isTypeFile,
@@ -67,7 +68,8 @@ function validateFilesField(packageJson: PackageMetadata) {
   return state
 }
 
-export async function lint(pkg: PackageMetadata, cwd?: string) {
+export async function lint(cwd: string) {
+  const pkg = await getPackageMeta(cwd)
   const { name, main, exports } = pkg
   const isESM = isESModulePackage(pkg.type)
   const parsedExports = await parseExports(pkg, cwd)

@@ -49,10 +49,10 @@ function help() {
 
 async function lint(cwd: string) {
   // Not package.json detected, skip package linting
-  if (!(await hasPackageJson(cwd))) {
+  if (!hasPackageJson(cwd)) {
     return
   }
-  await lintPackage(await getPackageMeta(cwd), cwd)
+  await lintPackage(cwd)
 }
 
 async function parseCliArgs(argv: string[]) {
