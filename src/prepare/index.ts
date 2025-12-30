@@ -44,14 +44,26 @@ function createExportCondition(
   if (exportName === '.') {
     exportName = 'index'
   }
+  const outputPathPrefix = esmOnly ? '' : 'es'
   if (isTsSourceFile) {
-    const importCondition = {
-      types: getDistPath(
-        'es',
-        `${exportName}.${dtsExtensionsMap[esmExtension]}`,
-      ),
-      default: getDistPath('es', `${exportName}.${esmExtension}`),
-    }
+    const importCondition = esmOnly
+      ? {
+          types: getDistPath(
+            outputPathPrefix,
+            `${exportName}.${dtsExtensionsMap[esmExtension]}`,
+          ),
+          default: getDistPath(`${exportName}.${esmExtension}`),
+        }
+      : {
+          types: getDistPath(
+            outputPathPrefix,
+            `${exportName}.${dtsExtensionsMap[esmExtension]}`,
+          ),
+          default: getDistPath(
+            outputPathPrefix,
+            `${exportName}.${esmExtension}`,
+          ),
+        }
     if (esmOnly) {
       return importCondition
     }
@@ -96,11 +108,9 @@ function createExportConditionPair(
       .slice(0, 2)
       .join('.')
       .replace('./', '')
+    const fileName = `${fileBaseName}-${specialConditionName}.mjs`
     specialCondition = {
-      [specialConditionName]: getDistPath(
-        'es',
-        `${fileBaseName}-${specialConditionName}.mjs`,
-      ),
+      [specialConditionName]: getDistPath(esmOnly ? '' : 'es', fileName),
     }
     return [normalizedExportPath, specialCondition] as const
   }
@@ -306,13 +316,6 @@ export async function prepare(
       if (esmOnly) {
         // When esmOnly is true, mainExport is either a string or an object with types/default
         pkgJson.main = isUsingTs
-          ? typeof mainExport === 'object'
-            ? mainExport.default
-            : mainExport
-          : typeof mainExport === 'string'
-            ? mainExport
-            : mainExport.default
-        pkgJson.module = isUsingTs
           ? typeof mainExport === 'object'
             ? mainExport.default
             : mainExport

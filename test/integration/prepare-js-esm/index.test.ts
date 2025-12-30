@@ -30,7 +30,7 @@ describe('integration prepare-js-esm', () => {
     expect(pkgJson.type).toBe('module')
     // With type: module, ESM uses .js, CJS uses .cjs
     expect(pkgJson.main).toBe('./dist/index.js')
-    expect(pkgJson.module).toBe('./dist/index.js')
+    expect(pkgJson.module).toBeUndefined()
     expect(pkgJson.types).toBeFalsy()
     expect(pkgJson.files).toContain('dist')
     expect(pkgJson.bin).toBe('./dist/bin/index.js')

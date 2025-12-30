@@ -5,7 +5,6 @@
   ],
   "bin": "./dist/bin/index.js",
   "main": "./dist/index.js",
-  "module": "./dist/index.js",
   "exports": {
     "./foo": "./dist/foo.js",
     ".": "./dist/index.js"
@@ -13,5 +12,8 @@
   "scripts": {
     "build": "bunchee",
     "prepublishOnly": "npm run build"
+  },
+  "devDependencies": {
+    "bunchee": "latest"
   }
 }

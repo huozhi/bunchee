@@ -31,19 +31,19 @@ describe('integration prepare-ts-esm', () => {
     // Verify type is set to module
     expect(pkgJson.type).toBe('module')
     // With type: module and TypeScript, ESM uses .js, types use .d.ts
-    expect(pkgJson.main).toBe('./dist/es/index.js')
-    expect(pkgJson.module).toBe('./dist/es/index.js')
-    expect(pkgJson.types).toBe('./dist/es/index.d.ts')
+    expect(pkgJson.main).toBe('./dist/index.js')
+    expect(pkgJson.module).toBeUndefined()
+    expect(pkgJson.types).toBe('./dist/index.d.ts')
     expect(pkgJson.files).toContain('dist')
     expect(pkgJson.bin).toBe('./dist/bin/index.js')
     expect(pkgJson.exports).toEqual({
       './foo': {
-        types: './dist/es/foo.d.ts',
-        default: './dist/es/foo.js',
+        types: './dist/foo.d.ts',
+        default: './dist/foo.js',
       },
       '.': {
-        types: './dist/es/index.d.ts',
-        default: './dist/es/index.js',
+        types: './dist/index.d.ts',
+        default: './dist/index.js',
       },
     })
 
