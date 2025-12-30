@@ -56,6 +56,11 @@ describe('integration prepare-no-src', () => {
     // Should have type: 'module' since package.json didn't exist
     expect(pkgJson.type).toBe('module')
 
+    // Should have bunchee in devDependencies
+    expect(pkgJson.devDependencies).toEqual({
+      bunchee: 'latest',
+    })
+
     // Should have exports configured for index.ts
     expect(pkgJson.exports).toEqual({
       '.': {

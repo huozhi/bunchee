@@ -361,6 +361,14 @@ export async function prepare(
     addBuildScripts(pkgJson, cwd)
   }
 
+  // Add bunchee to devDependencies if not already present
+  if (!pkgJson.devDependencies) {
+    pkgJson.devDependencies = {}
+  }
+  if (!pkgJson.devDependencies.bunchee) {
+    pkgJson.devDependencies.bunchee = 'latest'
+  }
+
   await fsp.writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + '\n')
   logger.info('Configured `exports` in package.json')
 }
