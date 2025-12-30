@@ -145,7 +145,7 @@ function MarkdownTitle({ title }: { title: string }) {
 function CodeBlock({ children }: { children: React.ReactNode }) {
   return (
     <pre className="mt-2 w-full block rounded-md bg-[#f5e6d4] text-[12px] leading-relaxed text-black/80">
-      <code className="px-3 py-2 block w-full select-none">{children}</code>
+      <code className="px-3 py-2 block w-full">{children}</code>
     </pre>
   )
 }
@@ -177,14 +177,14 @@ function TerminalLearn() {
   }
 }
 
-// Automatically expands to:
+// Output:
 // "./features/auth" -> "./dist/features/auth.js"
 // "./features/user" -> "./dist/features/user.js"`}
       </CodeBlock>
       <BlockSpacer />
       <MarkdownTitle title="## Native Addon (.node) Support" />
       <Output>
-        Import .node files - they'll be copied to output and loaded at runtime:
+        supports bundling native Node.js addon files (`.node` binaries).
       </Output>
       <CodeBlock>
         {`// src/index.js
