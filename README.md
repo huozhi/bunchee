@@ -550,6 +550,14 @@ export { readme, config, styles, content }
 
 All these imports will be bundled as string content, regardless of the original file extension.
 
+### Agent Skills
+
+If you want to use bunchee with coding agents with skills, run:
+
+```sh
+npx skills add huozhi/npm-skills
+```
+
 ### Node.js API
 
 ```ts

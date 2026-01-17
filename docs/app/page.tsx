@@ -193,6 +193,10 @@ import addon from './native-addon.node'
 // The .node file is copied to dist/ and
 // the import is rewritten to load it at runtime`}
       </CodeBlock>
+      <BlockSpacer />
+      <MarkdownTitle title="## Agent Skills" />
+      <Output>Use bunchee with coding agents that support skills:</Output>
+      <CodeBlock>{`npx skills add huozhi/npm-skills`}</CodeBlock>
     </div>
   )
 }
