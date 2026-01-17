@@ -14,7 +14,7 @@ jobs:
     timeout-minutes: 5
     strategy:
       matrix:
-        node-version: [20]
+        node-version: [24]
 
     name: Windows - Node ${{ matrix.node-version }}
     steps:
@@ -50,7 +50,7 @@ jobs:
     timeout-minutes: 5
     strategy:
       matrix:
-        node-version: [20, 22]
+        node-version: [20, 22, 24]
 
     name: Linux - Node ${{ matrix.node-version }}
     steps:
@@ -96,7 +96,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: pnpm
           registry-url: 'https://registry.npmjs.org'
 
@@ -112,10 +112,14 @@ jobs:
         if: steps.determine_tag.outputs.tag != ''
         run: |
           echo "Publishing to ${{ steps.determine_tag.outputs.tag }} tag"
-          npm publish --tag ${{ steps.determine_tag.outputs.tag }} --provenance --access public
+          npm publish --tag ${{ steps.determine_tag.outputs.tag }} --access public
+        env:
+          NPM_CONFIG_PROVENANCE: true
 
       - name: Publish to latest
         if: steps.determine_tag.outputs.tag == ''
         run: |
           echo "Publishing to latest"
-          npm publish --provenance --access public
+          npm publish --access public
+        env:
+          NPM_CONFIG_PROVENANCE: true
