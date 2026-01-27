@@ -103,7 +103,7 @@
     "cross-env": "^7.0.3",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
-    "next": "16.1.1-canary.31",
+    "next": "16.1.5",
     "picocolors": "^1.0.0",
     "postcss": "^8.5.4",
     "prettier": "3.4.2",
