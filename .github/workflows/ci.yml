@@ -50,9 +50,25 @@ jobs:
     timeout-minutes: 5
     strategy:
       matrix:
-        node-version: [20, 22, 24]
+        include:
+          - node-version: 20
+            typescript-version: 6.0.2
+            react-types-version: 19.2.14
+            react-dom-types-version: 19.2.3
+          - node-version: 22
+            typescript-version: 6.0.2
+            react-types-version: 19.2.14
+            react-dom-types-version: 19.2.3
+          - node-version: 24
+            typescript-version: 6.0.2
+            react-types-version: 19.2.14
+            react-dom-types-version: 19.2.3
+          - node-version: 24
+            typescript-version: 5.9.3
+            react-types-version: 18.3.28
+            react-dom-types-version: 18.3.7
 
-    name: Linux - Node ${{ matrix.node-version }}
+    name: Linux - Node ${{ matrix.node-version }} - TS ${{ matrix.typescript-version }}
     steps:
       - uses: actions/checkout@v4.2.2
         with:
@@ -68,6 +84,9 @@ jobs:
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Setup TypeScript and React types
+        run: pnpm add --save-dev "typescript@${{ matrix.typescript-version }}" "@types/react@${{ matrix.react-types-version }}" "@types/react-dom@${{ matrix.react-dom-types-version }}" --prefer-offline
 
       - name: Typecheck
         run: pnpm typecheck

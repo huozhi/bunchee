@@ -3,14 +3,14 @@
   "compilerOptions": {
     "rootDir": "..",
     "module": "ESNext",
+    "moduleResolution": "bundler",
     "target": "ESNext",
     "strict": false,
     "noUnusedLocals": false,
     "jsx": "preserve",
-    "baseUrl": "..",
     "paths": {
-      "bunchee": ["./src/index.ts"],
-      "testing-utils": ["./test/testing-utils/index.ts"]
+      "bunchee": ["../src/index.ts"],
+      "testing-utils": ["./testing-utils/index.ts"]
     }
   },
   "include": [

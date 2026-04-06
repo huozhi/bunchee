@@ -1,6 +1,6 @@
 type FooString = string;
 
-declare function Tsx(): any;
+declare function Tsx(): JSX.Element;
 
 export { Tsx as default };
 export type { FooString };

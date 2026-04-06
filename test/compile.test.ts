@@ -8,7 +8,48 @@ const assetPath = process.env.POST_BUILD ? '..' : '../src/index.ts'
 const baseUnitTestDir = resolve(__dirname, 'compile')
 const unitTestDirs = fs.readdirSync(baseUnitTestDir)
 
-type CompareFn = (a: string, b: string | undefined) => void
+type CompareFn = (
+  a: string,
+  b: string | undefined,
+  context: { filename: string; unitName: string },
+) => void
+
+const jsxDtsVariantUnits = new Set([
+  'jsx-preserve',
+  'jsx-react-automatic',
+  'tsx',
+  'tsx-css-global',
+])
+
+function shouldNormalizeJsxDtsSnapshot(filename: string, unitName: string) {
+  return filename.endsWith('.d.ts') && jsxDtsVariantUnits.has(unitName)
+}
+
+function normalizeJsxDtsSnapshot(content: string): string {
+  return (
+    content
+      // Normalize runtime import noise for JSX d.ts output across TS/toolchain variants.
+      // Example:
+      //   import * as react from 'react';
+      //
+      //   declare function Foo(): react.JSX.Element;
+      // =>
+      //   declare function Foo(): react.JSX.Element;
+      .replace(
+        /^import \* as [A-Za-z_$][\w$]* from ['"]react(?:\/jsx-runtime)?['"];\r?\n+/m,
+        '',
+      )
+      // Normalize return type spelling differences to one canonical form.
+      // Examples:
+      //   declare function Foo(): any; => declare function Foo(): JSX.Element;
+      //   declare function Foo(): react.JSX.Element; => declare function Foo(): JSX.Element;
+      //   declare function Foo(): react_jsx_runtime.JSX.Element; => declare function Foo(): JSX.Element;
+      .replace(
+        /declare function ([A-Za-z_$][\w$]*)\(\): (?:any|[A-Za-z_$][\w$]*\.JSX\.Element|JSX\.Element);/g,
+        'declare function $1(): JSX.Element;',
+      )
+  )
+}
 
 async function ensureDir(dir: string) {
   if (!(await existsFile(dir))) {
@@ -40,7 +81,14 @@ async function compareOrUpdateSnapshot(
     ).replace(/\r\n/g, '\n')
   }
 
-  if (bundledAssetContent !== currentOutputSnapshot) {
+  const normalizedBundled = shouldNormalizeJsxDtsSnapshot(filename, unitName)
+    ? normalizeJsxDtsSnapshot(bundledAssetContent)
+    : bundledAssetContent
+  const normalizedCurrent = shouldNormalizeJsxDtsSnapshot(filename, unitName)
+    ? normalizeJsxDtsSnapshot(currentOutputSnapshot || '')
+    : currentOutputSnapshot
+
+  if (normalizedBundled !== normalizedCurrent) {
     console.log(
       `Snapshot ${unitName} is not matched, use TEST_UPDATE_SNAPSHOT=1 pnpm test to update it`,
     )
@@ -50,7 +98,7 @@ async function compareOrUpdateSnapshot(
       currentOutputSnapshot = bundledAssetContent
     }
   }
-  onCompare(bundledAssetContent, currentOutputSnapshot)
+  onCompare(bundledAssetContent, currentOutputSnapshot, { filename, unitName })
 }
 
 for (const unitName of unitTestDirs) {
@@ -96,7 +144,20 @@ for (const unitName of unitTestDirs) {
     const compareSnapshot: CompareFn = (
       bundledAssetContent,
       currentOutputSnapshot,
+      context,
     ) => {
+      const shouldNormalizeJsxDts = shouldNormalizeJsxDtsSnapshot(
+        context.filename,
+        context.unitName,
+      )
+
+      if (shouldNormalizeJsxDts) {
+        expect(normalizeJsxDtsSnapshot(bundledAssetContent)).toEqual(
+          normalizeJsxDtsSnapshot(currentOutputSnapshot || ''),
+        )
+        return
+      }
+
       expect(bundledAssetContent).toEqual(currentOutputSnapshot)
     }
 
