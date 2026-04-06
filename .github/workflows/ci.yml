@@ -85,11 +85,8 @@ jobs:
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
 
-      - name: Setup TypeScript
-        run: pnpm add --save-dev "typescript@${{ matrix.typescript-version }}" --prefer-offline
-
-      - name: Setup React Types
-        run: pnpm add --save-dev "@types/react@${{ matrix.react-types-version }}" "@types/react-dom@${{ matrix.react-dom-types-version }}" --prefer-offline
+      - name: Setup TypeScript and React types
+        run: pnpm add --save-dev "typescript@${{ matrix.typescript-version }}" "@types/react@${{ matrix.react-types-version }}" "@types/react-dom@${{ matrix.react-dom-types-version }}" --prefer-offline
 
       - name: Typecheck
         run: pnpm typecheck
