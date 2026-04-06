@@ -52,17 +52,21 @@ jobs:
       matrix:
         include:
           - node-version: 20
-            typescript-version: 6
-            react-types-major: 19
+            typescript-version: 6.0.2
+            react-types-version: 19.2.14
+            react-dom-types-version: 19.2.3
           - node-version: 22
-            typescript-version: 6
-            react-types-major: 19
+            typescript-version: 6.0.2
+            react-types-version: 19.2.14
+            react-dom-types-version: 19.2.3
           - node-version: 24
-            typescript-version: 6
-            react-types-major: 19
+            typescript-version: 6.0.2
+            react-types-version: 19.2.14
+            react-dom-types-version: 19.2.3
           - node-version: 24
-            typescript-version: 5
-            react-types-major: 18
+            typescript-version: 5.9.3
+            react-types-version: 18.3.28
+            react-dom-types-version: 18.3.7
 
     name: Linux - Node ${{ matrix.node-version }} - TS ${{ matrix.typescript-version }}
     steps:
@@ -82,10 +86,10 @@ jobs:
         run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Setup TypeScript
-        run: pnpm add --save-dev "typescript@^${{ matrix.typescript-version }}.0.0" --prefer-offline
+        run: pnpm add --save-dev "typescript@${{ matrix.typescript-version }}" --prefer-offline
 
       - name: Setup React Types
-        run: pnpm add --save-dev "@types/react@^${{ matrix.react-types-major }}.0.0" "@types/react-dom@^${{ matrix.react-types-major }}.0.0" --prefer-offline
+        run: pnpm add --save-dev "@types/react@${{ matrix.react-types-version }}" "@types/react-dom@${{ matrix.react-dom-types-version }}" --prefer-offline
 
       - name: Typecheck
         run: pnpm typecheck
