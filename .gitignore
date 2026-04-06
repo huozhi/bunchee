@@ -11,3 +11,5 @@ test/**/*.d.*
 !test/**/node_modules
 .next
 .vscode
+tsconfig.tsbuildinfo
+

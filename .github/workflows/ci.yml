@@ -78,7 +78,7 @@ jobs:
         run: pnpm install --frozen-lockfile --prefer-offline
 
       - name: Setup TypeScript
-        run: pnpm add --save-dev "typescript@^${{ matrix.typescript-version }}.0.0" --no-frozen-lockfile --prefer-offline
+        run: pnpm add --save-dev "typescript@^${{ matrix.typescript-version }}.0.0" --prefer-offline
 
       - name: Typecheck
         run: pnpm typecheck
