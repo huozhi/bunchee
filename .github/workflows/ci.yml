@@ -53,12 +53,16 @@ jobs:
         include:
           - node-version: 20
             typescript-version: 6
+            react-types-major: 19
           - node-version: 22
             typescript-version: 6
+            react-types-major: 19
           - node-version: 24
             typescript-version: 6
+            react-types-major: 19
           - node-version: 24
             typescript-version: 5
+            react-types-major: 18
 
     name: Linux - Node ${{ matrix.node-version }} - TS ${{ matrix.typescript-version }}
     steps:
@@ -79,6 +83,9 @@ jobs:
 
       - name: Setup TypeScript
         run: pnpm add --save-dev "typescript@^${{ matrix.typescript-version }}.0.0" --prefer-offline
+
+      - name: Setup React Types
+        run: pnpm add --save-dev "@types/react@^${{ matrix.react-types-major }}.0.0" "@types/react-dom@^${{ matrix.react-types-major }}.0.0" --prefer-offline
 
       - name: Typecheck
         run: pnpm typecheck
