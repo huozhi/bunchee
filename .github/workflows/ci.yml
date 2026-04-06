@@ -50,9 +50,17 @@ jobs:
     timeout-minutes: 5
     strategy:
       matrix:
-        node-version: [20, 22, 24]
+        include:
+          - node-version: 20
+            typescript-version: 6
+          - node-version: 22
+            typescript-version: 6
+          - node-version: 24
+            typescript-version: 6
+          - node-version: 24
+            typescript-version: 5
 
-    name: Linux - Node ${{ matrix.node-version }}
+    name: Linux - Node ${{ matrix.node-version }} - TS ${{ matrix.typescript-version }}
     steps:
       - uses: actions/checkout@v4.2.2
         with:
@@ -68,6 +76,9 @@ jobs:
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Setup TypeScript
+        run: pnpm add --save-dev "typescript@^${{ matrix.typescript-version }}.0.0" --no-frozen-lockfile --prefer-offline
 
       - name: Typecheck
         run: pnpm typecheck
