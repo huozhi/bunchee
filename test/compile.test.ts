@@ -26,15 +26,29 @@ function shouldNormalizeJsxDtsSnapshot(filename: string, unitName: string) {
 }
 
 function normalizeJsxDtsSnapshot(content: string): string {
-  return content
-    .replace(
-      /^import \* as [A-Za-z_$][\w$]* from ['"]react(?:\/jsx-runtime)?['"];\r?\n+/m,
-      '',
-    )
-    .replace(
-      /declare function ([A-Za-z_$][\w$]*)\(\): (?:any|[A-Za-z_$][\w$]*\.JSX\.Element|JSX\.Element);/g,
-      'declare function $1(): JSX.Element;',
-    )
+  return (
+    content
+      // Normalize runtime import noise for JSX d.ts output across TS/toolchain variants.
+      // Example:
+      //   import * as react from 'react';
+      //
+      //   declare function Foo(): react.JSX.Element;
+      // =>
+      //   declare function Foo(): react.JSX.Element;
+      .replace(
+        /^import \* as [A-Za-z_$][\w$]* from ['"]react(?:\/jsx-runtime)?['"];\r?\n+/m,
+        '',
+      )
+      // Normalize return type spelling differences to one canonical form.
+      // Examples:
+      //   declare function Foo(): any; => declare function Foo(): JSX.Element;
+      //   declare function Foo(): react.JSX.Element; => declare function Foo(): JSX.Element;
+      //   declare function Foo(): react_jsx_runtime.JSX.Element; => declare function Foo(): JSX.Element;
+      .replace(
+        /declare function ([A-Za-z_$][\w$]*)\(\): (?:any|[A-Za-z_$][\w$]*\.JSX\.Element|JSX\.Element);/g,
+        'declare function $1(): JSX.Element;',
+      )
+  )
 }
 
 async function ensureDir(dir: string) {
