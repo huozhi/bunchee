@@ -6,22 +6,15 @@ export default function Page() {
   return (
     <div>
       <div className="mx-auto max-w-[600px] px-4 pt-6">
-        <div className="flex items-center justify-between border-b border-black/10 px-4 py-2">
-          <div className="text-xs text-black/60">{'📦'}</div>
-          <a
-            href="https://github.com/huozhi/bunchee#bunchee"
-            className="text-xs text-teal-300 hover:underline"
-          >
-            README.md ↗
-          </a>
-        </div>
         <TerminalBody />
         <div className=""></div>
-        <footer className="mx-auto max-w-4xl px-6 py-2 text-xs text-black/40">
+        <footer className="mx-auto max-w-4xl px-4 py-2 text-xs text-black/40">
           <p>
+            <a href="https://github.com/huozhi/bunchee">github</a>
+            {` · `}
             <a href="https://x.com/huozhi">x.com</a>
             {` · `}
-            <a href="https://github/huozhi">github</a>
+            <a href="https://github/huozhi">huozhi</a>
           </p>
         </footer>
       </div>
