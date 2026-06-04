@@ -6,7 +6,11 @@
 
 <p align="left">
   <a href="https://npm.im/bunchee">
-    <img src="https://badgen.net/npm/v/bunchee">
+    <img src="https://img.shields.io/npm/v/bunchee?style=flat&colorA=000000&colorB=000000">
+  </a>
+
+  <a href="https://npm.im/bunchee">
+    <img src="https://img.shields.io/npm/dt/bunchee.svg?style=flat&colorA=000000&colorB=000000">
   </a>
 
   <a href="https://github.com/huozhi/bunchee/actions?workflow=CI">
