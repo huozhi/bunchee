@@ -45,7 +45,6 @@ describe('integration - mixed-directives', () => {
         "inline.js": "import { jsx } from 'react/jsx-runtime';
       import ClientComponent from 'client-component';
 
-      // @ts-ignore externals
       function Page() {
           async function inlineAction() {
               'use server';
