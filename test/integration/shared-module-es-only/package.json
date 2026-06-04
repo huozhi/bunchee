@@ -1,0 +1,10 @@
+{
+  "name": "shared-module-es-only",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  }
+}

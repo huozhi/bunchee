@@ -1,0 +1,8 @@
+{
+  "name": "bin-shared-module-esm",
+  "type": "module",
+  "bin": {
+    "run": "./dist/bin/run.js",
+    "check": "./dist/bin/check.js"
+  }
+}
