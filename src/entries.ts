@@ -2,7 +2,11 @@ import { existsSync } from 'fs'
 import fsp from 'fs/promises'
 import path, { posix } from 'path'
 import { glob } from 'tinyglobby'
-import { getExportTypeFromFile, type ParsedExportsInfo } from './exports'
+import {
+  getExportTypeFromFile,
+  isCjsExportName,
+  type ParsedExportsInfo,
+} from './exports'
 import { PackageMetadata, type Entries, ExportPaths } from './types'
 import { logger } from './logger'
 import { baseNameWithoutExtension, validateEntryFiles } from './util/file-path'
@@ -223,6 +227,13 @@ export function getSpecialExportTypeFromSourcePath(sourcePath: string): string {
   return getSpecialExportTypeFromComposedExportPath(fileBaseName)
 }
 
+const ModuleFormat = {
+  none: 0,
+  esm: 1,
+  cjs: 2,
+  all: 3,
+} as const
+
 function getExportTypeFromExportTypesArray(types: string[]): string {
   let exportType = 'default'
   new Set(types).forEach((value) => {
@@ -365,10 +376,24 @@ export async function collectSourceEntriesFromExportPaths(
 ) {
   const bins = new Map<string, string>()
   const exportsEntries = new Map<string, Record<string, string>>()
+  let requiredPrivateModuleFormats = ModuleFormat.none
 
   for (const [exportPath, exportInfo] of parsedExportsInfo.entries()) {
     const specialConditions = new Set<string>()
-    for (const [_, composedExportType] of exportInfo) {
+    for (const [outputPath, composedExportType] of exportInfo) {
+      // Collect required private shared module formats while walking export outputs.
+      const exportType = composedExportType.split('.').pop()
+      if (exportType !== 'types') {
+        const ext = path.extname(outputPath).slice(1)
+        requiredPrivateModuleFormats |= isCjsExportName(
+          pkg,
+          composedExportType,
+          ext,
+        )
+          ? ModuleFormat.cjs
+          : ModuleFormat.esm
+      }
+
       const specialExportType =
         getSpecialExportTypeFromComposedExportPath(composedExportType)
       if (specialExportType !== 'default') {
@@ -405,6 +430,10 @@ export async function collectSourceEntriesFromExportPaths(
     ignore: [TESTS_GLOB_PATTERN],
     expandDirectories: false,
   })
+  const defaultPrivateModuleFormats =
+    requiredPrivateModuleFormats !== ModuleFormat.none
+      ? requiredPrivateModuleFormats
+      : ModuleFormat.all
 
   for (const file of privateFiles) {
     const sourceFileAbsolutePath = path.join(sourceFolderPath, file)
@@ -418,40 +447,52 @@ export async function collectSourceEntriesFromExportPaths(
     // export type: default => ''
     // export type: development => '.development'
     const condPart = isSpecialExport ? specialExportType + '.' : ''
+    const sourceExt = path.extname(file).slice(1)
+    const formats =
+      sourceExt === 'cts'
+        ? ModuleFormat.cjs
+        : sourceExt === 'mts'
+          ? ModuleFormat.esm
+          : defaultPrivateModuleFormats
 
     // Map private shared files to the dist directory
     // e.g. ./_utils.ts -> ./dist/_utils.js
-    // TODO: improve the logic to only generate the required files, not all possible files
     const isTs = isTypescriptFile(file)
-    const typesInfos: [string, string][] = [
-      [
-        posixRelativify(
-          posix.join('./dist', exportPath + (isEsmPkg ? '.d.ts' : '.d.mts')),
-        ),
-        condPart + 'import.types',
-      ],
-      [
-        posixRelativify(
-          posix.join('./dist', exportPath + (isEsmPkg ? '.d.cts' : '.d.ts')),
-        ),
-        condPart + 'require.types',
-      ],
-    ]
-    const privateExportInfo: [string, string][] = [
-      ...(isTs ? typesInfos : []),
-      [
+    const privateExportInfo: [string, string][] = []
+
+    if (formats === ModuleFormat.esm || formats === ModuleFormat.all) {
+      if (isTs) {
+        privateExportInfo.push([
+          posixRelativify(
+            posix.join('./dist', exportPath + (isEsmPkg ? '.d.ts' : '.d.mts')),
+          ),
+          condPart + 'import.types',
+        ])
+      }
+      privateExportInfo.push([
         posixRelativify(
           posix.join('./dist', exportPath + (isEsmPkg ? '.js' : '.mjs')),
         ),
         condPart + 'import.default',
-      ],
-      [
+      ])
+    }
+
+    if (formats === ModuleFormat.cjs || formats === ModuleFormat.all) {
+      if (isTs) {
+        privateExportInfo.push([
+          posixRelativify(
+            posix.join('./dist', exportPath + (isEsmPkg ? '.d.cts' : '.d.ts')),
+          ),
+          condPart + 'require.types',
+        ])
+      }
+      privateExportInfo.push([
         posixRelativify(
           posix.join('./dist', exportPath + (isEsmPkg ? '.cjs' : '.js')),
         ),
         condPart + 'require.default',
-      ],
-    ]
+      ])
+    }
 
     const exportsInfo = parsedExportsInfo.get(normalizedExportPath)
     if (!exportsInfo) {
