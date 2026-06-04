@@ -12,4 +12,6 @@ test/**/*.d.*
 .next
 .vscode
 tsconfig.tsbuildinfo
+next-env.d.ts
+
 

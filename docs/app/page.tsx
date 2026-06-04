@@ -18,7 +18,11 @@ export default function Page() {
         <TerminalBody />
         <div className=""></div>
         <footer className="mx-auto max-w-4xl px-6 py-2 text-xs text-black/40">
-          <p>huozhi © {new Date().getFullYear()}</p>
+          <p>
+            <a href="https://x.com/huozhi">x.com</a>
+            {` · `}
+            <a href="https://github/huozhi">github</a>
+          </p>
         </footer>
       </div>
     </div>
@@ -193,10 +197,6 @@ import addon from './native-addon.node'
 // The .node file is copied to dist/ and
 // the import is rewritten to load it at runtime`}
       </CodeBlock>
-      <BlockSpacer />
-      <MarkdownTitle title="## Agent Skills" />
-      <Output>Use bunchee with coding agents that support skills:</Output>
-      <CodeBlock>{`npx skills add huozhi/npm-skills`}</CodeBlock>
     </div>
   )
 }
