@@ -7,6 +7,7 @@
     "target": "ESNext",
     "strict": false,
     "noUnusedLocals": false,
+    "types": ["node"],
     "jsx": "preserve",
     "paths": {
       "bunchee": ["../src/index.ts"],
