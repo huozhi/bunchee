@@ -13,5 +13,6 @@ test/**/*.d.*
 .vscode
 tsconfig.tsbuildinfo
 next-env.d.ts
+.pnpm-store
 
 
