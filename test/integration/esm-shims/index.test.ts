@@ -1,34 +1,93 @@
 import { describe, expect, it } from 'vitest'
-import {
-  assertFilesContent,
-  getFileContents,
-  createJob,
-} from '../../testing-utils'
+import { getFileContents, createJob } from '../../testing-utils'
 
 describe('integration esm-shims', () => {
   const { distDir } = createJob({ directory: __dirname })
 
   it('should work with ESM shims', async () => {
-    const requirePolyfill =
-      'const require = __node_cjsModule.createRequire(import.meta.url)'
-    const filenamePolyfill =
-      'const __filename = __node_cjsUrl.fileURLToPath(import.meta.url)'
-    const dirnamePolyfill =
-      'const __dirname = __node_cjsPath.dirname(__filename)'
+    const contents = await getFileContents(distDir, [
+      'custom-require.js',
+      'custom-require.mjs',
+      'dirname.js',
+      'dirname.mjs',
+      'filename.js',
+      'filename.mjs',
+      'require.js',
+      'require.mjs',
+    ])
 
-    await assertFilesContent(distDir, {
-      'filename.mjs': filenamePolyfill,
-      'dirname.mjs': dirnamePolyfill,
-      'custom-require.mjs': (code) => !code.includes(requirePolyfill),
-      'require.js': /require\(/,
-      'filename.js': /__filename/,
-      'dirname.js': /__dirname/,
-      'custom-require.js': (code) => !code.includes(requirePolyfill),
-    })
+    expect(contents).toMatchInlineSnapshot(`
+      {
+        "custom-require.js": "const a = 1;
 
-    const contents = await getFileContents(distDir, ['require.mjs'])
-    expect(contents['require.mjs']).not.toContain(requirePolyfill)
-    expect(contents['require.mjs']).toContain('function getRequireModule')
-    expect(contents['require.mjs']).toContain('import.meta.url')
+      exports.a = a;
+      ",
+        "custom-require.mjs": "const a = 1;
+
+      export { a };
+      ",
+        "dirname.js": "function getDirname() {
+          return __dirname;
+      }
+
+      exports.getDirname = getDirname;
+      ",
+        "dirname.mjs": "import __node_cjsUrl from 'node:url';
+      import __node_cjsPath from 'node:path';
+
+      function getDirname() {
+          return __dirname$1;
+      }
+      const __filename$1 = __node_cjsUrl.fileURLToPath(import.meta.url);
+      const __dirname$1 = __node_cjsPath.dirname(__filename$1);
+
+      export { getDirname };
+      ",
+        "filename.js": "function getFilename() {
+          return __filename;
+      }
+
+      exports.getFilename = getFilename;
+      ",
+        "filename.mjs": "import __node_cjsUrl from 'node:url';
+
+      function getFilename() {
+          return __filename$1;
+      }
+
+      const __filename$1 = __node_cjsUrl.fileURLToPath(import.meta.url);
+
+      export { getFilename };
+      ",
+        "require.js": "var require$$0 = require('node:fs');
+
+      var _documentCurrentScript = typeof document !== 'undefined' ? document.currentScript : null;
+      function _interopDefault (e) { return e && e.__esModule ? e : { default: e }; }
+
+      var require$$0__default = /*#__PURE__*/_interopDefault(require$$0);
+
+      function getRequireModule() {
+          return require$$0__default.default;
+      }
+      function esmImport() {
+          return (typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('require.js', document.baseURI).href));
+      }
+
+      exports.esmImport = esmImport;
+      exports.getRequireModule = getRequireModule;
+      ",
+        "require.mjs": "import require$$0 from 'node:fs';
+
+      function getRequireModule() {
+          return require$$0;
+      }
+      function esmImport() {
+          return import.meta.url;
+      }
+
+      export { esmImport, getRequireModule };
+      ",
+      }
+    `)
   })
 })

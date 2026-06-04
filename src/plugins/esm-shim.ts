@@ -5,40 +5,28 @@ import MagicString from 'magic-string'
 
 const FILENAME_REGEX = /__filename/
 const DIRNAME_REGEX = /__dirname/
-// not char, or space before require(.resolve)?(
-export const GLOBAL_REQUIRE_REGEX =
-  /(?:^|[^.\w'"`])\brequire(\.resolve)?\(\s*[\r\n]*(\w|['"`])/
 
 const PolyfillComment = '/** rollup-private-do-not-use-esm-shim-polyfill */'
 const createESMShim = ({
   filename,
   dirname,
-  globalRequire,
 }: {
   filename: boolean
   dirname: boolean
-  globalRequire: boolean
 }) => {
   const useNodeUrl = filename || dirname
   const useNodePath = dirname
-  const useNodeModule = globalRequire
   return (
     `\
 ${PolyfillComment}
 ${useNodeUrl ? `import __node_cjsUrl from 'node:url'` : ''};
 ${useNodePath ? `import __node_cjsPath from 'node:path';` : ''}
-${useNodeModule ? `import __node_cjsModule from 'node:module';` : ''}
 ${
   useNodeUrl
     ? 'const __filename = __node_cjsUrl.fileURLToPath(import.meta.url);'
     : ''
 }
 ${useNodePath ? 'const __dirname = __node_cjsPath.dirname(__filename);' : ''}
-${
-  useNodeModule
-    ? 'const require = __node_cjsModule.createRequire(import.meta.url);'
-    : ''
-}
 `.trim() + '\n'
   )
 }
@@ -59,18 +47,14 @@ export function esmShim(): Plugin {
 
         let hasFilename = false
         let hasDirname = false
-        let hasGlobalRequire = false
         if (FILENAME_REGEX.test(code)) {
           hasFilename = true
         }
         if (DIRNAME_REGEX.test(code)) {
           hasDirname = true
         }
-        if (GLOBAL_REQUIRE_REGEX.test(code)) {
-          hasGlobalRequire = true
-        }
 
-        if (!hasFilename && !hasDirname && !hasGlobalRequire) {
+        if (!hasFilename && !hasDirname) {
           return null
         }
 
@@ -110,7 +94,6 @@ export function esmShim(): Plugin {
             createESMShim({
               filename: hasFilename,
               dirname: hasDirname,
-              globalRequire: hasGlobalRequire,
             }),
         )
         return {
