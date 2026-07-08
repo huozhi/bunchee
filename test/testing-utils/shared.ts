@@ -129,7 +129,12 @@ export async function executeBunchee(
     : '../../src/bin/index.ts'
 
   const ps = fork(path.resolve(__dirname, assetPath), args, {
-    execArgv: ['-r', '@swc-node/register'],
+    execArgv: [
+      '-r',
+      path.resolve(__dirname, '../../scripts/ts6-compat.js'),
+      '-r',
+      '@swc-node/register',
+    ],
     stdio: 'pipe',
     env: { SWC_NODE_IGNORE_DYNAMIC: 'true', ...options.env, ...process.env },
   })

@@ -1,4 +1,4 @@
-import type { CompilerOptions } from 'typescript'
+import type { CompilerOptions, Diagnostic } from '@typescript/typescript6'
 import { resolve, dirname } from 'path'
 import { promises as fsp } from 'fs'
 import { Module } from 'module'
@@ -8,35 +8,96 @@ import { memoize } from './lib/memoize'
 import { DEFAULT_TS_CONFIG } from './constants'
 import { logger } from './logger'
 
+// TypeScript 7+ compiles natively and its `typescript` package no longer ships
+// the JavaScript compiler API (the main export only contains the version).
+// `@typescript/typescript6` is the official package re-exporting the TS 6 API.
+const TS_COMPAT_PACKAGE = '@typescript/typescript6'
+
+type TypeScriptApi = typeof import('@typescript/typescript6')
+
 export type TypescriptOptions = {
   tsConfigPath: string | undefined
   tsCompilerOptions: CompilerOptions | undefined
 }
 
 let hasLoggedTsWarning = false
+let hasLoggedTsCompatFallback = false
+let hasRedirectedTsRequire = false
 
-function resolveTypescript(cwd: string): typeof import('typescript') {
-  let ts
-  const m = new Module('', undefined)
-  m.paths = (Module as any)._nodeModulePaths(cwd)
+function resolveModulePath(request: string, paths: string[]): string | null {
   try {
-    // Bun does not yet support the `Module` class properly.
-    if (typeof m?.require === 'undefined') {
-      const tsPath = require.resolve('typescript', {
-        paths: (Module as any)._nodeModulePaths(cwd),
-      })
-      ts = require(tsPath)
-    } else {
-      ts = m.require('typescript')
+    return require.resolve(request, { paths })
+  } catch {
+    return null
+  }
+}
+
+function hasTsCompilerApi(ts: any): boolean {
+  return (
+    typeof ts?.readConfigFile === 'function' &&
+    typeof ts?.parseJsonConfigFileContent === 'function'
+  )
+}
+
+// Redirect `require('typescript')` to the TS 6 compat API so dependencies
+// relying on the JS compiler API (e.g. rollup-plugin-dts) keep working
+// when the workspace TypeScript is v7+.
+function redirectTypescriptRequire(tsApiPath: string) {
+  if (hasRedirectedTsRequire) return
+  hasRedirectedTsRequire = true
+  const moduleAny = Module as any
+  const originalResolveFilename = moduleAny._resolveFilename
+  moduleAny._resolveFilename = function (request: string, ...args: any[]) {
+    if (request === 'typescript') {
+      return tsApiPath
     }
-  } catch (e) {
-    console.error(e)
+    return originalResolveFilename.apply(this, [request, ...args])
+  }
+}
+
+function resolveTypescript(cwd: string): TypeScriptApi {
+  const searchPaths = (Module as any)._nodeModulePaths(cwd)
+  const tsPath = resolveModulePath('typescript', searchPaths)
+  let ts: any = null
+  if (tsPath) {
+    try {
+      ts = require(tsPath)
+    } catch (e) {
+      console.error(e)
+    }
+  }
+  if (!ts) {
     if (!hasLoggedTsWarning) {
       hasLoggedTsWarning = true
       exit(
         'Could not load TypeScript compiler. Try to install `typescript` as dev dependency',
       )
     }
+    return ts
+  }
+  if (!hasTsCompilerApi(ts)) {
+    const tsCompatPath =
+      resolveModulePath(TS_COMPAT_PACKAGE, searchPaths) ??
+      resolveModulePath(TS_COMPAT_PACKAGE, [__dirname])
+    if (!tsCompatPath) {
+      if (!hasLoggedTsWarning) {
+        hasLoggedTsWarning = true
+        exit(
+          `Detected TypeScript ${ts.version || '7+'}, which no longer ships the JavaScript compiler API required for generating type declarations. Install \`${TS_COMPAT_PACKAGE}\` as dev dependency to keep building types`,
+        )
+      }
+      return ts
+    }
+    redirectTypescriptRequire(tsCompatPath)
+    if (!hasLoggedTsCompatFallback) {
+      hasLoggedTsCompatFallback = true
+      logger.log(
+        pc.dim(
+          `Using ${TS_COMPAT_PACKAGE} API for TypeScript ${ts.version} type declaration generation`,
+        ),
+      )
+    }
+    ts = require(tsCompatPath)
   }
   return ts
 }
@@ -91,7 +152,10 @@ export function resolveTsConfig(
   return result
 }
 
-export async function convertCompilerOptions(cwd: string, json: any) {
+export async function convertCompilerOptions(
+  cwd: string,
+  json: any,
+): Promise<{ options: CompilerOptions; errors: Diagnostic[] }> {
   // Use the original ts handler to avoid memory leak
   const ts = resolveTypescript(cwd)
   return ts.convertCompilerOptionsFromJson(json, './')

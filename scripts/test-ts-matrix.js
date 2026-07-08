@@ -3,6 +3,11 @@
 const { spawnSync } = require('child_process')
 
 const lanes = {
+  ts7: {
+    typescript: '7.0.2',
+    reactTypes: '19.2.14',
+    reactDomTypes: '19.2.3',
+  },
   ts6: {
     typescript: '6.0.2',
     reactTypes: '19.2.14',
@@ -17,7 +22,11 @@ const lanes = {
 
 const laneArg = process.argv[2] || 'all'
 const selected =
-  laneArg === 'all' ? ['ts6', 'ts5'] : laneArg in lanes ? [laneArg] : null
+  laneArg === 'all'
+    ? ['ts7', 'ts6', 'ts5']
+    : laneArg in lanes
+      ? [laneArg]
+      : null
 
 if (!selected) {
   console.error(
@@ -58,8 +67,8 @@ try {
   }
 } finally {
   // Always restore default dev versions after running matrix checks.
-  const defaultLane = lanes.ts6
-  console.log('\n===> Restoring default dev toolchain (ts6)')
+  const defaultLane = lanes.ts7
+  console.log('\n===> Restoring default dev toolchain (ts7)')
   run('pnpm', [
     'add',
     '--save-dev',
