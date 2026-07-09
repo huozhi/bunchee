@@ -24,6 +24,7 @@ let hasLoggedTsWarning = false
 let hasLoggedTsCompatFallback = false
 let hasRedirectedTsRequire = false
 
+// Resolve to a concrete file path (works in both Node.js and Bun); the TS 7 fallback also needs the path to redirect `require('typescript')`.
 function resolveModulePath(request: string, paths: string[]): string | null {
   try {
     return require.resolve(request, { paths })
