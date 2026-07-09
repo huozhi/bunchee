@@ -28,6 +28,13 @@ By using the standard `exports` configuration as the single source of truth, **b
 npm install --save-dev bunchee typescript
 ```
 
+> [!NOTE]
+> TypeScript 7+ compiles natively and its `typescript` package no longer ships the JavaScript compiler API used for generating type declarations. If you're on TypeScript 7 or above, also install the official compat API package [`@typescript/typescript6`](https://www.npmjs.com/package/@typescript/typescript6) and `bunchee` will pick it up automatically:
+>
+> ```sh
+> npm install --save-dev @typescript/typescript6
+> ```
+
 ### Configuration
 
 Create entry files of your library and `package.json`.

@@ -10,17 +10,18 @@
     "test:update": "TEST_UPDATE_SNAPSHOT=1 pnpm test",
     "test:post": "cross-env POST_BUILD=1 pnpm test test/compile.test.ts test/integration.test.ts",
     "site": "next dev docs",
-    "docs:build": "next build docs",
+    "docs:build": "pnpm --dir docs install && next build docs",
     "clean": "rm -rf ./dist",
     "new-test": "node ./scripts/new-test.js",
     "test:ts-matrix": "node ./scripts/test-ts-matrix.js all",
     "test:ts5": "node ./scripts/test-ts-matrix.js ts5",
     "test:ts6": "node ./scripts/test-ts-matrix.js ts6",
+    "test:ts7": "node ./scripts/test-ts-matrix.js ts7",
     "typecheck": "tsc --noEmit && tsc -p test/tsconfig.json --noEmit",
     "prepare-release": "pnpm clean && pnpm build",
     "publish-local": "pnpm prepare-release && pnpm test && pnpm publish",
     "prepublishOnly": "pnpm prepare-release && chmod +x ./dist/bin/cli.js",
-    "run-ts": "cross-env SWC_NODE_IGNORE_DYNAMIC=1 node -r @swc-node/register",
+    "run-ts": "cross-env SWC_NODE_IGNORE_DYNAMIC=1 node -r ./scripts/ts6-compat.js -r @swc-node/register",
     "ts-bunchee": "pnpm run-ts ./src/bin/index.ts",
     "build-dir": "pnpm ts-bunchee --cwd",
     "build": "pnpm run-ts ./src/bin/index.ts --runtime node",
@@ -81,7 +82,7 @@
     "yargs": "^17.7.2"
   },
   "peerDependencies": {
-    "typescript": "^4.1 || ^5.0 || ^6.0"
+    "typescript": "^4.1 || ^5.0 || ^6.0 || ^7.0"
   },
   "peerDependenciesMeta": {
     "typescript": {
@@ -93,7 +94,7 @@
   },
   "devDependencies": {
     "@huozhi/testing-package": "1.0.0",
-    "@swc-node/register": "^1.10.9",
+    "@swc-node/register": "^1.11.1",
     "@swc/types": "^0.1.17",
     "@tailwindcss/postcss": "^4.1.8",
     "@types/clean-css": "^4.2.11",
@@ -102,6 +103,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@types/yargs": "^17.0.33",
+    "@typescript/typescript6": "^6.0.2",
     "bunchee": "link:./",
     "cross-env": "^7.0.3",
     "husky": "^9.0.11",
@@ -118,6 +120,13 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,md,json,yml,yaml}": "prettier --write"
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "rollup-plugin-dts>typescript": "^7.0.0"
+      }
+    }
   },
   "packageManager": "pnpm@9.4.0"
 }

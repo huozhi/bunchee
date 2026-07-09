@@ -64,6 +64,10 @@ jobs:
             react-types-version: 19.2.14
             react-dom-types-version: 19.2.3
           - node-version: 24
+            typescript-version: 7.0.2
+            react-types-version: 19.2.14
+            react-dom-types-version: 19.2.3
+          - node-version: 24
             typescript-version: 5.9.3
             react-types-version: 18.3.28
             react-dom-types-version: 18.3.7
