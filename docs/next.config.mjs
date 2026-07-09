@@ -7,7 +7,7 @@ const nextConfig = {
   },
   turbopack: {
     // The docs app resolves next and other dependencies from the repo root.
-    root: resolve(import.meta.dirname, '..'),
+    root: resolve(import.meta.dirname),
   },
 }
 
