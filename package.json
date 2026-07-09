@@ -10,7 +10,7 @@
     "test:update": "TEST_UPDATE_SNAPSHOT=1 pnpm test",
     "test:post": "cross-env POST_BUILD=1 pnpm test test/compile.test.ts test/integration.test.ts",
     "site": "next dev docs",
-    "docs:build": "next build docs",
+    "docs:build": "pnpm --dir docs install && next build docs",
     "clean": "rm -rf ./dist",
     "new-test": "node ./scripts/new-test.js",
     "test:ts-matrix": "node ./scripts/test-ts-matrix.js all",
