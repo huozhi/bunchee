@@ -67,8 +67,8 @@ try {
   }
 } finally {
   // Always restore default dev versions after running matrix checks.
-  const defaultLane = lanes.ts7
-  console.log('\n===> Restoring default dev toolchain (ts7)')
+  const defaultLane = lanes.ts6
+  console.log('\n===> Restoring default dev toolchain (ts6)')
   run('pnpm', [
     'add',
     '--save-dev',

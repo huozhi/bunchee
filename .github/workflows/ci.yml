@@ -52,19 +52,19 @@ jobs:
       matrix:
         include:
           - node-version: 20
-            typescript-version: 7.0.2
+            typescript-version: 6.0.2
             react-types-version: 19.2.14
             react-dom-types-version: 19.2.3
           - node-version: 22
-            typescript-version: 7.0.2
-            react-types-version: 19.2.14
-            react-dom-types-version: 19.2.3
-          - node-version: 24
-            typescript-version: 7.0.2
+            typescript-version: 6.0.2
             react-types-version: 19.2.14
             react-dom-types-version: 19.2.3
           - node-version: 24
             typescript-version: 6.0.2
+            react-types-version: 19.2.14
+            react-dom-types-version: 19.2.3
+          - node-version: 24
+            typescript-version: 7.0.2
             react-types-version: 19.2.14
             react-dom-types-version: 19.2.3
           - node-version: 24
