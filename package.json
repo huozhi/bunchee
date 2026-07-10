@@ -121,12 +121,5 @@
   "lint-staged": {
     "*.{js,jsx,ts,tsx,md,json,yml,yaml}": "prettier --write"
   },
-  "pnpm": {
-    "peerDependencyRules": {
-      "allowedVersions": {
-        "rollup-plugin-dts>typescript": "^7.0.0"
-      }
-    }
-  },
-  "packageManager": "pnpm@9.4.0"
+  "packageManager": "pnpm@11.10.0"
 }
