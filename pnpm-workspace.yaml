@@ -1,0 +1,10 @@
+packages:
+  - '.'
+allowBuilds:
+  '@swc/core': true
+  '@tailwindcss/oxide': true
+  esbuild: true
+  sharp: true
+peerDependencyRules:
+  allowedVersions:
+    'rollup-plugin-dts>typescript': ^7.0.0
