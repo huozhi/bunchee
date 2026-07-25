@@ -16,6 +16,8 @@ import {
 } from './types'
 import { removeOutputDir } from './utils'
 import { normalizeError } from './lib/normalize-error'
+import { runWithConcurrency } from './lib/concurrency'
+import { DEFAULT_BUILD_CONCURRENCY } from './constants'
 
 export async function createAssetRollupJobs(
   options: BundleConfig,
@@ -44,16 +46,30 @@ export async function createAssetRollupJobs(
     }
   }
 
-  const rollupJobs = allConfigs.map((rollupConfig) =>
-    bundleOrWatch(options, rollupConfig),
-  )
-
   try {
-    return await Promise.all(rollupJobs)
+    // Watchers never settle, so pooling them would stall the build. Only the
+    // one-shot build is capped.
+    if (options.watch) {
+      return await Promise.all(
+        allConfigs.map((rollupConfig) => bundleOrWatch(options, rollupConfig)),
+      )
+    }
+
+    return await runWithConcurrency(
+      allConfigs.map(
+        (rollupConfig) => () => bundleOrWatch(options, rollupConfig),
+      ),
+      getBuildConcurrency(),
+    )
   } catch (err: unknown) {
     const error = normalizeError(err)
     throw error
   }
+}
+
+function getBuildConcurrency(): number {
+  const value = Number(process.env.BUNCHEE_CONCURRENCY)
+  return Number.isFinite(value) && value > 0 ? value : DEFAULT_BUILD_CONCURRENCY
 }
 
 async function bundleOrWatch(

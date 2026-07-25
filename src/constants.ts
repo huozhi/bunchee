@@ -86,6 +86,10 @@ export const DEFAULT_TS_CONFIG = {
 
 export const BINARY_TAG = '$binary'
 
+// How many rollup builds run in parallel. Building every entry at once makes
+// memory scale with entry count, which OOMs on packages with many exports.
+export const DEFAULT_BUILD_CONCURRENCY = 4
+
 export const PRIVATE_GLOB_PATTERN = '**/_*/**'
 export const TESTS_GLOB_PATTERN =
   '**/{__tests__/**,__mocks__/**,*.{test,spec}.*}'
