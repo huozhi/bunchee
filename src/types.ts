@@ -22,8 +22,10 @@ type FullExportCondition = {
   [key: string]: string
 }
 
+// `null` is valid in package.json `exports` and blocks a subpath from resolving.
 type ExportCondition =
   | string
+  | null
   | {
       [key: string]: ExportCondition | string
     }

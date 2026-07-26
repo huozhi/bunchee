@@ -2,7 +2,7 @@ import { existsSync } from 'fs'
 import { glob } from 'tinyglobby'
 import {
   BINARY_TAG,
-  PRIVATE_GLOB_PATTERN,
+  PRIVATE_GLOB_PATTERNS,
   TESTS_GLOB_PATTERN,
   availableExtensions,
 } from '../constants'
@@ -28,13 +28,13 @@ export async function collectSourceEntries(sourceFolderPath: string) {
 
   const binMatches = await glob(binPattern, {
     cwd: sourceFolderPath,
-    ignore: [PRIVATE_GLOB_PATTERN, TESTS_GLOB_PATTERN], // ignore private entries
+    ignore: [...PRIVATE_GLOB_PATTERNS, TESTS_GLOB_PATTERN], // ignore private entries
     expandDirectories: false,
   })
 
   const srcMatches = await glob(srcPattern, {
     cwd: sourceFolderPath,
-    ignore: [PRIVATE_GLOB_PATTERN, TESTS_GLOB_PATTERN], // ignore private entries
+    ignore: [...PRIVATE_GLOB_PATTERNS, TESTS_GLOB_PATTERN], // ignore private entries
     expandDirectories: false,
   })
 

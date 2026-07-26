@@ -11,11 +11,16 @@ import {
   fileExists,
   getPackageMeta,
   getSourcePathFromExportPath,
+  isBinExportPath,
   isTypescriptFile,
   removeOutputDir,
 } from './utils'
 import { MIN_ENTRIES_FOR_WORKERS, runEntriesInWorkers } from './lib/worker-pool'
-import { getExportFileTypePath, parseExports } from './exports'
+import {
+  getExportFileTypePath,
+  parseExports,
+  type ParsedExportsInfo,
+} from './exports'
 import type { BuildContext } from './types'
 import {
   TypescriptOptions,
@@ -38,9 +43,9 @@ function assignDefault(
   }
 }
 
-function hasMultiEntryExport(exportPaths: object): boolean {
-  const exportKeys = Object.keys(exportPaths).filter(
-    (key) => key !== './package.json',
+function hasMultiEntryExport(parsedExportsInfo: ParsedExportsInfo): boolean {
+  const exportKeys = [...parsedExportsInfo.keys()].filter(
+    (key) => key !== './package.json' && !isBinExportPath(key),
   )
 
   return (

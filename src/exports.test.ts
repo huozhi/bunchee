@@ -1,5 +1,10 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
-import { parseExports } from './exports'
+import {
+  getFileExportType,
+  isCjsExportName,
+  isEsmExportName,
+  parseExports,
+} from './exports'
 import type { PackageMetadata } from './types'
 import * as wildcard from './wildcard'
 
@@ -280,6 +285,40 @@ describe('parse-exports', () => {
     ])
   })
 
+  it('should skip export paths blocked with null', async () => {
+    const pkg: PackageMetadata = {
+      name: 'test-pkg',
+      type: 'module',
+      exports: {
+        '.': './dist/index.js',
+        './internal': null,
+        './nested': { import: null, require: './dist/nested.cjs' },
+      },
+    }
+
+    const result = await parseExports(pkg)
+    expect(result.get('./index')).toEqual([['./dist/index.js', 'default']])
+    expect(result.get('./internal')).toBeUndefined()
+    expect(result.get('./nested')).toEqual([['./dist/nested.cjs', 'require']])
+  })
+
+  it('should skip wildcard export paths blocked with null', async () => {
+    const pkg: PackageMetadata = {
+      name: 'test-pkg',
+      type: 'module',
+      exports: {
+        './features/*': null,
+      },
+    }
+
+    vi.mocked(wildcard.expandWildcardPattern).mockResolvedValue(
+      new Map([['./features/foo', 'foo']]),
+    )
+
+    const result = await parseExports(pkg, mockCwd)
+    expect(result.get('./features/foo')).toBeUndefined()
+  })
+
   it('should handle nested export conditions', async () => {
     const pkg: PackageMetadata = {
       name: 'test-pkg',
@@ -302,5 +341,67 @@ describe('parse-exports', () => {
         ['./dist/index.js', 'default'],
       ]),
     )
+  })
+})
+
+describe('export condition classification', () => {
+  describe('getFileExportType', () => {
+    it('should detect the types condition wherever it is nested', () => {
+      expect(getFileExportType('types')).toBe('types')
+      expect(getFileExportType('import.types')).toBe('types')
+      // `"types": { "import": ..., "require": ... }` nests the other way around
+      expect(getFileExportType('types.import')).toBe('types')
+      expect(getFileExportType('types.require')).toBe('types')
+      expect(getFileExportType('development.require.types')).toBe('types')
+    })
+
+    it('should return the last condition for non-types conditions', () => {
+      expect(getFileExportType('import.default')).toBe('default')
+      expect(getFileExportType('development.import.default')).toBe('default')
+      expect(getFileExportType('require')).toBe('require')
+    })
+  })
+
+  describe('isEsmExportName', () => {
+    it('should match esm conditions nested in a composed condition', () => {
+      expect(isEsmExportName('import', 'js')).toBe(true)
+      expect(isEsmExportName('import.default', 'js')).toBe(true)
+      expect(isEsmExportName('development.import.default', 'js')).toBe(true)
+      expect(isEsmExportName('module.default', 'js')).toBe(true)
+      expect(isEsmExportName('module-sync.default', 'js')).toBe(true)
+    })
+
+    it('should not match cjs conditions', () => {
+      expect(isEsmExportName('require.default', 'js')).toBe(false)
+      expect(isEsmExportName('default', 'js')).toBe(false)
+    })
+
+    it('should always treat .mjs as esm', () => {
+      expect(isEsmExportName('require', 'mjs')).toBe(true)
+    })
+  })
+
+  describe('isCjsExportName', () => {
+    const cjsPkg: PackageMetadata = { name: 'p', type: 'commonjs' }
+    const esmPkg: PackageMetadata = { name: 'p', type: 'module' }
+
+    it('should not classify a nested import condition as cjs', () => {
+      expect(isCjsExportName(cjsPkg, 'import', 'js')).toBe(false)
+      expect(isCjsExportName(cjsPkg, 'import.default', 'js')).toBe(false)
+      expect(isCjsExportName(cjsPkg, 'development.import.default', 'js')).toBe(
+        false,
+      )
+    })
+
+    it('should classify require conditions in a cjs package as cjs', () => {
+      expect(isCjsExportName(cjsPkg, 'require', 'js')).toBe(true)
+      expect(isCjsExportName(cjsPkg, 'require.default', 'js')).toBe(true)
+      expect(isCjsExportName(cjsPkg, 'default', 'js')).toBe(true)
+    })
+
+    it('should classify by extension in an esm package', () => {
+      expect(isCjsExportName(esmPkg, 'require.default', 'cjs')).toBe(true)
+      expect(isCjsExportName(esmPkg, 'import.default', 'js')).toBe(false)
+    })
   })
 })

@@ -67,6 +67,11 @@ async function processWildcardExportValue(
   exportToDist: ParsedExportsInfo,
   matchedSubpath: string,
 ) {
+  // `null` blocks a subpath from being resolved, there's nothing to build for it.
+  if (exportValue == null) {
+    return
+  }
+
   // End of searching, export value is file path.
   // <export key>: <export value> (string)
   if (typeof exportValue === 'string') {
@@ -159,6 +164,11 @@ function collectExportPath(
   exportTypes: Set<string>,
   exportToDist: ParsedExportsInfo,
 ) {
+  // `null` blocks a subpath from being resolved, there's nothing to build for it.
+  if (exportValue == null) {
+    return
+  }
+
   // End of searching, export value is file path.
   // <export key>: <export value> (string)
   if (typeof exportValue === 'string') {
@@ -357,8 +367,15 @@ export function constructDefaultExportCondition(
   return constructFullExportCondition(exportCondition, packageType)
 }
 
+const esmConditions = new Set(['import', 'module', 'module-sync'])
+const cjsConditions = new Set(['require', 'main'])
+
 export function isEsmExportName(name: string, ext: string) {
-  return ['import', 'module', 'module-sync'].includes(name) || ext === 'mjs'
+  // `name` is a composed condition such as `import.default` or
+  // `development.import.types`, so match on segments rather than the whole string.
+  return (
+    name.split('.').some((cond) => esmConditions.has(cond)) || ext === 'mjs'
+  )
 }
 
 export function isCjsExportName(
@@ -367,7 +384,9 @@ export function isCjsExportName(
   ext: string,
 ) {
   const isESModule = isESModulePackage(pkg.type)
-  const isCjsCondition = ['require', 'main'].includes(exportCondition)
+  const isCjsCondition = exportCondition
+    .split('.')
+    .some((cond) => cjsConditions.has(cond))
   const isNotEsmExportName = !isEsmExportName(exportCondition, ext)
   return (
     (!isESModule && isNotEsmExportName && (ext !== 'mjs' || isCjsCondition)) ||
@@ -375,8 +394,17 @@ export function isCjsExportName(
   )
 }
 
+// `import.types` -> types
+// `types.import` -> types
+// `development.import.default` -> default
 export function getFileExportType(composedTypes: string) {
-  return composedTypes.split('.').pop() as string
+  const conditions = composedTypes.split('.')
+  // `types` can be nested either way around, and it always wins: it decides
+  // whether the output is a declaration file or a JS asset.
+  if (conditions.includes('types')) {
+    return 'types'
+  }
+  return conditions[conditions.length - 1]
 }
 
 export type ExportOutput = {
