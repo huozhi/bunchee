@@ -5,14 +5,16 @@ import type {
 } from './types'
 import fsp from 'fs/promises'
 import fs from 'fs'
-import { resolve } from 'path'
+import { dirname, resolve } from 'path'
 import { createOutputState } from './plugins/output-state-plugin'
 import {
   fileExists,
   getPackageMeta,
   getSourcePathFromExportPath,
   isTypescriptFile,
+  removeOutputDir,
 } from './utils'
+import { MIN_ENTRIES_FOR_WORKERS, runEntriesInWorkers } from './lib/worker-pool'
 import { getExportFileTypePath, parseExports } from './exports'
 import type { BuildContext } from './types'
 import {
@@ -141,7 +143,7 @@ async function bundle(
   const missingEntries = [...parsedExportsInfo.keys()].filter(
     (key) => !entries[key] && key !== './package.json',
   )
-  if (missingEntries.length > 0) {
+  if (missingEntries.length > 0 && !options._entryFilter) {
     logger.warn(
       `The following exports are defined in package.json but missing source files:\n${missingEntries
         .map((name) => `⨯ ${name}`)
@@ -190,12 +192,39 @@ async function bundle(
   const generateTypes = hasTsConfig && options.dts !== false
   const rollupJobsOptions: BundleJobOptions = { isFromCli, generateTypes }
 
+  const entryNames = Object.keys(entries)
+  // With many entries, every entry's rollup build shares one heap and peak
+  // memory scales with entry count, which OOMs on packages with many exports.
+  // Build each entry in its own worker instead, one isolated heap per entry.
+  const useWorkers =
+    !options.watch &&
+    !options._entryFilter &&
+    entryNames.length >= MIN_ENTRIES_FOR_WORKERS
+
   try {
-    const assetJobs = await createAssetRollupJobs(
-      options,
-      buildContext,
-      rollupJobsOptions,
-    )
+    let assetJobs
+    if (useWorkers) {
+      // Clean once before fanning out; concurrent workers must not remove
+      // each other's output.
+      if (options.clean && !isFromCli) {
+        for (const entry of Object.values(entries)) {
+          for (const distFile of Object.values(entry.export)) {
+            await removeOutputDir({ dir: dirname(resolve(cwd, distFile)) }, cwd)
+          }
+        }
+      }
+      const workerStats = await runEntriesInWorkers(cwd, entryNames, options)
+      for (const stats of workerStats) {
+        outputState.mergeSizeStats(stats)
+      }
+      assetJobs = workerStats
+    } else {
+      assetJobs = await createAssetRollupJobs(
+        options,
+        buildContext,
+        rollupJobsOptions,
+      )
+    }
 
     options._callbacks?.onBuildEnd?.(assetJobs)
 

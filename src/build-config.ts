@@ -61,7 +61,15 @@ export async function buildEntryConfig(
 ): Promise<BuncheeRollupConfig[]> {
   const configs: BuncheeRollupConfig[] = []
   const { entries } = pluginContext
-  for (const exportCondition of Object.values(entries)) {
+  for (const [exportPath, exportCondition] of Object.entries(entries)) {
+    // Workers build only their assigned entries. The full entries map stays
+    // in the context so cross-entry imports and types still resolve.
+    if (
+      bundleConfig._entryFilter &&
+      !bundleConfig._entryFilter.includes(exportPath)
+    ) {
+      continue
+    }
     const rollupConfigs = await buildConfig(
       bundleConfig,
       exportCondition,

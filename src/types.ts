@@ -46,6 +46,13 @@ type BundleConfig = {
   tsconfig?: string
   onSuccess?: string | (() => void | Promise<void>)
 
+  /*
+   * Only build the entries with these export paths (e.g. ['./foo']).
+   * Set by the worker pool to assign one entry per worker.
+   * @internal
+   */
+  _entryFilter?: string[]
+
   // hooks
   /*
    * This hook is called before the build starts
