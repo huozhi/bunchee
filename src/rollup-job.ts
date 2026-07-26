@@ -16,6 +16,7 @@ import {
 } from './types'
 import { removeOutputDir } from './utils'
 import { normalizeError } from './lib/normalize-error'
+import { runWithMemoryBudget } from './lib/concurrency'
 
 export async function createAssetRollupJobs(
   options: BundleConfig,
@@ -44,12 +45,20 @@ export async function createAssetRollupJobs(
     }
   }
 
-  const rollupJobs = allConfigs.map((rollupConfig) =>
-    bundleOrWatch(options, rollupConfig),
-  )
-
   try {
-    return await Promise.all(rollupJobs)
+    // Watchers are long-lived and never settle, so they are not pooled.
+    if (options.watch) {
+      return await Promise.all(
+        allConfigs.map((rollupConfig) => bundleOrWatch(options, rollupConfig)),
+      )
+    }
+    // Bundling every entry at once makes peak memory scale with entry count,
+    // which OOMs on packages with many exports.
+    return await runWithMemoryBudget(
+      allConfigs.map(
+        (rollupConfig) => () => bundleOrWatch(options, rollupConfig),
+      ),
+    )
   } catch (err: unknown) {
     const error = normalizeError(err)
     throw error
@@ -66,10 +75,22 @@ async function bundleOrWatch(
   return runBundle(rollupConfig)
 }
 
-function runBundle({ output, ...restOptions }: BuncheeRollupConfig) {
-  return rollup(restOptions).then((bundle: RollupBuild) => {
-    return bundle.write(output)
-  }, catchErrorHandler)
+async function runBundle({ output, ...restOptions }: BuncheeRollupConfig) {
+  let bundle: RollupBuild
+  try {
+    // One-shot builds never reuse the cache; disabling it stops rollup from
+    // retaining every module's AST on the bundle for the rest of the build.
+    bundle = await rollup({ ...restOptions, cache: false })
+  } catch (error) {
+    return catchErrorHandler(error)
+  }
+  try {
+    return await bundle.write(output)
+  } finally {
+    // Release module graph and plugin resources once the assets are written,
+    // instead of holding every entry's graph until the whole build finishes.
+    await bundle.close()
+  }
 }
 
 function runWatch({
