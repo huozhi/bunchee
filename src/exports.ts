@@ -18,7 +18,11 @@ import {
   substituteWildcardInPath,
 } from './wildcard'
 import { baseNameWithoutExtension } from './util/file-path'
-import { BINARY_TAG, dtsExtensionsMap } from './constants'
+import {
+  BINARY_TAG,
+  dtsExtensionsMap,
+  specialExportConventions,
+} from './constants'
 import { OutputOptions } from 'rollup'
 
 export function getPackageTypings(pkg: PackageMetadata) {
@@ -52,116 +56,39 @@ function constructFullExportCondition(
 }
 
 /**
- * export path: -> [ output path, export type ]
+ * A single output file declared by package.json, together with the export
+ * conditions that lead to it, outermost first.
+ *
+ * `{ path: './dist/index.mjs', conditions: ['development', 'import', 'default'] }`
+ *
+ * Conditions are kept as a list rather than a dot-joined string so that
+ * classification is a lookup instead of re-parsing. `conditionKey` produces the
+ * dot-joined form where a stable map key or a log label is needed.
  */
-export type ParsedExportsInfo = Map<string, [string, string][]>
-
-/**
- * Process export value for wildcard patterns, substituting wildcards in output paths
- */
-async function processWildcardExportValue(
-  exportValue: ExportCondition,
-  originalExportKey: string,
-  currentPath: string,
-  exportTypes: Set<string>,
-  exportToDist: ParsedExportsInfo,
-  matchedSubpath: string,
-) {
-  // `null` blocks a subpath from being resolved, there's nothing to build for it.
-  if (exportValue == null) {
-    return
-  }
-
-  // End of searching, export value is file path.
-  // <export key>: <export value> (string)
-  if (typeof exportValue === 'string') {
-    const composedTypes = new Set(exportTypes)
-    const exportType = originalExportKey.startsWith('.')
-      ? 'default'
-      : originalExportKey
-    composedTypes.add(exportType)
-    const exportInfo = exportToDist.get(mapExportFullPath(currentPath))
-    const exportCondition = Array.from(composedTypes).join('.')
-
-    // Substitute wildcard in output path
-    const substitutedPath = substituteWildcardInPath(
-      exportValue,
-      matchedSubpath,
-    )
-
-    if (!exportInfo) {
-      const outputConditionPair: [string, string] = [
-        substitutedPath,
-        exportCondition,
-      ]
-      addToExportDistMap(exportToDist, currentPath, [outputConditionPair])
-    } else {
-      exportInfo.push([substitutedPath, exportCondition])
-    }
-    return
-  }
-
-  const exportKeys = Object.keys(exportValue)
-  for (const exportKey of exportKeys) {
-    // Clone the set to avoid modifying the parent set
-    const childExports = new Set(exportTypes)
-    // Normalize child export value to a map
-    const childExportValue = exportValue[exportKey]
-
-    // Substitute wildcard in nested string values
-    let processedChildValue: ExportCondition = childExportValue
-    if (typeof childExportValue === 'string') {
-      processedChildValue = substituteWildcardInPath(
-        childExportValue,
-        matchedSubpath,
-      )
-    } else if (
-      typeof childExportValue === 'object' &&
-      childExportValue !== null
-    ) {
-      // Recursively process nested objects
-      const processed: Record<string, ExportCondition | string> = {}
-      for (const [key, value] of Object.entries(childExportValue)) {
-        if (typeof value === 'string') {
-          processed[key] = substituteWildcardInPath(value, matchedSubpath)
-        } else if (value !== null && value !== undefined) {
-          processed[key] = value
-        }
-      }
-      processedChildValue = processed as ExportCondition
-    }
-
-    // Visit export path: ./subpath, ./subpath2, ...
-    if (exportKey.startsWith('.')) {
-      const childPath = joinRelativePath(currentPath, exportKey)
-      await processWildcardExportValue(
-        processedChildValue,
-        exportKey,
-        childPath,
-        childExports,
-        exportToDist,
-        matchedSubpath,
-      )
-    } else {
-      // Visit export type: import, require, ...
-      childExports.add(exportKey)
-      await processWildcardExportValue(
-        processedChildValue,
-        exportKey,
-        currentPath,
-        childExports,
-        exportToDist,
-        matchedSubpath,
-      )
-    }
-  }
+export type OutputTarget = {
+  path: string
+  conditions: string[]
 }
 
+/**
+ * export path -> the output targets declared for it
+ */
+export type ParsedExportsInfo = Map<string, OutputTarget[]>
+
+export const conditionKey = (target: OutputTarget) =>
+  target.conditions.join('.')
+
+/**
+ * Walk one export value, recording an output target for every leaf string.
+ *
+ * There is deliberately one walker: wildcard keys are expanded into concrete
+ * keys before this runs, so it never needs to know about `*`.
+ */
 function collectExportPath(
   exportValue: ExportCondition,
   exportKey: string,
   currentPath: string,
-  exportTypes: Set<string>,
+  conditions: string[],
   exportToDist: ParsedExportsInfo,
 ) {
   // `null` blocks a subpath from being resolved, there's nothing to build for it.
@@ -172,47 +99,37 @@ function collectExportPath(
   // End of searching, export value is file path.
   // <export key>: <export value> (string)
   if (typeof exportValue === 'string') {
-    const composedTypes = new Set(exportTypes)
-    const exportType = exportKey.startsWith('.') ? 'default' : exportKey
-    composedTypes.add(exportType)
-    const exportInfo = exportToDist.get(mapExportFullPath(currentPath))
-    const exportCondition = Array.from(composedTypes).join('.')
-    if (!exportInfo) {
-      const outputConditionPair: [string, string] = [
-        exportValue,
-        exportCondition,
-      ]
-      addToExportDistMap(exportToDist, currentPath, [outputConditionPair])
-    } else {
-      exportInfo.push([exportValue, exportCondition])
-    }
+    const condition = exportKey.startsWith('.') ? 'default' : exportKey
+    // Dedupe while preserving the authored order, matching the old Set-based
+    // composition (`{ import: { import: ... } }` composes to just `import`).
+    const composed = conditions.includes(condition)
+      ? conditions
+      : [...conditions, condition]
+
+    addToExportDistMap(exportToDist, currentPath, [
+      { path: exportValue, conditions: composed },
+    ])
     return
   }
 
-  const exportKeys = Object.keys(exportValue)
-  for (const exportKey of exportKeys) {
-    // Clone the set to avoid modifying the parent set
-    const childExports = new Set(exportTypes)
-    // Normalize child export value to a map
-    const childExportValue = exportValue[exportKey]
-    // Visit export path: ./subpath, ./subpath2, ...
-    if (exportKey.startsWith('.')) {
-      const childPath = joinRelativePath(currentPath, exportKey)
+  for (const childKey of Object.keys(exportValue)) {
+    const childValue = exportValue[childKey]
+    if (childKey.startsWith('.')) {
+      // Visit export path: ./subpath, ./subpath2, ...
       collectExportPath(
-        childExportValue,
-        exportKey,
-        childPath,
-        childExports,
+        childValue,
+        childKey,
+        joinRelativePath(currentPath, childKey),
+        conditions,
         exportToDist,
       )
     } else {
       // Visit export type: import, require, ...
-      childExports.add(exportKey)
       collectExportPath(
-        childExportValue,
-        exportKey,
+        childValue,
+        childKey,
         currentPath,
-        childExports,
+        conditions.includes(childKey) ? conditions : [...conditions, childKey],
         exportToDist,
       )
     }
@@ -225,16 +142,67 @@ const mapExportFullPath = (exportPath: string) =>
 function addToExportDistMap(
   exportToDist: ParsedExportsInfo,
   exportPath: string,
-  outputConditionPairs: [string, string][],
+  targets: OutputTarget[],
 ) {
   const fullPath = mapExportFullPath(exportPath)
 
-  const existingExportInfo = exportToDist.get(fullPath)
-  if (!existingExportInfo) {
-    exportToDist.set(fullPath, outputConditionPairs)
+  const existing = exportToDist.get(fullPath)
+  if (!existing) {
+    exportToDist.set(fullPath, targets)
   } else {
-    existingExportInfo.push(...outputConditionPairs)
+    existing.push(...targets)
   }
+}
+
+/** Replace every `*` in a nested export value with the matched subpath. */
+function substituteWildcardDeep(
+  exportValue: ExportCondition,
+  matchedSubpath: string,
+): ExportCondition {
+  if (exportValue == null) {
+    return null
+  }
+  if (typeof exportValue === 'string') {
+    return substituteWildcardInPath(exportValue, matchedSubpath)
+  }
+  const result: Record<string, ExportCondition> = {}
+  for (const [key, value] of Object.entries(exportValue)) {
+    result[key] = substituteWildcardDeep(value, matchedSubpath)
+  }
+  return result
+}
+
+/**
+ * Rewrite wildcard keys into concrete ones before any walking happens.
+ *
+ * Returns pairs rather than an object so that a literal subpath and a wildcard
+ * that expands to the same subpath both survive, as they do today.
+ */
+async function expandExportKeys(
+  exportsField: Record<string, ExportCondition>,
+  cwd: string | undefined,
+): Promise<[string, ExportCondition][]> {
+  const pairs: [string, ExportCondition][] = []
+
+  for (const exportKey of Object.keys(exportsField)) {
+    const exportValue = exportsField[exportKey]
+    const isExportPath = exportKey.startsWith('.')
+
+    if (isExportPath && hasWildcardPattern(exportKey) && cwd) {
+      const expanded = await expandWildcardPattern(exportKey, cwd)
+      for (const [concreteExportPath, matchedSubpath] of expanded) {
+        pairs.push([
+          concreteExportPath,
+          substituteWildcardDeep(exportValue, matchedSubpath),
+        ])
+      }
+      continue
+    }
+
+    pairs.push([exportKey, exportValue])
+  }
+
+  return pairs
 }
 
 /**
@@ -257,92 +225,60 @@ export async function parseExports(
   const isEsmPkg = isESModulePackage(pkg.type)
   const defaultCondition = isEsmPkg ? 'import' : 'require'
 
-  let currentPath = '.'
+  const rootPath = '.'
 
   if (typeof exportsField === 'string') {
-    const outputConditionPair: [string, string] = [
-      exportsField,
-      defaultCondition,
-    ]
-    addToExportDistMap(exportToDist, currentPath, [outputConditionPair])
+    addToExportDistMap(exportToDist, rootPath, [
+      { path: exportsField, conditions: [defaultCondition] },
+    ])
   } else {
-    // keys means unknown if they're relative path or export type
-    const exportConditionKeys = Object.keys(exportsField)
+    // Wildcards are resolved up front, so the walk below only sees concrete keys.
+    const exportPairs = await expandExportKeys(exportsField, cwd)
 
-    for (const exportKey of exportConditionKeys) {
-      const exportValue = exportsField[exportKey]
-      const exportTypes: Set<string> = new Set()
+    for (const [exportKey, exportValue] of exportPairs) {
       const isExportPath = exportKey.startsWith('.')
-
-      // Handle wildcard patterns
-      if (isExportPath && hasWildcardPattern(exportKey) && cwd) {
-        // Expand wildcard pattern to concrete exports
-        const expanded = await expandWildcardPattern(exportKey, cwd)
-
-        for (const [concreteExportPath, matchedSubpath] of expanded) {
-          const childPath = joinRelativePath(currentPath, concreteExportPath)
-
-          // Process the export value and substitute wildcards in output paths
-          await processWildcardExportValue(
-            exportValue,
-            exportKey,
-            childPath,
-            exportTypes,
-            exportToDist,
-            matchedSubpath,
-          )
-        }
-        continue
-      }
-
-      const childPath = isExportPath
-        ? joinRelativePath(currentPath, exportKey)
-        : currentPath
-
-      if (!isExportPath) {
-        exportTypes.add(exportKey)
-      }
-
       collectExportPath(
         exportValue,
         exportKey,
-        childPath,
-        exportTypes,
+        isExportPath ? joinRelativePath(rootPath, exportKey) : rootPath,
+        isExportPath ? [] : [exportKey],
         exportToDist,
       )
     }
   }
 
   if (typeof bins === 'string') {
-    const outputConditionPair: [string, string] = [bins, defaultCondition]
-    addToExportDistMap(exportToDist, BINARY_TAG, [outputConditionPair])
+    addToExportDistMap(exportToDist, BINARY_TAG, [
+      { path: bins, conditions: [defaultCondition] },
+    ])
   } else {
     for (const binName of Object.keys(bins)) {
       const binDistPath = bins[binName]
-      const exportType = getExportTypeFromFile(binDistPath, pkg.type)
-      const exportPath = posix.join(BINARY_TAG, binName)
-      const outputConditionPair: [string, string] = [binDistPath, exportType]
-      addToExportDistMap(exportToDist, exportPath, [outputConditionPair])
+      addToExportDistMap(exportToDist, posix.join(BINARY_TAG, binName), [
+        {
+          path: binDistPath,
+          conditions: [getExportTypeFromFile(binDistPath, pkg.type)],
+        },
+      ])
     }
   }
 
   // Handle package.json global exports fields
   if (pkg.main || pkg.module || pkg.types) {
-    const mainExportPath = pkg.main
-    const moduleExportPath = pkg.module
-    const typesEntryPath = pkg.types
-
+    const rootFields: [string | undefined, string][] = [
+      [pkg.main, getMainFieldExportType(pkg)],
+      [pkg.module, 'module'],
+      [pkg.types, 'types'],
+    ]
     addToExportDistMap(
       exportToDist,
       './index',
-      [
-        Boolean(mainExportPath) && [
-          mainExportPath,
-          getMainFieldExportType(pkg),
-        ],
-        Boolean(moduleExportPath) && [moduleExportPath, 'module'],
-        Boolean(typesEntryPath) && [typesEntryPath, 'types'],
-      ].filter(Boolean) as [string, string][],
+      rootFields
+        .filter(([path]) => Boolean(path))
+        .map(([path, condition]) => ({
+          path: path as string,
+          conditions: [condition],
+        })),
     )
   }
 
@@ -370,41 +306,47 @@ export function constructDefaultExportCondition(
 const esmConditions = new Set(['import', 'module', 'module-sync'])
 const cjsConditions = new Set(['require', 'main'])
 
-export function isEsmExportName(name: string, ext: string) {
-  // `name` is a composed condition such as `import.default` or
-  // `development.import.types`, so match on segments rather than the whole string.
-  return (
-    name.split('.').some((cond) => esmConditions.has(cond)) || ext === 'mjs'
-  )
-}
+/**
+ * Whether a target produces a declaration file rather than a JS asset.
+ *
+ * `types` is decisive wherever it appears: both `{ import: { types } }` and
+ * `{ types: { import } }` are valid nestings in the wild.
+ */
+export const isTypesTarget = (target: OutputTarget) =>
+  target.conditions.includes('types')
 
-export function isCjsExportName(
+/**
+ * The runtime/optimize condition a target belongs to, e.g. `react-server`,
+ * `development`. `default` when it is not condition-specific.
+ */
+export const getSpecialCondition = (target: OutputTarget) =>
+  target.conditions.find((cond) => specialExportConventions.has(cond)) ??
+  'default'
+
+/**
+ * The single place that decides CJS vs ESM for an output file.
+ *
+ * The file extension plus `pkg.type` fully determines the format for any valid
+ * package.json; the conditions only break ties for misconfigured ones (which
+ * `lint` warns about separately).
+ */
+export function getOutputFormat(
   pkg: PackageMetadata,
-  exportCondition: string,
-  ext: string,
-) {
-  const isESModule = isESModulePackage(pkg.type)
-  const isCjsCondition = exportCondition
-    .split('.')
-    .some((cond) => cjsConditions.has(cond))
-  const isNotEsmExportName = !isEsmExportName(exportCondition, ext)
-  return (
-    (!isESModule && isNotEsmExportName && (ext !== 'mjs' || isCjsCondition)) ||
-    ext === 'cjs'
-  )
-}
-
-// `import.types` -> types
-// `types.import` -> types
-// `development.import.default` -> default
-export function getFileExportType(composedTypes: string) {
-  const conditions = composedTypes.split('.')
-  // `types` can be nested either way around, and it always wins: it decides
-  // whether the output is a declaration file or a JS asset.
-  if (conditions.includes('types')) {
-    return 'types'
+  target: OutputTarget,
+): 'cjs' | 'esm' {
+  const ext = extname(target.path).slice(1)
+  if (ext === 'cjs') return 'cjs'
+  if (ext === 'mjs') {
+    // `.mjs` is ESM unless a CJS package explicitly routes it through `require`.
+    return !isESModulePackage(pkg.type) &&
+      target.conditions.some((cond) => cjsConditions.has(cond))
+      ? 'cjs'
+      : 'esm'
   }
-  return conditions[conditions.length - 1]
+  if (isESModulePackage(pkg.type)) return 'esm'
+  return target.conditions.some((cond) => esmConditions.has(cond))
+    ? 'esm'
+    : 'cjs'
 }
 
 export type ExportOutput = {
@@ -419,35 +361,22 @@ export function getExportsDistFilesOfCondition(
   dts: boolean,
 ): ExportOutput[] {
   const dist: ExportOutput[] = []
-  const exportConditionNames = Object.keys(parsedExportCondition.export)
   const uniqueFiles = new Set<string>()
-  for (const exportCondition of exportConditionNames) {
-    const exportType = getFileExportType(exportCondition)
-    // Filter out non-types field when generating types jobs
-    if (dts && exportType !== 'types') {
+  for (const target of parsedExportCondition.targets) {
+    // Types jobs emit declarations, asset jobs emit JS. Never both.
+    if (dts !== isTypesTarget(target)) {
       continue
     }
-    // Filter out types field when generating asset jobs
-    if (!dts && exportType === 'types') {
-      continue
-    }
-    const filePath = parsedExportCondition.export[exportCondition]
-    const ext = extname(filePath).slice(1)
-    const relativePath = parsedExportCondition.export[exportCondition]
-    const distFile = resolve(cwd, relativePath)
-    const format: OutputOptions['format'] = isCjsExportName(
-      pkg,
-      exportCondition,
-      ext,
-    )
-      ? 'cjs'
-      : 'esm'
-
+    const distFile = resolve(cwd, target.path)
     if (uniqueFiles.has(distFile)) {
       continue
     }
     uniqueFiles.add(distFile)
-    dist.push({ format, file: distFile, exportCondition })
+    dist.push({
+      format: getOutputFormat(pkg, target),
+      file: distFile,
+      exportCondition: conditionKey(target),
+    })
   }
 
   return dist

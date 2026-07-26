@@ -1,3 +1,4 @@
+import type { OutputTarget } from './exports'
 import type { JscTarget } from '@swc/types'
 import type { InputOptions, OutputOptions } from 'rollup'
 import type { OutputState } from './plugins/output-state-plugin'
@@ -135,6 +136,14 @@ type BundleOptions = BundleConfig
 type ParsedExportCondition = {
   source: string
   name: string
+  /**
+   * The authoritative list of outputs for this entry.
+   */
+  targets: OutputTarget[]
+  /**
+   * Dot-joined condition key -> output path. Derived from `targets`, kept while
+   * the rollup/plugin layer still looks outputs up by composed key.
+   */
   export: FullExportCondition
 }
 

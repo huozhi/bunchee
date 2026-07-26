@@ -3,12 +3,15 @@ import fsp from 'fs/promises'
 import path, { posix } from 'path'
 import { glob } from 'tinyglobby'
 import {
+  conditionKey,
   getExportTypeFromFile,
-  getFileExportType,
-  isCjsExportName,
+  getOutputFormat,
+  getSpecialCondition,
+  isTypesTarget,
+  type OutputTarget,
   type ParsedExportsInfo,
 } from './exports'
-import { PackageMetadata, type Entries, ExportPaths } from './types'
+import { PackageMetadata, type Entries } from './types'
 import { logger } from './logger'
 import { baseNameWithoutExtension, validateEntryFiles } from './util/file-path'
 import {
@@ -43,12 +46,15 @@ export async function collectEntriesFromParsedExports(
   // build to, so fall through to the export-derived entries below.
   const defaultExport = parsedExportsInfo.get('./index')?.[0]
   if (sourceFile && defaultExport) {
+    const target: OutputTarget = {
+      path: defaultExport.path,
+      conditions: ['default'],
+    }
     entries['./index'] = {
       source: sourceFile,
       name: '.',
-      export: {
-        default: defaultExport[0],
-      },
+      targets: [target],
+      export: { default: target.path },
     }
   }
 
@@ -87,12 +93,9 @@ export async function collectEntriesFromParsedExports(
       continue
     }
 
-    for (const [outputPath, outputComposedExportType] of outputExports) {
+    for (const target of outputExports) {
       // export type can be: default, development, react-server, etc.
-
-      const matchedExportType = getSpecialExportTypeFromComposedExportPath(
-        outputComposedExportType,
-      )
+      const matchedExportType = getSpecialCondition(target)
       const specialSet = pathSpecialConditionsMap[normalizedExportPath]
       const hasSpecialEntry = specialSet.has(matchedExportType)
       const sourceFile =
@@ -107,6 +110,7 @@ export async function collectEntriesFromParsedExports(
         entries[entryExportPath] = {
           source: sourceFile,
           name: normalizedExportPath,
+          targets: [],
           export: {},
         }
       } else if (matchedExportType === entryExportPathType) {
@@ -134,8 +138,8 @@ export async function collectEntriesFromParsedExports(
         ) {
           continue
         }
-        const exportMap = entries[entryExportPath].export
-        exportMap[outputComposedExportType] = outputPath
+        entries[entryExportPath].targets.push(target)
+        entries[entryExportPath].export[conditionKey(target)] = target.path
       }
     }
   }
@@ -147,13 +151,12 @@ export async function collectEntriesFromParsedExports(
       continue
     }
 
-    for (const [outputPath, exportType] of outputExports) {
+    for (const target of outputExports) {
       entries[exportPath] = {
         source: sourceFile,
         name: exportPath,
-        export: {
-          [exportType]: outputPath,
-        },
+        targets: [target],
+        export: { [conditionKey(target)]: target.path },
       }
     }
   }
@@ -178,14 +181,16 @@ export async function collectBinaries(
             binaryExports[key],
           ])
 
-    const binExportPaths = binPairs.reduce((acc, [binName, binDistPath]) => {
-      const exportType = getExportTypeFromFile(binDistPath, pkg.type)
-
-      acc[binName] = {
-        [exportType]: binDistPath,
-      }
-      return acc
-    }, {} as ExportPaths)
+    const binTargets = binPairs.reduce(
+      (acc, [binName, binDistPath]) => {
+        acc[binName] = {
+          path: binDistPath,
+          conditions: [getExportTypeFromFile(binDistPath, pkg.type)],
+        }
+        return acc
+      },
+      {} as Record<string, OutputTarget>,
+    )
 
     for (const [binName] of binPairs) {
       const source = await getSourcePathFromExportPath(cwd, binName, BINARY_TAG)
@@ -196,10 +201,12 @@ export async function collectBinaries(
       }
 
       const binEntryPath = await resolveSourceFile(cwd, source)
+      const target = binTargets[binName]
       entries[binName] = {
         source: binEntryPath,
         name: binName,
-        export: binExportPaths[binName],
+        targets: [target],
+        export: { [conditionKey(target)]: target.path },
       }
     }
   }
@@ -384,22 +391,16 @@ export async function collectSourceEntriesFromExportPaths(
 
   for (const [exportPath, exportInfo] of parsedExportsInfo.entries()) {
     const specialConditions = new Set<string>()
-    for (const [outputPath, composedExportType] of exportInfo) {
+    for (const target of exportInfo) {
       // Collect required private shared module formats while walking export outputs.
-      const exportType = getFileExportType(composedExportType)
-      if (exportType !== 'types') {
-        const ext = path.extname(outputPath).slice(1)
-        requiredPrivateModuleFormats |= isCjsExportName(
-          pkg,
-          composedExportType,
-          ext,
-        )
-          ? ModuleFormat.cjs
-          : ModuleFormat.esm
+      if (!isTypesTarget(target)) {
+        requiredPrivateModuleFormats |=
+          getOutputFormat(pkg, target) === 'cjs'
+            ? ModuleFormat.cjs
+            : ModuleFormat.esm
       }
 
-      const specialExportType =
-        getSpecialExportTypeFromComposedExportPath(composedExportType)
+      const specialExportType = getSpecialCondition(target)
       if (specialExportType !== 'default') {
         specialConditions.add(specialExportType)
       }
@@ -448,9 +449,9 @@ export async function collectSourceEntriesFromExportPaths(
     const normalizedExportPath = stripSpecialCondition(exportPath)
     const isSpecialExport = specialExportType !== 'default'
 
-    // export type: default => ''
-    // export type: development => '.development'
-    const condPart = isSpecialExport ? specialExportType + '.' : ''
+    // Special conditions prefix the composed condition, e.g.
+    // `development` + `import` + `types`.
+    const condPrefix = isSpecialExport ? [specialExportType] : []
     const sourceExt = path.extname(file).slice(1)
     const formats =
       sourceExt === 'cts'
@@ -462,40 +463,34 @@ export async function collectSourceEntriesFromExportPaths(
     // Map private shared files to the dist directory
     // e.g. ./_utils.ts -> ./dist/_utils.js
     const isTs = isTypescriptFile(file)
-    const privateExportInfo: [string, string][] = []
+    const privateExportInfo: OutputTarget[] = []
+    const distPath = (ext: string) =>
+      posixRelativify(posix.join('./dist', exportPath + ext))
 
     if (formats === ModuleFormat.esm || formats === ModuleFormat.all) {
       if (isTs) {
-        privateExportInfo.push([
-          posixRelativify(
-            posix.join('./dist', exportPath + (isEsmPkg ? '.d.ts' : '.d.mts')),
-          ),
-          condPart + 'import.types',
-        ])
+        privateExportInfo.push({
+          path: distPath(isEsmPkg ? '.d.ts' : '.d.mts'),
+          conditions: [...condPrefix, 'import', 'types'],
+        })
       }
-      privateExportInfo.push([
-        posixRelativify(
-          posix.join('./dist', exportPath + (isEsmPkg ? '.js' : '.mjs')),
-        ),
-        condPart + 'import.default',
-      ])
+      privateExportInfo.push({
+        path: distPath(isEsmPkg ? '.js' : '.mjs'),
+        conditions: [...condPrefix, 'import', 'default'],
+      })
     }
 
     if (formats === ModuleFormat.cjs || formats === ModuleFormat.all) {
       if (isTs) {
-        privateExportInfo.push([
-          posixRelativify(
-            posix.join('./dist', exportPath + (isEsmPkg ? '.d.cts' : '.d.ts')),
-          ),
-          condPart + 'require.types',
-        ])
+        privateExportInfo.push({
+          path: distPath(isEsmPkg ? '.d.cts' : '.d.ts'),
+          conditions: [...condPrefix, 'require', 'types'],
+        })
       }
-      privateExportInfo.push([
-        posixRelativify(
-          posix.join('./dist', exportPath + (isEsmPkg ? '.cjs' : '.js')),
-        ),
-        condPart + 'require.default',
-      ])
+      privateExportInfo.push({
+        path: distPath(isEsmPkg ? '.cjs' : '.js'),
+        conditions: [...condPrefix, 'require', 'default'],
+      })
     }
 
     const exportsInfo = parsedExportsInfo.get(normalizedExportPath)

@@ -103,13 +103,12 @@ async function bundle(
         typesEntryPath = getExportFileTypePath(mainExportPath)
       }
 
-      parsedExportsInfo.set(
-        './index',
-        [
-          [mainExportPath, 'default'],
-          Boolean(typesEntryPath) && [typesEntryPath, 'types'],
-        ].filter(Boolean) as [string, string][],
-      )
+      parsedExportsInfo.set('./index', [
+        { path: mainExportPath, conditions: ['default'] },
+        ...(typesEntryPath
+          ? [{ path: typesEntryPath, conditions: ['types'] }]
+          : []),
+      ])
     }
   }
 
