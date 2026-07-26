@@ -199,13 +199,19 @@ async function bundle(
   const useWorkers =
     !options.watch &&
     !options._entryFilter &&
+    // Test-only, not a supported option: the tests build the same package
+    // both ways and diff the output.
+    !process.env.TEST_NO_WORKERS &&
     entryNames.length >= MIN_ENTRIES_FOR_WORKERS
 
   try {
     let assetJobs
     if (useWorkers) {
       // Clean once before fanning out; concurrent workers must not remove
-      // each other's output.
+      // each other's output. Every output directory the rollup configs would
+      // clean is covered: the export conditions hold the js dist files, plus
+      // the `types` condition when it is declared, and the types path derived
+      // from a js path when it is not always lands in the same directory.
       if (options.clean && !isFromCli) {
         for (const entry of Object.values(entries)) {
           for (const distFile of Object.values(entry.export)) {
@@ -213,7 +219,14 @@ async function bundle(
           }
         }
       }
-      const workerStats = await runEntriesInWorkers(cwd, entryNames, options)
+      const workerStats = await runEntriesInWorkers(
+        cwd,
+        // The original CLI entry, before the single-entry fallback above
+        // reassigns it — this is what the entries above were resolved with.
+        inputFile,
+        entryNames,
+        options,
+      )
       for (const stats of workerStats) {
         outputState.mergeSizeStats(stats)
       }

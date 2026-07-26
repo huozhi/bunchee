@@ -10,6 +10,7 @@ type SpinnerLike = {
   isSpinning: boolean | (() => boolean)
   clear: () => void
   start: () => void
+  stop?: () => void
 }
 
 let activeSpinner: SpinnerLike | null = null
@@ -63,6 +64,26 @@ export function setActiveSpinner(spinner: SpinnerLike | null) {
     console.warn = originalConsole.warn
     console.error = originalConsole.error
     console.info = originalConsole.info
+  }
+}
+
+/**
+ * Stop animating the spinner until the returned function is called.
+ *
+ * The console patch above only pauses the spinner for writes made on this
+ * thread. Worker threads write straight to the shared stdout, so the spinner
+ * has to be parked for as long as they are running or their output gets
+ * interleaved with spinner frames.
+ */
+export function pauseActiveSpinner(): () => void {
+  if (!isSpinnerActive() || !activeSpinner) {
+    return () => {}
+  }
+  const spinner = activeSpinner
+  spinner.clear()
+  spinner.stop?.()
+  return () => {
+    spinner.start()
   }
 }
 

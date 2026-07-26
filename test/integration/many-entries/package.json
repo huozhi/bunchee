@@ -1,0 +1,44 @@
+{
+  "name": "many-entries",
+  "version": "0.0.0",
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./a": {
+      "types": "./dist/a.d.ts",
+      "import": "./dist/a.js"
+    },
+    "./b": {
+      "types": "./dist/b.d.ts",
+      "import": "./dist/b.js"
+    },
+    "./c": {
+      "types": "./dist/c.d.ts",
+      "import": "./dist/c.js"
+    },
+    "./d": {
+      "types": "./dist/d.d.ts",
+      "import": "./dist/d.js"
+    },
+    "./e": {
+      "types": "./dist/e.d.ts",
+      "import": "./dist/e.js"
+    },
+    "./f": {
+      "types": "./dist/f.d.ts",
+      "import": "./dist/f.js"
+    },
+    "./g": {
+      "types": "./dist/g.d.ts",
+      "import": "./dist/g.js"
+    },
+    "./h": {
+      "types": "./dist/h.d.ts",
+      "import": "./dist/h.js"
+    }
+  }
+}
