@@ -2,8 +2,6 @@ import { posix, join, resolve, dirname, extname } from 'path'
 import type {
   PackageMetadata,
   ExportCondition,
-  FullExportCondition,
-  PackageType,
   ParsedExportCondition,
 } from './types'
 import {
@@ -27,32 +25,6 @@ import { OutputOptions } from 'rollup'
 
 export function getPackageTypings(pkg: PackageMetadata) {
   return pkg.types || pkg.typings
-}
-
-function constructFullExportCondition(
-  exportCondition: string | Record<string, string | undefined>,
-  packageType: PackageType,
-): FullExportCondition {
-  let fullExportCond: FullExportCondition
-  if (typeof exportCondition === 'string') {
-    const exportType = getExportTypeFromFile(exportCondition, packageType)
-
-    fullExportCond = {
-      [exportType]: exportCondition,
-    }
-  } else {
-    const exportTypes: string[] = Object.keys(exportCondition)
-    fullExportCond = {}
-    exportTypes.forEach((exportType) => {
-      const condition = exportCondition[exportType]
-      // Filter out nullable value
-      if (condition) {
-        fullExportCond[exportType] = condition
-      }
-    })
-  }
-
-  return fullExportCond
 }
 
 /**
@@ -285,24 +257,6 @@ export async function parseExports(
   return exportToDist
 }
 
-export function constructDefaultExportCondition(
-  value: string | Record<string, string | undefined>,
-  packageType: PackageType,
-) {
-  const isEsmPackage = isESModulePackage(packageType)
-  let exportCondition
-  if (typeof value === 'string') {
-    const types = getPackageTypings(value as PackageMetadata)
-    exportCondition = {
-      [isEsmPackage ? 'import' : 'require']: value,
-      ...(types && { types }),
-    }
-  } else {
-    exportCondition = value
-  }
-  return constructFullExportCondition(exportCondition, packageType)
-}
-
 const esmConditions = new Set(['import', 'module', 'module-sync'])
 const cjsConditions = new Set(['require', 'main'])
 
@@ -351,8 +305,9 @@ export function getOutputFormat(
 
 export type ExportOutput = {
   format: OutputOptions['format']
+  /** Absolute output path */
   file: string
-  exportCondition: string
+  target: OutputTarget
 }
 export function getExportsDistFilesOfCondition(
   pkg: PackageMetadata,
@@ -375,7 +330,7 @@ export function getExportsDistFilesOfCondition(
     dist.push({
       format: getOutputFormat(pkg, target),
       file: distFile,
-      exportCondition: conditionKey(target),
+      target,
     })
   }
 

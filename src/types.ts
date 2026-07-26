@@ -136,15 +136,8 @@ type BundleOptions = BundleConfig
 type ParsedExportCondition = {
   source: string
   name: string
-  /**
-   * The authoritative list of outputs for this entry.
-   */
+  /** Every output file this entry produces. */
   targets: OutputTarget[]
-  /**
-   * Dot-joined condition key -> output path. Derived from `targets`, kept while
-   * the rollup/plugin layer still looks outputs up by composed key.
-   */
-  export: FullExportCondition
 }
 
 type ExportPaths = Record<string, FullExportCondition>

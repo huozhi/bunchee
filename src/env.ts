@@ -15,16 +15,8 @@ export function getDefinedInlineVariables(
     return acc
   }, {})
 
-  const exportConditionNames = Object.keys(parsedExportCondition.export).reduce(
-    (acc, key) => {
-      // key could be 'require' or 'import.development' etc.
-      const exportTypes = key.split('.')
-      for (const exportType of exportTypes) {
-        acc.add(exportType)
-      }
-      return acc
-    },
-    new Set() as Set<string>,
+  const exportConditionNames = new Set(
+    parsedExportCondition.targets.flatMap((target) => target.conditions),
   )
 
   // For development and production convention, we override the NODE_ENV value

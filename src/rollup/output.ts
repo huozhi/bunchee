@@ -7,7 +7,6 @@ import type {
 import { createSplitChunks } from './split-chunks'
 import { resolve, dirname, basename } from 'path'
 import { filePathWithoutExtension, isESModulePackage } from '../utils'
-import { getExportFileTypePath } from '../exports'
 
 export async function buildOutputConfigs(
   bundleConfig: BundleConfig,
@@ -28,16 +27,8 @@ export async function buildOutputConfigs(
   const absoluteOutputFile = resolve(cwd, bundleConfig.file!)
   const isEsmPkg = isESModulePackage(pkg.type)
   const name = filePathWithoutExtension(absoluteOutputFile)
-  const dtsFile = resolve(
-    cwd,
-    dts
-      ? bundleConfig.file!
-      : (exportCondition.export.types ??
-          getExportFileTypePath(bundleConfig.file!)),
-  )
-  const typesDir = dirname(dtsFile)
-  const jsDir = dirname(absoluteOutputFile!)
-  const outputFile: string = dts ? dtsFile : absoluteOutputFile
+  // For a types job `bundleConfig.file` is already the declaration path.
+  const outputFile: string = absoluteOutputFile
   const entryFiles = new Set(
     Object.values(entries).map((entry) => entry.source),
   )
@@ -59,7 +50,7 @@ export async function buildOutputConfigs(
   const outputOptions: OutputOptions = {
     name: pkg.name || name,
     extend: true,
-    dir: dts ? typesDir : jsDir,
+    dir: dirname(outputFile),
     format,
     exports: 'named',
     esModule: useEsModuleMark || 'if-default-prop',

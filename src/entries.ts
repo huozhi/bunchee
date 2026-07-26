@@ -3,7 +3,6 @@ import fsp from 'fs/promises'
 import path, { posix } from 'path'
 import { glob } from 'tinyglobby'
 import {
-  conditionKey,
   getExportTypeFromFile,
   getOutputFormat,
   getSpecialCondition,
@@ -54,7 +53,6 @@ export async function collectEntriesFromParsedExports(
       source: sourceFile,
       name: '.',
       targets: [target],
-      export: { default: target.path },
     }
   }
 
@@ -111,7 +109,6 @@ export async function collectEntriesFromParsedExports(
           source: sourceFile,
           name: normalizedExportPath,
           targets: [],
-          export: {},
         }
       } else if (matchedExportType === entryExportPathType) {
         entries[entryExportPath].source = sourceFile
@@ -139,7 +136,6 @@ export async function collectEntriesFromParsedExports(
           continue
         }
         entries[entryExportPath].targets.push(target)
-        entries[entryExportPath].export[conditionKey(target)] = target.path
       }
     }
   }
@@ -156,7 +152,6 @@ export async function collectEntriesFromParsedExports(
         source: sourceFile,
         name: exportPath,
         targets: [target],
-        export: { [conditionKey(target)]: target.path },
       }
     }
   }
@@ -206,7 +201,6 @@ export async function collectBinaries(
         source: binEntryPath,
         name: binName,
         targets: [target],
-        export: { [conditionKey(target)]: target.path },
       }
     }
   }
@@ -269,6 +263,29 @@ export function getSpecialExportTypeFromConditionNames(
   return exportType
 }
 
+// A trailing dot segment is only a condition if it actually names one.
+// Anything else is part of the subpath, e.g. `./v1.2` or `./charts.min`.
+const isConditionSuffix = (segment: string) =>
+  specialExportConventions.has(segment) ||
+  segment === 'import' ||
+  segment === 'require' ||
+  segment === 'types'
+
+// ./index.react-server        -> ./index
+// ./index.development.node    -> ./index
+// ./v1.2/thing                -> ./v1.2/thing  (`2/thing` is not a condition)
+function stripSpecialCondition(exportPath: string): string {
+  let result = exportPath
+  // Conditions can stack, e.g. `index.development.react-server.ts`.
+  while (true) {
+    const lastDot = result.lastIndexOf('.')
+    // index 0 is the leading `.` of `./foo`, never a condition separator.
+    if (lastDot <= 0) return result
+    if (!isConditionSuffix(result.slice(lastDot + 1))) return result
+    result = result.slice(0, lastDot)
+  }
+}
+
 // ./index -> .
 // ./index.development -> .
 // ./index.react-server -> .
@@ -284,16 +301,11 @@ export function normalizeExportPath(exportPath: string): string {
     }
     return exportPath
   }
-  const baseName = exportPath.split('.').slice(0, 2).join('.')
+  const baseName = stripSpecialCondition(exportPath)
   if (baseName === './index') {
     return '.'
   }
   return baseName
-}
-
-// ./index.react-server -> ./index
-function stripSpecialCondition(exportPath: string): string {
-  return exportPath.split('.').slice(0, 2).join('.')
 }
 
 export async function collectSourceEntriesByExportPath(
@@ -344,13 +356,15 @@ export async function collectSourceEntriesByExportPath(
     if (isBinaryPath) {
       bins.set(normalizeExportPath(originalSubpath), sourceFileAbsolutePath)
     } else {
+      // `index.development.ts` carries a condition; `charts.min.ts` does not.
       const parts = path.basename(file).split('.')
+      const filenameCondition =
+        parts.length > 2 && isConditionSuffix(parts[1]) ? parts[1] : undefined
       const exportType =
-        parts.length > 2 ? parts[1] : getExportTypeFromExportPath(exportPath)
-      const specialExportPath =
-        exportType !== 'index' && parts.length > 2
-          ? exportPath + '.' + exportType
-          : exportPath // Adjust for direct file matches
+        filenameCondition ?? getExportTypeFromExportPath(exportPath)
+      const specialExportPath = filenameCondition
+        ? exportPath + '.' + filenameCondition
+        : exportPath // Adjust for direct file matches
 
       const sourceFilesMap = exportsEntries.get(specialExportPath) || {}
       sourceFilesMap[exportType] = sourceFileAbsolutePath
