@@ -1,43 +1,52 @@
 import fs from 'fs'
 import os from 'os'
-import { dirname, join } from 'path'
+import { dirname, extname, join } from 'path'
 import Piscina from 'piscina'
 import type { BundleConfig } from '../types'
 import type { SizeStats } from '../plugins/output-state-plugin'
-import type { EntryWorkerTask } from '../worker'
+import type { ErrorDetails, EntryWorkerTask } from '../worker'
+import { logger, pauseActiveSpinner } from '../logger'
 
 // Below this entry count builds stay in-process: a handful of module graphs
 // fits comfortably in one heap, and skipping the pool avoids worker startup.
 export const MIN_ENTRIES_FOR_WORKERS = 8
 
-// The handler is loaded from this file by its export name, so no separate
-// worker asset needs to exist in dist.
+// The handler is loaded from a file by its export name, so no separate worker
+// asset needs to exist in dist.
 export const WORKER_HANDLER_NAME = 'buildEntryInWorker'
 
 function resolveWorkerFile(): string {
-  // This code runs from src/lib/ in dev and is bundled into dist/index.js and
-  // dist/bin/cli.js when compiled, so locate the package root first and
-  // resolve the worker from there. When running from source, worker threads
-  // inherit execArgv, so the TypeScript register hook loads the .ts worker.
-  let packageRoot = __dirname
-  while (!fs.existsSync(join(packageRoot, 'package.json'))) {
-    packageRoot = dirname(packageRoot)
-  }
-  return join(
-    packageRoot,
-    __filename.endsWith('.ts') ? 'src/worker.ts' : 'dist/index.js',
-  )
+  // Running from source, the handler is a sibling module. Bundled, this code
+  // is only ever reachable through the package's main entry — the bin requires
+  // that entry rather than inlining it — and the same bundle re-exports the
+  // handler, so the file to hand piscina is the one this code is running from.
+  const sibling = join(dirname(__dirname), `worker${extname(__filename)}`)
+  return fs.existsSync(sibling) ? sibling : __filename
 }
 
-// Build each entry in its own worker so every entry's module graphs live in
-// an isolated V8 heap: peak memory per heap is one entry, not the whole
-// package, no matter how many entries there are.
+function restoreErrorDetails(error: any): unknown {
+  const details: ErrorDetails | undefined = error?.cause
+  if (!details?.props) {
+    // Not one of ours: a worker that exited, or a task failed by pool.destroy.
+    return error
+  }
+  delete error.cause
+  error.name = details.name
+  return Object.assign(error, details.props)
+}
+
+// Build entries in a pool of worker threads so a single entry's module graphs
+// never share a heap with the rest of the package. Threads are reused across
+// entries, so a heap can hold more than one entry's garbage over time — what
+// it never holds is all of them at once.
 export async function runEntriesInWorkers(
   cwd: string,
+  cliEntryPath: string,
   entryNames: string[],
   options: BundleConfig,
 ): Promise<SizeStats[]> {
-  const { _callbacks, onSuccess, ...plainOptions } = options
+  // `_callbacks` holds functions, which structured clone cannot move.
+  const { _callbacks, ...plainOptions } = options
   const pool = new Piscina({
     filename: resolveWorkerFile(),
     maxThreads: Math.max(
@@ -48,16 +57,34 @@ export async function runEntriesInWorkers(
       ),
     ),
   })
+  const resumeSpinner = pauseActiveSpinner()
+  if (process.env.DEBUG) {
+    logger.log(
+      `Building ${entryNames.length} entries in ${pool.maxThreads} worker threads`,
+    )
+  }
+
   try {
     return await Promise.all(
       entryNames.map((entryName) => {
-        const task: EntryWorkerTask = { cwd, entryName, options: plainOptions }
+        const task: EntryWorkerTask = {
+          cwd,
+          cliEntryPath,
+          entryName,
+          options: plainOptions,
+        }
         return pool.run(task, {
           name: WORKER_HANDLER_NAME,
         }) as Promise<SizeStats>
       }),
     )
+  } catch (error) {
+    // The first entry to fail rejects here, and destroying the pool below
+    // fails whatever is still queued — the rest of the package is not built
+    // just to be thrown away.
+    throw restoreErrorDetails(error)
   } finally {
     await pool.destroy()
+    resumeSpinner()
   }
 }
