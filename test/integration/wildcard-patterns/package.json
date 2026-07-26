@@ -1,0 +1,10 @@
+{
+  "name": "wildcard-patterns",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./feat-*": "./dist/feat-*.js",
+    "./features/*": "./dist/features/*.js",
+    "./*/utils": "./dist/*/utils.js"
+  }
+}

@@ -86,6 +86,16 @@ export const DEFAULT_TS_CONFIG = {
 
 export const BINARY_TAG = '$binary'
 
+// Matches private shared modules living inside an underscore-prefixed directory,
+// e.g. `_utils/index.ts`, `a/_b/c.ts`.
 export const PRIVATE_GLOB_PATTERN = '**/_*/**'
+// Matches underscore-prefixed files themselves, e.g. `_utils.ts`, `lib/_helper.ts`.
+// PRIVATE_GLOB_PATTERN alone never matches these, since `_*` only matches a
+// directory segment that has children.
+const PRIVATE_FILE_GLOB_PATTERN = '**/_*'
+export const PRIVATE_GLOB_PATTERNS = [
+  PRIVATE_GLOB_PATTERN,
+  PRIVATE_FILE_GLOB_PATTERN,
+]
 export const TESTS_GLOB_PATTERN =
   '**/{__tests__/**,__mocks__/**,*.{test,spec}.*}'

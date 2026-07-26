@@ -3,8 +3,9 @@ import { glob } from 'tinyglobby'
 import {
   availableExtensions,
   SRC,
-  PRIVATE_GLOB_PATTERN,
+  PRIVATE_GLOB_PATTERNS,
   TESTS_GLOB_PATTERN,
+  specialExportConventions,
 } from './constants'
 import { logger } from './logger'
 import { fileExists, normalizePath } from './utils'
@@ -41,10 +42,51 @@ export function substituteWildcardInPath(
 }
 
 /**
+ * Turn a source file path into the subpath it serves, or undefined if it serves none.
+ *
+ * "features/foo.ts"             -> "features/foo"
+ * "features/bar/index.ts"       -> "features/bar"
+ * "features/foo.development.ts" -> "features/foo"  (a condition variant, not its own export)
+ */
+function sourceFileToSubpath(sourceFile: string): string | undefined {
+  const relativePath = normalizePath(sourceFile)
+  const ext = path.extname(relativePath)
+  if (!ext) {
+    return undefined
+  }
+  let subpath = relativePath.slice(0, -ext.length)
+
+  // Strip a trailing export-convention segment, e.g. `foo.development` -> `foo`.
+  // Those files are variants of the base export, not exports of their own.
+  const segments = path.posix.basename(subpath).split('.')
+  if (
+    segments.length > 1 &&
+    specialExportConventions.has(segments[segments.length - 1])
+  ) {
+    const dir = path.posix.dirname(subpath)
+    const baseName = segments.slice(0, -1).join('.')
+    subpath = dir === '.' ? baseName : path.posix.join(dir, baseName)
+  }
+
+  // `foo/index.ts` serves `foo`, not `foo/index`.
+  if (subpath.endsWith('/index')) {
+    subpath = subpath.slice(0, -'/index'.length)
+  } else if (subpath === 'index') {
+    return undefined
+  }
+
+  return subpath || undefined
+}
+
+/**
  * Expand a wildcard export pattern by finding matching source files
  * Returns a map of concrete export paths to their matched subpaths
  * Example: "./features/*" with files ["foo.ts", "bar.ts"] in src/features/
  *   -> { "./features/foo": "foo", "./features/bar": "bar" }
+ *
+ * A `*` may appear anywhere in the key and, per Node's subpath-pattern rules,
+ * matches across `/`. So `./feat-*`, `./*\/utils` and deeply nested files under
+ * `./features/*` all expand.
  */
 export async function expandWildcardPattern(
   wildcardPattern: string,
@@ -57,28 +99,33 @@ export async function expandWildcardPattern(
     return expanded
   }
 
-  // Convert wildcard pattern to glob pattern
   // "./features/*" -> "features/*"
   const cleanPattern = wildcardPattern.replace(/^\.\//, '')
 
-  // Extract the base path before the wildcard
-  // "features/*" -> "features"
-  const basePathParts = cleanPattern.split('*')
-  const basePath = basePathParts[0].replace(/\/$/, '')
+  // Node only honours the first `*` in a subpath pattern.
+  // "features/*"  -> prefix "features/", suffix ""
+  // "feat-*"      -> prefix "feat-",     suffix ""
+  // "*/utils"     -> prefix "",          suffix "/utils"
+  const starIndex = cleanPattern.indexOf('*')
+  if (starIndex === -1) {
+    return expanded
+  }
+  const prefix = cleanPattern.slice(0, starIndex)
+  const suffix = cleanPattern.slice(starIndex + 1).replace(/\*/g, '')
 
-  // Build glob pattern to match files
-  // "features/*" -> "features/*.{js,ts,tsx,...}"
   const extPattern = `{${[...availableExtensions].join(',')}}`
-  const globPatterns = [
-    `${cleanPattern}.${extPattern}`,
-    `${cleanPattern}/index.${extPattern}`,
-  ]
+  // Narrow the search to the static directory part of the prefix, so
+  // `./features/*` only walks `src/features`. A prefix without a directory part
+  // (`./feat-*`, `./*/utils`) can match anywhere, so it needs the whole tree.
+  const prefixDir = prefix.includes('/')
+    ? prefix.slice(0, prefix.lastIndexOf('/') + 1)
+    : ''
 
   let matches: string[] = []
   try {
-    matches = await glob(globPatterns, {
+    matches = await glob([`${prefixDir}**/*.${extPattern}`], {
       cwd: sourceDir,
-      ignore: [PRIVATE_GLOB_PATTERN, TESTS_GLOB_PATTERN],
+      ignore: [...PRIVATE_GLOB_PATTERNS, TESTS_GLOB_PATTERN],
       expandDirectories: false,
     })
   } catch (error) {
@@ -89,45 +136,24 @@ export async function expandWildcardPattern(
   }
 
   for (const match of matches) {
-    // Extract the matched subpath
-    // "features/foo.ts" -> "foo"
-    // "features/bar/index.ts" -> "bar"
-    const relativePath = normalizePath(match)
-    const ext = path.extname(relativePath)
-    const withoutExt = relativePath.slice(0, -ext.length)
-
-    // Remove the base path to get just the matched part
-    // "features/foo" -> "foo" (when basePath is "features")
-    let matchedPart = withoutExt
-    if (basePath && matchedPart.startsWith(basePath + '/')) {
-      matchedPart = matchedPart.slice(basePath.length + 1)
-    } else if (basePath && matchedPart === basePath) {
-      // This shouldn't happen, but handle it
+    const subpath = sourceFileToSubpath(match)
+    if (
+      !subpath ||
+      !subpath.startsWith(prefix) ||
+      !subpath.endsWith(suffix) ||
+      // The prefix and suffix must not overlap, otherwise `*` matched nothing.
+      subpath.length <= prefix.length + suffix.length
+    ) {
       continue
     }
 
-    // Handle index files
-    let matchedSubpath: string
-    if (matchedPart.endsWith('/index')) {
-      matchedSubpath = matchedPart.slice(0, -6) // Remove "/index"
-      // If there's still a path, take the last segment
-      const lastSlash = matchedSubpath.lastIndexOf('/')
-      matchedSubpath =
-        lastSlash >= 0 ? matchedSubpath.slice(lastSlash + 1) : matchedSubpath
-    } else {
-      // Take the first segment (what matches the *)
-      const firstSlash = matchedPart.indexOf('/')
-      matchedSubpath =
-        firstSlash >= 0 ? matchedPart.slice(0, firstSlash) : matchedPart
-    }
+    // What `*` stands for, e.g. "features/nested/deep" -> "nested/deep"
+    const matchedSubpath = subpath.slice(
+      prefix.length,
+      subpath.length - suffix.length,
+    )
 
-    // Build the concrete export path
-    // "./features/*" + "foo" -> "./features/foo"
-    const concreteExportPath = basePath
-      ? `./${basePath}/${matchedSubpath}`
-      : `./${matchedSubpath}`
-
-    expanded.set(concreteExportPath, matchedSubpath)
+    expanded.set(`./${subpath}`, matchedSubpath)
   }
 
   return expanded

@@ -197,7 +197,15 @@ export async function lint(cwd: string) {
   const fieldState = validateFilesField(pkg)
 
   const warningsCount =
-    exportsState.badTypesExport.length + fieldState.missingFiles.length
+    exportsState.badTypesExport.length +
+    fieldState.missingFiles.length +
+    exportsState.badCjsRequireExport.paths.length +
+    exportsState.badCjsImportExport.paths.length +
+    exportsState.badEsmRequireExport.paths.length +
+    exportsState.badEsmImportExport.paths.length +
+    Number(exportsState.badMainExtension) +
+    Number(exportsState.badMainExport) +
+    Number(exportsState.invalidExportsFieldType)
 
   if (warningsCount) {
     logger.warn(`Lint: ${warningsCount} issues found.`)

@@ -125,7 +125,7 @@ describe('wildcard', () => {
       expect(result.get('./features/baz')).toBe('baz')
     })
 
-    it('should handle nested paths in wildcard expansion', async () => {
+    it('should expand nested paths in wildcard expansion', async () => {
       vi.mocked(existsSync).mockReturnValue(true)
       vi.mocked(utils.fileExists).mockReturnValue(true)
       vi.mocked(glob).mockResolvedValue(['features/nested/deep/file.ts'])
@@ -133,8 +133,64 @@ describe('wildcard', () => {
       const result = await expandWildcardPattern('./features/*', mockCwd)
 
       expect(result.size).toBe(1)
-      // Should extract the first segment after features/
-      expect(result.get('./features/nested')).toBe('nested')
+      // `*` matches across `/`, matching Node's subpath pattern resolution
+      expect(result.get('./features/nested/deep/file')).toBe('nested/deep/file')
+    })
+
+    it('should expand a wildcard prefixed within a segment', async () => {
+      vi.mocked(existsSync).mockReturnValue(true)
+      vi.mocked(utils.fileExists).mockReturnValue(true)
+      vi.mocked(glob).mockResolvedValue(['feat-alpha.ts', 'other.ts'])
+
+      const result = await expandWildcardPattern('./feat-*', mockCwd)
+
+      expect(result.size).toBe(1)
+      expect(result.get('./feat-alpha')).toBe('alpha')
+    })
+
+    it('should expand a wildcard followed by a suffix', async () => {
+      vi.mocked(existsSync).mockReturnValue(true)
+      vi.mocked(utils.fileExists).mockReturnValue(true)
+      vi.mocked(glob).mockResolvedValue([
+        'alpha/utils.ts',
+        'beta/utils.ts',
+        'alpha/other.ts',
+      ])
+
+      const result = await expandWildcardPattern('./*/utils', mockCwd)
+
+      expect(result.size).toBe(2)
+      expect(result.get('./alpha/utils')).toBe('alpha')
+      expect(result.get('./beta/utils')).toBe('beta')
+    })
+
+    it('should not expand export-condition variants into their own exports', async () => {
+      vi.mocked(existsSync).mockReturnValue(true)
+      vi.mocked(utils.fileExists).mockReturnValue(true)
+      vi.mocked(glob).mockResolvedValue([
+        'features/foo.ts',
+        'features/foo.development.ts',
+        'features/bar.react-server.ts',
+      ])
+
+      const result = await expandWildcardPattern('./features/*', mockCwd)
+
+      // `foo.development.ts` is a variant of `./features/foo`, and
+      // `bar.react-server.ts` is a variant of `./features/bar`.
+      expect(result.size).toBe(2)
+      expect(result.get('./features/foo')).toBe('foo')
+      expect(result.get('./features/bar')).toBe('bar')
+      expect(result.get('./features/foo.development')).toBeUndefined()
+    })
+
+    it('should not match when the wildcard stands for nothing', async () => {
+      vi.mocked(existsSync).mockReturnValue(true)
+      vi.mocked(utils.fileExists).mockReturnValue(true)
+      vi.mocked(glob).mockResolvedValue(['feat-.ts'])
+
+      const result = await expandWildcardPattern('./feat-*', mockCwd)
+
+      expect(result.size).toBe(0)
     })
 
     it('should ignore private files and test files', async () => {

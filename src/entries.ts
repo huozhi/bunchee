@@ -4,6 +4,7 @@ import path, { posix } from 'path'
 import { glob } from 'tinyglobby'
 import {
   getExportTypeFromFile,
+  getFileExportType,
   isCjsExportName,
   type ParsedExportsInfo,
 } from './exports'
@@ -37,8 +38,11 @@ export async function collectEntriesFromParsedExports(
   sourceFile: string | undefined,
 ): Promise<Entries> {
   const entries: Entries = {}
-  if (sourceFile) {
-    const defaultExport = parsedExportsInfo.get('./index')![0]
+  // A CLI entry file only becomes `./index` when package.json actually declares an
+  // output for it. Without `-o` and without a `.` export there's no output path to
+  // build to, so fall through to the export-derived entries below.
+  const defaultExport = parsedExportsInfo.get('./index')?.[0]
+  if (sourceFile && defaultExport) {
     entries['./index'] = {
       source: sourceFile,
       name: '.',
@@ -382,7 +386,7 @@ export async function collectSourceEntriesFromExportPaths(
     const specialConditions = new Set<string>()
     for (const [outputPath, composedExportType] of exportInfo) {
       // Collect required private shared module formats while walking export outputs.
-      const exportType = composedExportType.split('.').pop()
+      const exportType = getFileExportType(composedExportType)
       if (exportType !== 'types') {
         const ext = path.extname(outputPath).slice(1)
         requiredPrivateModuleFormats |= isCjsExportName(
