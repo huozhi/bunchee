@@ -15,6 +15,7 @@ import {
   removeOutputDir,
 } from './utils'
 import { MIN_ENTRIES_FOR_WORKERS, runEntriesInWorkers } from './lib/worker-pool'
+import { hasDirectiveLayers } from './lib/directives'
 import { getExportFileTypePath, parseExports } from './exports'
 import type { BuildContext } from './types'
 import {
@@ -196,13 +197,19 @@ async function bundle(
   // With many entries, every entry's rollup build shares one heap and peak
   // memory scales with entry count, which OOMs on packages with many exports.
   // Build each entry in its own worker instead, one isolated heap per entry.
+  //
+  // Packages with directive layers are excluded: chunk splitting for those
+  // reads state that every entry's build contributes to
+  // (`pluginContext.moduleDirectiveLayerMap`), and a worker only sees the one
+  // entry it was given, which would split chunks differently.
   const useWorkers =
     !options.watch &&
     !options._entryFilter &&
     // Test-only, not a supported option: the tests build the same package
     // both ways and diff the output.
     !process.env.TEST_NO_WORKERS &&
-    entryNames.length >= MIN_ENTRIES_FOR_WORKERS
+    entryNames.length >= MIN_ENTRIES_FOR_WORKERS &&
+    !(await hasDirectiveLayers(cwd, entries))
 
   try {
     let assetJobs
