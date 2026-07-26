@@ -10,6 +10,15 @@ import type { EntryWorkerTask } from '../worker'
 // fits comfortably in one heap, and skipping the pool avoids worker startup.
 export const MIN_ENTRIES_FOR_WORKERS = 8
 
+// Threads are capped well below the core count on purpose. Every thread is a
+// separate isolate, so each one builds its own rollup-plugin-dts instance and
+// its own TypeScript program (see the memoization in rollup/input.ts) — the
+// single largest allocation in a typical build. Total memory therefore scales
+// with thread count, and `availableParallelism()` reflects the CPU affinity
+// mask rather than a cgroup CPU quota, so a container on a large host would
+// otherwise fan out to dozens of TypeScript programs and OOM the box.
+const MAX_WORKER_THREADS = 4
+
 // The handler is loaded from this file by its export name, so no separate
 // worker asset needs to exist in dist.
 export const WORKER_HANDLER_NAME = 'buildEntryInWorker'
@@ -44,6 +53,7 @@ export async function runEntriesInWorkers(
       1,
       Math.min(
         entryNames.length,
+        MAX_WORKER_THREADS,
         (os.availableParallelism?.() ?? os.cpus().length) - 1,
       ),
     ),

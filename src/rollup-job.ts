@@ -16,6 +16,7 @@ import {
 } from './types'
 import { removeOutputDir } from './utils'
 import { normalizeError } from './lib/normalize-error'
+import { runWithMemoryBudget } from './lib/concurrency'
 
 export async function createAssetRollupJobs(
   options: BundleConfig,
@@ -44,12 +45,22 @@ export async function createAssetRollupJobs(
     }
   }
 
-  const rollupJobs = allConfigs.map((rollupConfig) =>
-    bundleOrWatch(options, rollupConfig),
-  )
-
   try {
-    return await Promise.all(rollupJobs)
+    // Watchers are long-lived and never settle, so they are not pooled.
+    if (options.watch) {
+      return await Promise.all(
+        allConfigs.map((rollupConfig) => bundleOrWatch(options, rollupConfig)),
+      )
+    }
+    // Bundling every config at once makes peak memory scale with the number of
+    // entries times their formats, which is what OOMs on packages with many
+    // exports. This bounds the in-process path the same way the worker pool
+    // bounds the fanned-out one.
+    return await runWithMemoryBudget(
+      allConfigs.map(
+        (rollupConfig) => () => bundleOrWatch(options, rollupConfig),
+      ),
+    )
   } catch (err: unknown) {
     const error = normalizeError(err)
     throw error
