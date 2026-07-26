@@ -72,6 +72,7 @@
     "magic-string": "^0.30.17",
     "nanospinner": "^1.2.2",
     "picomatch": "^4.0.2",
+    "piscina": "^4.9.3",
     "pretty-bytes": "^5.6.0",
     "rollup": "^4.61.0",
     "rollup-plugin-dts": "^6.4.1",

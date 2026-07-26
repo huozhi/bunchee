@@ -18,7 +18,7 @@ import {
 
 // [filename, sourceFileName, size]
 type FileState = [string, string, number]
-type SizeStats = Map<string, FileState[]>
+export type SizeStats = Map<string, FileState[]>
 export type OutputState = ReturnType<typeof createOutputState>
 
 // Example: @foo/bar -> bar
@@ -27,6 +27,7 @@ const removeScope = (exportPath: string) => exportPath.replace(/^@[^/]+\//, '')
 function createOutputState({ entries }: { entries: Entries }): {
   plugin(cwd: string): Plugin
   getSizeStats(): SizeStats
+  mergeSizeStats(other: SizeStats): void
 } {
   const sizeStats: SizeStats = new Map()
   const uniqFiles = new Set<string>()
@@ -90,6 +91,18 @@ function createOutputState({ entries }: { entries: Entries }): {
     },
     getSizeStats() {
       return sizeStats
+    },
+    mergeSizeStats(other: SizeStats) {
+      for (const [exportPath, fileStates] of other) {
+        const distFilesStats = sizeStats.get(exportPath) || []
+        sizeStats.set(exportPath, distFilesStats)
+        for (const fileState of fileStates) {
+          if (!uniqFiles.has(fileState[0])) {
+            uniqFiles.add(fileState[0])
+            distFilesStats.push(fileState)
+          }
+        }
+      }
     },
   }
 }

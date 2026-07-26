@@ -66,10 +66,22 @@ async function bundleOrWatch(
   return runBundle(rollupConfig)
 }
 
-function runBundle({ output, ...restOptions }: BuncheeRollupConfig) {
-  return rollup(restOptions).then((bundle: RollupBuild) => {
-    return bundle.write(output)
-  }, catchErrorHandler)
+async function runBundle({ output, ...restOptions }: BuncheeRollupConfig) {
+  let bundle: RollupBuild
+  try {
+    // One-shot builds never reuse the cache; disabling it stops rollup from
+    // retaining every module's AST on the bundle for the rest of the build.
+    bundle = await rollup({ ...restOptions, cache: false })
+  } catch (error) {
+    return catchErrorHandler(error)
+  }
+  try {
+    return await bundle.write(output)
+  } finally {
+    // Release module graph and plugin resources once the assets are written,
+    // instead of holding every entry's graph until the whole build finishes.
+    await bundle.close()
+  }
 }
 
 function runWatch({
