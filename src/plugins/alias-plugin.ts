@@ -127,7 +127,7 @@ export function aliasEntries({
   cwd: string
 }): Plugin {
   const currentConditionNames = new Set(
-    Object.keys(exportCondition.export)[0].split('.'),
+    exportCondition.targets[0]?.conditions ?? [],
   )
 
   // <imported source file path>: <relative path to source's bundle>
@@ -136,21 +136,13 @@ export function aliasEntries({
     currentConditionNames,
   )
   for (const [, exportCondition] of Object.entries(entries)) {
-    const exportDistMaps = exportCondition.export
-
-    const exportMapEntries = Object.entries(exportDistMaps).map(
-      ([composedKey, bundlePath]) => {
-        const conditionNames = new Set(composedKey.split('.'))
-
-        return {
-          conditionNames,
-          bundlePath,
-          format,
-          isDefaultCondition:
-            conditionNames.size === 1 && conditionNames.has('default'),
-        }
-      },
-    )
+    const exportMapEntries = exportCondition.targets.map((target) => ({
+      conditionNames: new Set(target.conditions),
+      bundlePath: target.path,
+      format,
+      isDefaultCondition:
+        target.conditions.length === 1 && target.conditions[0] === 'default',
+    }))
 
     let matchedBundlePath: string | undefined
     if (dts) {

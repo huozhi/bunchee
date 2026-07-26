@@ -103,13 +103,12 @@ async function bundle(
         typesEntryPath = getExportFileTypePath(mainExportPath)
       }
 
-      parsedExportsInfo.set(
-        './index',
-        [
-          [mainExportPath, 'default'],
-          Boolean(typesEntryPath) && [typesEntryPath, 'types'],
-        ].filter(Boolean) as [string, string][],
-      )
+      parsedExportsInfo.set('./index', [
+        { path: mainExportPath, conditions: ['default'] },
+        ...(typesEntryPath
+          ? [{ path: typesEntryPath, conditions: ['types'] }]
+          : []),
+      ])
     }
   }
 
@@ -219,8 +218,11 @@ async function bundle(
       // from a js path when it is not always lands in the same directory.
       if (options.clean && !isFromCli) {
         for (const entry of Object.values(entries)) {
-          for (const distFile of Object.values(entry.export)) {
-            await removeOutputDir({ dir: dirname(resolve(cwd, distFile)) }, cwd)
+          for (const target of entry.targets) {
+            await removeOutputDir(
+              { dir: dirname(resolve(cwd, target.path)) },
+              cwd,
+            )
           }
         }
       }

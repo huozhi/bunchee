@@ -139,10 +139,11 @@ async function buildConfig(
   if (!dts && isFromCli && outputExports.length === 0 && !pkg.bin) {
     const isEsmPkg = isESModulePackage(pkg.type)
     const defaultFormat: OutputOptions['format'] = isEsmPkg ? 'esm' : 'cjs'
+    const file = join(cwd, 'dist/index.js'.replace('/', path.sep))
     outputExports.push({
       format: defaultFormat,
-      file: join(cwd, 'dist/index.js'.replace('/', path.sep)),
-      exportCondition: 'default',
+      file,
+      target: { path: file, conditions: ['default'] },
     })
   }
   let bundleOptions: ExportOutput[] = []
@@ -155,7 +156,7 @@ async function buildConfig(
         {
           file: absoluteTypeFile,
           format: 'esm',
-          exportCondition: 'types',
+          target: { path: absoluteTypeFile, conditions: ['types'] },
         },
       ]
     } else {
@@ -164,7 +165,7 @@ async function buildConfig(
         {
           file: absoluteFile,
           format: bundleConfig.format || fallbackExport.format,
-          exportCondition: fallbackExport.exportCondition,
+          target: { ...fallbackExport.target, path: absoluteFile },
         },
       ]
     }
@@ -181,8 +182,8 @@ async function buildConfig(
       bundleOptions = Array.from(uniqTypes).map((typeFile) => {
         return {
           file: typeFile,
-          format: 'esm',
-          exportCondition: 'types',
+          format: 'esm' as const,
+          target: { path: typeFile, conditions: ['types'] },
         }
       })
     } else {
@@ -190,21 +191,17 @@ async function buildConfig(
         return {
           file: resolve(cwd, exportDist.file),
           format: exportDist.format,
-          exportCondition: exportDist.exportCondition,
+          target: exportDist.target,
         }
       })
     }
   }
 
   const outputConfigs = bundleOptions.map(async (bundleOption) => {
-    const targetExportCondition = {
+    // Narrow the entry down to the single output currently being built.
+    const targetExportCondition: ParsedExportCondition = {
       ...exportCondition,
-      export: {
-        [bundleOption.exportCondition]:
-          bundleOption.exportCondition === 'types'
-            ? bundleOption.file
-            : exportCondition.export[bundleOption.exportCondition],
-      },
+      targets: [bundleOption.target],
     }
     return await buildRollupConfigs(
       entry,

@@ -1,5 +1,10 @@
 import path from 'path'
-import { parseExports } from './exports'
+import {
+  conditionKey,
+  isTypesTarget,
+  parseExports,
+  type OutputTarget,
+} from './exports'
 import { logger } from './logger'
 import { PackageMetadata } from './types'
 import {
@@ -16,14 +21,8 @@ type BadExportItem = {
   paths: string[]
 }
 
-function validateTypesFieldCondition(pair: [string, string]) {
-  const [outputPath, composedExportType] = pair
-  const exportTypes = new Set(composedExportType.split('.'))
-
-  if (!exportTypes.has('types') && isTypeFile(outputPath)) {
-    return true
-  }
-  return false
+function validateTypesFieldCondition(target: OutputTarget) {
+  return !isTypesTarget(target) && isTypeFile(target.path)
 }
 
 function validateFilesField(packageJson: PackageMetadata) {
@@ -86,7 +85,7 @@ export async function lint(cwd: string) {
     badCjsImportExport: BadExportItem
     badEsmRequireExport: BadExportItem
     badEsmImportExport: BadExportItem
-    badTypesExport: [string, string][]
+    badTypesExport: OutputTarget[]
   } = {
     badMainExtension: false,
     badMainExport: false,
@@ -120,31 +119,23 @@ export async function lint(cwd: string) {
       } else if (typeof exports !== 'object') {
         exportsState.invalidExportsFieldType = true
       } else {
-        parsedExports.forEach((outputPairs) => {
-          for (const outputPair of outputPairs) {
-            const [outputPath, composedExportType] = outputPair
-            if (validateTypesFieldCondition([outputPath, composedExportType])) {
-              exportsState.badTypesExport.push([outputPath, composedExportType])
+        parsedExports.forEach((targets) => {
+          for (const target of targets) {
+            if (validateTypesFieldCondition(target)) {
+              exportsState.badTypesExport.push(target)
             }
 
-            const exportTypes = new Set(composedExportType.split('.'))
-            let requirePath: string = ''
-            let importPath: string = ''
-            if (exportTypes.has('require')) {
-              requirePath = outputPath
-            }
-            if (exportTypes.has('import')) {
-              importPath = outputPath
-            }
-            const requireExt = requirePath && path.extname(requirePath)
-            const importExt = importPath && path.extname(importPath)
-            if (requireExt === '.mjs' || requireExt === '.js') {
+            const ext = path.extname(target.path)
+            if (
+              target.conditions.includes('require') &&
+              (ext === '.mjs' || ext === '.js')
+            ) {
               exportsState.badEsmRequireExport.value = true
-              exportsState.badEsmRequireExport.paths.push(requirePath)
+              exportsState.badEsmRequireExport.paths.push(target.path)
             }
-            if (importExt === '.cjs') {
+            if (target.conditions.includes('import') && ext === '.cjs') {
               exportsState.badEsmImportExport.value = true
-              exportsState.badEsmImportExport.paths.push(importPath)
+              exportsState.badEsmImportExport.paths.push(target.path)
             }
           }
         })
@@ -163,30 +154,22 @@ export async function lint(cwd: string) {
       } else if (typeof exports !== 'object') {
         exportsState.invalidExportsFieldType = true
       } else {
-        parsedExports.forEach((outputPairs) => {
-          for (const outputPair of outputPairs) {
-            const [outputPath, composedExportType] = outputPair
-            if (validateTypesFieldCondition([outputPath, composedExportType])) {
-              exportsState.badTypesExport.push([outputPath, composedExportType])
+        parsedExports.forEach((targets) => {
+          for (const target of targets) {
+            if (validateTypesFieldCondition(target)) {
+              exportsState.badTypesExport.push(target)
             }
-            const exportTypes = new Set(composedExportType.split('.'))
-            let requirePath: string = ''
-            let importPath: string = ''
-            if (exportTypes.has('require')) {
-              requirePath = outputPath
-            }
-            if (exportTypes.has('import')) {
-              importPath = outputPath
-            }
-            const requireExt = requirePath && path.extname(requirePath)
-            const importExt = importPath && path.extname(importPath)
-            if (requireExt === '.mjs') {
+            const ext = path.extname(target.path)
+            if (target.conditions.includes('require') && ext === '.mjs') {
               exportsState.badCjsRequireExport.value = true
-              exportsState.badCjsRequireExport.paths.push(requirePath)
+              exportsState.badCjsRequireExport.paths.push(target.path)
             }
-            if (importExt === '.js' || importExt === '.cjs') {
+            if (
+              target.conditions.includes('import') &&
+              (ext === '.js' || ext === '.cjs')
+            ) {
               exportsState.badCjsImportExport.value = true
-              exportsState.badCjsImportExport.paths.push(importPath)
+              exportsState.badCjsImportExport.paths.push(target.path)
             }
           }
         })
@@ -276,9 +259,9 @@ export async function lint(cwd: string) {
   }
 
   if (exportsState.badTypesExport.length) {
-    exportsState.badTypesExport.forEach(([outputPath, composedExportType]) => {
+    exportsState.badTypesExport.forEach((target) => {
       logger.error(
-        `Bad export types field with ${composedExportType} in ${outputPath}, use "types" export condition for it`,
+        `Bad export types field with ${conditionKey(target)} in ${target.path}, use "types" export condition for it`,
       )
     })
   }

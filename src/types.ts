@@ -1,3 +1,4 @@
+import type { OutputTarget } from './exports'
 import type { JscTarget } from '@swc/types'
 import type { InputOptions, OutputOptions } from 'rollup'
 import type { OutputState } from './plugins/output-state-plugin'
@@ -135,7 +136,8 @@ type BundleOptions = BundleConfig
 type ParsedExportCondition = {
   source: string
   name: string
-  export: FullExportCondition
+  /** Every output file this entry produces. */
+  targets: OutputTarget[]
 }
 
 type ExportPaths = Record<string, FullExportCondition>

@@ -1,0 +1,9 @@
+{
+  "name": "dotted-subpaths",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./v1.2/thing": "./dist/v1.2/thing.js",
+    "./charts.min": "./dist/charts.min.js"
+  }
+}

@@ -1,9 +1,10 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest'
 import {
-  getFileExportType,
-  isCjsExportName,
-  isEsmExportName,
+  getOutputFormat,
+  getSpecialCondition,
+  isTypesTarget,
   parseExports,
+  type OutputTarget,
 } from './exports'
 import type { PackageMetadata } from './types'
 import * as wildcard from './wildcard'
@@ -23,6 +24,11 @@ vi.mock('tinyglobby', async () => {
     ...actual,
     glob: vi.fn(),
   }
+})
+
+const t = (path: string, ...conditions: string[]): OutputTarget => ({
+  path,
+  conditions,
 })
 
 describe('parse-exports', () => {
@@ -47,7 +53,7 @@ describe('parse-exports', () => {
     }
 
     const result = await parseExports(pkg)
-    expect(result.get('./index')).toEqual([['./dist/index.js', 'import']])
+    expect(result.get('./index')).toEqual([t('./dist/index.js', 'import')])
   })
 
   it('should parse exports with import and require conditions', async () => {
@@ -66,8 +72,8 @@ describe('parse-exports', () => {
     const exports = result.get('./index')
     expect(exports).toEqual(
       expect.arrayContaining([
-        ['./dist/index.mjs', 'import'],
-        ['./dist/index.cjs', 'require'],
+        t('./dist/index.mjs', 'import'),
+        t('./dist/index.cjs', 'require'),
       ]),
     )
   })
@@ -88,8 +94,8 @@ describe('parse-exports', () => {
     const exports = result.get('./index')
     expect(exports).toEqual(
       expect.arrayContaining([
-        ['./dist/index.d.ts', 'types'],
-        ['./dist/index.js', 'default'],
+        t('./dist/index.d.ts', 'types'),
+        t('./dist/index.js', 'default'),
       ]),
     )
   })
@@ -106,9 +112,9 @@ describe('parse-exports', () => {
     }
 
     const result = await parseExports(pkg)
-    expect(result.get('./index')).toEqual([['./dist/index.js', 'default']])
-    expect(result.get('./lite')).toEqual([['./dist/lite.js', 'default']])
-    expect(result.get('./utils')).toEqual([['./dist/utils.js', 'default']])
+    expect(result.get('./index')).toEqual([t('./dist/index.js', 'default')])
+    expect(result.get('./lite')).toEqual([t('./dist/lite.js', 'default')])
+    expect(result.get('./utils')).toEqual([t('./dist/utils.js', 'default')])
   })
 
   it('should parse wildcard exports when cwd is provided', async () => {
@@ -137,10 +143,10 @@ describe('parse-exports', () => {
 
     // Verify wildcard exports were expanded
     expect(result.get('./features/foo')).toEqual([
-      ['./dist/features/foo.js', 'default'],
+      t('./dist/features/foo.js', 'default'),
     ])
     expect(result.get('./features/bar')).toEqual([
-      ['./dist/features/bar.js', 'default'],
+      t('./dist/features/bar.js', 'default'),
     ])
   })
 
@@ -184,9 +190,9 @@ describe('parse-exports', () => {
     const fooExports = result.get('./features/foo')
     expect(fooExports).toEqual(
       expect.arrayContaining([
-        ['./dist/features/foo.mjs', 'import'],
-        ['./dist/features/foo.cjs', 'require'],
-        ['./dist/features/foo.d.ts', 'types'],
+        t('./dist/features/foo.mjs', 'import'),
+        t('./dist/features/foo.cjs', 'require'),
+        t('./dist/features/foo.d.ts', 'types'),
       ]),
     )
   })
@@ -199,7 +205,7 @@ describe('parse-exports', () => {
     }
 
     const result = await parseExports(pkg)
-    expect(result.get('$binary')).toEqual([['./dist/bin/cli.js', 'import']])
+    expect(result.get('$binary')).toEqual([t('./dist/bin/cli.js', 'import')])
   })
 
   it('should parse multiple bin exports', async () => {
@@ -213,9 +219,11 @@ describe('parse-exports', () => {
     }
 
     const result = await parseExports(pkg)
-    expect(result.get('$binary/cli')).toEqual([['./dist/bin/cli.js', 'import']])
+    expect(result.get('$binary/cli')).toEqual([
+      t('./dist/bin/cli.js', 'import'),
+    ])
     expect(result.get('$binary/server')).toEqual([
-      ['./dist/bin/server.js', 'import'],
+      t('./dist/bin/server.js', 'import'),
     ])
   })
 
@@ -232,18 +240,24 @@ describe('parse-exports', () => {
     const exports = result.get('./index')
     expect(exports).toMatchInlineSnapshot(`
       [
-        [
-          "./dist/index.js",
-          "import",
-        ],
-        [
-          "./dist/index.mjs",
-          "module",
-        ],
-        [
-          "./dist/index.d.ts",
-          "types",
-        ],
+        {
+          "conditions": [
+            "import",
+          ],
+          "path": "./dist/index.js",
+        },
+        {
+          "conditions": [
+            "module",
+          ],
+          "path": "./dist/index.mjs",
+        },
+        {
+          "conditions": [
+            "types",
+          ],
+          "path": "./dist/index.d.ts",
+        },
       ]
     `)
   })
@@ -256,7 +270,7 @@ describe('parse-exports', () => {
     }
 
     const result = await parseExports(pkg)
-    expect(result.get('./index')).toEqual([['./dist/index.js', 'require']])
+    expect(result.get('./index')).toEqual([t('./dist/index.js', 'require')])
   })
 
   it('should handle mixed wildcard and normal exports', async () => {
@@ -276,12 +290,12 @@ describe('parse-exports', () => {
     const result = await parseExports(pkg, mockCwd)
 
     // Normal exports should work
-    expect(result.get('./index')).toEqual([['./dist/index.js', 'default']])
-    expect(result.get('./utils')).toEqual([['./dist/utils.js', 'default']])
+    expect(result.get('./index')).toEqual([t('./dist/index.js', 'default')])
+    expect(result.get('./utils')).toEqual([t('./dist/utils.js', 'default')])
 
     // Wildcard exports should be expanded
     expect(result.get('./features/foo')).toEqual([
-      ['./dist/features/foo.js', 'default'],
+      t('./dist/features/foo.js', 'default'),
     ])
   })
 
@@ -297,9 +311,9 @@ describe('parse-exports', () => {
     }
 
     const result = await parseExports(pkg)
-    expect(result.get('./index')).toEqual([['./dist/index.js', 'default']])
+    expect(result.get('./index')).toEqual([t('./dist/index.js', 'default')])
     expect(result.get('./internal')).toBeUndefined()
-    expect(result.get('./nested')).toEqual([['./dist/nested.cjs', 'require']])
+    expect(result.get('./nested')).toEqual([t('./dist/nested.cjs', 'require')])
   })
 
   it('should skip wildcard export paths blocked with null', async () => {
@@ -336,72 +350,94 @@ describe('parse-exports', () => {
     const exports = result.get('./index')
     expect(exports).toEqual(
       expect.arrayContaining([
-        ['./dist/index.react-server.js', 'react-server'],
-        ['./dist/index.edge-light.js', 'edge-light'],
-        ['./dist/index.js', 'default'],
+        t('./dist/index.react-server.js', 'react-server'),
+        t('./dist/index.edge-light.js', 'edge-light'),
+        t('./dist/index.js', 'default'),
       ]),
     )
   })
 })
 
 describe('export condition classification', () => {
-  describe('getFileExportType', () => {
+  const cjsPkg: PackageMetadata = { name: 'p', type: 'commonjs' }
+  const esmPkg: PackageMetadata = { name: 'p', type: 'module' }
+
+  describe('isTypesTarget', () => {
     it('should detect the types condition wherever it is nested', () => {
-      expect(getFileExportType('types')).toBe('types')
-      expect(getFileExportType('import.types')).toBe('types')
+      expect(isTypesTarget(t('./i.d.ts', 'types'))).toBe(true)
+      expect(isTypesTarget(t('./i.d.ts', 'import', 'types'))).toBe(true)
       // `"types": { "import": ..., "require": ... }` nests the other way around
-      expect(getFileExportType('types.import')).toBe('types')
-      expect(getFileExportType('types.require')).toBe('types')
-      expect(getFileExportType('development.require.types')).toBe('types')
+      expect(isTypesTarget(t('./i.d.mts', 'types', 'import'))).toBe(true)
+      expect(
+        isTypesTarget(t('./i.d.cts', 'development', 'require', 'types')),
+      ).toBe(true)
     })
 
-    it('should return the last condition for non-types conditions', () => {
-      expect(getFileExportType('import.default')).toBe('default')
-      expect(getFileExportType('development.import.default')).toBe('default')
-      expect(getFileExportType('require')).toBe('require')
-    })
-  })
-
-  describe('isEsmExportName', () => {
-    it('should match esm conditions nested in a composed condition', () => {
-      expect(isEsmExportName('import', 'js')).toBe(true)
-      expect(isEsmExportName('import.default', 'js')).toBe(true)
-      expect(isEsmExportName('development.import.default', 'js')).toBe(true)
-      expect(isEsmExportName('module.default', 'js')).toBe(true)
-      expect(isEsmExportName('module-sync.default', 'js')).toBe(true)
-    })
-
-    it('should not match cjs conditions', () => {
-      expect(isEsmExportName('require.default', 'js')).toBe(false)
-      expect(isEsmExportName('default', 'js')).toBe(false)
-    })
-
-    it('should always treat .mjs as esm', () => {
-      expect(isEsmExportName('require', 'mjs')).toBe(true)
+    it('should not treat JS conditions as types', () => {
+      expect(isTypesTarget(t('./i.js', 'import', 'default'))).toBe(false)
+      expect(
+        isTypesTarget(t('./i.js', 'development', 'import', 'default')),
+      ).toBe(false)
     })
   })
 
-  describe('isCjsExportName', () => {
-    const cjsPkg: PackageMetadata = { name: 'p', type: 'commonjs' }
-    const esmPkg: PackageMetadata = { name: 'p', type: 'module' }
-
-    it('should not classify a nested import condition as cjs', () => {
-      expect(isCjsExportName(cjsPkg, 'import', 'js')).toBe(false)
-      expect(isCjsExportName(cjsPkg, 'import.default', 'js')).toBe(false)
-      expect(isCjsExportName(cjsPkg, 'development.import.default', 'js')).toBe(
-        false,
+  describe('getSpecialCondition', () => {
+    it('should find the runtime or optimize condition', () => {
+      expect(getSpecialCondition(t('./i.js', 'development', 'import'))).toBe(
+        'development',
+      )
+      expect(getSpecialCondition(t('./i.js', 'react-server', 'default'))).toBe(
+        'react-server',
       )
     })
 
-    it('should classify require conditions in a cjs package as cjs', () => {
-      expect(isCjsExportName(cjsPkg, 'require', 'js')).toBe(true)
-      expect(isCjsExportName(cjsPkg, 'require.default', 'js')).toBe(true)
-      expect(isCjsExportName(cjsPkg, 'default', 'js')).toBe(true)
+    it('should fall back to default', () => {
+      expect(getSpecialCondition(t('./i.js', 'import', 'default'))).toBe(
+        'default',
+      )
+    })
+  })
+
+  describe('getOutputFormat', () => {
+    it('should decide by extension first', () => {
+      expect(getOutputFormat(esmPkg, t('./i.cjs', 'require', 'default'))).toBe(
+        'cjs',
+      )
+      expect(getOutputFormat(cjsPkg, t('./i.mjs', 'import', 'default'))).toBe(
+        'esm',
+      )
     })
 
-    it('should classify by extension in an esm package', () => {
-      expect(isCjsExportName(esmPkg, 'require.default', 'cjs')).toBe(true)
-      expect(isCjsExportName(esmPkg, 'import.default', 'js')).toBe(false)
+    it('should follow package type for extensionless-ambiguous .js', () => {
+      expect(getOutputFormat(esmPkg, t('./i.js', 'import', 'default'))).toBe(
+        'esm',
+      )
+      expect(getOutputFormat(cjsPkg, t('./i.js', 'require', 'default'))).toBe(
+        'cjs',
+      )
+      expect(getOutputFormat(cjsPkg, t('./i.js', 'default'))).toBe('cjs')
+    })
+
+    it('should honour a nested esm condition in a cjs package', () => {
+      // Regression: the composed condition used to be compared as a whole
+      // string, so `import.default` never registered as esm.
+      expect(getOutputFormat(cjsPkg, t('./i.js', 'import', 'default'))).toBe(
+        'esm',
+      )
+      expect(
+        getOutputFormat(
+          cjsPkg,
+          t('./i.js', 'development', 'import', 'default'),
+        ),
+      ).toBe('esm')
+      expect(getOutputFormat(cjsPkg, t('./i.js', 'module', 'default'))).toBe(
+        'esm',
+      )
+    })
+
+    it('should let an explicit require condition win for .mjs in a cjs package', () => {
+      expect(getOutputFormat(cjsPkg, t('./i.mjs', 'require'))).toBe('cjs')
+      expect(getOutputFormat(esmPkg, t('./i.mjs', 'require'))).toBe('esm')
     })
   })
 })
