@@ -1,6 +1,10 @@
 import path from 'path'
 import { afterAll, describe, expect, it } from 'vitest'
-import { getFileNamesFromDirectory, removeDirectory } from '../../testing-utils'
+import {
+  getFileNamesFromDirectory,
+  removeDirectory,
+  stripANSIColor,
+} from '../../testing-utils'
 import { executeBunchee } from '../../testing-utils/shared'
 
 // Nine entries, so the build fans out to workers, and the `.` export has no
@@ -20,7 +24,9 @@ async function build(env: NodeJS.ProcessEnv = {}) {
   expect(result.code).toBe(0)
   return {
     files: await getFileNamesFromDirectory(distDir),
-    stdout: result.stdout,
+    // The size table is colorized whenever picocolors thinks the terminal
+    // supports it, which includes any environment setting CI.
+    stdout: stripANSIColor(result.stdout),
   }
 }
 
