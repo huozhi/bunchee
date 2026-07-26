@@ -11,7 +11,10 @@ export type EntryWorkerTask = {
 // Piscina task: build a single entry (all of its output formats and types)
 // in this worker's own isolate, so its module graphs never share a heap with
 // other entries. Returns the size stats for the main thread's output table.
-export default async function buildEntryInWorker({
+// Loaded by name from src/worker.ts in dev and from dist/index.js when
+// compiled — a named export is what makes the single handler work for both.
+/** @internal */
+export async function buildEntryInWorker({
   cwd,
   entryName,
   options,

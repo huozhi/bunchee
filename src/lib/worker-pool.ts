@@ -1,6 +1,6 @@
 import fs from 'fs'
 import os from 'os'
-import { join } from 'path'
+import { dirname, join } from 'path'
 import Piscina from 'piscina'
 import type { BundleConfig } from '../types'
 import type { SizeStats } from '../plugins/output-state-plugin'
@@ -10,23 +10,23 @@ import type { EntryWorkerTask } from '../worker'
 // fits comfortably in one heap, and skipping the pool avoids worker startup.
 export const MIN_ENTRIES_FOR_WORKERS = 8
 
+// The handler is loaded from this file by its export name, so no separate
+// worker asset needs to exist in dist.
+export const WORKER_HANDLER_NAME = 'buildEntryInWorker'
+
 function resolveWorkerFile(): string {
-  // Running from source (dev / tests): worker threads inherit execArgv, so
-  // the TypeScript register hook loads the .ts worker.
-  if (__filename.endsWith('.ts')) {
-    return join(__dirname, '..', 'worker.ts')
+  // This code runs from src/lib/ in dev and is bundled into dist/index.js and
+  // dist/bin/cli.js when compiled, so locate the package root first and
+  // resolve the worker from there. When running from source, worker threads
+  // inherit execArgv, so the TypeScript register hook loads the .ts worker.
+  let packageRoot = __dirname
+  while (!fs.existsSync(join(packageRoot, 'package.json'))) {
+    packageRoot = dirname(packageRoot)
   }
-  // Compiled: this code is bundled into both dist/index.js and
-  // dist/bin/cli.js, so the worker sits either next to it or one level up.
-  const candidates = [
-    join(__dirname, 'worker.js'),
-    join(__dirname, '..', 'worker.js'),
-  ]
-  const workerFile = candidates.find((file) => fs.existsSync(file))
-  if (!workerFile) {
-    throw new Error('Could not resolve bunchee worker file')
-  }
-  return workerFile
+  return join(
+    packageRoot,
+    __filename.endsWith('.ts') ? 'src/worker.ts' : 'dist/index.js',
+  )
 }
 
 // Build each entry in its own worker so every entry's module graphs live in
@@ -52,7 +52,9 @@ export async function runEntriesInWorkers(
     return await Promise.all(
       entryNames.map((entryName) => {
         const task: EntryWorkerTask = { cwd, entryName, options: plainOptions }
-        return pool.run(task) as Promise<SizeStats>
+        return pool.run(task, {
+          name: WORKER_HANDLER_NAME,
+        }) as Promise<SizeStats>
       }),
     )
   } finally {
