@@ -15,7 +15,11 @@ import {
   isTypescriptFile,
   removeOutputDir,
 } from './utils'
-import { MIN_ENTRIES_FOR_WORKERS, runEntriesInWorkers } from './lib/worker-pool'
+import {
+  MIN_ENTRIES_FOR_WORKERS,
+  availableCores,
+  runEntriesInWorkers,
+} from './lib/worker-pool'
 import {
   getExportFileTypePath,
   parseExports,
@@ -29,7 +33,12 @@ import {
   writeDefaultTsconfig,
 } from './typescript'
 import { collectEntriesFromParsedExports } from './entries'
-import { createAssetRollupJobs } from './rollup-job'
+import { createAssetRollupJobs, createMergedRollupJobs } from './rollup-job'
+import {
+  canMergeEntries,
+  shardEntries,
+  typeShardCount,
+} from './rollup/merged-config'
 import { spawn } from 'child_process'
 import { logger } from './logger'
 
@@ -197,16 +206,33 @@ async function bundle(
   const rollupJobsOptions: BundleJobOptions = { isFromCli, generateTypes }
 
   const entryNames = Object.keys(entries)
+
+  // Build every entry through a few shared rollup instances instead of one per
+  // entry/output pair, so shared code becomes a chunk instead of being copied
+  // into each entry that uses it.
+  // `_entryFilter` is not a reason to skip merging: a worker gets a shard of
+  // entries and builds them as one graph, with the entries it does not own
+  // resolved as externals against their own output paths.
+  const useMerged = await canMergeEntries(entries, options, isFromCli)
+
   // With many entries, every entry's rollup build shares one heap and peak
   // memory scales with entry count, which OOMs on packages with many exports.
   // Build each entry in its own worker instead, one isolated heap per entry.
-  const useWorkers =
+  const workersAvailable =
     !options.watch &&
     !options._entryFilter &&
     // Test-only, not a supported option: the tests build the same package
     // both ways and diff the output.
     !process.env.TEST_NO_WORKERS &&
     entryNames.length >= MIN_ENTRIES_FOR_WORKERS
+
+  // Merging collapses the JS work to a couple of graphs, but declaration emit
+  // stays linear in entry count and one shared graph cannot amortise it. So
+  // above the worker threshold the two are combined: merged JS here, then the
+  // types split into shards that each build a merged graph in their own heap.
+  // Sharding them in this heap is slower, not faster — several TypeScript
+  // programs in one isolate spend their time in GC.
+  const useWorkers = workersAvailable && (!useMerged || generateTypes)
 
   try {
     let assetJobs
@@ -226,18 +252,39 @@ async function bundle(
           }
         }
       }
+      // The JS side first, so the workers are not competing with it and so
+      // everything is written after the clean above.
+      const mergedJobs = useMerged
+        ? await createMergedRollupJobs(options, buildContext, {
+            ...rollupJobsOptions,
+            generateTypes: false,
+          })
+        : []
+      const entryGroups = useMerged
+        ? shardEntries(
+            entryNames,
+            typeShardCount(entryNames.length, availableCores()),
+          )
+        : entryNames.map((entryName) => [entryName])
       const workerStats = await runEntriesInWorkers(
         cwd,
         // The original CLI entry, before the single-entry fallback above
         // reassigns it — this is what the entries above were resolved with.
         inputFile,
-        entryNames,
-        options,
+        entryGroups,
+        // With the JS assets already built, the workers only owe the types.
+        useMerged ? { ...options, _typesOnly: true } : options,
       )
       for (const stats of workerStats) {
         outputState.mergeSizeStats(stats)
       }
-      assetJobs = workerStats
+      assetJobs = [...mergedJobs, ...workerStats]
+    } else if (useMerged) {
+      assetJobs = await createMergedRollupJobs(
+        options,
+        buildContext,
+        rollupJobsOptions,
+      )
     } else {
       assetJobs = await createAssetRollupJobs(
         options,

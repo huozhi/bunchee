@@ -48,24 +48,19 @@ describe('integration exports-order', () => {
     `)
 
     expect(contents['index.cjs']).toMatchInlineSnapshot(`
-      "var a_cjs = require('./a.cjs');
+      "var a = require('./a.cjs');
 
 
 
-      Object.keys(a_cjs).forEach(function (k) {
-      	if (k !== 'default' && !Object.prototype.hasOwnProperty.call(exports, k)) Object.defineProperty(exports, k, {
-      		enumerable: true,
-      		get: function () { return a_cjs[k]; }
-      	});
-      });
+      exports.foo = a.foo;
       "
     `)
     expect(contents['index.edge-light.js']).toMatchInlineSnapshot(`
-      "export * from './a.edge-light.js';
+      "export { foo } from './a.edge-light.js';
       "
     `)
     expect(contents['index.js']).toMatchInlineSnapshot(`
-      "export * from './a.js';
+      "export { foo } from './a.js';
       "
     `)
   })

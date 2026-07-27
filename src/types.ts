@@ -50,6 +50,14 @@ type BundleConfig = {
   onSuccess?: string | (() => void | Promise<void>)
 
   /*
+   * Build only the type declarations, skipping the JS assets. Set when merged
+   * rollup instances have already produced the JS on the main thread and the
+   * workers are left with the types.
+   * @internal
+   */
+  _typesOnly?: boolean
+
+  /*
    * Only build the entries with these export paths (e.g. ['./foo']).
    * Set by the worker pool to assign one entry per worker.
    * @internal
@@ -102,10 +110,17 @@ type CustomRollupInputOptions = Pick<
   InputOptions,
   'external' | 'plugins' | 'treeshake' | 'onwarn'
 > & {
-  input: string
+  /** A single entry, or `{ <entry name>: <source path> }` for a merged build. */
+  input: string | Record<string, string>
 }
 
 type BuncheeRollupConfig = CustomRollupInputOptions & {
+  output: OutputOptions
+}
+
+/** One rollup build shared by many entries: a single module graph, one output. */
+type MergedRollupConfig = CustomRollupInputOptions & {
+  input: Record<string, string>
   output: OutputOptions
 }
 
@@ -179,6 +194,7 @@ export type {
   PackageMetadata,
   FullExportCondition,
   BuncheeRollupConfig,
+  MergedRollupConfig,
   PackageType,
   ParsedExportCondition,
   Entries,

@@ -11,17 +11,26 @@ import { logger, pauseActiveSpinner } from '../logger'
 // fits comfortably in one heap, and skipping the pool avoids worker startup.
 export const MIN_ENTRIES_FOR_WORKERS = 8
 
+export function availableCores(): number {
+  return Math.max(1, (os.availableParallelism?.() ?? os.cpus().length) - 1)
+}
+
 // The handler is loaded from a file by its export name, so no separate worker
 // asset needs to exist in dist.
 export const WORKER_HANDLER_NAME = 'buildEntryInWorker'
 
 function resolveWorkerFile(): string {
-  // Running from source, the handler is a sibling module. Bundled, this code
-  // is only ever reachable through the package's main entry — the bin requires
-  // that entry rather than inlining it — and the same bundle re-exports the
-  // handler, so the file to hand piscina is the one this code is running from.
+  // Running from source, the handler is a sibling module.
   const sibling = join(dirname(__dirname), `worker${extname(__filename)}`)
-  return fs.existsSync(sibling) ? sibling : __filename
+  if (fs.existsSync(sibling)) return sibling
+
+  // Bundled, the handler is re-exported from the package's main entry. This
+  // file is not necessarily that entry: code shared between the entry and the
+  // bin lands in a chunk beside it, and a chunk exports nothing by name. The
+  // entry sits next to it, so look there before falling back to this file.
+  const mainEntry = join(dirname(__filename), `index${extname(__filename)}`)
+  if (mainEntry !== __filename && fs.existsSync(mainEntry)) return mainEntry
+  return __filename
 }
 
 function restoreErrorDetails(error: any): unknown {
@@ -42,35 +51,38 @@ function restoreErrorDetails(error: any): unknown {
 export async function runEntriesInWorkers(
   cwd: string,
   cliEntryPath: string,
-  entryNames: string[],
+  /**
+   * One group per worker task. Usually one entry each, but the merged path
+   * hands each worker a shard of entries to build together.
+   */
+  entryGroups: string[][],
   options: BundleConfig,
 ): Promise<SizeStats[]> {
   // `_callbacks` holds functions, which structured clone cannot move.
   const { _callbacks, ...plainOptions } = options
   const pool = new Piscina({
     filename: resolveWorkerFile(),
-    maxThreads: Math.max(
-      1,
-      Math.min(
-        entryNames.length,
-        (os.availableParallelism?.() ?? os.cpus().length) - 1,
-      ),
-    ),
+    maxThreads: Math.max(1, Math.min(entryGroups.length, availableCores())),
   })
   const resumeSpinner = pauseActiveSpinner()
   if (process.env.DEBUG) {
+    const entryCount = entryGroups.reduce((n, group) => n + group.length, 0)
+    const shape =
+      entryGroups.length === entryCount
+        ? ''
+        : ` (${entryGroups.length} shards of ~${entryGroups[0].length})`
     logger.log(
-      `Building ${entryNames.length} entries in ${pool.maxThreads} worker threads`,
+      `Building ${entryCount} entries in ${pool.maxThreads} worker threads${shape}`,
     )
   }
 
   try {
     return await Promise.all(
-      entryNames.map((entryName) => {
+      entryGroups.map((entryNames) => {
         const task: EntryWorkerTask = {
           cwd,
           cliEntryPath,
-          entryName,
+          entryNames,
           options: plainOptions,
         }
         return pool.run(task, {

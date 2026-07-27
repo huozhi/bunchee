@@ -63,7 +63,9 @@ export async function getFileContents(dir: string, filePaths?: string[]) {
         continue
       }
       const content = await fsp.readFile(fullPath, { encoding: 'utf-8' })
-      results[file.replace(/\\/, '/')] = content
+      // Every separator, not just the first: on Windows `readdir` returns
+      // `nest\deep\index.d.ts` and callers key off posix paths.
+      results[file.replace(/\\/g, '/')] = content
     }
   }
   return results

@@ -1,0 +1,16 @@
+{
+  "name": "merge-entries-groups",
+  "version": "0.0.0",
+  "type": "module",
+  "bin": "./dist/bin/index.js",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./edge": {
+      "edge-light": "./dist/edge.edge-light.js",
+      "import": "./dist/edge.js"
+    }
+  }
+}

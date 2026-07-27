@@ -153,6 +153,32 @@ export function resolveTsConfig(
   return result
 }
 
+/**
+ * Whether `rollup-plugin-dts` would find this exact tsconfig on its own from
+ * every one of `entryDirs`.
+ *
+ * Worth knowing because passing the path explicitly is slower. The plugin
+ * rewrites its per-input directory key to the tsconfig's directory only when
+ * its config cache misses, and an explicit path makes the cache hit for every
+ * input after the first — so the rest keep their own directory and each gets
+ * its own TypeScript program. Letting the plugin discover the file keeps every
+ * lookup a miss, which lands every input in one program. A package whose
+ * entries each sit in their own directory pays for that difference per entry.
+ */
+export function isTsConfigAutoDiscoverable(
+  cwd: string,
+  tsConfigPath: string | undefined,
+  entryDirs: string[],
+): boolean {
+  if (!tsConfigPath) return false
+  const ts = resolveTypescript(cwd)
+  const resolved = resolve(tsConfigPath)
+  return entryDirs.every((dir) => {
+    const found = ts.findConfigFile(dir, ts.sys.fileExists)
+    return Boolean(found) && resolve(found as string) === resolved
+  })
+}
+
 export async function convertCompilerOptions(
   cwd: string,
   json: any,

@@ -1,6 +1,6 @@
 import { OutputOptions, Plugin } from 'rollup'
 import { Entries, ParsedExportCondition } from '../types'
-import { posix } from 'path'
+import { dirname, posix, relative, resolve } from 'path'
 import { posixRelativify } from '../lib/format'
 import { getSpecialExportTypeFromConditionNames } from '../entries'
 import {
@@ -108,6 +108,14 @@ function findTypesFileCallback({
   )
 }
 
+/**
+ * Marks an import of a sibling entry that this build does not own. The correct
+ * specifier is relative to the importing chunk, which is only known once the
+ * chunk has a file name, so the absolute target is parked behind this prefix
+ * and resolved in `renderChunk`.
+ */
+const SIBLING_MARK = '\0bunchee-sibling:'
+
 // Alias entry key to dist bundle path
 export function aliasEntries({
   entry: sourceFilePath,
@@ -117,6 +125,7 @@ export function aliasEntries({
   format,
   dts,
   cwd,
+  mergedSources,
 }: {
   entry: string
   entries: Entries
@@ -125,6 +134,12 @@ export function aliasEntries({
   exportCondition: ParsedExportCondition
   dts: boolean
   cwd: string
+  /**
+   * The sources this build owns as inputs. When set, the build is a merged one:
+   * rollup emits the references between these itself, and only entries outside
+   * the set need rewriting to a `<dist>` path.
+   */
+  mergedSources?: Set<string>
 }): Plugin {
   const currentConditionNames = new Set(
     exportCondition.targets[0]?.conditions ?? [],
@@ -169,6 +184,45 @@ export function aliasEntries({
     if (matchedBundlePath) {
       if (!sourceToRelativeBundleMap.has(exportCondition.source))
         sourceToRelativeBundleMap.set(exportCondition.source, matchedBundlePath)
+    }
+  }
+
+  if (mergedSources) {
+    return {
+      name: 'alias',
+      resolveId: {
+        async handler(source, importer, options) {
+          const resolved = await this.resolve(source, importer, options)
+          if (resolved == null) return null
+          // An input of this build: rollup emits the cross-chunk reference.
+          if (mergedSources.has(resolved.id)) return null
+
+          const bundlePath = sourceToRelativeBundleMap.get(resolved.id)
+          if (!bundlePath) return null
+          // Resolved with the platform's own path rules — `cwd` and the dist
+          // paths are native, and mixing them with posix helpers treats a
+          // Windows path as a single segment.
+          return {
+            id: SIBLING_MARK + resolve(cwd, bundlePath),
+            external: true,
+          }
+        },
+      },
+      renderChunk(code, chunk, outputOptions) {
+        if (!code.includes(SIBLING_MARK)) return null
+        const chunkDir = dirname(
+          resolve(outputOptions.dir ?? cwd, chunk.fileName),
+        )
+        const rewritten = code.replace(
+          // The mark is followed by an absolute path, up to the quote that
+          // closes the module specifier.
+          new RegExp(`${SIBLING_MARK}([^'"]+)`, 'g'),
+          (_, target: string) =>
+            // The specifier is always posix, whatever the platform's paths are.
+            posixRelativify(normalizePath(relative(chunkDir, target))),
+        )
+        return { code: rewritten, map: null }
+      },
     }
   }
 

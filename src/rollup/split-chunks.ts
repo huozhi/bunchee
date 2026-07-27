@@ -107,6 +107,14 @@ function getImporterLayers(
 export function createSplitChunks(
   dependencyGraphMap: Map<string, Set<[string, string | undefined]>>,
   entryFiles: Set<string>,
+  /**
+   * One graph holding every entry only gets to place a directive module once,
+   * where a build per entry decides separately each time — so it cannot inline
+   * the module into a same-layer entry and split it out of a different-layer
+   * one. Giving every directive module its own chunk keeps the boundary
+   * explicit for all of them, and costs one chunk instead of a copy per entry.
+   */
+  merged: boolean = false,
 ): GetManualChunk {
   // If there's existing chunk being splitted, and contains a layer { <id>: <chunkGroup> }
   const splitChunksGroupMap = new Map<string, string>()
@@ -164,6 +172,14 @@ export function createSplitChunks(
         splitChunksGroupMap.set(id, chunkGroup)
         return chunkGroup
       }
+    }
+
+    if (merged && moduleLayer && !isEntry) {
+      const existing = splitChunksGroupMap.get(id)
+      if (existing) return existing
+      const chunkGroup = `${path.basename(id, path.extname(id))}-${hashTo3Char(moduleLayer)}`
+      splitChunksGroupMap.set(id, chunkGroup)
+      return chunkGroup
     }
 
     // If current module has a layer, and it's not an entry
