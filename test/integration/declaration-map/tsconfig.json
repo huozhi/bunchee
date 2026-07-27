@@ -6,7 +6,5 @@
     "declarationMap": true,
     "moduleResolution": "bundler"
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }

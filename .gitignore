@@ -14,5 +14,5 @@ test/**/*.d.*
 tsconfig.tsbuildinfo
 next-env.d.ts
 .pnpm-store
-
+.bench
 

@@ -7,8 +7,8 @@ import { logger } from '../logger'
 function hasSwcHelpersDeclared(pkg: PackageMetadata): boolean {
   return Boolean(
     pkg.dependencies?.['@swc/helpers'] ||
-      pkg.peerDependencies?.['@swc/helpers'] ||
-      pkg.optionalDependencies?.['@swc/helpers'],
+    pkg.peerDependencies?.['@swc/helpers'] ||
+    pkg.optionalDependencies?.['@swc/helpers'],
   )
 }
 
