@@ -12,9 +12,9 @@ import { executeBunchee } from '../../testing-utils/shared'
 const dir = __dirname
 const distDir = path.join(dir, 'dist')
 
-async function build(env: NodeJS.ProcessEnv = {}) {
+async function build(env: NodeJS.ProcessEnv = {}, args: string[] = []) {
   await removeDirectory(distDir)
-  const result = await executeBunchee(['--cwd', dir], { env })
+  const result = await executeBunchee(['--cwd', dir, ...args], { env })
   expect(result.stderr).toBe('')
   expect(result.code).toBe(0)
   return {
@@ -76,4 +76,58 @@ describe('integration - many-entries', () => {
     expect(inProcess.files).toEqual(workers.files)
     expect(inProcess.contents).toEqual(workers.contents)
   }, 240_000)
+
+  describe('--merge-entries', () => {
+    it('should build every entry through two shared rollup instances', async () => {
+      const merged = await build({ DEBUG: '1' }, ['--merge-entries'])
+
+      // Nine entries, each with a types output, is 18 rollup instances on the
+      // per-entry path. Merged it is one graph for the JS and one for the types.
+      expect(merged.stdout).toMatch(
+        /Building 9 entries in 2 shared rollup instances/,
+      )
+      expect(merged.stdout).not.toContain('worker threads')
+    }, 120_000)
+
+    it('should keep a sibling entry external instead of inlining it', async () => {
+      const merged = await build({}, ['--merge-entries'])
+
+      // Rollup resolves cross-entry references itself once both are inputs of
+      // the same graph, so this has to hold without the alias plugin.
+      expect(merged.contents['index.js']).toContain(`from './a.js'`)
+      expect(merged.contents['index.js']).not.toContain(`'a:'`)
+    }, 120_000)
+
+    it('should emit shared code as one chunk instead of copying it per entry', async () => {
+      const perEntry = await build()
+      const merged = await build({}, ['--merge-entries'])
+
+      // `shared.ts` is not an entry and every entry imports it, so the
+      // per-entry path duplicates it into all nine outputs.
+      const copies = Object.entries(perEntry.contents).filter(
+        ([file, content]) =>
+          file.endsWith('.js') && content.includes(`const shared = 'shared'`),
+      )
+      expect(copies).toHaveLength(9)
+
+      const chunk = merged.files.find((file) => file.startsWith('shared-'))
+      expect(chunk).toBeDefined()
+      expect(merged.contents['a.js']).toContain(`from './${chunk}'`)
+      expect(merged.contents['a.js']).not.toContain(`const shared = 'shared'`)
+    }, 180_000)
+
+    it('should produce identical type declarations', async () => {
+      const perEntry = await build()
+      const merged = await build({}, ['--merge-entries'])
+
+      const declarations = (contents: Record<string, string>) =>
+        Object.fromEntries(
+          Object.entries(contents).filter(([file]) => file.endsWith('.d.ts')),
+        )
+
+      expect(declarations(merged.contents)).toEqual(
+        declarations(perEntry.contents),
+      )
+    }, 180_000)
+  })
 })

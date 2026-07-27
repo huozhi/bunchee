@@ -115,16 +115,20 @@ async function buildRollupConfigs(
   }
 }
 
-async function buildConfig(
+/**
+ * Every output file a single entry produces, as `{ file, format, target }`.
+ * Shared by the per-entry config path and the merged-group path so the two
+ * cannot drift on which files an entry is supposed to emit.
+ */
+export async function getEntryBundleOutputs(
   bundleConfig: BundleConfig,
   exportCondition: ParsedExportCondition,
   pluginContext: BuildContext,
   bundleEntryOptions: bundleEntryOptions,
-): Promise<BuncheeRollupConfig[]> {
+): Promise<ExportOutput[]> {
   const { file } = bundleConfig
   const { pkg, cwd } = pluginContext
   const { dts, isFromCli } = bundleEntryOptions
-  const entry = exportCondition.source
 
   const outputExports = getExportsDistFilesOfCondition(
     pkg,
@@ -196,6 +200,24 @@ async function buildConfig(
       })
     }
   }
+
+  return bundleOptions
+}
+
+async function buildConfig(
+  bundleConfig: BundleConfig,
+  exportCondition: ParsedExportCondition,
+  pluginContext: BuildContext,
+  bundleEntryOptions: bundleEntryOptions,
+): Promise<BuncheeRollupConfig[]> {
+  const { dts } = bundleEntryOptions
+  const entry = exportCondition.source
+  const bundleOptions = await getEntryBundleOutputs(
+    bundleConfig,
+    exportCondition,
+    pluginContext,
+    bundleEntryOptions,
+  )
 
   const outputConfigs = bundleOptions.map(async (bundleOption) => {
     // Narrow the entry down to the single output currently being built.

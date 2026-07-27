@@ -29,7 +29,8 @@ import {
   writeDefaultTsconfig,
 } from './typescript'
 import { collectEntriesFromParsedExports } from './entries'
-import { createAssetRollupJobs } from './rollup-job'
+import { createAssetRollupJobs, createMergedRollupJobs } from './rollup-job'
+import { canMergeEntries } from './rollup/merged-config'
 import { spawn } from 'child_process'
 import { logger } from './logger'
 
@@ -197,10 +198,20 @@ async function bundle(
   const rollupJobsOptions: BundleJobOptions = { isFromCli, generateTypes }
 
   const entryNames = Object.keys(entries)
+
+  // Build every entry through a few shared rollup instances instead of one per
+  // entry/output pair. Experimental: shared code becomes a chunk rather than
+  // being copied into each entry that uses it.
+  const useMerged =
+    Boolean(options.mergeEntries) &&
+    !options._entryFilter &&
+    (await canMergeEntries(entries, options, isFromCli))
+
   // With many entries, every entry's rollup build shares one heap and peak
   // memory scales with entry count, which OOMs on packages with many exports.
   // Build each entry in its own worker instead, one isolated heap per entry.
   const useWorkers =
+    !useMerged &&
     !options.watch &&
     !options._entryFilter &&
     // Test-only, not a supported option: the tests build the same package
@@ -238,6 +249,12 @@ async function bundle(
         outputState.mergeSizeStats(stats)
       }
       assetJobs = workerStats
+    } else if (useMerged) {
+      assetJobs = await createMergedRollupJobs(
+        options,
+        buildContext,
+        rollupJobsOptions,
+      )
     } else {
       assetJobs = await createAssetRollupJobs(
         options,

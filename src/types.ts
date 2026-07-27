@@ -49,6 +49,14 @@ type BundleConfig = {
   tsconfig?: string
   onSuccess?: string | (() => void | Promise<void>)
 
+  /**
+   * Build every entry through a few shared rollup instances — one module graph
+   * per group of entries that can share one — instead of one per entry/output
+   * pair. Experimental: shared code becomes a chunk rather than being copied
+   * into each entry that uses it.
+   */
+  mergeEntries?: boolean
+
   /*
    * Only build the entries with these export paths (e.g. ['./foo']).
    * Set by the worker pool to assign one entry per worker.
@@ -102,11 +110,21 @@ type CustomRollupInputOptions = Pick<
   InputOptions,
   'external' | 'plugins' | 'treeshake' | 'onwarn'
 > & {
-  input: string
+  /** A single entry, or `{ <entry name>: <source path> }` for a merged build. */
+  input: string | Record<string, string>
 }
 
 type BuncheeRollupConfig = CustomRollupInputOptions & {
   output: OutputOptions
+}
+
+/**
+ * One rollup build shared by many entries: a single module graph written once
+ * per output format.
+ */
+type MergedRollupConfig = CustomRollupInputOptions & {
+  input: Record<string, string>
+  outputs: OutputOptions[]
 }
 
 type CliArgs = {
@@ -127,6 +145,7 @@ type CliArgs = {
   runtime?: string
   prepare?: boolean
   clean?: boolean
+  mergeEntries?: boolean
   tsconfig?: string
   onSuccess?: string
 }
@@ -179,6 +198,7 @@ export type {
   PackageMetadata,
   FullExportCondition,
   BuncheeRollupConfig,
+  MergedRollupConfig,
   PackageType,
   ParsedExportCondition,
   Entries,

@@ -106,6 +106,14 @@ export async function buildInputConfig(
   exportCondition: ParsedExportCondition,
   buildContext: BuildContext,
   dts: boolean,
+  /**
+   * When set, every entry in the map is an input of one shared rollup build
+   * instead of `entry` being the only one. Sibling entries then live in the
+   * same module graph, so they must not be externalized and rollup emits the
+   * cross-entry imports itself — which is what the alias plugin does by hand
+   * on the per-entry path.
+   */
+  mergedInputs?: Record<string, string>,
 ): Promise<CustomRollupInputOptions> {
   const {
     entries,
@@ -116,6 +124,8 @@ export async function buildInputConfig(
     pluginContext,
   } = buildContext
   const isBinEntry = isBinExportPath(exportCondition.name)
+  const isMerged = mergedInputs != null
+  const mergedSources = new Set(Object.values(mergedInputs ?? {}))
 
   const hasNoExternal = bundleConfig.external === null
   const externals = hasNoExternal
@@ -129,10 +139,16 @@ export async function buildInputConfig(
   for (const [exportImportPath, exportCondition] of Object.entries(entries)) {
     const entryFilePath = exportCondition.source
     if (entryFilePath !== entry) {
+      // Self-referencing subpath imports (`<pkg>/<subpath>`) stay external in
+      // both modes — rollup cannot resolve them and Node picks the condition.
       externals.push(
         posix.join(pkg.name || '', normalizeExportPath(exportImportPath)),
       )
-      externals.push(entryFilePath)
+      // The source path is only external when the sibling is built separately.
+      // In a merged build it is an input of this same graph.
+      if (!mergedSources.has(entryFilePath)) {
+        externals.push(entryFilePath)
+      }
     }
   }
 
@@ -208,8 +224,10 @@ export async function buildInputConfig(
   })
   const commonPlugins = [json(), sizePlugin]
 
-  const typesPlugins = [
-    aliasPlugin,
+  const typesPlugins: (Plugin | false)[] = [
+    // In a merged build every entry is an input, so rollup resolves the
+    // cross-entry references natively and the alias rewrite is redundant.
+    isMerged ? (false as const) : aliasPlugin,
     ...commonPlugins,
     inlineCss({ skip: true }),
   ]
@@ -234,7 +252,7 @@ export async function buildInputConfig(
       : [
           ...commonPlugins,
           preserveDirectives(),
-          aliasPlugin,
+          isMerged ? (false as const) : aliasPlugin,
           inlineCss({ exclude: /node_modules/ }),
           rawContent({ exclude: /node_modules/ }),
           nativeAddon(),
@@ -269,7 +287,7 @@ export async function buildInputConfig(
   ).filter(isNotNull<Plugin>)
 
   return {
-    input: entry,
+    input: mergedInputs ?? entry,
     external(id: string) {
       return externals.some((name) => id === name || id.startsWith(name + '/'))
     },

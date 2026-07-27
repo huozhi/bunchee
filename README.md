@@ -348,6 +348,33 @@ bunchee --no-external
 
 This will include all dependencies within your output bundle.
 
+#### Merging entries into shared rollup instances (experimental)
+
+By default bunchee creates one rollup instance per entry/output pair, so a
+package with 50 exports in two formats plus types builds through 150 of them.
+`--merge-entries` instead groups every entry that can share a module graph and
+builds each group once, writing one output per format from the same graph:
+
+```sh
+bunchee --merge-entries
+```
+
+Run with `DEBUG=1` to see the grouping, and the reason when a package is not
+merged.
+
+Two things change when this is on:
+
+- Code shared between entries becomes a chunk instead of being copied into every
+  entry that imports it, so the emitted file list gains chunk files.
+- Re-exports of a sibling entry are emitted as named re-exports rather than
+  `export *`, because rollup knows the sibling's exports once it is part of the
+  same graph.
+
+bunchee falls back to the per-entry path — with no change in output — for
+packages it cannot merge yet: `bin` entries, runtime or `development`/
+`production` export conditions, `'use client'` / `'use server'` boundaries, a
+single `-o` output, and watch mode.
+
 #### Build Successful Command
 
 A command to be executed after a build is successful can be specified using the `--success` option, which is useful for development watching mode:
