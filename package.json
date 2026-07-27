@@ -25,7 +25,7 @@
     "ts-bunchee": "pnpm run-ts ./src/bin/index.ts",
     "build-dir": "pnpm ts-bunchee --cwd",
     "build": "pnpm run-ts ./src/bin/index.ts --runtime node",
-    "format": "prettier --write .",
+    "format": "oxfmt",
     "prepare": "husky"
   },
   "type": "commonjs",
@@ -45,11 +45,6 @@
     "dist",
     "*.md"
   ],
-  "prettier": {
-    "semi": false,
-    "singleQuote": true,
-    "trailingComma": "all"
-  },
   "engines": {
     "node": ">= 18.0.0"
   },
@@ -110,9 +105,9 @@
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
     "next": "^16.2.6",
+    "oxfmt": "^0.60.0",
     "picocolors": "^1.0.0",
     "postcss": "^8.5.4",
-    "prettier": "3.4.2",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "tailwindcss": "^4.1.8",
@@ -120,7 +115,7 @@
     "vitest": "^4.1.8"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,md,json,yml,yaml}": "prettier --write"
+    "*.{js,jsx,ts,tsx,md,json,yml,yaml}": "oxfmt"
   },
   "packageManager": "pnpm@11.10.0"
 }
