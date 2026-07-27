@@ -1,6 +1,6 @@
 import { OutputOptions, Plugin } from 'rollup'
 import { Entries, ParsedExportCondition } from '../types'
-import { posix } from 'path'
+import { dirname, posix, relative, resolve } from 'path'
 import { posixRelativify } from '../lib/format'
 import { getSpecialExportTypeFromConditionNames } from '../entries'
 import {
@@ -199,26 +199,27 @@ export function aliasEntries({
 
           const bundlePath = sourceToRelativeBundleMap.get(resolved.id)
           if (!bundlePath) return null
+          // Resolved with the platform's own path rules — `cwd` and the dist
+          // paths are native, and mixing them with posix helpers treats a
+          // Windows path as a single segment.
           return {
-            id: SIBLING_MARK + posix.resolve(cwd, bundlePath),
+            id: SIBLING_MARK + resolve(cwd, bundlePath),
             external: true,
           }
         },
       },
       renderChunk(code, chunk, outputOptions) {
         if (!code.includes(SIBLING_MARK)) return null
-        const chunkDir = posix.dirname(
-          posix.resolve(
-            outputOptions.dir ?? cwd,
-            normalizePath(chunk.fileName),
-          ),
+        const chunkDir = dirname(
+          resolve(outputOptions.dir ?? cwd, chunk.fileName),
         )
         const rewritten = code.replace(
-          // The mark is followed by an absolute posix path, up to the quote
-          // that closes the module specifier.
+          // The mark is followed by an absolute path, up to the quote that
+          // closes the module specifier.
           new RegExp(`${SIBLING_MARK}([^'"]+)`, 'g'),
           (_, target: string) =>
-            posixRelativify(normalizePath(posix.relative(chunkDir, target))),
+            // The specifier is always posix, whatever the platform's paths are.
+            posixRelativify(normalizePath(relative(chunkDir, target))),
         )
         return { code: rewritten, map: null }
       },

@@ -49,5 +49,12 @@ describe('integration - merge-entries-shards', () => {
 
     expect(oneShard).toEqual(perEntry)
     expect(manyShards).toEqual(perEntry)
+
+    // A specifier is posix on every platform. Comparing the three runs to each
+    // other would not catch a Windows path leaking in, since all three would
+    // carry it.
+    for (const content of Object.values(manyShards)) {
+      expect(content).not.toMatch(/from '[^']*\\/)
+    }
   }, 240_000)
 })
