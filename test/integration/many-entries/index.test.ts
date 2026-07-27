@@ -1,5 +1,5 @@
 import path from 'path'
-import { afterAll, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
   getFileContents,
   getFileNamesFromDirectory,
@@ -27,12 +27,6 @@ async function build(env: NodeJS.ProcessEnv = {}) {
 const ENTRIES = ['index', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 
 describe('integration - many-entries', () => {
-  afterAll(async () => {
-    if (!process.env.TEST_NOT_CLEANUP) {
-      await removeDirectory(distDir)
-    }
-  })
-
   it('should build every entry', async () => {
     const { files, contents } = await build()
 

@@ -7,6 +7,7 @@ export * from './helpers'
 
 export { runCli } from './cli'
 export { createJob } from './integration'
+export { trackFixtureDir } from './fixture-state'
 
 export async function getFileNamesFromDirectory(directory: string) {
   const files = await glob(

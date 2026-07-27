@@ -15,6 +15,7 @@
     }
   },
   "include": [
+    "./setup.ts",
     "./**/*.test.ts",
     "./**/*.test.tsx",
     "./**/helpers.ts",

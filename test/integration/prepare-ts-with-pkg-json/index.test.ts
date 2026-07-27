@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import fsp from 'fs/promises'
 import { join } from 'path'
-import { assertContainFiles, createJob, deleteFile } from '../../testing-utils'
+import { assertContainFiles, createJob } from '../../testing-utils'
 
 describe('integration prepare-ts-with-pkg-json', () => {
   const dir = __dirname
@@ -12,7 +12,6 @@ describe('integration prepare-ts-with-pkg-json', () => {
         join(dir, './package.json'),
         JSON.stringify({ name: 'prepare-ts-with-pkg-json' }, null, 2),
       )
-      await deleteFile(join(dir, './tsconfig.json'))
     })
     createJob({
       directory: __dirname,
@@ -47,7 +46,6 @@ describe('integration prepare-ts-with-pkg-json', () => {
           2,
         ),
       )
-      await deleteFile(join(dir, './tsconfig.json'))
     })
     createJob({
       directory: __dirname,

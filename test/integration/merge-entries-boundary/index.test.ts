@@ -1,5 +1,5 @@
 import path from 'path'
-import { afterAll, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
   getFileContents,
   getFileNamesFromDirectory,
@@ -28,12 +28,6 @@ async function build(env: NodeJS.ProcessEnv = {}) {
 }
 
 describe('integration - merge-entries-boundary', () => {
-  afterAll(async () => {
-    if (!process.env.TEST_NOT_CLEANUP) {
-      await removeDirectory(distDir)
-    }
-  })
-
   it('should keep the client module in its own boundary chunk', async () => {
     const { files, contents } = await build()
 

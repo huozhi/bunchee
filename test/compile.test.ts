@@ -1,12 +1,16 @@
 import { expect, it } from 'vitest'
 import fs, { promises as fsp } from 'fs'
 import { resolve, dirname, extname } from 'path'
-import { existsFile, fullExtension } from './testing-utils'
+import { existsFile, fullExtension, trackFixtureDir } from './testing-utils'
 
 const assetPath = process.env.POST_BUILD ? '..' : '../src/index.ts'
 
 const baseUnitTestDir = resolve(__dirname, 'compile')
 const unitTestDirs = fs.readdirSync(baseUnitTestDir)
+
+// This file lives at the test root, so the fixtures it builds into have to be
+// declared for auto-cleanup instead of being inferred from its location.
+trackFixtureDir(baseUnitTestDir)
 
 type CompareFn = (
   a: string,

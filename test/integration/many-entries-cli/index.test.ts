@@ -1,5 +1,5 @@
 import path from 'path'
-import { afterAll, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
   getFileNamesFromDirectory,
   removeDirectory,
@@ -31,12 +31,6 @@ async function build(env: NodeJS.ProcessEnv = {}) {
 }
 
 describe('integration - many-entries-cli', () => {
-  afterAll(async () => {
-    if (!process.env.TEST_NOT_CLEANUP) {
-      await removeDirectory(distDir)
-    }
-  })
-
   it('should build the entry file passed on the command line', async () => {
     const { files, stdout } = await build()
 

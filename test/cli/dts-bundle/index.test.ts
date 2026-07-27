@@ -1,8 +1,8 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 import fs from 'fs'
 import fsp from 'fs/promises'
 import { join } from 'path'
-import { runCli, deleteFile } from '../../testing-utils'
+import { runCli } from '../../testing-utils'
 
 describe('cli', () => {
   const dir = __dirname
@@ -11,9 +11,6 @@ describe('cli', () => {
       join(dir, './package.json'),
       '{ "name": "prepare-ts-with-pkg-json", "devDependencies": { "@swc/types": "*" } }',
     )
-  })
-  afterAll(async () => {
-    await deleteFile(join(dir, './package.json'))
   })
 
   it(`cli dts-bundle option should work properly`, async () => {

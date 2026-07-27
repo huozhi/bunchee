@@ -1,29 +1,26 @@
-import { afterAll, beforeAll } from 'vitest'
+import { beforeAll } from 'vitest'
 import { fork } from 'child_process'
-import { CreateTestResultExtra, removeDirectory } from './helpers'
+import { CreateTestResultExtra } from './helpers'
 import path from 'path'
 import * as debug from './debug'
 
-export async function createAsyncTest<T>(
-  {
-    args,
-    options,
-    directory,
-    abortTimeout,
-    run,
-  }: {
-    args: string[]
-    options: { env?: NodeJS.ProcessEnv }
-    directory: string
-    abortTimeout?: number
-    run: (
-      args: string[],
-      options: { env?: NodeJS.ProcessEnv },
-      processOptions?: { abortTimeout?: number },
-    ) => Promise<T>
-  },
-  testFn?: (context: T & CreateTestResultExtra) => void,
-) {
+export async function createAsyncTest<T>({
+  args,
+  options,
+  directory,
+  abortTimeout,
+  run,
+}: {
+  args: string[]
+  options: { env?: NodeJS.ProcessEnv }
+  directory: string
+  abortTimeout?: number
+  run: (
+    args: string[],
+    options: { env?: NodeJS.ProcessEnv },
+    processOptions?: { abortTimeout?: number },
+  ) => Promise<T>
+}) {
   const fixturesDir = directory
   const distDir = path.join(fixturesDir, './dist')
   let distFile = ''
@@ -37,22 +34,12 @@ export async function createAsyncTest<T>(
   }
 
   const result = await run(args, options, { abortTimeout })
-  const build = {
+  return {
     ...result,
     dir: directory,
     distDir,
     distFile,
   }
-  if (testFn) {
-    try {
-      await testFn(build)
-    } finally {
-      if (!process.env.TEST_NOT_CLEANUP) {
-        await removeDirectory(distDir)
-      }
-    }
-  }
-  return build
 }
 
 export function createSyncTest<T>({
@@ -94,11 +81,6 @@ export function createSyncTest<T>({
   beforeAll(async () => {
     // execute the job
     result = await run(args, options, { abortTimeout })
-  }, hookTimeout)
-  afterAll(async () => {
-    if (!process.env.TEST_NOT_CLEANUP) {
-      await removeDirectory(distDir)
-    }
   }, hookTimeout)
 
   return {
