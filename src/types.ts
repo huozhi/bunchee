@@ -49,15 +49,6 @@ type BundleConfig = {
   tsconfig?: string
   onSuccess?: string | (() => void | Promise<void>)
 
-  /**
-   * Build every entry through a few shared rollup instances — one module graph
-   * per group of entries that can share one — instead of one per entry/output
-   * pair. On by default; set to `false` to keep one rollup instance per
-   * entry/output, which copies shared code into each entry instead of emitting
-   * it as a chunk.
-   */
-  mergeEntries?: boolean
-
   /*
    * Build only the type declarations, skipping the JS assets. Set when merged
    * rollup instances have already produced the JS on the main thread and the
@@ -154,7 +145,6 @@ type CliArgs = {
   runtime?: string
   prepare?: boolean
   clean?: boolean
-  mergeEntries?: boolean
   tsconfig?: string
   onSuccess?: string
 }

@@ -10,9 +10,9 @@ import { executeBunchee } from '../../testing-utils/shared'
 const dir = __dirname
 const distDir = path.join(dir, 'dist')
 
-async function build(env: NodeJS.ProcessEnv = {}, args: string[] = []) {
+async function build(env: NodeJS.ProcessEnv = {}) {
   await removeDirectory(distDir)
-  const result = await executeBunchee(['--cwd', dir, ...args], { env })
+  const result = await executeBunchee(['--cwd', dir], { env })
   expect(result.stderr).toBe('')
   expect(result.code).toBe(0)
   return await getFileContents(distDir)
@@ -41,14 +41,14 @@ describe('integration - merge-entries-shards', () => {
   }, 120_000)
 
   it('should emit the same declarations however the types are sharded', async () => {
-    const perEntry = declarations(await build({}, ['--no-merge-entries']))
     const oneShard = declarations(await build({ BUNCHEE_DTS_SHARDS: '1' }))
     // More shards than entries, so every entry lands in a shard of its own and
     // every cross-entry reference has to cross a shard boundary.
     const manyShards = declarations(await build({ BUNCHEE_DTS_SHARDS: '8' }))
 
-    expect(oneShard).toEqual(perEntry)
-    expect(manyShards).toEqual(perEntry)
+    // One graph holding every entry, against every entry in a shard of its own
+    // so each cross-entry reference crosses a boundary.
+    expect(manyShards).toEqual(oneShard)
 
     // A specifier is posix on every platform. Comparing the three runs to each
     // other would not catch a Windows path leaking in, since all three would

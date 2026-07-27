@@ -116,6 +116,30 @@ Here's a example of entry files and exports configuration:
 
 This will automatically discover files in `src/features/` and generate exports like `./features/foo`, `./features/bar`, etc. The wildcard `*` is substituted in both the export path and output path.
 
+### How Entries Are Built
+
+Entries that can share a module graph are grouped and built together, so a
+package with many exports does not pay for a rollup instance per entry/output
+pair — 50 exports in two formats plus types would otherwise be 150 of them.
+Within a group each entry still lands on the exact path its export condition
+declares.
+
+Two consequences worth knowing:
+
+- Code shared between entries becomes a chunk instead of being copied into every
+  entry that imports it, so `dist` contains chunk files alongside the entries.
+- Re-exports of a sibling entry are emitted as named re-exports rather than
+  `export *`, because the sibling's exports are known.
+
+Type declarations are the one part that cannot be shared — declaration emit is
+linear in entry count — so they are split across workers instead. Set
+`BUNCHEE_DTS_SHARDS` to override how many. Run with `DEBUG=1` to see the
+grouping and the shard layout.
+
+Some packages are built one entry at a time instead, which `DEBUG=1` also
+reports: `bin` entries, runtime or `development`/`production` export conditions,
+`'use client'` / `'use server'` boundaries, a single `-o` output, and watch mode.
+
 ### Output Formats
 
 **bunchee** detects the format of each entry-point based on export condition type or the file extension. It supports the following output formats:
@@ -347,38 +371,6 @@ bunchee --no-external
 ```
 
 This will include all dependencies within your output bundle.
-
-#### Building entries in shared rollup instances
-
-bunchee groups every entry that can share a module graph and builds each group
-once, writing one output per format from the same graph, rather than creating a
-rollup instance per entry/output pair. A package with 50 exports in two formats
-plus types would otherwise build through 150 of them.
-
-Declaration emit is linear in entry count and cannot be amortised by sharing a
-graph, so above the worker threshold the types are split into shards that each
-build a merged graph in their own worker. Set `BUNCHEE_DTS_SHARDS` to override
-how many. Run with `DEBUG=1` to see the grouping, the shard layout, and the
-reason when a package is not merged.
-
-Two things differ from building each entry separately:
-
-- Code shared between entries becomes a chunk instead of being copied into every
-  entry that imports it, so the emitted file list gains chunk files.
-- Re-exports of a sibling entry are emitted as named re-exports rather than
-  `export *`, because rollup knows the sibling's exports once it is part of the
-  same graph.
-
-Packages that cannot be merged fall back to one instance per entry, with no
-change in output: `bin` entries, runtime or `development`/`production` export
-conditions, `'use client'` / `'use server'` boundaries, a single `-o` output,
-and watch mode.
-
-To opt out and build each entry in its own rollup instance:
-
-```sh
-bunchee --no-merge-entries
-```
 
 #### Build Successful Command
 

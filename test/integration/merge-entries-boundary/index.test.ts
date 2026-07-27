@@ -11,13 +11,13 @@ import { executeBunchee } from '../../testing-utils/shared'
 // entry (`.`) and a client-layer one (`./ui`). A per-entry build decides where
 // it lands once per entry, so it is inlined into `ui.js` and split into its own
 // boundary chunk for `index.js`. One shared graph only gets to decide once, so
-// `--merge-entries` has to fall back here rather than flatten the boundary.
+// bunchee has to fall back for this package rather than flatten the boundary.
 const dir = __dirname
 const distDir = path.join(dir, 'dist')
 
-async function build(env: NodeJS.ProcessEnv = {}, args: string[] = []) {
+async function build(env: NodeJS.ProcessEnv = {}) {
   await removeDirectory(distDir)
-  const result = await executeBunchee(['--cwd', dir, ...args], { env })
+  const result = await executeBunchee(['--cwd', dir], { env })
   expect(result.stderr).toBe('')
   expect(result.code).toBe(0)
   return {
@@ -53,12 +53,4 @@ describe('integration - merge-entries-boundary', () => {
       /Building \d+ entries in \d+ shared rollup instances/,
     )
   }, 120_000)
-
-  it('should produce the same output with and without --no-merge-entries', async () => {
-    const perEntry = await build({}, ['--no-merge-entries'])
-    const merged = await build()
-
-    expect(merged.files).toEqual(perEntry.files)
-    expect(merged.contents).toEqual(perEntry.contents)
-  }, 180_000)
 })

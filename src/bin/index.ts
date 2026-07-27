@@ -40,7 +40,6 @@ Options:
   --no-dts               do not generate types, default: undefined
   --tsconfig             path to tsconfig file, default: tsconfig.json
   --dts-bundle           bundle type declaration files, default: false
-  --no-merge-entries     build each entry in its own rollup instance
   --success <cmd>     run command after build success
 `
 
@@ -134,11 +133,6 @@ async function parseCliArgs(argv: string[]) {
       type: 'boolean',
       description: 'bundle type declaration files',
     })
-    .option('merge-entries', {
-      type: 'boolean',
-      default: undefined,
-      description: 'build all entries in shared rollup instances',
-    })
     .option('prepare', {
       type: 'boolean',
       description: 'auto setup package.json for building',
@@ -199,7 +193,6 @@ async function parseCliArgs(argv: string[]) {
     cwd: args['cwd'],
     dts: args['dts'] === false ? false : undefined,
     dtsBundle: args['dts-bundle'],
-    mergeEntries: args['merge-entries'],
     help: args['help'],
     runtime: args['runtime'],
     target: args['target'] as CliArgs['target'],
@@ -240,7 +233,6 @@ async function run(args: CliArgs) {
     dtsBundle,
     env,
     clean,
-    mergeEntries,
     tsconfig,
     onSuccess,
   } = args
@@ -263,7 +255,6 @@ async function run(args: CliArgs) {
     sourcemap: sourcemap === false ? false : true,
     env: env?.split(',') || [],
     clean,
-    mergeEntries,
     tsconfig,
     onSuccess,
   }

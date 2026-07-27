@@ -213,9 +213,7 @@ async function bundle(
   // `_entryFilter` is not a reason to skip merging: a worker gets a shard of
   // entries and builds them as one graph, with the entries it does not own
   // resolved as externals against their own output paths.
-  const useMerged =
-    options.mergeEntries !== false &&
-    (await canMergeEntries(entries, options, isFromCli))
+  const useMerged = await canMergeEntries(entries, options, isFromCli)
 
   // With many entries, every entry's rollup build shares one heap and peak
   // memory scales with entry count, which OOMs on packages with many exports.
