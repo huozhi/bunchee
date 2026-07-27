@@ -116,30 +116,6 @@ Here's a example of entry files and exports configuration:
 
 This will automatically discover files in `src/features/` and generate exports like `./features/foo`, `./features/bar`, etc. The wildcard `*` is substituted in both the export path and output path.
 
-### How Entries Are Built
-
-Entries that can share a module graph are grouped and built together, so a
-package with many exports does not pay for a rollup instance per entry/output
-pair — 50 exports in two formats plus types would otherwise be 150 of them.
-Within a group each entry still lands on the exact path its export condition
-declares.
-
-Two consequences worth knowing:
-
-- Code shared between entries becomes a chunk instead of being copied into every
-  entry that imports it, so `dist` contains chunk files alongside the entries.
-- Re-exports of a sibling entry are emitted as named re-exports rather than
-  `export *`, because the sibling's exports are known.
-
-Type declarations are the one part that cannot be shared — declaration emit is
-linear in entry count — so they are split across workers instead. Set
-`BUNCHEE_DTS_SHARDS` to override how many. Run with `DEBUG=1` to see the
-grouping and the shard layout.
-
-Some packages are built one entry at a time instead, which `DEBUG=1` also
-reports: `bin` entries, runtime or `development`/`production` export conditions,
-`'use client'` / `'use server'` boundaries, a single `-o` output, and watch mode.
-
 ### Output Formats
 
 **bunchee** detects the format of each entry-point based on export condition type or the file extension. It supports the following output formats:

@@ -1,6 +1,4 @@
 import { dirname, relative, resolve, sep } from 'path'
-import { readFile } from 'fs/promises'
-import { glob } from 'tinyglobby'
 import type {
   BuildContext,
   BundleConfig,
@@ -13,12 +11,8 @@ import type { ExportOutput } from '../exports'
 import { buildInputConfig } from './input'
 import { buildOutputConfigs } from './output'
 import { getEntryBundleOutputs } from '../build-config'
-import { isBinExportPath, normalizePath } from '../utils'
-import {
-  availableExtensions,
-  specialExportConventions,
-  TESTS_GLOB_PATTERN,
-} from '../constants'
+import { normalizePath } from '../utils'
+import { getSpecialExportTypeFromConditionNames } from '../entries'
 import { getDefinedInlineVariables } from '../env'
 import { logger } from '../logger'
 
@@ -32,47 +26,8 @@ type Group = {
   /** Debug label; also the map key that collects the group. */
   key: string
   items: GroupItem[]
-}
-
-const BOUNDARY_DIRECTIVE_REGEX =
-  /^\s*(?:\/\*[\s\S]*?\*\/|\/\/.*\n)*\s*['"]use (client|server)['"]/
-
-/**
- * Whether the package uses `'use client'` / `'use server'` boundaries.
- *
- * A per-entry build decides where a directive module lands separately for each
- * entry, so the same module can be inlined into one output and split into its
- * own chunk in another. One shared graph only gets to make that call once, so
- * merging cannot reproduce the existing chunk layout for these packages —
- * see `test/integration/server-components`. Detect it and stay on the
- * per-entry path.
- *
- * Conservative on purpose: a false positive only means the build keeps working
- * the way it does today.
- */
-async function hasBoundaryDirectives(entries: Entries): Promise<boolean> {
-  const sourceDirs = new Set(
-    Object.values(entries).map((entry) => dirname(entry.source)),
-  )
-  const extensions = [...availableExtensions].join(',')
-  const files = new Set<string>()
-  for (const dir of sourceDirs) {
-    const found = await glob(`**/*.{${extensions}}`, {
-      cwd: dir,
-      absolute: true,
-      ignore: [TESTS_GLOB_PATTERN, '**/node_modules/**'],
-    })
-    for (const file of found) files.add(file)
-  }
-
-  for (const file of files) {
-    // Directives are the first statement, so only the head matters.
-    const handle = await readFile(file, 'utf8').catch(() => '')
-    if (BOUNDARY_DIRECTIVE_REGEX.test(handle.slice(0, 512))) {
-      return true
-    }
-  }
-  return false
+  /** Absolute output file -> the source that claimed it. */
+  claimed: Map<string, string>
 }
 
 /**
@@ -108,28 +63,6 @@ async function findMergeBlocker(
   const exportPaths = Object.keys(entries)
   if (exportPaths.length < 2) {
     return `only ${exportPaths.length} entry resolved`
-  }
-
-  for (const [exportPath, exportCondition] of Object.entries(entries)) {
-    // `prependShebang` is bound to one specific entry file.
-    if (isBinExportPath(exportPath)) {
-      return `"${exportPath}" is a bin entry`
-    }
-    for (const target of exportCondition.targets) {
-      // Runtime/optimize conditions (`react-server`, `browser`, `development`,
-      // …) change the inlined env and which sibling bundle an import should
-      // resolve to, which the alias plugin decides per entry.
-      const special = target.conditions.find((condition) =>
-        specialExportConventions.has(condition),
-      )
-      if (special) {
-        return `"${exportPath}" uses the "${special}" condition`
-      }
-    }
-  }
-
-  if (await hasBoundaryDirectives(entries)) {
-    return `package uses 'use client' / 'use server' boundaries`
   }
 
   return undefined
@@ -204,16 +137,45 @@ export async function buildMergedConfigs(
         output.format,
         outputExtension(output.file),
         JSON.stringify(env),
+        // Which sibling bundle an import resolves to is decided per runtime or
+        // optimize condition, so entries only share a graph with entries that
+        // resolve the same way.
+        getSpecialExportTypeFromConditionNames(
+          new Set(output.target.conditions),
+        ),
       ].join('|')
       const occurrence = seen.get(shape) ?? 0
       seen.set(shape, occurrence + 1)
 
-      const key = occurrence === 0 ? shape : `${shape}|#${occurrence}`
-      let group = groups.get(key)
-      if (!group) {
-        group = { key, items: [] }
-        groups.set(key, group)
+      // Two entries can resolve to the same output file — `./a` picking up the
+      // `workerd` condition and `./a.workerd` both land on `a.workerd.js`.
+      // Built one at a time they overwrite each other; in one graph they are
+      // two inputs, and rollup would keep both by numbering the second.
+      const file = resolve(buildContext.cwd, output.file)
+      let group: Group | undefined
+      for (let attempt = occurrence; ; attempt++) {
+        const key = attempt === 0 ? shape : `${shape}|#${attempt}`
+        const candidate = groups.get(key) ?? {
+          key,
+          items: [],
+          claimed: new Map(),
+        }
+        groups.set(key, candidate)
+        const claimedBy = candidate.claimed.get(file)
+        if (claimedBy === exportCondition.source) {
+          // The same source writing the same file: nothing to add.
+          group = undefined
+          break
+        }
+        if (claimedBy == null) {
+          group = candidate
+          break
+        }
+        // A different source wants this file. Keep them in separate graphs so
+        // the later one still overwrites, exactly as it does today.
       }
+      if (!group) continue
+      group.claimed.set(file, exportCondition.source)
       group.items.push({ exportPath, exportCondition, output })
     }
   }
@@ -280,10 +242,18 @@ async function buildMergedConfig(
   const input: Record<string, string> = {}
   /** input name -> absolute output file */
   const outputFiles = new Map<string, string>()
+  /**
+   * Same, keyed by source. Rollup sanitises an input name before it reaches
+   * `chunk.name` — a bin entry's `$binary` arrives as `_binary` — so the source
+   * behind the chunk is the reliable way back to its output path.
+   */
+  const outputFilesBySource = new Map<string, string>()
   for (const item of items) {
     const name = toInputName(item.exportPath)
+    const file = resolve(cwd, item.output.file)
     input[name] = item.exportCondition.source
-    outputFiles.set(name, resolve(cwd, item.output.file))
+    outputFiles.set(name, file)
+    outputFilesBySource.set(item.exportCondition.source, file)
   }
 
   // The first entry stands in for the group when building the options shared
@@ -313,6 +283,7 @@ async function buildMergedConfig(
     representativeCondition,
     buildContext,
     dts,
+    true,
   )
 
   const dir = commonRootDir([...outputFiles.values()].map((f) => dirname(f)))
@@ -320,22 +291,23 @@ async function buildMergedConfig(
   return {
     ...inputOptions,
     input,
-    outputs: [
-      {
-        ...outputOptions,
-        dir,
-        // Each entry keeps the exact path its export condition declares, which
-        // the per-entry path gets for free from a single `output.file`.
-        entryFileNames(chunk) {
-          const file = outputFiles.get(chunk.name)
-          if (!file) {
-            throw new Error(
-              `bunchee: no output file mapped for merged entry "${chunk.name}"`,
-            )
-          }
-          return normalizePath(relative(dir, file))
-        },
+    output: {
+      ...outputOptions,
+      dir,
+      // Each entry keeps the exact path its export condition declares, which
+      // the per-entry path gets for free from a single `output.file`.
+      entryFileNames(chunk) {
+        const file =
+          (chunk.facadeModuleId &&
+            outputFilesBySource.get(chunk.facadeModuleId)) ||
+          outputFiles.get(chunk.name)
+        if (!file) {
+          throw new Error(
+            `bunchee: no output file mapped for merged entry "${chunk.name}"`,
+          )
+        }
+        return normalizePath(relative(dir, file))
       },
-    ],
+    },
   }
 }

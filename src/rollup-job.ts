@@ -89,9 +89,7 @@ export async function createMergedRollupJobs(
   // an earlier job's output.
   if (options.clean && !isFromCli) {
     for (const config of allConfigs) {
-      for (const output of config.outputs) {
-        await removeOutputDir(output, buildContext.cwd)
-      }
+      await removeOutputDir(config.output, buildContext.cwd)
     }
   }
 
@@ -99,8 +97,7 @@ export async function createMergedRollupJobs(
     const shape = allConfigs
       .map(
         (config) =>
-          `${Object.keys(config.input).length} inputs -> ` +
-          config.outputs.map((output) => output.format).join(','),
+          `${Object.keys(config.input).length} inputs -> ${config.output.format}`,
       )
       .join(' | ')
     logger.log(
@@ -125,10 +122,7 @@ export async function createMergedRollupJobs(
   }
 }
 
-async function runMergedBundle({
-  outputs,
-  ...restOptions
-}: MergedRollupConfig) {
+async function runMergedBundle({ output, ...restOptions }: MergedRollupConfig) {
   let bundle: RollupBuild
   const debug = Boolean(process.env.DEBUG)
   const started = Date.now()
@@ -141,17 +135,12 @@ async function runMergedBundle({
     logMergedGraph(bundle, Object.keys(restOptions.input).length, started)
   }
   try {
-    // One graph, N writes: the parse/transform/treeshake work is done once and
-    // only the generate step repeats per output.
-    const results: RollupOutput[] = []
-    for (const output of outputs) {
-      const writeStart = Date.now()
-      results.push(await bundle.write(output))
-      if (debug) {
-        logger.log(`  write ${output.format}: ${Date.now() - writeStart}ms`)
-      }
+    const writeStart = Date.now()
+    const result = await bundle.write(output)
+    if (debug) {
+      logger.log(`  write ${output.format}: ${Date.now() - writeStart}ms`)
     }
-    return results
+    return result
   } finally {
     await bundle.close()
   }

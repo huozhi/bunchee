@@ -14,6 +14,11 @@ describe('integration server-components', () => {
       'index.js',
       'mod_actions-12x-B4EBPs-d.js',
       'mod_actions-12x-DtrEcTfm.cjs',
+      // `mod_asset` carries 'use client' and is reached from `ui` only, but one
+      // graph places it once, so it gets a boundary chunk rather than being
+      // inlined into that entry.
+      'mod_asset-12s--5vqDwxI.cjs',
+      'mod_asset-12s-Bq1vQakb.js',
       'mod_client-12s-BO96FYFA.js',
       'mod_client-12s-DAeHkA4H.cjs',
       'ui.cjs',

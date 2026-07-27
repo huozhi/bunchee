@@ -8,10 +8,10 @@ import {
 import { executeBunchee } from '../../testing-utils/shared'
 
 // `widget.ts` carries `'use client'` and is reached from both a server-layer
-// entry (`.`) and a client-layer one (`./ui`). A per-entry build decides where
-// it lands once per entry, so it is inlined into `ui.js` and split into its own
-// boundary chunk for `index.js`. One shared graph only gets to decide once, so
-// bunchee has to fall back for this package rather than flatten the boundary.
+// entry (`.`) and a client-layer one (`./ui`). One graph holding both entries
+// only gets to place that module once, so it has to land in its own chunk for
+// the boundary to survive — inlining it into `ui` would leave the server entry
+// importing client code directly.
 const dir = __dirname
 const distDir = path.join(dir, 'dist')
 
@@ -39,18 +39,27 @@ describe('integration - merge-entries-boundary', () => {
 
     const chunk = files.find((file) => file.startsWith('widget-'))
     expect(chunk).toBeDefined()
-    expect(contents[chunk!]).toContain(`'use client'`)
+    // The chunk has to carry the directive, or the boundary is lost.
+    expect(contents[chunk!]).toMatch(/^'use client'/)
+    // Neither entry inlines it; both reach it through the chunk.
     expect(contents['index.js']).toContain(`from './${chunk}'`)
+    expect(contents['ui.js']).toContain(`from './${chunk}'`)
+    expect(contents['index.js']).not.toContain('function Widget')
+    expect(contents['ui.js']).not.toContain('function Widget')
   }, 120_000)
 
-  it('should not merge a package with boundary directives', async () => {
-    const merged = await build({ DEBUG: '1' })
+  it('should not put a directive on the server-layer entry', async () => {
+    const { contents } = await build()
 
-    expect(merged.stdout).toContain(
-      `Not merging entries into shared rollup instances: package uses 'use client' / 'use server' boundaries`,
-    )
-    expect(merged.stdout).not.toMatch(
-      /Building \d+ entries in \d+ shared rollup instances/,
-    )
+    // `index.ts` has no directive of its own and must not pick one up from the
+    // client module it re-exports.
+    expect(contents['index.js']).not.toContain(`'use client'`)
+    expect(contents['ui.js']).toMatch(/^'use client'/)
+  }, 120_000)
+
+  it('should build both entries as one graph', async () => {
+    const { stdout } = await build({ DEBUG: '1' })
+
+    expect(stdout).toMatch(/Building 2 entries in \d+ shared rollup instances/)
   }, 120_000)
 })
