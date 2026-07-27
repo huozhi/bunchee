@@ -1,5 +1,5 @@
 import path from 'path'
-import { afterAll, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
   getFileContents,
   getFileNamesFromDirectory,
@@ -27,12 +27,6 @@ async function build(env: NodeJS.ProcessEnv = {}) {
 }
 
 describe('integration - merge-entries-groups', () => {
-  afterAll(async () => {
-    if (!process.env.TEST_NOT_CLEANUP) {
-      await removeDirectory(distDir)
-    }
-  })
-
   it('should merge rather than fall back to one instance per entry', async () => {
     const { stdout } = await build({ DEBUG: '1' })
 

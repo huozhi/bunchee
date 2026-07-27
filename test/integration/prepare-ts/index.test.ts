@@ -1,19 +1,13 @@
-import { beforeAll, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import fsp from 'fs/promises'
 import { join } from 'path'
 import {
   assertContainFiles,
   createJob,
-  deleteFile,
   stripANSIColor,
 } from '../../testing-utils'
 
 describe('integration prepare-ts', () => {
-  beforeAll(async () => {
-    await deleteFile(join(__dirname, './package.json'))
-    await deleteFile(join(__dirname, './tsconfig.json'))
-  })
-
   const { dir, job } = createJob({
     args: ['prepare'],
     directory: __dirname,

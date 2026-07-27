@@ -4,6 +4,9 @@ export default defineConfig({
   test: {
     environment: 'node',
 
+    // Snapshots and restores each test file's fixture directory around the run.
+    setupFiles: ['./test/setup.ts'],
+
     alias: {
       '^bunchee$': '/src/index.ts', // Adjusted to use absolute paths
     },

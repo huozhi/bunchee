@@ -1,13 +1,8 @@
-import { afterEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import fs from 'fs'
 import { runCli } from '../../testing-utils'
 
 describe('cli', () => {
-  afterEach(() => {
-    // remove dist folder
-    fs.rmdirSync(__dirname + '/dist', { recursive: true })
-  })
-
   it(`cli basic should work properly`, async () => {
     const { code, distFile } = await runCli({
       directory: __dirname,
@@ -59,7 +54,7 @@ describe('cli', () => {
   it(`should enable sourcemap when enable minify by default`, async () => {
     const { code, distFile } = await runCli({
       directory: __dirname,
-      args: ['hello.js', '-m', '--sourcemap', '-o', 'dist/hello.js'],
+      args: ['hello.js', '-m', '--sourcemap', '-o', 'dist/hello.minify.js'],
     })
     expect(fs.existsSync(distFile)).toBe(true)
     expect(fs.existsSync(distFile + '.map')).toBe(true)
@@ -74,7 +69,9 @@ describe('cli', () => {
   it(`should be able to opt out sourcemap when minify`, async () => {
     const { code, distFile } = await runCli({
       directory: __dirname,
-      args: ['hello.js', '-m', '--no-sourcemap', '-o', 'dist/hello.js'],
+      // Its own output file: a `.map` left behind by another case in this dist
+      // directory would make this assertion pass or fail for the wrong reason.
+      args: ['hello.js', '-m', '--no-sourcemap', '-o', 'dist/hello.no-map.js'],
     })
     expect(fs.existsSync(distFile)).toBe(true)
     expect(fs.existsSync(distFile + '.map')).toBe(false)

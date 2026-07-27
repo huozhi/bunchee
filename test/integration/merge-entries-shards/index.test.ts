@@ -1,5 +1,5 @@
 import path from 'path'
-import { afterAll, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { getFileContents, removeDirectory } from '../../testing-utils'
 import { executeBunchee } from '../../testing-utils/shared'
 
@@ -25,12 +25,6 @@ function declarations(contents: Record<string, string>) {
 }
 
 describe('integration - merge-entries-shards', () => {
-  afterAll(async () => {
-    if (!process.env.TEST_NOT_CLEANUP) {
-      await removeDirectory(distDir)
-    }
-  })
-
   it('should resolve cross-entry type references relative to each entry', async () => {
     const contents = await build()
 

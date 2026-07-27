@@ -1,26 +1,13 @@
-import { beforeAll, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import fsp from 'fs/promises'
 import { join } from 'path'
 import {
   assertContainFiles,
   createJob,
-  deleteFile,
   stripANSIColor,
 } from '../../testing-utils'
 
 describe('integration prepare-no-src', () => {
-  beforeAll(async () => {
-    await deleteFile(join(__dirname, './package.json'))
-    await deleteFile(join(__dirname, './tsconfig.json'))
-    // Remove src folder if it exists
-    const srcDir = join(__dirname, './src')
-    try {
-      await fsp.rm(srcDir, { recursive: true, force: true })
-    } catch {
-      // Ignore errors if src doesn't exist
-    }
-  })
-
   const { dir, job } = createJob({
     args: ['prepare'],
     directory: __dirname,

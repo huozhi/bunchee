@@ -1,7 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import fsp from 'fs/promises'
 import { join } from 'path'
-import { execSync } from 'child_process'
 import {
   assertContainFiles,
   assertFilesContent,
@@ -12,7 +11,7 @@ import { existsSync } from 'fs'
 describe('integration - no-clean flag', () => {
   const distDir = join(__dirname, 'dist')
   beforeAll(async () => {
-    execSync(`rm -rf ${distDir}`)
+    await fsp.rm(distDir, { recursive: true, force: true })
     await fsp.mkdir(distDir)
     await fsp.writeFile(join(distDir, 'no-clean.json'), '{}')
   })
@@ -37,7 +36,7 @@ describe('integration - no-clean default', () => {
   const distDir = join(__dirname, 'dist')
 
   beforeAll(async () => {
-    execSync(`rm -rf ${distDir}`)
+    await fsp.rm(distDir, { recursive: true, force: true })
     await fsp.mkdir(distDir)
     await fsp.writeFile(join(distDir, 'no-clean.json'), '{}')
   })
