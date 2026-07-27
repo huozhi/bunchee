@@ -208,11 +208,13 @@ async function bundle(
   const entryNames = Object.keys(entries)
 
   // Build every entry through a few shared rollup instances instead of one per
-  // entry/output pair. Experimental: shared code becomes a chunk rather than
-  // being copied into each entry that uses it.
+  // entry/output pair, so shared code becomes a chunk instead of being copied
+  // into each entry that uses it.
+  // `_entryFilter` is not a reason to skip merging: a worker gets a shard of
+  // entries and builds them as one graph, with the entries it does not own
+  // resolved as externals against their own output paths.
   const useMerged =
-    Boolean(options.mergeEntries) &&
-    !options._entryFilter &&
+    options.mergeEntries !== false &&
     (await canMergeEntries(entries, options, isFromCli))
 
   // With many entries, every entry's rollup build shares one heap and peak

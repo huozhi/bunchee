@@ -18,10 +18,10 @@ describe('integration multi-exports', () => {
       export { fooIndex, index };
       export type { FooIndex };
       ",
-        "cjs/index.js": "var index_js = require('../../foo/cjs/index.js');
+        "cjs/index.js": "var foo = require('../../foo/cjs/index.js');
 
       const index = 'index';
-      const fooIndex = index_js.foo;
+      const fooIndex = foo.foo;
 
       exports.fooIndex = fooIndex;
       exports.index = index;
@@ -60,10 +60,10 @@ describe('integration multi-exports', () => {
       export { fooIndex, index };
       export type { FooIndex };
       ",
-        "index.js": "var index_js = require('../../foo/cjs/index.js');
+        "index.js": "var foo = require('../../foo/cjs/index.js');
 
       const index = 'index';
-      const fooIndex = index_js.foo;
+      const fooIndex = foo.foo;
 
       exports.fooIndex = fooIndex;
       exports.index = index;

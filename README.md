@@ -348,16 +348,12 @@ bunchee --no-external
 
 This will include all dependencies within your output bundle.
 
-#### Merging entries into shared rollup instances (experimental)
+#### Building entries in shared rollup instances
 
-By default bunchee creates one rollup instance per entry/output pair, so a
-package with 50 exports in two formats plus types builds through 150 of them.
-`--merge-entries` instead groups every entry that can share a module graph and
-builds each group once, writing one output per format from the same graph:
-
-```sh
-bunchee --merge-entries
-```
+bunchee groups every entry that can share a module graph and builds each group
+once, writing one output per format from the same graph, rather than creating a
+rollup instance per entry/output pair. A package with 50 exports in two formats
+plus types would otherwise build through 150 of them.
 
 Declaration emit is linear in entry count and cannot be amortised by sharing a
 graph, so above the worker threshold the types are split into shards that each
@@ -365,12 +361,7 @@ build a merged graph in their own worker. Set `BUNCHEE_DTS_SHARDS` to override
 how many. Run with `DEBUG=1` to see the grouping, the shard layout, and the
 reason when a package is not merged.
 
-This trades wall-clock time for total CPU. Merging is faster on both for
-packages below the worker threshold, and above it it uses roughly 1.4–2.5x less
-CPU while being at parity to ~25% slower in wall time on an otherwise idle
-multi-core machine.
-
-Two things change when this is on:
+Two things differ from building each entry separately:
 
 - Code shared between entries becomes a chunk instead of being copied into every
   entry that imports it, so the emitted file list gains chunk files.
@@ -378,10 +369,16 @@ Two things change when this is on:
   `export *`, because rollup knows the sibling's exports once it is part of the
   same graph.
 
-bunchee falls back to the per-entry path — with no change in output — for
-packages it cannot merge yet: `bin` entries, runtime or `development`/
-`production` export conditions, `'use client'` / `'use server'` boundaries, a
-single `-o` output, and watch mode.
+Packages that cannot be merged fall back to one instance per entry, with no
+change in output: `bin` entries, runtime or `development`/`production` export
+conditions, `'use client'` / `'use server'` boundaries, a single `-o` output,
+and watch mode.
+
+To opt out and build each entry in its own rollup instance:
+
+```sh
+bunchee --no-merge-entries
+```
 
 #### Build Successful Command
 

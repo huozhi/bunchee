@@ -21,21 +21,16 @@ describe('integration - default-default-export', () => {
     ])
     const contents = await getFileContents(distDir)
     expect(contents['a.cjs']).toMatchInlineSnapshot(`
-      "var b_cjs = require('./b.cjs');
+      "var b = require('./b.cjs');
 
       const a = 'a';
 
+      exports.b = b.b;
       exports.a = a;
-      Object.keys(b_cjs).forEach(function (k) {
-      	if (k !== 'default' && !Object.prototype.hasOwnProperty.call(exports, k)) Object.defineProperty(exports, k, {
-      		enumerable: true,
-      		get: function () { return b_cjs[k]; }
-      	});
-      });
       "
     `)
     expect(contents['a.js']).toMatchInlineSnapshot(`
-      "export * from './b.js';
+      "export { b } from './b.js';
 
       const a = 'a';
 

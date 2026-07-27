@@ -44,7 +44,7 @@ describe('integration - merge-entries-boundary', () => {
   }, 120_000)
 
   it('should not merge a package with boundary directives', async () => {
-    const merged = await build({ DEBUG: '1' }, ['--merge-entries'])
+    const merged = await build({ DEBUG: '1' })
 
     expect(merged.stdout).toContain(
       `Not merging entries into shared rollup instances: package uses 'use client' / 'use server' boundaries`,
@@ -54,9 +54,9 @@ describe('integration - merge-entries-boundary', () => {
     )
   }, 120_000)
 
-  it('should produce the same output with and without --merge-entries', async () => {
-    const perEntry = await build()
-    const merged = await build({}, ['--merge-entries'])
+  it('should produce the same output with and without --no-merge-entries', async () => {
+    const perEntry = await build({}, ['--no-merge-entries'])
+    const merged = await build()
 
     expect(merged.files).toEqual(perEntry.files)
     expect(merged.contents).toEqual(perEntry.contents)

@@ -52,8 +52,9 @@ type BundleConfig = {
   /**
    * Build every entry through a few shared rollup instances — one module graph
    * per group of entries that can share one — instead of one per entry/output
-   * pair. Experimental: shared code becomes a chunk rather than being copied
-   * into each entry that uses it.
+   * pair. On by default; set to `false` to keep one rollup instance per
+   * entry/output, which copies shared code into each entry instead of emitting
+   * it as a chunk.
    */
   mergeEntries?: boolean
 

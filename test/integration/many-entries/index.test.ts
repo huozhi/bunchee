@@ -8,7 +8,7 @@ import {
 import { executeBunchee } from '../../testing-utils/shared'
 
 // Nine entries, above MIN_ENTRIES_FOR_WORKERS, with no directive layers: this
-// is the fixture that takes the worker pool path.
+// is the fixture that merges the JS into one graph and shards the types.
 const dir = __dirname
 const distDir = path.join(dir, 'dist')
 
@@ -23,6 +23,11 @@ async function build(env: NodeJS.ProcessEnv = {}, args: string[] = []) {
     contents: await getFileContents(distDir),
   }
 }
+
+const declarations = (contents: Record<string, string>) =>
+  Object.fromEntries(
+    Object.entries(contents).filter(([file]) => file.endsWith('.d.ts')),
+  )
 
 describe('integration - many-entries', () => {
   afterAll(async () => {
@@ -54,83 +59,80 @@ describe('integration - many-entries', () => {
         "h.js",
         "index.d.ts",
         "index.js",
+        "shared-BMJTKie0.js",
       ]
     `)
-    // The entry that imports a sibling entry keeps it external instead of
-    // inlining it, which the worker has to get right from its own copy of the
-    // full entries map.
+    // The entry that imports a sibling entry references it instead of inlining
+    // it, which rollup resolves itself once both are inputs of one graph.
     expect(contents['index.js']).toContain(`from './a.js'`)
     expect(contents['index.js']).not.toContain(`'a:'`)
   }, 120_000)
 
-  it('should produce the same output as an in-process build', async () => {
-    const workers = await build({ DEBUG: '1' })
-    const inProcess = await build({ DEBUG: '1', TEST_NO_WORKERS: '1' })
+  it('should build the JS as one graph and shard the types', async () => {
+    const { stdout } = await build({ DEBUG: '1' })
 
-    // Guard the comparison: it only means anything if the first build really
-    // did fan out. Runs from source and from dist resolve the worker file
-    // differently, so this has to hold for both.
-    expect(workers.stdout).toMatch(/Building 9 entries in \d+ worker threads/)
-    expect(inProcess.stdout).not.toContain('worker threads')
+    // Nine entries with a types output each is 18 rollup instances when every
+    // entry is built on its own.
+    expect(stdout).toMatch(/Building 9 entries in 1 shared rollup instances/)
+    expect(stdout).toMatch(
+      /Building 9 entries in \d+ worker threads \(\d+ shards of ~\d+\)/,
+    )
+  }, 120_000)
 
-    expect(inProcess.files).toEqual(workers.files)
-    expect(inProcess.contents).toEqual(workers.contents)
-  }, 240_000)
+  it('should emit shared code as one chunk instead of copying it per entry', async () => {
+    const perEntry = await build({}, ['--no-merge-entries'])
+    const merged = await build()
 
-  describe('--merge-entries', () => {
-    it('should build the JS through shared rollup instances and shard the types', async () => {
-      const merged = await build({ DEBUG: '1' }, ['--merge-entries'])
+    // `shared.ts` is not an entry and every entry imports it, so building each
+    // entry on its own duplicates it into all nine outputs.
+    const copies = Object.entries(perEntry.contents).filter(
+      ([file, content]) =>
+        file.endsWith('.js') && content.includes(`const shared = 'shared'`),
+    )
+    expect(copies).toHaveLength(9)
 
-      // Nine entries with a types output each is 18 rollup instances on the
-      // per-entry path. Merged, the JS collapses to one graph per format and
-      // the types go to the workers in shards rather than one worker per entry.
-      expect(merged.stdout).toMatch(
-        /Building 9 entries in 1 shared rollup instances/,
-      )
-      expect(merged.stdout).toMatch(
-        /Building 9 entries in \d+ worker threads \(\d+ shards of ~\d+\)/,
-      )
+    const chunk = merged.files.find((file) => file.startsWith('shared-'))
+    expect(chunk).toBeDefined()
+    expect(merged.contents['a.js']).toContain(`from './${chunk}'`)
+    expect(merged.contents['a.js']).not.toContain(`const shared = 'shared'`)
+  }, 180_000)
+
+  it('should emit the same declarations either way', async () => {
+    const perEntry = await build({}, ['--no-merge-entries'])
+    const merged = await build()
+
+    expect(declarations(merged.contents)).toEqual(
+      declarations(perEntry.contents),
+    )
+  }, 180_000)
+
+  describe('--no-merge-entries', () => {
+    it('should build every entry in its own rollup instance', async () => {
+      const { stdout, files, contents } = await build({ DEBUG: '1' }, [
+        '--no-merge-entries',
+      ])
+
+      expect(stdout).toMatch(/Building 9 entries in \d+ worker threads/)
+      expect(stdout).not.toContain('shared rollup instances')
+      // No cross-entry chunk: each entry carries its own copy of `shared`.
+      expect(files.some((file) => file.startsWith('shared-'))).toBe(false)
+      expect(contents['index.js']).toContain(`from './a.js'`)
     }, 120_000)
 
-    it('should keep a sibling entry external instead of inlining it', async () => {
-      const merged = await build({}, ['--merge-entries'])
+    it('should produce the same output as an in-process build', async () => {
+      const workers = await build({ DEBUG: '1' }, ['--no-merge-entries'])
+      const inProcess = await build({ DEBUG: '1', TEST_NO_WORKERS: '1' }, [
+        '--no-merge-entries',
+      ])
 
-      // Rollup resolves cross-entry references itself once both are inputs of
-      // the same graph, so this has to hold without the alias plugin.
-      expect(merged.contents['index.js']).toContain(`from './a.js'`)
-      expect(merged.contents['index.js']).not.toContain(`'a:'`)
-    }, 120_000)
+      // Guard the comparison: it only means anything if the first build really
+      // did fan out. Runs from source and from dist resolve the worker file
+      // differently, so this has to hold for both.
+      expect(workers.stdout).toMatch(/Building 9 entries in \d+ worker threads/)
+      expect(inProcess.stdout).not.toContain('worker threads')
 
-    it('should emit shared code as one chunk instead of copying it per entry', async () => {
-      const perEntry = await build()
-      const merged = await build({}, ['--merge-entries'])
-
-      // `shared.ts` is not an entry and every entry imports it, so the
-      // per-entry path duplicates it into all nine outputs.
-      const copies = Object.entries(perEntry.contents).filter(
-        ([file, content]) =>
-          file.endsWith('.js') && content.includes(`const shared = 'shared'`),
-      )
-      expect(copies).toHaveLength(9)
-
-      const chunk = merged.files.find((file) => file.startsWith('shared-'))
-      expect(chunk).toBeDefined()
-      expect(merged.contents['a.js']).toContain(`from './${chunk}'`)
-      expect(merged.contents['a.js']).not.toContain(`const shared = 'shared'`)
-    }, 180_000)
-
-    it('should produce identical type declarations', async () => {
-      const perEntry = await build()
-      const merged = await build({}, ['--merge-entries'])
-
-      const declarations = (contents: Record<string, string>) =>
-        Object.fromEntries(
-          Object.entries(contents).filter(([file]) => file.endsWith('.d.ts')),
-        )
-
-      expect(declarations(merged.contents)).toEqual(
-        declarations(perEntry.contents),
-      )
-    }, 180_000)
+      expect(inProcess.files).toEqual(workers.files)
+      expect(inProcess.contents).toEqual(workers.contents)
+    }, 240_000)
   })
 })

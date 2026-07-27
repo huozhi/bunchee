@@ -40,7 +40,7 @@ Options:
   --no-dts               do not generate types, default: undefined
   --tsconfig             path to tsconfig file, default: tsconfig.json
   --dts-bundle           bundle type declaration files, default: false
-  --merge-entries        build all entries in shared rollup instances (experimental)
+  --no-merge-entries     build each entry in its own rollup instance
   --success <cmd>     run command after build success
 `
 
@@ -136,6 +136,7 @@ async function parseCliArgs(argv: string[]) {
     })
     .option('merge-entries', {
       type: 'boolean',
+      default: undefined,
       description: 'build all entries in shared rollup instances',
     })
     .option('prepare', {

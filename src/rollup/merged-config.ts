@@ -245,11 +245,15 @@ export function typeShardCount(entryCount: number, cores: number): number {
   const override = Number(process.env.BUNCHEE_DTS_SHARDS)
   if (Number.isFinite(override) && override > 0) return Math.floor(override)
 
-  // Below this a shard spends longer starting a program than emitting types.
-  const MIN_ENTRIES_PER_SHARD = 8
-  return Math.max(
-    1,
-    Math.min(4, cores, Math.floor(entryCount / MIN_ENTRIES_PER_SHARD)),
+  // Past four the wall-clock barely moves while each extra program keeps
+  // costing CPU: on 57 entries, eight shards bought 50ms over four and spent
+  // another 7s of CPU doing it.
+  const MAX_SHARDS = 4
+  const MIN_ENTRIES_PER_SHARD = 4
+  return Math.min(
+    MAX_SHARDS,
+    cores,
+    Math.max(1, Math.ceil(entryCount / MIN_ENTRIES_PER_SHARD)),
   )
 }
 

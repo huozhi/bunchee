@@ -41,15 +41,11 @@ describe('integration - merge-entries-shards', () => {
   }, 120_000)
 
   it('should emit the same declarations however the types are sharded', async () => {
-    const perEntry = declarations(await build())
-    const oneShard = declarations(
-      await build({ BUNCHEE_DTS_SHARDS: '1' }, ['--merge-entries']),
-    )
+    const perEntry = declarations(await build({}, ['--no-merge-entries']))
+    const oneShard = declarations(await build({ BUNCHEE_DTS_SHARDS: '1' }))
     // More shards than entries, so every entry lands in a shard of its own and
     // every cross-entry reference has to cross a shard boundary.
-    const manyShards = declarations(
-      await build({ BUNCHEE_DTS_SHARDS: '8' }, ['--merge-entries']),
-    )
+    const manyShards = declarations(await build({ BUNCHEE_DTS_SHARDS: '8' }))
 
     expect(oneShard).toEqual(perEntry)
     expect(manyShards).toEqual(perEntry)
