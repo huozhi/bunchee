@@ -179,6 +179,14 @@ export async function buildMergedConfigs(
 
   const groups = new Map<string, Group>()
   for (const [exportPath, exportCondition] of Object.entries(entries)) {
+    // A shard owns a subset of the entries. The rest stay in `entries` so the
+    // alias plugin can still resolve references to them as externals.
+    if (
+      bundleConfig._entryFilter &&
+      !bundleConfig._entryFilter.includes(exportPath)
+    ) {
+      continue
+    }
     const outputs = await getEntryBundleOutputs(
       bundleConfig,
       exportCondition,
@@ -223,6 +231,37 @@ export async function buildMergedConfigs(
     )
   }
   return configs
+}
+
+/**
+ * How many ways to split the types work across workers.
+ *
+ * Declaration emit is linear in entry count and one shared graph cannot
+ * amortise it, so the only lever is running several at once — and only in
+ * separate heaps. Four was the floor on a 57-entry package; past that each
+ * extra TypeScript program costs more than the parallelism it buys.
+ */
+export function typeShardCount(entryCount: number, cores: number): number {
+  const override = Number(process.env.BUNCHEE_DTS_SHARDS)
+  if (Number.isFinite(override) && override > 0) return Math.floor(override)
+
+  // Below this a shard spends longer starting a program than emitting types.
+  const MIN_ENTRIES_PER_SHARD = 8
+  return Math.max(
+    1,
+    Math.min(4, cores, Math.floor(entryCount / MIN_ENTRIES_PER_SHARD)),
+  )
+}
+
+/** Split into `count` contiguous groups of near-equal size. */
+export function shardEntries(names: string[], count: number): string[][] {
+  if (count <= 1) return [names]
+  const groups: string[][] = []
+  const size = Math.ceil(names.length / count)
+  for (let i = 0; i < names.length; i += size) {
+    groups.push(names.slice(i, i + size))
+  }
+  return groups
 }
 
 async function buildMergedConfig(

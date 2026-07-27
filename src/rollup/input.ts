@@ -221,13 +221,14 @@ export async function buildInputConfig(
     exportCondition,
     dts,
     cwd,
+    // In a merged build the plugin only rewrites references to entries this
+    // build does not own; rollup emits the rest as chunk imports.
+    mergedSources: isMerged ? mergedSources : undefined,
   })
   const commonPlugins = [json(), sizePlugin]
 
   const typesPlugins: (Plugin | false)[] = [
-    // In a merged build every entry is an input, so rollup resolves the
-    // cross-entry references natively and the alias rewrite is redundant.
-    isMerged ? (false as const) : aliasPlugin,
+    aliasPlugin,
     ...commonPlugins,
     inlineCss({ skip: true }),
   ]
@@ -252,7 +253,7 @@ export async function buildInputConfig(
       : [
           ...commonPlugins,
           preserveDirectives(),
-          isMerged ? (false as const) : aliasPlugin,
+          aliasPlugin,
           inlineCss({ exclude: /node_modules/ }),
           rawContent({ exclude: /node_modules/ }),
           nativeAddon(),

@@ -78,15 +78,18 @@ describe('integration - many-entries', () => {
   }, 240_000)
 
   describe('--merge-entries', () => {
-    it('should build every entry through two shared rollup instances', async () => {
+    it('should build the JS through shared rollup instances and shard the types', async () => {
       const merged = await build({ DEBUG: '1' }, ['--merge-entries'])
 
-      // Nine entries, each with a types output, is 18 rollup instances on the
-      // per-entry path. Merged it is one graph for the JS and one for the types.
+      // Nine entries with a types output each is 18 rollup instances on the
+      // per-entry path. Merged, the JS collapses to one graph per format and
+      // the types go to the workers in shards rather than one worker per entry.
       expect(merged.stdout).toMatch(
-        /Building 9 entries in 2 shared rollup instances/,
+        /Building 9 entries in 1 shared rollup instances/,
       )
-      expect(merged.stdout).not.toContain('worker threads')
+      expect(merged.stdout).toMatch(
+        /Building 9 entries in \d+ worker threads \(\d+ shards of ~\d+\)/,
+      )
     }, 120_000)
 
     it('should keep a sibling entry external instead of inlining it', async () => {

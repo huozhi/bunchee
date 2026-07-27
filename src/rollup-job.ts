@@ -28,10 +28,12 @@ export async function createAssetRollupJobs(
   bundleJobOptions: BundleJobOptions,
 ) {
   const { isFromCli, generateTypes } = bundleJobOptions
-  const assetsConfigs = await buildEntryConfig(options, buildContext, {
-    dts: false,
-    isFromCli,
-  })
+  const assetsConfigs = options._typesOnly
+    ? []
+    : await buildEntryConfig(options, buildContext, {
+        dts: false,
+        isFromCli,
+      })
   const typesConfigs = generateTypes
     ? await buildEntryConfig(options, buildContext, {
         dts: true,
@@ -71,10 +73,12 @@ export async function createMergedRollupJobs(
   bundleJobOptions: BundleJobOptions,
 ) {
   const { isFromCli, generateTypes } = bundleJobOptions
-  const assetsConfigs = await buildMergedConfigs(options, buildContext, {
-    dts: false,
-    isFromCli,
-  })
+  const assetsConfigs = options._typesOnly
+    ? []
+    : await buildMergedConfigs(options, buildContext, {
+        dts: false,
+        isFromCli,
+      })
   const typesConfigs = generateTypes
     ? await buildMergedConfigs(options, buildContext, { dts: true, isFromCli })
     : []
@@ -106,10 +110,11 @@ export async function createMergedRollupJobs(
   }
 
   try {
-    // Sequentially: the point of merging is that there are only a handful of
-    // graphs, and each is large. Running them concurrently puts every graph —
-    // including a full TypeScript program — in the heap at once, which is the
-    // same OOM the per-entry path hits.
+    // Sequentially: there are only a handful of graphs and each is large.
+    // Running them concurrently puts every graph — including a full TypeScript
+    // program — in one heap, which is both the OOM the per-entry path hits and,
+    // measured, slower than doing them in turn. Parallelism across types shards
+    // comes from the worker pool, where each shard gets its own heap.
     const results = []
     for (const config of allConfigs) {
       results.push(await runMergedBundle(config))

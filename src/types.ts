@@ -58,6 +58,14 @@ type BundleConfig = {
   mergeEntries?: boolean
 
   /*
+   * Build only the type declarations, skipping the JS assets. Set when merged
+   * rollup instances have already produced the JS on the main thread and the
+   * workers are left with the types.
+   * @internal
+   */
+  _typesOnly?: boolean
+
+  /*
    * Only build the entries with these export paths (e.g. ['./foo']).
    * Set by the worker pool to assign one entry per worker.
    * @internal

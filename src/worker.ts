@@ -5,7 +5,8 @@ import bundle from './bundle'
 export type EntryWorkerTask = {
   cwd: string
   cliEntryPath: string
-  entryName: string
+  /** The entries this worker owns; more than one when the caller sharded. */
+  entryNames: string[]
   options: BundleConfig
 }
 
@@ -57,7 +58,7 @@ function toTransferableError(error: any): Error {
 export async function buildEntryInWorker({
   cwd,
   cliEntryPath,
-  entryName,
+  entryNames,
   options,
 }: EntryWorkerTask): Promise<SizeStats> {
   let buildContext: BuildContext | undefined
@@ -73,7 +74,7 @@ export async function buildEntryInWorker({
       // entries are dispatched; workers run concurrently and must not remove
       // each other's output.
       clean: false,
-      _entryFilter: [entryName],
+      _entryFilter: entryNames,
       _callbacks: {
         onBuildStart(context: BuildContext) {
           buildContext = context

@@ -1,0 +1,23 @@
+{
+  "name": "merge-entries-shards",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    "./base": {
+      "types": "./dist/base/index.d.ts",
+      "import": "./dist/base/index.js"
+    },
+    "./mid": {
+      "types": "./dist/mid/index.d.ts",
+      "import": "./dist/mid/index.js"
+    },
+    "./nest/deep": {
+      "types": "./dist/nest/deep/index.d.ts",
+      "import": "./dist/nest/deep/index.js"
+    },
+    "./top": {
+      "types": "./dist/top/index.d.ts",
+      "import": "./dist/top/index.js"
+    }
+  }
+}

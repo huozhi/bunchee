@@ -359,8 +359,16 @@ builds each group once, writing one output per format from the same graph:
 bunchee --merge-entries
 ```
 
-Run with `DEBUG=1` to see the grouping, and the reason when a package is not
-merged.
+Declaration emit is linear in entry count and cannot be amortised by sharing a
+graph, so above the worker threshold the types are split into shards that each
+build a merged graph in their own worker. Set `BUNCHEE_DTS_SHARDS` to override
+how many. Run with `DEBUG=1` to see the grouping, the shard layout, and the
+reason when a package is not merged.
+
+This trades wall-clock time for total CPU. Merging is faster on both for
+packages below the worker threshold, and above it it uses roughly 1.4–2.5x less
+CPU while being at parity to ~25% slower in wall time on an otherwise idle
+multi-core machine.
 
 Two things change when this is on:
 
