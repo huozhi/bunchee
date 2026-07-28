@@ -430,7 +430,6 @@ _NOTE_: When you're using `.mjs` or `.cjs` extensions with TypeScript and modern
   "files": ["dist"],
   "type": "module",
   "main": "./dist/index.js",
-  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     "import": {

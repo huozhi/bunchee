@@ -25,7 +25,7 @@ describe('integration prepare-ts-with-pkg-json', () => {
       expect(pkgJson.files).toContain('dist')
       expect(pkgJson.type).toBeUndefined()
       expect(pkgJson.main).toBe('./dist/cjs/index.js')
-      expect(pkgJson.module).toBe('./dist/es/index.mjs')
+      expect(pkgJson.module).toBeUndefined()
     })
   })
 
@@ -59,7 +59,7 @@ describe('integration prepare-ts-with-pkg-json', () => {
       expect(pkgJson.files).toContain('dist')
       expect(pkgJson.type).toBeUndefined()
       expect(pkgJson.main).toBe('./dist/cjs/index.js')
-      expect(pkgJson.module).toBe('./dist/es/index.mjs')
+      expect(pkgJson.module).toBeUndefined()
       expect(pkgJson.exports).toEqual({
         '.': {
           default: './dist/index.js',

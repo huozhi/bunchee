@@ -42,7 +42,7 @@ describe('integration prepare-ts-cjs', () => {
     })
     expect(pkgJson.type).toBe('module')
     expect(pkgJson.main).toBe('./dist/es/index.js')
-    expect(pkgJson.module).toBe('./dist/es/index.js')
+    expect(pkgJson.module).toBeUndefined()
     expect(pkgJson.exports).toEqual({
       './foo': {
         import: {
