@@ -23,10 +23,6 @@ import {
 } from './constants'
 import { OutputOptions } from 'rollup'
 
-export function getPackageTypings(pkg: PackageMetadata) {
-  return pkg.types || pkg.typings
-}
-
 /**
  * A single output file declared by package.json, together with the export
  * conditions that lead to it, outermost first.
@@ -235,7 +231,7 @@ export async function parseExports(
     }
   }
 
-  // Handle package.json global exports fields
+  // Handle package.json main, module, and types fields
   if (pkg.main || pkg.module || pkg.types) {
     const rootFields: [string | undefined, string][] = [
       [pkg.main, getMainFieldExportType(pkg)],
