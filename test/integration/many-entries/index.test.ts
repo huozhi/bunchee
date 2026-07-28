@@ -50,7 +50,7 @@ describe('integration - many-entries', () => {
         "h.js",
         "index.d.ts",
         "index.js",
-        "shared-BMJTKie0.js",
+        "shared-m31h5ood.js",
       ]
     `)
     // The entry that imports a sibling entry references it instead of inlining

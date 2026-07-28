@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "module": "ES6",
+    "moduleResolution": "bundler",
+    "target": "ES2022"
+  },
+  "exclude": ["*.test.ts"]
+}

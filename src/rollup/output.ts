@@ -48,6 +48,9 @@ export async function buildOutputConfigs(
     sourcemap = !!tsCompilerOptions?.declarationMap
   }
 
+  /** Group name -> emitted base name, populated by `createSplitChunks`. */
+  const chunkBaseNames = new Map<string, string>()
+
   const outputOptions: OutputOptions = {
     name: pkg.name || name,
     extend: true,
@@ -59,12 +62,18 @@ export async function buildOutputConfigs(
     freeze: false,
     strict: false,
     sourcemap,
+    // Rollup's default hash alphabet is base64url, which includes `-` — so the
+    // hash itself could add dashes to a name that already has one before it,
+    // sometimes two in a row (`mod_asset-12s--5vqDwxI.js`). base36 is
+    // alphanumeric, which leaves that single dash as the only one in the name.
+    hashCharacters: 'base36',
     manualChunks: createSplitChunks(
       pluginContext.moduleDirectiveLayerMap,
       entryFiles,
       merged,
+      chunkBaseNames,
     ),
-    chunkFileNames() {
+    chunkFileNames(chunk) {
       const isCjsFormat = format === 'cjs'
       const ext = dts
         ? 'd.ts'
@@ -73,7 +82,12 @@ export async function buildOutputConfigs(
           : !isCjsFormat && !isEsmPkg
             ? 'mjs'
             : 'js'
-      return '[name]-[hash].' + ext
+      // A boundary group is keyed by layer so the layers cannot merge, but the
+      // file is written under the module's own name — the layer is only part of
+      // the key. Chunks rollup names itself are not in the map and keep
+      // `[name]`.
+      const base = chunkBaseNames.get(chunk.name)
+      return `${base ?? '[name]'}-[hash].${ext}`
     },
     // By default in rollup, when creating multiple chunks, transitive imports of entry chunks
     // will be added as empty imports to the entry chunks. Disable to avoid imports hoist outside of boundaries
