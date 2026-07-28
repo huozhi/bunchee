@@ -330,17 +330,13 @@ export async function prepare(
           ? mainExport[mainCondition].default
           : mainExport[mainCondition]
 
-        pkgJson.module = isUsingTs
-          ? mainExport.import.default
-          : mainExport.import
-
         if (isUsingTs) {
           pkgJson.types = mainExport[mainCondition].types
         }
       }
     }
 
-    // Assign the properties by order: files, main, module, types, exports
+    // Assign the properties by order: files, main, types, exports
     if (Object.keys(pkgExports).length > 0) {
       if (!pkgJson.exports) {
         pkgJson.exports = pkgExports
