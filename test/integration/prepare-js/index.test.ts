@@ -15,38 +15,35 @@ describe('integration prepare-js', () => {
     )
   })
 
-  const { dir, job } = createJob({ directory: __dirname, args: ['prepare'] })
+  const { dir, job } = createJob({
+    directory: __dirname,
+    args: ['prepare'],
+  })
 
-  it('should contain correct files', async () => {
+  it('should set type to module and use correct extensions', async () => {
     const { stdout } = job
     await assertContainFiles(dir, ['package.json'])
     const pkgJson = JSON.parse(
       await fsp.readFile(join(dir, './package.json'), 'utf-8'),
     )
+    // Verify type is set to module
+    expect(pkgJson.type).toBe('module')
+    // With type: module, ESM uses .js, CJS uses .cjs
     expect(pkgJson.main).toBe('./dist/index.js')
-    expect(pkgJson.module).toBe('./dist/index.mjs')
+    expect(pkgJson.module).toBeUndefined()
     expect(pkgJson.types).toBeFalsy()
     expect(pkgJson.files).toContain('dist')
     expect(pkgJson.bin).toBe('./dist/bin/index.js')
     expect(pkgJson.exports).toEqual({
-      './foo': {
-        import: './dist/foo.mjs',
-        require: './dist/foo.js',
-      },
-      '.': {
-        import: './dist/index.mjs',
-        require: './dist/index.js',
-      },
+      './foo': './dist/foo.js',
+      '.': './dist/index.js',
     })
 
-    /*
-      Discovered binaries entries:
-        .: bin.js
-      Discovered exports entries:
-        ./foo: foo.js
-        .    : index.js
-      ✓ Configured `exports` in package.json
-    */
+    // Verify additional setup for --esm
+    expect(pkgJson.scripts).toEqual({
+      build: 'bunchee',
+      prepublishOnly: 'npm run build',
+    })
 
     expect(stripANSIColor(stdout)).toMatchInlineSnapshot(`
       "Discovered binaries entries:

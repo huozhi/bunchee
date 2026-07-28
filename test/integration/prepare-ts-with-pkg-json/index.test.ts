@@ -15,7 +15,7 @@ describe('integration prepare-ts-with-pkg-json', () => {
     })
     createJob({
       directory: __dirname,
-      args: ['prepare'],
+      args: ['prepare', '--cjs'],
     })
     it('should contain output files', async () => {
       assertContainFiles(dir, ['package.json'])
@@ -49,7 +49,7 @@ describe('integration prepare-ts-with-pkg-json', () => {
     })
     createJob({
       directory: __dirname,
-      args: ['prepare'],
+      args: ['prepare', '--cjs'],
     })
     it('should not override existing exports field', async () => {
       assertContainFiles(dir, ['package.json'])

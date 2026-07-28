@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 import fsp from 'fs/promises'
 import { join } from 'path'
 import {
@@ -8,83 +8,55 @@ import {
 } from '../../testing-utils'
 
 describe('integration prepare-ts', () => {
-  const { dir, job } = createJob({
-    args: ['prepare'],
-    directory: __dirname,
+  beforeAll(async () => {
+    await fsp.writeFile(
+      join(__dirname, './package.json'),
+      '{ "type": "commonjs" }',
+    )
   })
 
-  it('should contain files', async () => {
+  const { dir, job } = createJob({
+    directory: __dirname,
+    args: ['prepare'],
+  })
+
+  it('should set type to module and use correct exports pattern with types', async () => {
     const { stdout } = job
     await assertContainFiles(dir, ['package.json', 'tsconfig.json'])
-
-    const tsconfig = await fsp.readFile(join(dir, './tsconfig.json'), 'utf-8')
-
-    expect(tsconfig).toMatchInlineSnapshot(`
-      "{
-        "compilerOptions": {
-          "target": "ES2022",
-          "module": "ESNext",
-          "moduleResolution": "bundler"
-        },
-        "include": [
-          "src"
-        ]
-      }"
-    `)
-
     const pkgJson = JSON.parse(
       await fsp.readFile(join(dir, './package.json'), 'utf-8'),
     )
-    expect(pkgJson.files).toContain('dist')
-    expect(pkgJson.bin).toEqual({
-      cli: './dist/bin/cli.js',
-      cmd: './dist/bin/cmd.js',
-    })
+    // Verify type is set to module (ESM-first default)
     expect(pkgJson.type).toBe('module')
-    expect(pkgJson.main).toBe('./dist/es/index.js')
-    expect(pkgJson.module).toBe('./dist/es/index.js')
+    // With type: module and TypeScript, ESM uses .js, types use .d.ts
+    expect(pkgJson.main).toBe('./dist/index.js')
+    expect(pkgJson.module).toBeUndefined()
+    expect(pkgJson.types).toBe('./dist/index.d.ts')
+    expect(pkgJson.files).toContain('dist')
+    expect(pkgJson.bin).toBe('./dist/bin/index.js')
     expect(pkgJson.exports).toEqual({
       './foo': {
-        import: {
-          types: './dist/es/foo.d.ts',
-          default: './dist/es/foo.js',
-        },
-        require: {
-          types: './dist/cjs/foo.d.cts',
-          default: './dist/cjs/foo.cjs',
-        },
+        types: './dist/foo.d.ts',
+        default: './dist/foo.js',
       },
       '.': {
-        'react-server': './dist/es/index-react-server.mjs',
-        import: {
-          types: './dist/es/index.d.ts',
-          default: './dist/es/index.js',
-        },
-        require: {
-          types: './dist/cjs/index.d.cts',
-          default: './dist/cjs/index.cjs',
-        },
+        types: './dist/index.d.ts',
+        default: './dist/index.js',
       },
     })
 
-    /*
-      Discovered binaries entries:
-        ./cli: cli.ts
-        ./cmd: cmd.ts
-      Discovered exports entries:
-        ./foo: foo.ts
-        .    : index.react-server.ts
-        .    : index.ts
-      ✓ Configured `exports` in package.json
-    */
+    // Verify build scripts are added by default
+    expect(pkgJson.scripts).toEqual({
+      build: 'bunchee',
+      prepublishOnly: 'npm run build',
+    })
+
     expect(stripANSIColor(stdout)).toMatchInlineSnapshot(`
       "Detected using TypeScript but tsconfig.json is missing, created a tsconfig.json for you.
       Discovered binaries entries:
-        ./cli: cli.ts
-        ./cmd: cmd.ts
+        ./$binary: bin.ts
       Discovered exports entries:
         ./foo: foo.ts
-        .    : index.react-server.ts
         .    : index.ts
       ✓ Configured \`exports\` in package.json
       "

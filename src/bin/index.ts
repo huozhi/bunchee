@@ -145,13 +145,14 @@ async function parseCliArgs(argv: string[]) {
       'prepare',
       'auto configure package.json exports for building',
       (yargs) => {
-        return yargs.option('esm', {
+        return yargs.option('cjs', {
           type: 'boolean',
-          description: 'configure package as ESM (sets type: "module")',
+          description:
+            'configure package for dual CJS+ESM output (default: ESM only)',
         })
       },
       (argv) => {
-        return prepare(argv.cwd || process.cwd(), { esm: argv.esm })
+        return prepare(argv.cwd || process.cwd(), { cjs: argv.cjs })
       },
     )
     .command(
