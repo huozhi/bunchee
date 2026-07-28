@@ -158,7 +158,7 @@ function addBuildScripts(pkgJson: Record<string, any>, cwd: string): void {
 
 export async function prepare(
   cwd: string,
-  options?: { esm?: boolean },
+  options?: { cjs?: boolean },
 ): Promise<void> {
   const sourceFolder = path.resolve(cwd, SRC)
 
@@ -215,9 +215,8 @@ export async function prepare(
     }
   }
 
-  // Configure as ESM package by default if there's no package.json
-  // OR if --esm flag is explicitly set
-  if (!hasPackageJson || options?.esm) {
+  // Configure as ESM package by default
+  if (!hasPackageJson || !options?.cjs) {
     pkgJson.type = 'module'
   }
 
@@ -281,7 +280,7 @@ export async function prepare(
     }
 
     const pkgExports: Record<string, any> = {}
-    const esmOnly = options?.esm === true
+    const esmOnly = !options?.cjs
     for (const [exportName, sourceFilesMap] of exportsEntries.entries()) {
       for (const sourceFile of Object.values(sourceFilesMap)) {
         const [normalizedExportPath, conditions] = createExportConditionPair(
@@ -359,10 +358,8 @@ export async function prepare(
     }
   }
 
-  // Additional setup when --esm flag is set
-  if (options?.esm) {
-    addBuildScripts(pkgJson, cwd)
-  }
+  // Additional setup for build scripts
+  addBuildScripts(pkgJson, cwd)
 
   // Add bunchee to devDependencies if not already present
   if (!pkgJson.devDependencies) {

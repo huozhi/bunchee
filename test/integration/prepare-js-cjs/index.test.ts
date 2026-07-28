@@ -7,7 +7,7 @@ import {
   stripANSIColor,
 } from '../../testing-utils'
 
-describe('integration prepare-js-esm', () => {
+describe('integration prepare-js-cjs', () => {
   beforeAll(async () => {
     await fsp.writeFile(
       join(__dirname, './package.json'),
@@ -17,33 +17,39 @@ describe('integration prepare-js-esm', () => {
 
   const { dir, job } = createJob({
     directory: __dirname,
-    args: ['prepare', '--esm'],
+    args: ['prepare', '--cjs'],
   })
 
-  it('should set type to module and use correct extensions', async () => {
+  it('should contain correct files', async () => {
     const { stdout } = job
     await assertContainFiles(dir, ['package.json'])
     const pkgJson = JSON.parse(
       await fsp.readFile(join(dir, './package.json'), 'utf-8'),
     )
-    // Verify type is set to module
-    expect(pkgJson.type).toBe('module')
-    // With type: module, ESM uses .js, CJS uses .cjs
     expect(pkgJson.main).toBe('./dist/index.js')
-    expect(pkgJson.module).toBeUndefined()
+    expect(pkgJson.module).toBe('./dist/index.mjs')
     expect(pkgJson.types).toBeFalsy()
     expect(pkgJson.files).toContain('dist')
     expect(pkgJson.bin).toBe('./dist/bin/index.js')
     expect(pkgJson.exports).toEqual({
-      './foo': './dist/foo.js',
-      '.': './dist/index.js',
+      './foo': {
+        import: './dist/foo.mjs',
+        require: './dist/foo.js',
+      },
+      '.': {
+        import: './dist/index.mjs',
+        require: './dist/index.js',
+      },
     })
 
-    // Verify additional setup for --esm
-    expect(pkgJson.scripts).toEqual({
-      build: 'bunchee',
-      prepublishOnly: 'npm run build',
-    })
+    /*
+      Discovered binaries entries:
+        .: bin.js
+      Discovered exports entries:
+        ./foo: foo.js
+        .    : index.js
+      ✓ Configured `exports` in package.json
+    */
 
     expect(stripANSIColor(stdout)).toMatchInlineSnapshot(`
       "Discovered binaries entries:

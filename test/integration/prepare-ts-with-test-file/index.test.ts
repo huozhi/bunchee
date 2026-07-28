@@ -15,8 +15,8 @@ describe('integration prepare-ts-with-test-file', () => {
       await fsp.readFile(join(dir, './package.json'), 'utf-8'),
     )
     expect(pkgJson.files).toContain('dist')
-    expect(pkgJson.main).toBe('./dist/es/index.js')
-    expect(pkgJson.module).toBe('./dist/es/index.js')
+    expect(pkgJson.main).toBe('./dist/index.js')
+    expect(pkgJson.module).toBeUndefined()
     expect(Object.keys(pkgJson.exports)).toEqual(['.'])
     expect(Object.keys(pkgJson.exports['.'])).not.toContain('./test')
   })

@@ -40,7 +40,7 @@ describe('integration prepare-no-src', () => {
     // Should have files field with dist
     expect(pkgJson.files).toEqual(['dist'])
 
-    // Should have type: 'module' since package.json didn't exist
+    // Should have type: 'module' (ESM-first default)
     expect(pkgJson.type).toBe('module')
 
     // Should have bunchee in devDependencies
@@ -48,24 +48,18 @@ describe('integration prepare-no-src', () => {
       bunchee: 'latest',
     })
 
-    // Should have exports configured for index.ts
+    // Should have ESM-only exports configured for index.ts
     expect(pkgJson.exports).toEqual({
       '.': {
-        import: {
-          types: './dist/es/index.d.ts',
-          default: './dist/es/index.js',
-        },
-        require: {
-          types: './dist/cjs/index.d.cts',
-          default: './dist/cjs/index.cjs',
-        },
+        types: './dist/index.d.ts',
+        default: './dist/index.js',
       },
     })
 
-    // Should have main, module, and types fields
-    expect(pkgJson.main).toBe('./dist/es/index.js')
-    expect(pkgJson.module).toBe('./dist/es/index.js')
-    expect(pkgJson.types).toBe('./dist/es/index.d.ts')
+    // Should have main and types fields (no module in ESM-first)
+    expect(pkgJson.main).toBe('./dist/index.js')
+    expect(pkgJson.types).toBe('./dist/index.d.ts')
+    expect(pkgJson.module).toBeUndefined()
 
     // Should not have bin
     expect(pkgJson.bin).toBeUndefined()
