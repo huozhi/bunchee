@@ -1,0 +1,8 @@
+{
+  "name": "workspace-protocol",
+  "type": "module",
+  "exports": "./dist/index.js",
+  "dependencies": {
+    "foo": "workspace:*"
+  }
+}
