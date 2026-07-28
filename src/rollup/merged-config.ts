@@ -198,20 +198,30 @@ export async function buildMergedConfigs(
 /**
  * How many ways to split the types work across workers.
  *
- * Declaration emit is linear in entry count and one shared graph cannot
- * amortise it, so the only lever is running several at once — and only in
- * separate heaps. Four was the floor on a 57-entry package; past that each
- * extra TypeScript program costs more than the parallelism it buys.
+ * Declaration emit splits into a fixed cost — standing up a TypeScript program,
+ * around 400ms — and a per-entry cost that grows as the program does. Sharding
+ * divides the second but pays the first once per shard, so it only wins once
+ * the per-entry side dominates: measured serially, declarations cost 573ms at
+ * 21 entries, 706ms at 42, and 3180ms at 201.
+ *
+ * That makes entry count, not core count, the thing worth gating on. A shard
+ * per 4 entries sent a 21-entry package straight to the cap and made it slower
+ * than not sharding at all.
  */
 export function typeShardCount(entryCount: number, cores: number): number {
   const override = Number(process.env.BUNCHEE_DTS_SHARDS)
   if (Number.isFinite(override) && override > 0) return Math.floor(override)
 
-  // Past four the wall-clock barely moves while each extra program keeps
-  // costing CPU: on 57 entries, eight shards bought 50ms over four and spent
-  // another 7s of CPU doing it.
-  const MAX_SHARDS = 4
-  const MIN_ENTRIES_PER_SHARD = 4
+  // Two is the setting that holds up in both directions. On an idle machine a
+  // third and fourth shard buy another 3% at 201 entries, but they cost a
+  // program each, and on a machine whose cores are already busy — CI, or a
+  // build sharing a laptop — that extra CPU comes straight back as wall clock:
+  // four shards ran 10% slower than two at 201 entries and 20% slower at 42.
+  //
+  // The second shard only starts paying for itself around 40 entries. Below 20
+  // it is a wash, so keep those on one program and one heap.
+  const MAX_SHARDS = 2
+  const MIN_ENTRIES_PER_SHARD = 20
   return Math.min(
     MAX_SHARDS,
     cores,
