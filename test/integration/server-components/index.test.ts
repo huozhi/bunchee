@@ -10,15 +10,15 @@ describe('integration server-components', () => {
     expect(jsFiles).toEqual([
       'index.cjs',
       'index.js',
-      'mod_actions-12x-DRlszKRg.js',
-      'mod_actions-12x-ZyfVXl5o.cjs',
+      'mod_actions-gdr5hg8y.js',
+      'mod_actions-gnku5pdq.cjs',
       // `mod_asset` carries 'use client' and is reached from `ui` only, but one
       // graph places it once, so it gets a boundary chunk rather than being
       // inlined into that entry.
-      'mod_asset-12s--5vqDwxI.cjs',
-      'mod_asset-12s-Bq1vQakb.js',
-      'mod_client-12s-BO96FYFA.js',
-      'mod_client-12s-DAeHkA4H.cjs',
+      'mod_asset-bssczhru.js',
+      'mod_asset-hfdpjgz4.cjs',
+      'mod_client-dntoopie.js',
+      'mod_client-h1r7vgy7.cjs',
       'ui.cjs',
       'ui.js',
     ])

@@ -1,16 +1,15 @@
 import { type GetManualChunk, type GetModuleInfo } from 'rollup'
 import { type CustomPluginOptions } from 'rollup'
 import path from 'path'
-import { memoize } from '../lib/memoize'
 
-const hashTo3Char = memoize((input: string): string => {
-  let hash = 0
-  for (let i = 0; i < input.length; i++) {
-    hash = (hash << 5) - hash + input.charCodeAt(i) // Simple hash shift
-  }
-  return (hash >>> 0).toString(36).slice(0, 3) // Base36 + trim to 3 chars
-})
-
+/**
+ * The module's own directive layer, as written — `'use client'` gives `client`.
+ *
+ * This is the raw directive rather than a hash of it. The value decides whether
+ * two modules sit on the same side of a boundary, so it has to stay exact: a
+ * hash short enough to put in a file name is not, and `'use server'` and
+ * `'use cache'` collided under the one that used to be here.
+ */
 function getModuleLayer(moduleMeta: CustomPluginOptions): string | undefined {
   const directives = (
     moduleMeta.preserveDirectives || { directives: [] }
@@ -18,8 +17,7 @@ function getModuleLayer(moduleMeta: CustomPluginOptions): string | undefined {
     .map((d: string) => d.replace(/^use /, ''))
     .filter((d: string) => d !== 'strict')
 
-  const moduleLayer = directives[0]
-  return moduleLayer ? hashTo3Char(moduleLayer) : undefined
+  return directives[0]
 }
 
 /**
@@ -115,9 +113,45 @@ export function createSplitChunks(
    * explicit for all of them, and costs one chunk instead of a copy per entry.
    */
   merged: boolean = false,
+  /**
+   * Filled in as groups are created: group name -> the base name its file is
+   * written under, for `chunkFileNames` to read back.
+   *
+   * A group name has to be layer-specific, or two modules that share a file
+   * name on opposite sides of a boundary land in one chunk carrying both
+   * directives. That makes the layer part of the key, but it is only a key —
+   * it does not belong in the emitted file name, which stays
+   * `<module>-<hash>`.
+   */
+  chunkBaseNames?: Map<string, string>,
 ): GetManualChunk {
   // If there's existing chunk being splitted, and contains a layer { <id>: <chunkGroup> }
   const splitChunksGroupMap = new Map<string, string>()
+
+  /** module + layer -> group token, so the same pair always reuses its group. */
+  const groupTokens = new Map<string, string>()
+
+  /**
+   * A group keyed by module *and* layer, written out under the module's name.
+   *
+   * The token is deliberately opaque rather than something readable like
+   * `<module>_<layer>`: rollup rewrites a chunk name it considers unsafe for a
+   * file name, and a rewritten name no longer matches the key it was recorded
+   * under — which silently puts the layer back into the output. A token rollup
+   * leaves alone keeps the emitted name entirely ours. It never reaches the
+   * user; `chunkFileNames` maps it straight back to `base`.
+   */
+  function groupFor(id: string, layerKey: string): string {
+    const base = path.basename(id, path.extname(id))
+    const key = `${base}\u0000${layerKey}`
+    let token = groupTokens.get(key)
+    if (!token) {
+      token = `bunchee_group_${groupTokens.size}`
+      groupTokens.set(key, token)
+      chunkBaseNames?.set(token, base)
+    }
+    return token
+  }
 
   return function splitChunks(id, ctx) {
     if (/[\\/]node_modules[\\/]\@swc[\\/]helper/.test(id)) {
@@ -164,10 +198,12 @@ export function createSplitChunks(
           return splitChunksGroupMap.get(id)
         }
 
-        const chunkName = path.basename(id, path.extname(id))
-        // Create a unique suffix based on all the layers that import this module
-        const layersSuffix = Array.from(importerLayers).sort().join('-')
-        const chunkGroup = `${chunkName}-${hashTo3Char(layersSuffix)}`
+        // Keyed by every layer that reaches it, so the chunk shared by the
+        // client and server boundaries is distinct from either one's own.
+        const chunkGroup = groupFor(
+          id,
+          Array.from(importerLayers).sort().join('\u0000'),
+        )
 
         splitChunksGroupMap.set(id, chunkGroup)
         return chunkGroup
@@ -177,7 +213,7 @@ export function createSplitChunks(
     if (merged && moduleLayer && !isEntry) {
       const existing = splitChunksGroupMap.get(id)
       if (existing) return existing
-      const chunkGroup = `${path.basename(id, path.extname(id))}-${hashTo3Char(moduleLayer)}`
+      const chunkGroup = groupFor(id, moduleLayer)
       splitChunksGroupMap.set(id, chunkGroup)
       return chunkGroup
     }
@@ -212,9 +248,7 @@ export function createSplitChunks(
           return
         }
 
-        const chunkName = path.basename(id, path.extname(id))
-        const layerSuffix = hashTo3Char(moduleLayer)
-        const chunkGroup = `${chunkName}-${layerSuffix}`
+        const chunkGroup = groupFor(id, moduleLayer)
 
         splitChunksGroupMap.set(id, chunkGroup)
         return chunkGroup

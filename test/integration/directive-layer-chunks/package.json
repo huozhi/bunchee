@@ -1,0 +1,14 @@
+{
+  "name": "directive-layer-chunks",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./other": {
+      "types": "./dist/other.d.ts",
+      "default": "./dist/other.js"
+    }
+  }
+}
