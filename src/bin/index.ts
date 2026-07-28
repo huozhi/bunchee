@@ -32,7 +32,7 @@ Options:
   --external <mod>       specify an external dependency, separate by comma
   --no-external          do not bundle external dependencies
   --no-clean             do not clean dist folder before building, default: false
-  --target <target>      js features target: swc target es versions. default: es2015
+  --target <target>      js features target: swc target es versions. default: es2022
   --runtime <runtime>    build runtime (nodejs, browser). default: browser
   --env <env>            inlined process env variables, separate by comma. default: NODE_ENV
   --cwd <cwd>            specify current working directory
@@ -133,10 +133,6 @@ async function parseCliArgs(argv: string[]) {
       type: 'boolean',
       description: 'bundle type declaration files',
     })
-    .option('prepare', {
-      type: 'boolean',
-      description: 'auto setup package.json for building',
-    })
     .option('success', {
       type: 'string',
       description: 'run command after build success',
@@ -173,14 +169,6 @@ async function parseCliArgs(argv: string[]) {
     return {
       cmd,
     }
-  }
-
-  // Warn about this command being deprecated
-  if (args['prepare']) {
-    logger.warn(
-      'The "--prepare" option is deprecated. Please use `bunchee prepare` instead.',
-    )
-    return
   }
 
   const source: string = args._[0] as string

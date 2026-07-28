@@ -5,11 +5,11 @@ class Parent {
 }
 
 class A extends Parent {
-    get x() {
-        return super.f();
-    }
     constructor(){
         super();
+    }
+    get x() {
+        return super.f();
     }
 }
 const a = new A();

@@ -1,26 +1,18 @@
-import { _ as _async_to_generator, a as _class_private_field_loose_base, b as _class_private_field_loose_key } from './cc-KIEkbIiI.mjs';
-
 function* generator() {
     yield 1;
 }
-function asyncFunc() {
-    return _async_to_generator(function*() {
-        yield new Promise((r)=>r(1));
-    })();
+async function asyncFunc() {
+    await new Promise((r)=>r(1));
 }
-var _x = /*#__PURE__*/ _class_private_field_loose_key("_x");
 class A {
+    #x;
     *f1() {
         yield 1;
     }
     constructor(){
-        Object.defineProperty(this, _x, {
-            writable: true,
-            value: void 0
-        });
-        _class_private_field_loose_base(this, _x)[_x] = 1;
+        this.#x = 1;
         this.getX = ()=>{
-            return _class_private_field_loose_base(this, _x)[_x];
+            return this.#x;
         };
     }
 }

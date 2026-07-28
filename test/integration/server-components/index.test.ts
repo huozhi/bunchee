@@ -8,12 +8,10 @@ describe('integration server-components', () => {
     const jsFiles = await getFileNamesFromDirectory(distDir)
 
     expect(jsFiles).toEqual([
-      'cc-BU0zEyYq.js',
-      'cc-DF6UvQmH.cjs',
       'index.cjs',
       'index.js',
-      'mod_actions-12x-B4EBPs-d.js',
-      'mod_actions-12x-DtrEcTfm.cjs',
+      'mod_actions-12x-DRlszKRg.js',
+      'mod_actions-12x-ZyfVXl5o.cjs',
       // `mod_asset` carries 'use client' and is reached from `ui` only, but one
       // graph places it once, so it gets a boundary chunk rather than being
       // inlined into that entry.

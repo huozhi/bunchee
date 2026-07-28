@@ -52,26 +52,28 @@ describe('integration swc-helpers-warning', () => {
       const output = fs.readFileSync(path.join(distDir, 'index.js'), 'utf-8')
       expect(output).toMatchInlineSnapshot(`
         "import { _ } from '@swc/helpers/_/_apply_decs_2203_r';
-        
+
         var _dec, _initProto;
         function dec() {
             return function() {};
         }
         _dec = dec();
         class Foo {
-            method() {}
+            static{
+                ({ e: [_initProto] } = _(this, [
+                    [
+                        _dec,
+                        2,
+                        "method"
+                    ]
+                ], []));
+            }
             constructor(){
                 _initProto(this);
             }
+            method() {}
         }
-        ({ e: [_initProto] } = _(Foo, [
-            [
-                _dec,
-                2,
-                "method"
-            ]
-        ], []));
-        
+
         export { Foo };
         "
       `)

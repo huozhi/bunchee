@@ -69,7 +69,7 @@ async function bundle(
   const cwd = resolve(process.cwd(), _cwd || '')
   assignDefault(options, 'format', 'esm')
   assignDefault(options, 'minify', false)
-  assignDefault(options, 'target', 'es2015')
+  assignDefault(options, 'target', 'es2022')
 
   const pkg = await getPackageMeta(cwd)
   const parsedExportsInfo = await parseExports(pkg, cwd)
