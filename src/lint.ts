@@ -10,11 +10,18 @@ import { PackageMetadata } from './types'
 import {
   getPackageMeta,
   hasCjsExtension,
+  hasPackageJson,
   isESModulePackage,
   isTypeFile,
   normalizePath,
 } from './utils'
 import { matchFile } from './lib/file-match'
+import {
+  conditionOrderRule,
+  outputsExistRule,
+  workspaceProtocolRule,
+  type LintIssue,
+} from './lint/rules'
 
 type BadExportItem = {
   value: boolean
@@ -68,10 +75,16 @@ function validateFilesField(packageJson: PackageMetadata) {
 }
 
 export async function lint(cwd: string) {
+  // Not package.json detected, skip package linting
+  if (!hasPackageJson(cwd)) {
+    return
+  }
+
   const pkg = await getPackageMeta(cwd)
   const { name, main, exports } = pkg
   const isESM = isESModulePackage(pkg.type)
   const parsedExports = await parseExports(pkg, cwd)
+  const pkgPath = path.resolve(cwd, 'package.json')
 
   if (!name) {
     logger.warn('Missing package name')
@@ -179,6 +192,14 @@ export async function lint(cwd: string) {
 
   const fieldState = validateFilesField(pkg)
 
+  // Rules added on top of the classic checks: condition order, outputs that
+  // are missing on disk, and workspace: ranges that would publish unrewritten.
+  const extraIssues: LintIssue[] = [
+    ...conditionOrderRule({ pkg, cwd, parsedExports, pkgPath }),
+    ...outputsExistRule({ pkg, cwd, parsedExports, pkgPath }),
+    ...workspaceProtocolRule({ pkg, cwd, parsedExports, pkgPath }),
+  ]
+
   const warningsCount =
     exportsState.badTypesExport.length +
     fieldState.missingFiles.length +
@@ -188,7 +209,8 @@ export async function lint(cwd: string) {
     exportsState.badEsmImportExport.paths.length +
     Number(exportsState.badMainExtension) +
     Number(exportsState.badMainExport) +
-    Number(exportsState.invalidExportsFieldType)
+    Number(exportsState.invalidExportsFieldType) +
+    extraIssues.length
 
   if (warningsCount) {
     logger.warn(`Lint: ${warningsCount} issues found.`)
@@ -264,5 +286,9 @@ export async function lint(cwd: string) {
         `Bad export types field with ${conditionKey(target)} in ${target.path}, use "types" export condition for it`,
       )
     })
+  }
+
+  for (const issue of extraIssues) {
+    logger.warn(issue.message)
   }
 }

@@ -1,0 +1,10 @@
+{
+  "name": "condition-order",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  }
+}
