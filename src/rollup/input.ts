@@ -310,10 +310,32 @@ export async function buildInputConfig(
         ]
   ).filter(isNotNull<Plugin>)
 
+  // `externals` holds one entry per dependency plus one per sibling entry, and
+  // rollup asks about every specifier in the graph — so this is scanned tens of
+  // thousands of times. Precompute the exact-match set and the `<name>/` subpath
+  // prefixes once instead of rebuilding a prefix string per candidate per call,
+  // and memoize per specifier, since the same imports repeat across modules.
+  const externalNames = new Set(externals)
+  const externalPrefixes = externals.map((name) => name + '/')
+  const externalCache = new Map<string, boolean>()
+
+  function isExternal(id: string): boolean {
+    if (externalNames.has(id)) return true
+    for (let i = 0; i < externalPrefixes.length; i++) {
+      if (id.startsWith(externalPrefixes[i])) return true
+    }
+    return false
+  }
+
   return {
     input: mergedInputs ?? entry,
     external(id: string) {
-      return externals.some((name) => id === name || id.startsWith(name + '/'))
+      let cached = externalCache.get(id)
+      if (cached === undefined) {
+        cached = isExternal(id)
+        externalCache.set(id, cached)
+      }
+      return cached
     },
     plugins,
     treeshake: 'recommended',
