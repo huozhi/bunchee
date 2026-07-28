@@ -1,5 +1,3 @@
-import { _ as _extends, a as _async_to_generator } from './cc-CgYInQop.mjs';
-
 const add = (a, b)=>a + b;
 
 const sum = add(1, 2);
@@ -7,11 +5,11 @@ const obj = {
     a: 1,
     b: 2
 };
-const clone = _extends({}, obj);
-function asyncFunc() {
-    return _async_to_generator(function*() {
-        yield new Promise((r)=>r(1));
-    })();
+const clone = {
+    ...obj
+};
+async function asyncFunc() {
+    await new Promise((r)=>r(1));
 }
 
 export { asyncFunc, clone, sum as default };

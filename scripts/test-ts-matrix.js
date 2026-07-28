@@ -50,6 +50,9 @@ function runLane(laneName) {
   console.log(`\n===> Running ${laneName} lane`)
   run('pnpm', [
     'add',
+    // pnpm-workspace.yaml makes this repo a workspace root, and pnpm refuses to
+    // add there without an explicit -w.
+    '-w',
     '--save-dev',
     `typescript@${lane.typescript}`,
     `@types/react@${lane.reactTypes}`,
@@ -71,6 +74,7 @@ try {
   console.log('\n===> Restoring default dev toolchain (ts6)')
   run('pnpm', [
     'add',
+    '-w',
     '--save-dev',
     `typescript@${defaultLane.typescript}`,
     `@types/react@${defaultLane.reactTypes}`,

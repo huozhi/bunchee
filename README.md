@@ -571,7 +571,7 @@ await bundle(path.resolve('./src/index.ts'), {
   sourcemap: false, // Boolean
   external: [], // string[]
   format: 'esm', // 'esm' | 'cjs'
-  target: 'es2015', // ES syntax target
+  target: 'es2022', // ES syntax target
   runtime: 'nodejs', // 'browser' | 'nodejs'
   cwd: process.cwd(), // string
   clean: true, // boolean

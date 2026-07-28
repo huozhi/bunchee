@@ -140,7 +140,6 @@ type CliArgs = {
   dts?: false
   dtsBundle?: boolean
   runtime?: string
-  prepare?: boolean
   clean?: boolean
   tsconfig?: string
   onSuccess?: string
