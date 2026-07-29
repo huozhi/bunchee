@@ -1,8 +1,7 @@
-import { existsSync, statSync } from 'fs'
+import { existsSync } from 'fs'
 import fsp from 'fs/promises'
 import path, { posix } from 'path'
 import { glob } from 'tinyglobby'
-import { parseSync } from '@swc/core'
 import {
   getExportTypeFromFile,
   getOutputFormat,
@@ -33,6 +32,10 @@ import {
   TESTS_GLOB_PATTERN,
 } from './constants'
 import { posixRelativify } from './lib/format'
+import {
+  collectSpecifiers,
+  resolveSpecifierToSourceFile,
+} from './lib/module-specifiers'
 
 export async function collectEntriesFromParsedExports(
   cwd: string,
@@ -383,134 +386,6 @@ export async function collectSourceEntriesByExportPath(
   }
 }
 
-type CollectedSpecifiers = {
-  specifiers: string[]
-  /**
-   * An `import()` or `require()` whose argument is not a literal. Nothing can be
-   * concluded about what such a call reaches, so the caller stops concluding.
-   */
-  hasComputedSpecifier: boolean
-}
-
-/** Whatever `node` and everything under it imports. */
-function walkForSpecifiers(node: any, found: CollectedSpecifiers): void {
-  if (node == null || typeof node !== 'object') return
-  if (Array.isArray(node)) {
-    for (const child of node) walkForSpecifiers(child, found)
-    return
-  }
-
-  switch (node.type) {
-    // `import x from '...'`, `export * from '...'`, `export { x } from '...'`.
-    // A named export without a source is a local re-export and has none.
-    case 'ImportDeclaration':
-    case 'ExportAllDeclaration':
-    case 'ExportNamedDeclaration': {
-      if (node.source?.type === 'StringLiteral') {
-        found.specifiers.push(node.source.value)
-      }
-      break
-    }
-    // `import x = require('...')`
-    case 'TsImportEqualsDeclaration': {
-      const expression = node.moduleRef?.expression
-      if (expression?.type === 'StringLiteral') {
-        found.specifiers.push(expression.value)
-      }
-      break
-    }
-    case 'CallExpression': {
-      const callee = node.callee
-      const isImportCall = callee?.type === 'Import'
-      const isRequireCall =
-        callee?.type === 'Identifier' && callee.value === 'require'
-      if (isImportCall || isRequireCall) {
-        const argument = node.arguments?.[0]?.expression
-        if (argument?.type === 'StringLiteral') {
-          found.specifiers.push(argument.value)
-        } else if (argument != null) {
-          found.hasComputedSpecifier = true
-        }
-      }
-      break
-    }
-  }
-
-  for (const key in node) {
-    if (key === 'span') continue
-    walkForSpecifiers(node[key], found)
-  }
-}
-
-/**
- * What `filePath` imports, or `null` if it could not be parsed.
- *
- * Parsed rather than matched, because a specifier has to be told apart from text
- * that merely looks like one: a module that generates code has import statements
- * inside its string literals, and reading those as its own imports is how a file
- * appears to reach something it does not.
- */
-function collectSpecifiers(
-  code: string,
-  filePath: string,
-): CollectedSpecifiers | null {
-  const found: CollectedSpecifiers = {
-    specifiers: [],
-    hasComputedSpecifier: false,
-  }
-  const isTs = isTypescriptFile(filePath)
-  const isJsxExtension = /\.[jt]sx$/.test(filePath)
-  // `tsx` and `jsx` change how `<` is read, and the extension does not always
-  // settle it — a `.ts` file can hold JSX, and a generic arrow function in one
-  // parsed as JSX fails. Whichever the extension suggests is tried first.
-  const variants = [isJsxExtension, !isJsxExtension]
-  for (const jsxEnabled of variants) {
-    try {
-      const ast = parseSync(code, {
-        syntax: isTs ? 'typescript' : 'ecmascript',
-        [isTs ? 'tsx' : 'jsx']: jsxEnabled,
-      } as any)
-      walkForSpecifiers(ast.body, found)
-      return found
-    } catch {
-      continue
-    }
-  }
-  return null
-}
-
-function isSourceFile(filePath: string): boolean {
-  // A directory answers `existsSync`, and `./_internal` meaning
-  // `_internal/index.ts` is exactly the case that matters here — so the
-  // candidate has to be a file before it counts as resolved.
-  return statSync(filePath, { throwIfNoEntry: false })?.isFile() ?? false
-}
-
-/**
- * Which files `specifier`, written in `importer`, could mean.
- *
- * Relative specifiers only — a bare one cannot name a file inside `src`. The
- * candidates cover the ways a source file is written versus imported: the path
- * as-is, with each source extension appended, as a directory index, and with a
- * declared output extension swapped back to a source one (`./_utils.js` in
- * TypeScript means `_utils.ts`).
- */
-function resolveRelativeSpecifier(importer: string, specifier: string) {
-  const base = path.resolve(path.dirname(importer), specifier)
-  const candidates = [base]
-  for (const ext of availableExtensions) {
-    candidates.push(`${base}.${ext}`)
-    candidates.push(path.join(base, `index.${ext}`))
-  }
-  const withoutJsExt = base.replace(/\.(m|c)?js$/, '')
-  if (withoutJsExt !== base) {
-    for (const ext of availableExtensions) {
-      candidates.push(`${withoutJsExt}.${ext}`)
-    }
-  }
-  return candidates
-}
-
 /**
  * The private modules something in `src` actually imports.
  *
@@ -599,9 +474,7 @@ export async function findReachablePrivateFiles(
     }
 
     for (const specifier of found.specifiers) {
-      const resolved = specifier.startsWith('.')
-        ? resolveRelativeSpecifier(importer, specifier).find(isSourceFile)
-        : undefined
+      const resolved = resolveSpecifierToSourceFile(importer, specifier)
       if (resolved) {
         const isPrivate = privateByPath.get(resolved)
         // A private module importing itself is not a reference to it.
