@@ -6,13 +6,21 @@ import { performance } from 'perf_hooks'
 import { lint as lintPackage } from '../lint'
 import { exit, hasPackageJson } from '../utils'
 import { logger, setActiveSpinner } from '../logger'
-import { version } from '../../package.json'
 import { bundle } from '../../src/index'
 import { prepare } from '../prepare'
 import { RollupWatcher } from 'rollup'
 import { logOutputState } from '../plugins/output-state-plugin'
 import { normalizeError } from '../lib/normalize-error'
 import { createSpinner } from 'nanospinner'
+import { createRequire } from 'module'
+
+// Read rather than imported: a JSON module in ESM has no named exports, and a
+// default import would inline the whole manifest into the bin. The path holds
+// for both `src/bin/index.ts` and the built `dist/bin/cli.js` — package.json is
+// two levels up from either.
+const { version } = createRequire(import.meta.url)(
+  '../../package.json',
+) as typeof import('../../package.json')
 
 const helpMessage = `
 Usage: bunchee [options]

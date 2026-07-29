@@ -34,17 +34,18 @@ export function availableCores(): number {
 export const WORKER_HANDLER_NAME = 'buildEntryInWorker'
 
 function resolveWorkerFile(): string {
+  const self = import.meta.filename
   // Running from source, the handler is a sibling module.
-  const sibling = join(dirname(__dirname), `worker${extname(__filename)}`)
+  const sibling = join(dirname(import.meta.dirname), `worker${extname(self)}`)
   if (fs.existsSync(sibling)) return sibling
 
   // Bundled, the handler is re-exported from the package's main entry. This
   // file is not necessarily that entry: code shared between the entry and the
   // bin lands in a chunk beside it, and a chunk exports nothing by name. The
   // entry sits next to it, so look there before falling back to this file.
-  const mainEntry = join(dirname(__filename), `index${extname(__filename)}`)
-  if (mainEntry !== __filename && fs.existsSync(mainEntry)) return mainEntry
-  return __filename
+  const mainEntry = join(import.meta.dirname, `index${extname(self)}`)
+  if (mainEntry !== self && fs.existsSync(mainEntry)) return mainEntry
+  return self
 }
 
 function restoreErrorDetails(error: any): unknown {

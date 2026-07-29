@@ -10,6 +10,7 @@ import { isBinExportPath, isESModulePackage, isNotNull } from '../utils'
 import { normalizeExportPath } from '../entries'
 import { getDefinedInlineVariables } from '../env'
 import { dirname, posix } from 'path'
+import { createRequire } from 'module'
 import { wasm } from '@rollup/plugin-wasm'
 import { swc } from 'rollup-plugin-swc3'
 import commonjs from '@rollup/plugin-commonjs'
@@ -34,6 +35,11 @@ import {
   disabledWarnings,
   nodeResolveExtensions,
 } from '../constants'
+
+// `rollup-plugin-dts` is loaded through CJS on purpose: its `require`
+// of `typescript` is what the TypeScript 7 compat redirect in `../typescript`
+// patches, and that patch only reaches CommonJS resolution.
+const require = createRequire(import.meta.url)
 
 const swcMinifyOptions = {
   compress: {

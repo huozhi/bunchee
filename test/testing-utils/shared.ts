@@ -112,10 +112,12 @@ export async function executeBunchee(
 
   const ps = fork(path.resolve(__dirname, assetPath), args, {
     execArgv: [
+      // Stays a CJS preload: it patches CommonJS resolution, which is what
+      // @swc-node reaches for when it loads the TypeScript compiler API.
       '-r',
-      path.resolve(__dirname, '../../scripts/ts6-compat.js'),
-      '-r',
-      '@swc-node/register',
+      path.resolve(__dirname, '../../scripts/ts6-compat.cjs'),
+      '--import',
+      '@swc-node/register/esm-register',
     ],
     stdio: 'pipe',
     env: { SWC_NODE_IGNORE_DYNAMIC: 'true', ...options.env, ...process.env },
