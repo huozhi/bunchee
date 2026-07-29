@@ -11,7 +11,7 @@ import type {
 import type { ExportOutput } from '../exports'
 import { buildInputConfig } from './input'
 import { buildOutputConfigs } from './output'
-import { buildSourceToBundleMap } from '../plugins/alias-plugin'
+import { buildSourceToBundleMap, getAliasFormat } from '../plugins/alias-plugin'
 import { getEntryBundleOutputs } from '../build-config'
 import { isESModulePackage, normalizePath } from '../utils'
 import { getSpecialExportTypeFromConditionNames } from '../entries'
@@ -249,7 +249,14 @@ function coalesceGroups(
     )
     const map = buildSourceToBundleMap({
       entries,
-      format: representative.output.format,
+      // The format the plugin will actually be given, which for declarations is
+      // decided by the extension rather than by the rollup output format.
+      format: getAliasFormat({
+        dts,
+        file: representative.output.file,
+        format: representative.output.format,
+        isESMPkg,
+      }),
       isESMPkg,
       exportCondition: {
         ...representative.exportCondition,

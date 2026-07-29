@@ -1,0 +1,7 @@
+{
+  "name": "private-module-unreachable",
+  "type": "module",
+  "exports": {
+    "./used": "./dist/used.js"
+  }
+}

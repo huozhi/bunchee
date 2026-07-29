@@ -117,6 +117,30 @@ function findTypesFileCallback({
 const SIBLING_MARK = '\0bunchee-sibling:'
 
 /**
+ * The format the alias map is chosen by, for one output file.
+ *
+ * Not the rollup output format: declarations are always generated as ESM, so
+ * which sibling declaration an import should point at is carried by the
+ * extension instead — `.d.cts`, or `.d.ts` in a CJS package, means the CJS one.
+ */
+export function getAliasFormat({
+  dts,
+  file,
+  format,
+  isESMPkg,
+}: {
+  dts: boolean
+  file: string | undefined
+  format: OutputOptions['format']
+  isESMPkg: boolean
+}): OutputOptions['format'] {
+  if (!dts) return format
+  const isCjsTypes =
+    file?.endsWith('.d.cts') || (file?.endsWith('.d.ts') && !isESMPkg)
+  return isCjsTypes ? 'cjs' : 'esm'
+}
+
+/**
  * Where each entry's source lands in `dist`, for the output being built.
  *
  * The choice depends on the output format, so this is also what decides whether

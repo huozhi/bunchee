@@ -1,0 +1,14 @@
+{
+  "name": "merged-shared-graph",
+  "version": "0.0.0",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./other": {
+      "import": "./dist/other.mjs",
+      "require": "./dist/other.js"
+    }
+  }
+}

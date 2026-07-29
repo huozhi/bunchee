@@ -533,7 +533,7 @@ function resolveRelativeSpecifier(importer: string, specifier: string) {
  * sources for a single export path, and the one an importer names depends on
  * the condition being built, not on which file the specifier spells.
  */
-async function findReachablePrivateFiles(
+export async function findReachablePrivateFiles(
   sourceFolderPath: string,
   privateFiles: string[],
   entrySources: Iterable<string>,
