@@ -2,6 +2,7 @@ import { existsSync, statSync } from 'fs'
 import fsp from 'fs/promises'
 import path, { posix } from 'path'
 import { glob } from 'tinyglobby'
+import { parseSync } from '@swc/core'
 import {
   getExportTypeFromFile,
   getOutputFormat,
@@ -382,9 +383,101 @@ export async function collectSourceEntriesByExportPath(
   }
 }
 
-/** `from '...'`, `import '...'`, `import('...')`, `require('...')`. */
-const MODULE_SPECIFIER_REGEX =
-  /(?:\bfrom\s*|\bimport\s*|\brequire\s*\(\s*|\bimport\s*\(\s*)['"]([^'"]+)['"]/g
+type CollectedSpecifiers = {
+  specifiers: string[]
+  /**
+   * An `import()` or `require()` whose argument is not a literal. Nothing can be
+   * concluded about what such a call reaches, so the caller stops concluding.
+   */
+  hasComputedSpecifier: boolean
+}
+
+/** Whatever `node` and everything under it imports. */
+function walkForSpecifiers(node: any, found: CollectedSpecifiers): void {
+  if (node == null || typeof node !== 'object') return
+  if (Array.isArray(node)) {
+    for (const child of node) walkForSpecifiers(child, found)
+    return
+  }
+
+  switch (node.type) {
+    // `import x from '...'`, `export * from '...'`, `export { x } from '...'`.
+    // A named export without a source is a local re-export and has none.
+    case 'ImportDeclaration':
+    case 'ExportAllDeclaration':
+    case 'ExportNamedDeclaration': {
+      if (node.source?.type === 'StringLiteral') {
+        found.specifiers.push(node.source.value)
+      }
+      break
+    }
+    // `import x = require('...')`
+    case 'TsImportEqualsDeclaration': {
+      const expression = node.moduleRef?.expression
+      if (expression?.type === 'StringLiteral') {
+        found.specifiers.push(expression.value)
+      }
+      break
+    }
+    case 'CallExpression': {
+      const callee = node.callee
+      const isImportCall = callee?.type === 'Import'
+      const isRequireCall =
+        callee?.type === 'Identifier' && callee.value === 'require'
+      if (isImportCall || isRequireCall) {
+        const argument = node.arguments?.[0]?.expression
+        if (argument?.type === 'StringLiteral') {
+          found.specifiers.push(argument.value)
+        } else if (argument != null) {
+          found.hasComputedSpecifier = true
+        }
+      }
+      break
+    }
+  }
+
+  for (const key in node) {
+    if (key === 'span') continue
+    walkForSpecifiers(node[key], found)
+  }
+}
+
+/**
+ * What `filePath` imports, or `null` if it could not be parsed.
+ *
+ * Parsed rather than matched, because a specifier has to be told apart from text
+ * that merely looks like one: a module that generates code has import statements
+ * inside its string literals, and reading those as its own imports is how a file
+ * appears to reach something it does not.
+ */
+function collectSpecifiers(
+  code: string,
+  filePath: string,
+): CollectedSpecifiers | null {
+  const found: CollectedSpecifiers = {
+    specifiers: [],
+    hasComputedSpecifier: false,
+  }
+  const isTs = isTypescriptFile(filePath)
+  const isJsxExtension = /\.[jt]sx$/.test(filePath)
+  // `tsx` and `jsx` change how `<` is read, and the extension does not always
+  // settle it — a `.ts` file can hold JSX, and a generic arrow function in one
+  // parsed as JSX fails. Whichever the extension suggests is tried first.
+  const variants = [isJsxExtension, !isJsxExtension]
+  for (const jsxEnabled of variants) {
+    try {
+      const ast = parseSync(code, {
+        syntax: isTs ? 'typescript' : 'ecmascript',
+        [isTs ? 'tsx' : 'jsx']: jsxEnabled,
+      } as any)
+      walkForSpecifiers(ast.body, found)
+      return found
+    } catch {
+      continue
+    }
+  }
+  return null
+}
 
 function isSourceFile(filePath: string): boolean {
   // A directory answers `existsSync`, and `./_internal` meaning
@@ -429,11 +522,11 @@ function resolveRelativeSpecifier(importer: string, specifier: string) {
  * measured against — into the package's module graph and into `dist`.
  *
  * Reachability is walked over relative specifiers, which is how a module inside
- * `src` is named. A private module referenced any other way — through a
- * tsconfig path alias, or a computed `import()` — has no relative specifier
- * pointing at it, so a specifier that cannot be resolved keeps every private
- * module it could have meant. The walk only ever removes one it has positively
- * shown to be unmentioned.
+ * `src` is named. The walk only ever removes a module it has positively shown to
+ * be unmentioned, so everything it cannot account for is kept: a bare specifier
+ * that could be a tsconfig path alias keeps every private module whose
+ * underscore-prefixed segment it spells, and a file that will not parse or that
+ * computes a specifier at runtime keeps all of them.
  *
  * Runtime-condition variants of one module (`_util.js` and
  * `_util.react-server.js`) are reached as a group: the variants are alternative
@@ -465,7 +558,10 @@ async function findReachablePrivateFiles(
   }
   for (const source of entrySources) enqueue(source)
 
-  while (queue.length > 0) {
+  /** Every private module is kept once nothing can be concluded any more. */
+  let keepAll = false
+
+  while (queue.length > 0 && !keepAll) {
     const importer = queue.pop()!
     let code: string
     try {
@@ -473,8 +569,14 @@ async function findReachablePrivateFiles(
     } catch {
       continue
     }
-    for (const match of code.matchAll(MODULE_SPECIFIER_REGEX)) {
-      const specifier = match[1]
+    const found = collectSpecifiers(code, importer)
+    if (found == null || found.hasComputedSpecifier) {
+      // A file that will not parse, or one importing a path it computes at
+      // runtime, could reach anything. Stop deciding rather than decide wrong.
+      keepAll = true
+      break
+    }
+    for (const specifier of found.specifiers) {
       let resolved: string | undefined
       if (specifier.startsWith('.')) {
         resolved = resolveRelativeSpecifier(importer, specifier).find(
@@ -507,6 +609,8 @@ async function findReachablePrivateFiles(
       }
     }
   }
+
+  if (keepAll) return new Set(privateFiles)
 
   const kept = new Set<string>()
   for (const { file, group } of privateByPath.values()) {
