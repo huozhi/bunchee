@@ -54,17 +54,16 @@ describe('findReachablePrivateFiles', () => {
     return sourceFolder
   }
 
-  /** The private files kept, given which of them are private and which are entries. */
+  /** The private files kept, given which of `files` are the private ones. */
   async function reachable(
     files: Record<string, string>,
     privateFiles: string[],
-    entries: string[],
   ): Promise<string[]> {
     const sourceFolder = writeSrc(files)
     const kept = await findReachablePrivateFiles(
       sourceFolder,
       privateFiles,
-      entries.map((entry) => path.join(sourceFolder, entry)),
+      Object.keys(files),
     )
     return [...kept].sort()
   }
@@ -77,7 +76,6 @@ describe('findReachablePrivateFiles', () => {
           '_util.ts': `export const util = 1`,
         },
         ['_util.ts'],
-        ['index.ts'],
       ),
     ).toEqual(['_util.ts'])
   })
@@ -92,7 +90,6 @@ describe('findReachablePrivateFiles', () => {
           '_build.ts': `import ts from 'typescript'\nexport const build = ts`,
         },
         ['_build.ts'],
-        ['index.ts'],
       ),
     ).toEqual([])
   })
@@ -107,7 +104,6 @@ describe('findReachablePrivateFiles', () => {
           '_orphan.ts': `export const b = 2`,
         },
         ['_deep.ts', '_orphan.ts'],
-        ['index.ts'],
       ),
     ).toEqual(['_deep.ts'])
   })
@@ -124,9 +120,25 @@ describe('findReachablePrivateFiles', () => {
           '_internal/_helper.ts': `export const helper = 1`,
         },
         ['_internal/index.ts', '_internal/_helper.ts'],
-        ['index/index.ts'],
       ),
     ).toEqual(['_internal/_helper.ts', '_internal/index.ts'])
+  })
+
+  it('should keep a private module its private sibling imports', async () => {
+    // Regression: `_internal/events` is named by its sibling as `'./events'`,
+    // which contains nothing of `_internal`. Deciding which files were worth
+    // reading from the underscore-prefixed segment alone skipped the importer
+    // and dropped both modules.
+    expect(
+      await reachable(
+        {
+          'index.ts': `export { internal } from './_internal'`,
+          '_internal/index.ts': `export * from './events'\nexport const internal = 1`,
+          '_internal/events.ts': `export const events = 2`,
+        },
+        ['_internal/index.ts', '_internal/events.ts'],
+      ),
+    ).toEqual(['_internal/events.ts', '_internal/index.ts'])
   })
 
   it('should keep every condition variant when one is reached', async () => {
@@ -140,7 +152,6 @@ describe('findReachablePrivateFiles', () => {
           '_internal/index.ts': `export const internal = 'default'`,
         },
         ['_internal/index.react-server.ts', '_internal/index.ts'],
-        ['index.react-server.ts'],
       ),
     ).toEqual(['_internal/index.react-server.ts', '_internal/index.ts'].sort())
   })
@@ -155,7 +166,6 @@ describe('findReachablePrivateFiles', () => {
           '_internal/index.ts': `export const internal = 1`,
         },
         ['_internal/index.ts'],
-        ['index.ts'],
       ),
     ).toEqual(['_internal/index.ts'])
   })
@@ -171,7 +181,6 @@ describe('findReachablePrivateFiles', () => {
           '_target.ts': `export const x = 1`,
         },
         ['_target.ts'],
-        ['index.ts'],
       ),
     ).toEqual([])
   })
@@ -185,12 +194,27 @@ describe('findReachablePrivateFiles', () => {
           '_b.ts': `export const b = 2`,
         },
         ['_a.ts', '_b.ts'],
-        ['index.ts'],
       ),
     ).toEqual(['_a.ts', '_b.ts'])
   })
 
-  it('should keep everything when a file cannot be parsed', async () => {
+  it('should keep everything when a file mentioning one cannot be parsed', async () => {
+    // Mentioning `_a` is what makes the file worth reading in the first place;
+    // once it cannot be parsed there is no telling whether it imports it.
+    expect(
+      await reachable(
+        {
+          'index.ts': `import { a } from './_a'\nthis is not ( valid ] <<<`,
+          '_a.ts': `export const a = 1`,
+        },
+        ['_a.ts'],
+      ),
+    ).toEqual(['_a.ts'])
+  })
+
+  it('should not read a file that cannot mention one', async () => {
+    // Unparseable, but its text does not contain `_a`, so no specifier in it
+    // could have named `_a` — there is nothing to be uncertain about.
     expect(
       await reachable(
         {
@@ -198,8 +222,7 @@ describe('findReachablePrivateFiles', () => {
           '_a.ts': `export const a = 1`,
         },
         ['_a.ts'],
-        ['index.ts'],
       ),
-    ).toEqual(['_a.ts'])
+    ).toEqual([])
   })
 })
