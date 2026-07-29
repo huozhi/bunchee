@@ -16,6 +16,7 @@ import {
   removeOutputDir,
 } from './utils'
 import {
+  MIN_ENTRIES_FOR_MERGED_WORKERS,
   MIN_ENTRIES_FOR_WORKERS,
   availableCores,
   runEntriesInWorkers,
@@ -226,13 +227,17 @@ async function bundle(
     !process.env.TEST_NO_WORKERS &&
     entryNames.length >= MIN_ENTRIES_FOR_WORKERS
 
-  // Merging collapses the JS work to a couple of graphs, but declaration emit
-  // stays linear in entry count and one shared graph cannot amortise it. So
-  // above the worker threshold the two are combined: merged JS here, then the
-  // types split into shards that each build a merged graph in their own heap.
-  // Sharding them in this heap is slower, not faster — several TypeScript
-  // programs in one isolate spend their time in GC.
-  const useWorkers = workersAvailable && (!useMerged || generateTypes)
+  // The per-entry path grows its heap with the entry count, so it always fans
+  // out. A merged build is already a handful of graphs and only its declaration
+  // emit is left to split, which does not pay for the workers it would take
+  // until the entry count is large — see `MIN_ENTRIES_FOR_MERGED_WORKERS`. Below
+  // that, the pool cost more than it saved on every package measured, and below
+  // `typeShardCount`'s minimum it was pure overhead: one shard, so one worker,
+  // doing exactly what this process would have done.
+  const useWorkers =
+    workersAvailable &&
+    (!useMerged ||
+      (generateTypes && entryNames.length >= MIN_ENTRIES_FOR_MERGED_WORKERS))
 
   try {
     let assetJobs

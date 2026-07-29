@@ -1,4 +1,4 @@
-import { existsSync } from 'fs'
+import { existsSync, statSync } from 'fs'
 import fsp from 'fs/promises'
 import path, { posix } from 'path'
 import { glob } from 'tinyglobby'
@@ -382,6 +382,139 @@ export async function collectSourceEntriesByExportPath(
   }
 }
 
+/** `from '...'`, `import '...'`, `import('...')`, `require('...')`. */
+const MODULE_SPECIFIER_REGEX =
+  /(?:\bfrom\s*|\bimport\s*|\brequire\s*\(\s*|\bimport\s*\(\s*)['"]([^'"]+)['"]/g
+
+function isSourceFile(filePath: string): boolean {
+  // A directory answers `existsSync`, and `./_internal` meaning
+  // `_internal/index.ts` is exactly the case that matters here — so the
+  // candidate has to be a file before it counts as resolved.
+  return statSync(filePath, { throwIfNoEntry: false })?.isFile() ?? false
+}
+
+/**
+ * Which files `specifier`, written in `importer`, could mean.
+ *
+ * Relative specifiers only — a bare one cannot name a file inside `src`. The
+ * candidates cover the ways a source file is written versus imported: the path
+ * as-is, with each source extension appended, as a directory index, and with a
+ * declared output extension swapped back to a source one (`./_utils.js` in
+ * TypeScript means `_utils.ts`).
+ */
+function resolveRelativeSpecifier(importer: string, specifier: string) {
+  const base = path.resolve(path.dirname(importer), specifier)
+  const candidates = [base]
+  for (const ext of availableExtensions) {
+    candidates.push(`${base}.${ext}`)
+    candidates.push(path.join(base, `index.${ext}`))
+  }
+  const withoutJsExt = base.replace(/\.(m|c)?js$/, '')
+  if (withoutJsExt !== base) {
+    for (const ext of availableExtensions) {
+      candidates.push(`${withoutJsExt}.${ext}`)
+    }
+  }
+  return candidates
+}
+
+/**
+ * The private modules some declared export actually reaches.
+ *
+ * A private module exists so that entries built separately can share it through
+ * one emitted file instead of each inlining a copy. One that no export reaches
+ * shares nothing, and building it is not free: a codegen script sitting in
+ * `src` next to the module it generates pulls whatever it imports —
+ * a devDependency the size of the TypeScript compiler, in the case this was
+ * measured against — into the package's module graph and into `dist`.
+ *
+ * Reachability is walked over relative specifiers, which is how a module inside
+ * `src` is named. A private module referenced any other way — through a
+ * tsconfig path alias, or a computed `import()` — has no relative specifier
+ * pointing at it, so a specifier that cannot be resolved keeps every private
+ * module it could have meant. The walk only ever removes one it has positively
+ * shown to be unmentioned.
+ *
+ * Runtime-condition variants of one module (`_util.js` and
+ * `_util.react-server.js`) are reached as a group: the variants are alternative
+ * sources for a single export path, and the one an importer names depends on
+ * the condition being built, not on which file the specifier spells.
+ */
+async function findReachablePrivateFiles(
+  sourceFolderPath: string,
+  privateFiles: string[],
+  entrySources: Iterable<string>,
+): Promise<Set<string>> {
+  /** absolute path -> the glob-relative name, and the export path it serves. */
+  const privateByPath = new Map<string, { file: string; group: string }>()
+  for (const file of privateFiles) {
+    privateByPath.set(path.join(sourceFolderPath, file), {
+      file,
+      group: stripSpecialCondition(sourceFilenameToExportFullPath(file)),
+    })
+  }
+
+  const reachableGroups = new Set<string>()
+  const visited = new Set<string>()
+  const queue: string[] = []
+
+  const enqueue = (file: string) => {
+    if (visited.has(file)) return
+    visited.add(file)
+    queue.push(file)
+  }
+  for (const source of entrySources) enqueue(source)
+
+  while (queue.length > 0) {
+    const importer = queue.pop()!
+    let code: string
+    try {
+      code = await fsp.readFile(importer, 'utf8')
+    } catch {
+      continue
+    }
+    for (const match of code.matchAll(MODULE_SPECIFIER_REGEX)) {
+      const specifier = match[1]
+      let resolved: string | undefined
+      if (specifier.startsWith('.')) {
+        resolved = resolveRelativeSpecifier(importer, specifier).find(
+          isSourceFile,
+        )
+      }
+      if (resolved) {
+        const isPrivate = privateByPath.get(resolved)
+        if (isPrivate) reachableGroups.add(isPrivate.group)
+        enqueue(resolved)
+        continue
+      }
+      // Nothing on disk answers to this specifier, so it is either external or
+      // routed through something this walk does not model — a tsconfig path
+      // alias, or the package's own name (`swr/_internal`). Both keep the file
+      // path, so a specifier meaning a private module still spells that
+      // module's underscore-prefixed segment. Keep whatever it could have meant.
+      const named = new Set(
+        specifier
+          .split('/')
+          .filter((segment) => segment.startsWith('_'))
+          .map(baseNameWithoutExtension),
+      )
+      if (named.size === 0) continue
+      for (const { file, group } of privateByPath.values()) {
+        const mentioned = file
+          .split(/[/\\]/)
+          .some((segment) => named.has(baseNameWithoutExtension(segment)))
+        if (mentioned) reachableGroups.add(group)
+      }
+    }
+  }
+
+  const kept = new Set<string>()
+  for (const { file, group } of privateByPath.values()) {
+    if (reachableGroups.has(group)) kept.add(file)
+  }
+  return kept
+}
+
 /**
  * exportsEntries {
  *   "./index" => {
@@ -444,11 +577,31 @@ export async function collectSourceEntriesFromExportPaths(
   const suffixPattern = [...runtimeExportConventions].join(',')
   const extPattern = [...availableExtensions].join(',')
   const privatePattern = `**/_*{,/*}{,{.${suffixPattern}}}.{${extPattern}}`
-  const privateFiles = await glob(privatePattern, {
+  const allPrivateFiles = await glob(privatePattern, {
     cwd: sourceFolderPath,
     ignore: [TESTS_GLOB_PATTERN],
     expandDirectories: false,
   })
+  // Only the ones a declared export reaches: see `findReachablePrivateFiles`.
+  const reachablePrivateFiles = await findReachablePrivateFiles(
+    sourceFolderPath,
+    allPrivateFiles,
+    new Set([
+      ...bins.values(),
+      ...[...exportsEntries.values()].flatMap((sources) =>
+        Object.values(sources),
+      ),
+    ]),
+  )
+  const privateFiles = allPrivateFiles.filter((file) =>
+    reachablePrivateFiles.has(file),
+  )
+  if (process.env.DEBUG && privateFiles.length !== allPrivateFiles.length) {
+    const skipped = allPrivateFiles.filter((f) => !reachablePrivateFiles.has(f))
+    logger.log(
+      `Skipping ${skipped.length} private module(s) no export reaches: ${skipped.join(', ')}`,
+    )
+  }
   const defaultPrivateModuleFormats =
     requiredPrivateModuleFormats !== ModuleFormat.none
       ? requiredPrivateModuleFormats

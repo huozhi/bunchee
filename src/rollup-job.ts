@@ -89,7 +89,9 @@ export async function createMergedRollupJobs(
   // an earlier job's output.
   if (options.clean && !isFromCli) {
     for (const config of allConfigs) {
-      await removeOutputDir(config.output, buildContext.cwd)
+      for (const output of config.output) {
+        await removeOutputDir(output, buildContext.cwd)
+      }
     }
   }
 
@@ -97,7 +99,8 @@ export async function createMergedRollupJobs(
     const shape = allConfigs
       .map(
         (config) =>
-          `${Object.keys(config.input).length} inputs -> ${config.output.format}`,
+          `${Object.keys(config.input).length} inputs -> ` +
+          config.output.map((output) => output.format).join('+'),
       )
       .join(' | ')
     logger.log(
@@ -122,7 +125,10 @@ export async function createMergedRollupJobs(
   }
 }
 
-async function runMergedBundle({ output, ...restOptions }: MergedRollupConfig) {
+async function runMergedBundle({
+  output: outputs,
+  ...restOptions
+}: MergedRollupConfig) {
   let bundle: RollupBuild
   const debug = Boolean(process.env.DEBUG)
   const started = Date.now()
@@ -135,12 +141,17 @@ async function runMergedBundle({ output, ...restOptions }: MergedRollupConfig) {
     logMergedGraph(bundle, Object.keys(restOptions.input).length, started)
   }
   try {
-    const writeStart = Date.now()
-    const result = await bundle.write(output)
-    if (debug) {
-      logger.log(`  write ${output.format}: ${Date.now() - writeStart}ms`)
+    // One graph, written once per output: the parse and transform work behind it
+    // is not repeated for the second format.
+    const results = []
+    for (const output of outputs) {
+      const writeStart = Date.now()
+      results.push(await bundle.write(output))
+      if (debug) {
+        logger.log(`  write ${output.format}: ${Date.now() - writeStart}ms`)
+      }
     }
-    return result
+    return results
   } finally {
     await bundle.close()
   }

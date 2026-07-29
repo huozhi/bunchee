@@ -11,6 +11,20 @@ import { logger, pauseActiveSpinner } from '../logger'
 // fits comfortably in one heap, and skipping the pool avoids worker startup.
 export const MIN_ENTRIES_FOR_WORKERS = 8
 
+/**
+ * The entry count at which a *merged* build is worth fanning out.
+ *
+ * Merging already collapses the work to a few graphs, so the only thing left to
+ * split is the declaration emit — and a worker cannot start without its own copy
+ * of rollup and of the TypeScript compiler API. Measured on `pkg-N` fixtures,
+ * that startup outweighs the split until somewhere past 256 entries: staying in
+ * this process ran 1.29x faster at 8 entries, 1.17x at 64, 1.02x at 256, and
+ * 0.95x at 512. Memory moves the other way throughout — one heap held 20-47%
+ * less than the pool did — so the threshold sits at the far end of the range,
+ * where sharding starts winning on time by enough to pay for the memory.
+ */
+export const MIN_ENTRIES_FOR_MERGED_WORKERS = 256
+
 export function availableCores(): number {
   return Math.max(1, (os.availableParallelism?.() ?? os.cpus().length) - 1)
 }
