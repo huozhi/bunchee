@@ -14,11 +14,26 @@ export type CollectedSpecifiers = {
   hasComputedSpecifier: boolean
 }
 
+/**
+ * How deep this will follow a tree before giving up on it.
+ *
+ * Real source sits well under a hundred levels; this is only reached by
+ * generated code, where an expression like `0+1+2+...` nests once per term.
+ * Recursing past roughly four thousand overflows the stack, and while that
+ * throws and is handled like any other unreadable file, a limit makes giving up
+ * a decision rather than a side effect of how much stack was left.
+ */
+const MAX_DEPTH = 3000
+
+/** Thrown to unwind out of a tree deeper than `MAX_DEPTH`. */
+class TooDeep extends Error {}
+
 /** Collects into `found` whatever `node` and everything under it names. */
-function walk(node: any, found: CollectedSpecifiers): void {
+function walk(node: any, found: CollectedSpecifiers, depth: number): void {
   if (node == null || typeof node !== 'object') return
+  if (depth > MAX_DEPTH) throw new TooDeep()
   if (Array.isArray(node)) {
-    for (const child of node) walk(child, found)
+    for (const child of node) walk(child, found, depth + 1)
     return
   }
 
@@ -64,7 +79,7 @@ function walk(node: any, found: CollectedSpecifiers): void {
 
   for (const key in node) {
     if (key === 'span') continue
-    walk(node[key], found)
+    walk(node[key], found, depth + 1)
   }
 }
 
@@ -85,24 +100,28 @@ export function collectSpecifiers(
   code: string,
   filePath: string,
 ): CollectedSpecifiers | null {
-  const found: CollectedSpecifiers = {
-    specifiers: [],
-    hasComputedSpecifier: false,
-  }
   const isTs = tsExtensions.has(path.extname(filePath).slice(1))
   const isJsxExtension = /\.[jt]sx$/.test(filePath)
   // `tsx` and `jsx` change how `<` is read, and the extension does not settle
   // it — a `.ts` file can hold JSX, and a generic arrow function in one parsed
   // as JSX fails. Whichever the extension suggests is tried first.
   for (const jsxEnabled of [isJsxExtension, !isJsxExtension]) {
+    // Per attempt: the first can name some of what it finds before failing part
+    // way through, and those must not be carried into the second.
+    const found: CollectedSpecifiers = {
+      specifiers: [],
+      hasComputedSpecifier: false,
+    }
     try {
       const ast = parseSync(code, {
         syntax: isTs ? 'typescript' : 'ecmascript',
         [isTs ? 'tsx' : 'jsx']: jsxEnabled,
       } as any)
-      walk(ast.body, found)
+      walk(ast.body, found, 0)
       return found
-    } catch {
+    } catch (error) {
+      // Too deep once is too deep whichever way `<` is read.
+      if (error instanceof TooDeep) return null
       continue
     }
   }

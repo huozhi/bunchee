@@ -77,6 +77,17 @@ describe('collectSpecifiers', () => {
       collectSpecifiers(`this is not ( valid ] <<<`, '/pkg/src/index.ts'),
     ).toBeNull()
   })
+
+  it('should give up on a tree too deep to walk', () => {
+    // Generated code nests an expression like this once per term. Deep enough
+    // and following it would overflow the stack, so it is answered as unknown
+    // rather than as a file that names nothing.
+    const shallow = `import { a } from './a'\nconst x = ${'1+'.repeat(200)}1`
+    expect(named(shallow)).toEqual(['./a'])
+
+    const deep = `import { a } from './a'\nconst x = ${'1+'.repeat(5000)}1`
+    expect(collectSpecifiers(deep, '/pkg/src/index.ts')).toBeNull()
+  })
 })
 
 describe('resolveSpecifierToSourceFile', () => {
