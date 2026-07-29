@@ -8,7 +8,10 @@ import {
 import { executeBunchee } from '../../testing-utils/shared'
 
 // Nine entries, above MIN_ENTRIES_FOR_WORKERS, with no directive layers: this
-// is the fixture that merges the JS into one graph and shards the types.
+// is the fixture that merges every entry into one graph per output. Being over
+// the worker threshold, it is also what catches a merged build fanning out to
+// workers it cannot profit from. The worker path itself is covered by
+// `many-entries-cli`, where a CLI entry file blocks merging.
 const dir = __dirname
 const distDir = path.join(dir, 'dist')
 
@@ -59,15 +62,22 @@ describe('integration - many-entries', () => {
     expect(contents['index.js']).not.toContain(`'a:'`)
   }, 120_000)
 
-  it('should build the JS as one graph and shard the types', async () => {
+  it('should build the JS and the types as one graph each', async () => {
     const { stdout } = await build({ DEBUG: '1' })
 
     // Nine entries with a types output each would be 18 rollup instances if
-    // every entry were built on its own.
-    expect(stdout).toMatch(/Building 9 entries in 1 shared rollup instances/)
-    expect(stdout).toMatch(
-      /Building 9 entries in \d+ worker threads \(\d+ shards of ~\d+\)/,
-    )
+    // every entry were built on its own. One graph for the JS, one for the
+    // declarations.
+    expect(stdout).toMatch(/Building 9 entries in 2 shared rollup instances/)
+  }, 120_000)
+
+  it('should not fan out to workers once the entries are merged', async () => {
+    const { stdout } = await build({ DEBUG: '1' })
+
+    // A worker cannot start without its own copy of rollup and of the
+    // TypeScript compiler API, which costs more than splitting two graphs
+    // across threads saves at any entry count measured.
+    expect(stdout).not.toContain('worker threads')
   }, 120_000)
 
   it('should emit code shared between entries as a single chunk', async () => {
@@ -88,25 +98,10 @@ describe('integration - many-entries', () => {
   it('should emit a declaration file per entry', async () => {
     const { contents } = await build()
 
-    // The types are sharded across workers, so this is what catches a shard
-    // dropping the entries it was handed.
+    // Every entry shares one declaration graph, so this is what catches an
+    // entry being dropped from it.
     for (const entry of ENTRIES) {
       expect(contents[`${entry}.d.ts`]).toContain(`declare const ${entry}`)
     }
   }, 120_000)
-
-  it('should produce the same output as an in-process build', async () => {
-    const workers = await build({ DEBUG: '1' })
-    const inProcess = await build({ DEBUG: '1', TEST_NO_WORKERS: '1' })
-
-    // Guard the comparison: it only means anything if the first build really
-    // did fan out. Runs from source and from dist resolve the worker file
-    // differently, so this has to hold for both.
-    expect(workers.stdout).toMatch(/Building 9 entries in \d+ worker threads/)
-    expect(inProcess.stdout).not.toContain('worker threads')
-
-    // Types sharded across workers against one merged graph in this process.
-    expect(inProcess.files).toEqual(workers.files)
-    expect(inProcess.contents).toEqual(workers.contents)
-  }, 240_000)
 })

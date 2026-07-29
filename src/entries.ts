@@ -32,6 +32,10 @@ import {
   TESTS_GLOB_PATTERN,
 } from './constants'
 import { posixRelativify } from './lib/format'
+import {
+  collectSpecifiers,
+  resolveSpecifierToSourceFile,
+} from './lib/module-specifiers'
 
 export async function collectEntriesFromParsedExports(
   cwd: string,
@@ -383,6 +387,130 @@ export async function collectSourceEntriesByExportPath(
 }
 
 /**
+ * The private modules something in `src` actually imports.
+ *
+ * A private module exists so that bundles built separately can share it through
+ * one emitted file instead of each inlining a copy. One that nothing imports
+ * shares nothing, and building it is not free: a codegen script sitting in `src`
+ * next to the module it generates pulls whatever it imports — a devDependency
+ * the size of the TypeScript compiler, in the case this was measured against —
+ * into the package's module graph and into `dist`.
+ *
+ * Answered by asking which private modules are referenced rather than by walking
+ * the graph from the entries, so no module has to be followed to reach another.
+ * That keeps a private module imported only from unreachable code, which is the
+ * safe direction and much less work: any specifier naming a private module has
+ * to spell its underscore-prefixed segment, so a file not containing that text
+ * cannot reference it and is never parsed.
+ *
+ * It only ever removes a module it has positively shown to be unreferenced.
+ * Everything it cannot account for is kept: a specifier that resolves to nothing
+ * on disk keeps every private module whose segment it spells, since it may be a
+ * tsconfig path alias or the package's own name, and a file that will not parse
+ * or that computes a specifier at runtime keeps all of them.
+ *
+ * Runtime-condition variants of one module (`_util.js` and
+ * `_util.react-server.js`) are kept as a group: the variants are alternative
+ * sources for a single export path, and the one an importer means depends on the
+ * condition being built, not on which file the specifier spells.
+ */
+export async function findReachablePrivateFiles(
+  sourceFolderPath: string,
+  privateFiles: string[],
+  /** Every source file in `src`, relative to it. */
+  sourceFiles: string[],
+): Promise<Set<string>> {
+  // Nothing to decide, and most packages are here: no private modules means no
+  // reason to read a single source file.
+  if (privateFiles.length === 0) return new Set()
+
+  /** absolute path -> the glob-relative name, and the export path it serves. */
+  const privateByPath = new Map<string, { file: string; group: string }>()
+  /**
+   * Text a specifier naming one of these modules has to contain.
+   *
+   * Every segment, not just the underscore-prefixed one: a module inside a
+   * private directory is named by its siblings relatively, so `_internal/events`
+   * is reached by `'./events'`, which says nothing about `_internal`.
+   */
+  const privateTokens = new Set<string>()
+  for (const file of privateFiles) {
+    privateByPath.set(path.join(sourceFolderPath, file), {
+      file,
+      group: stripSpecialCondition(sourceFilenameToExportFullPath(file)),
+    })
+    for (const segment of file.split(/[/\\]/)) {
+      privateTokens.add(baseNameWithoutExtension(segment))
+      // `index.react-server` is also referred to as `index`.
+      privateTokens.add(segment.split('.')[0])
+    }
+  }
+
+  const referencedGroups = new Set<string>()
+
+  for (const sourceFile of sourceFiles) {
+    const importer = path.join(sourceFolderPath, sourceFile)
+    let code: string
+    try {
+      code = await fsp.readFile(importer, 'utf8')
+    } catch {
+      continue
+    }
+    // A file mentioning none of the names cannot import one of these modules,
+    // and one with no `import(`/`require(` cannot be hiding a computed
+    // specifier — so there is nothing in it worth parsing.
+    const mightReference = [...privateTokens].some((token) =>
+      code.includes(token),
+    )
+    const mightCompute = code.includes('import(') || code.includes('require(')
+    if (!mightReference && !mightCompute) continue
+
+    const found = collectSpecifiers(code, importer)
+    if (found == null || found.hasComputedSpecifier) {
+      // A file that will not parse, or one importing a path it computes at
+      // runtime, could reference anything. Stop deciding rather than decide
+      // wrong.
+      return new Set(privateFiles)
+    }
+
+    for (const specifier of found.specifiers) {
+      const resolved = resolveSpecifierToSourceFile(importer, specifier)
+      if (resolved) {
+        const isPrivate = privateByPath.get(resolved)
+        // A private module importing itself is not a reference to it.
+        if (isPrivate && resolved !== importer) {
+          referencedGroups.add(isPrivate.group)
+        }
+        continue
+      }
+      // Nothing on disk answers to this specifier, so it is either external or
+      // routed through something not modelled here — a tsconfig path alias, or
+      // the package's own name (`swr/_internal`). Both keep the file path, so
+      // keep whatever it could have meant.
+      const named = new Set(
+        specifier
+          .split('/')
+          .filter((segment) => segment.startsWith('_'))
+          .map(baseNameWithoutExtension),
+      )
+      if (named.size === 0) continue
+      for (const { file, group } of privateByPath.values()) {
+        const mentioned = file
+          .split(/[/\\]/)
+          .some((segment) => named.has(baseNameWithoutExtension(segment)))
+        if (mentioned) referencedGroups.add(group)
+      }
+    }
+  }
+
+  const kept = new Set<string>()
+  for (const { file, group } of privateByPath.values()) {
+    if (referencedGroups.has(group)) kept.add(file)
+  }
+  return kept
+}
+
+/**
  * exportsEntries {
  *   "./index" => {
  *      "development" => source"
@@ -444,11 +572,36 @@ export async function collectSourceEntriesFromExportPaths(
   const suffixPattern = [...runtimeExportConventions].join(',')
   const extPattern = [...availableExtensions].join(',')
   const privatePattern = `**/_*{,/*}{,{.${suffixPattern}}}.{${extPattern}}`
-  const privateFiles = await glob(privatePattern, {
+  const allPrivateFiles = await glob(privatePattern, {
     cwd: sourceFolderPath,
     ignore: [TESTS_GLOB_PATTERN],
     expandDirectories: false,
   })
+  // Only the ones something imports: see `findReachablePrivateFiles`. Skipped
+  // entirely when the package declares no private modules, which is the common
+  // case and the only reason to list the source files at all.
+  const sourceFiles =
+    allPrivateFiles.length > 0
+      ? await glob(`**/*.{${extPattern}}`, {
+          cwd: sourceFolderPath,
+          ignore: [TESTS_GLOB_PATTERN],
+          expandDirectories: false,
+        })
+      : []
+  const reachablePrivateFiles = await findReachablePrivateFiles(
+    sourceFolderPath,
+    allPrivateFiles,
+    sourceFiles,
+  )
+  const privateFiles = allPrivateFiles.filter((file) =>
+    reachablePrivateFiles.has(file),
+  )
+  if (process.env.DEBUG && privateFiles.length !== allPrivateFiles.length) {
+    const skipped = allPrivateFiles.filter((f) => !reachablePrivateFiles.has(f))
+    logger.log(
+      `Skipping ${skipped.length} private module(s) no export reaches: ${skipped.join(', ')}`,
+    )
+  }
   const defaultPrivateModuleFormats =
     requiredPrivateModuleFormats !== ModuleFormat.none
       ? requiredPrivateModuleFormats

@@ -118,10 +118,15 @@ type BuncheeRollupConfig = CustomRollupInputOptions & {
   output: OutputOptions
 }
 
-/** One rollup build shared by many entries: a single module graph, one output. */
+/** One rollup build shared by many entries: a single module graph. */
 type MergedRollupConfig = CustomRollupInputOptions & {
   input: Record<string, string>
-  output: OutputOptions
+  /**
+   * One per file set this graph is written as. More than one when the same
+   * inputs are emitted in several formats — the graph is built once and written
+   * per output, the way a rollup config with an `output` array behaves.
+   */
+  output: OutputOptions[]
 }
 
 type CliArgs = {

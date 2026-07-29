@@ -21,7 +21,7 @@ import { esmShim } from '../plugins/esm-shim'
 import { inlineCss } from '../plugins/inline-css'
 import { rawContent } from '../plugins/raw-plugin'
 import { nativeAddon } from '../plugins/native-addon-plugin'
-import { aliasEntries } from '../plugins/alias-plugin'
+import { aliasEntries, getAliasFormat } from '../plugins/alias-plugin'
 import { prependShebang } from '../plugins/prepend-shebang'
 import { swcHelpersWarningPlugin } from '../plugins/swc-helpers-warning-plugin'
 import { memoizeByKey } from '../lib/memoize'
@@ -221,13 +221,12 @@ export async function buildInputConfig(
 
   // common plugins for both dts and ts assets that need to be processed
 
-  // If it's a .d.ts file under non-ESM package or .d.cts file, use cjs types alias.
-  const aliasFormat = dts
-    ? bundleConfig.file?.endsWith('.d.cts') ||
-      (bundleConfig.file?.endsWith('.d.ts') && !isESModulePackage(pkg.type))
-      ? 'cjs'
-      : 'esm'
-    : bundleConfig.format
+  const aliasFormat = getAliasFormat({
+    dts,
+    file: bundleConfig.file,
+    format: bundleConfig.format,
+    isESMPkg: isESModulePackage(pkg.type),
+  })
 
   const aliasPlugin = aliasEntries({
     entry,

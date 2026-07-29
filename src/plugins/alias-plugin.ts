@@ -116,38 +116,57 @@ function findTypesFileCallback({
  */
 const SIBLING_MARK = '\0bunchee-sibling:'
 
-// Alias entry key to dist bundle path
-export function aliasEntries({
-  entry: sourceFilePath,
-  exportCondition,
-  entries,
-  isESMPkg,
-  format,
+/**
+ * The format the alias map is chosen by, for one output file.
+ *
+ * Not the rollup output format: declarations are always generated as ESM, so
+ * which sibling declaration an import should point at is carried by the
+ * extension instead — `.d.cts`, or `.d.ts` in a CJS package, means the CJS one.
+ */
+export function getAliasFormat({
   dts,
-  cwd,
-  mergedSources,
+  file,
+  format,
+  isESMPkg,
 }: {
-  entry: string
+  dts: boolean
+  file: string | undefined
+  format: OutputOptions['format']
+  isESMPkg: boolean
+}): OutputOptions['format'] {
+  if (!dts) return format
+  const isCjsTypes =
+    file?.endsWith('.d.cts') || (file?.endsWith('.d.ts') && !isESMPkg)
+  return isCjsTypes ? 'cjs' : 'esm'
+}
+
+/**
+ * Where each entry's source lands in `dist`, for the output being built.
+ *
+ * The choice depends on the output format, so this is also what decides whether
+ * two outputs can share one module graph: if the map is the same for both, the
+ * plugin rewrites imports identically and the graph does not depend on which
+ * output follows it.
+ */
+export function buildSourceToBundleMap({
+  entries,
+  format,
+  isESMPkg,
+  exportCondition,
+  dts,
+}: {
   entries: Entries
   format: OutputOptions['format']
   isESMPkg: boolean
   exportCondition: ParsedExportCondition
   dts: boolean
-  cwd: string
-  /**
-   * The sources this build owns as inputs. When set, the build is a merged one:
-   * rollup emits the references between these itself, and only entries outside
-   * the set need rewriting to a `<dist>` path.
-   */
-  mergedSources?: Set<string>
-}): Plugin {
+}): Map<string, string> {
   const currentConditionNames = new Set(
     exportCondition.targets[0]?.conditions ?? [],
   )
-
   // <imported source file path>: <relative path to source's bundle>
   const sourceToRelativeBundleMap = new Map<string, string>()
-  let specialCondition = getSpecialExportTypeFromConditionNames(
+  const specialCondition = getSpecialExportTypeFromConditionNames(
     currentConditionNames,
   )
   for (const [, exportCondition] of Object.entries(entries)) {
@@ -186,6 +205,41 @@ export function aliasEntries({
         sourceToRelativeBundleMap.set(exportCondition.source, matchedBundlePath)
     }
   }
+  return sourceToRelativeBundleMap
+}
+
+// Alias entry key to dist bundle path
+export function aliasEntries({
+  entry: sourceFilePath,
+  exportCondition,
+  entries,
+  isESMPkg,
+  format,
+  dts,
+  cwd,
+  mergedSources,
+}: {
+  entry: string
+  entries: Entries
+  format: OutputOptions['format']
+  isESMPkg: boolean
+  exportCondition: ParsedExportCondition
+  dts: boolean
+  cwd: string
+  /**
+   * The sources this build owns as inputs. When set, the build is a merged one:
+   * rollup emits the references between these itself, and only entries outside
+   * the set need rewriting to a `<dist>` path.
+   */
+  mergedSources?: Set<string>
+}): Plugin {
+  const sourceToRelativeBundleMap = buildSourceToBundleMap({
+    entries,
+    format,
+    isESMPkg,
+    exportCondition,
+    dts,
+  })
 
   if (mergedSources) {
     return {

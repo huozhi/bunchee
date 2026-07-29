@@ -1,4 +1,5 @@
 import { dirname, relative, resolve, sep } from 'path'
+import type { OutputOptions } from 'rollup'
 import type {
   BuildContext,
   BundleConfig,
@@ -10,8 +11,9 @@ import type {
 import type { ExportOutput } from '../exports'
 import { buildInputConfig } from './input'
 import { buildOutputConfigs } from './output'
+import { buildSourceToBundleMap, getAliasFormat } from '../plugins/alias-plugin'
 import { getEntryBundleOutputs } from '../build-config'
-import { normalizePath } from '../utils'
+import { isESModulePackage, normalizePath } from '../utils'
 import { getSpecialExportTypeFromConditionNames } from '../entries'
 import { getDefinedInlineVariables } from '../env'
 import { logger } from '../logger'
@@ -25,6 +27,13 @@ type GroupItem = {
 type Group = {
   /** Debug label; also the map key that collects the group. */
   key: string
+  /**
+   * The parts of the key that describe the *input* graph rather than how it is
+   * written: the inlined env, the condition imports resolve through, and which
+   * occurrence of that shape this is. Groups agreeing here are candidates for
+   * sharing one graph.
+   */
+  graphKey: string
   items: GroupItem[]
   /** Absolute output file -> the source that claimed it. */
   claimed: Map<string, string>
@@ -132,10 +141,7 @@ export async function buildMergedConfigs(
     )
     const seen = new Map<string, number>()
     for (const output of outputs) {
-      const shape = [
-        dts ? 'dts' : 'js',
-        output.format,
-        outputExtension(output.file),
+      const graphShape = [
         JSON.stringify(env),
         // Which sibling bundle an import resolves to is decided per runtime or
         // optimize condition, so entries only share a graph with entries that
@@ -143,6 +149,12 @@ export async function buildMergedConfigs(
         getSpecialExportTypeFromConditionNames(
           new Set(output.target.conditions),
         ),
+      ]
+      const shape = [
+        dts ? 'dts' : 'js',
+        output.format,
+        outputExtension(output.file),
+        ...graphShape,
       ].join('|')
       const occurrence = seen.get(shape) ?? 0
       seen.set(shape, occurrence + 1)
@@ -157,6 +169,7 @@ export async function buildMergedConfigs(
         const key = attempt === 0 ? shape : `${shape}|#${attempt}`
         const candidate = groups.get(key) ?? {
           key,
+          graphKey: JSON.stringify([...graphShape, attempt]),
           items: [],
           claimed: new Map(),
         }
@@ -187,12 +200,101 @@ export async function buildMergedConfigs(
   }
 
   const configs: MergedRollupConfig[] = []
-  for (const group of groups.values()) {
+  for (const graph of coalesceGroups([...groups.values()], buildContext, dts)) {
     configs.push(
-      await buildMergedConfig(group, bundleConfig, buildContext, dts),
+      await buildMergedConfig(graph, bundleConfig, buildContext, dts),
     )
   }
   return configs
+}
+
+/** The input name -> source pairs a group builds, in a comparable form. */
+function inputSignature(group: Group): string {
+  return JSON.stringify(
+    group.items
+      .map((item) => [
+        toInputName(item.exportPath),
+        item.exportCondition.source,
+      ])
+      .sort(),
+  )
+}
+
+/**
+ * Groups that differ only in what they are written as, collapsed into one graph.
+ *
+ * A package that publishes both `import` and `require` describes the same
+ * entries twice, and the two only diverge once rollup starts generating: the
+ * modules parsed, transformed and tree-shaken to get there are the same work.
+ * Built as separate groups that work is done once per format.
+ *
+ * Two groups can share a graph when they take the same inputs and the alias
+ * plugin would rewrite them the same way. The second condition is what keeps
+ * this honest: which sibling bundle an import of an entry outside the graph
+ * resolves to is chosen per format, so groups whose maps disagree still get a
+ * graph each.
+ */
+function coalesceGroups(
+  groups: Group[],
+  buildContext: BuildContext,
+  dts: boolean,
+): Group[][] {
+  const { entries, pkg } = buildContext
+  const isESMPkg = isESModulePackage(pkg.type)
+
+  const aliasSignature = (group: Group): string => {
+    const [representative] = group.items
+    const owned = new Set(
+      group.items.map((item) => item.exportCondition.source),
+    )
+    const map = buildSourceToBundleMap({
+      entries,
+      // The format the plugin will actually be given, which for declarations is
+      // decided by the extension rather than by the rollup output format.
+      format: getAliasFormat({
+        dts,
+        file: representative.output.file,
+        format: representative.output.format,
+        isESMPkg,
+      }),
+      isESMPkg,
+      exportCondition: {
+        ...representative.exportCondition,
+        targets: [representative.output.target],
+      },
+      dts,
+    })
+    // An input of this graph is emitted by rollup as a chunk, so its entry in
+    // the map is never read. Only the sources this graph does not own get
+    // rewritten, and only those have to agree between the two outputs.
+    return JSON.stringify(
+      [...map].filter(([source]) => !owned.has(source)).sort(),
+    )
+  }
+
+  const graphs = new Map<string, Group[]>()
+  for (const group of groups) {
+    const key = JSON.stringify([
+      group.graphKey,
+      inputSignature(group),
+      aliasSignature(group),
+    ])
+    const existing = graphs.get(key)
+    if (existing) existing.push(group)
+    else graphs.set(key, [group])
+  }
+
+  if (process.env.DEBUG) {
+    for (const members of graphs.values()) {
+      if (members.length > 1) {
+        logger.log(
+          `Sharing one graph across ${members.length} outputs: ` +
+            members.map((member) => member.key).join(' + '),
+        )
+      }
+    }
+  }
+  return [...graphs.values()]
 }
 
 /**
@@ -241,34 +343,26 @@ export function shardEntries(names: string[], count: number): string[][] {
 }
 
 async function buildMergedConfig(
-  group: Group,
+  /**
+   * The groups sharing this graph — one per output. They take the same inputs,
+   * so only where each entry lands differs between them.
+   */
+  graph: Group[],
   bundleConfig: BundleConfig,
   buildContext: BuildContext,
   dts: boolean,
 ): Promise<MergedRollupConfig> {
   const { cwd } = buildContext
-  const { items } = group
+  const [primary] = graph
 
   const input: Record<string, string> = {}
-  /** input name -> absolute output file */
-  const outputFiles = new Map<string, string>()
-  /**
-   * Same, keyed by source. Rollup sanitises an input name before it reaches
-   * `chunk.name` — a bin entry's `$binary` arrives as `_binary` — so the source
-   * behind the chunk is the reliable way back to its output path.
-   */
-  const outputFilesBySource = new Map<string, string>()
-  for (const item of items) {
-    const name = toInputName(item.exportPath)
-    const file = resolve(cwd, item.output.file)
-    input[name] = item.exportCondition.source
-    outputFiles.set(name, file)
-    outputFilesBySource.set(item.exportCondition.source, file)
+  for (const item of primary.items) {
+    input[toInputName(item.exportPath)] = item.exportCondition.source
   }
 
-  // The first entry stands in for the group when building the options shared
-  // across it: format, sourcemap, interop, chunk naming.
-  const [representative] = items
+  // The first entry of the first group stands in for the graph when building the
+  // options shared across it: format, sourcemap, interop, chunk naming.
+  const [representative] = primary.items
   const representativeCondition: ParsedExportCondition = {
     ...representative.exportCondition,
     targets: [representative.output.target],
@@ -288,20 +382,41 @@ async function buildMergedConfig(
     input,
   )
 
-  const outputOptions = await buildOutputConfigs(
-    representativeBundleConfig,
-    representativeCondition,
-    buildContext,
-    dts,
-    true,
-  )
+  const output: OutputOptions[] = []
+  for (const group of graph) {
+    const [groupRepresentative] = group.items
+    /** input name -> absolute output file */
+    const outputFiles = new Map<string, string>()
+    /**
+     * Same, keyed by source. Rollup sanitises an input name before it reaches
+     * `chunk.name` — a bin entry's `$binary` arrives as `_binary` — so the
+     * source behind the chunk is the reliable way back to its output path.
+     */
+    const outputFilesBySource = new Map<string, string>()
+    for (const item of group.items) {
+      const file = resolve(cwd, item.output.file)
+      outputFiles.set(toInputName(item.exportPath), file)
+      outputFilesBySource.set(item.exportCondition.source, file)
+    }
 
-  const dir = commonRootDir([...outputFiles.values()].map((f) => dirname(f)))
+    const groupBundleConfig: BundleConfig = {
+      ...bundleConfig,
+      file: groupRepresentative.output.file,
+      format: groupRepresentative.output.format,
+    }
+    const outputOptions = await buildOutputConfigs(
+      groupBundleConfig,
+      {
+        ...groupRepresentative.exportCondition,
+        targets: [groupRepresentative.output.target],
+      },
+      buildContext,
+      dts,
+      true,
+    )
 
-  return {
-    ...inputOptions,
-    input,
-    output: {
+    const dir = commonRootDir([...outputFiles.values()].map((f) => dirname(f)))
+    output.push({
       ...outputOptions,
       dir,
       // Each entry keeps the exact path its export condition declares, which
@@ -318,6 +433,8 @@ async function buildMergedConfig(
         }
         return normalizePath(relative(dir, file))
       },
-    },
+    })
   }
+
+  return { ...inputOptions, input, output }
 }
