@@ -538,6 +538,10 @@ export async function findReachablePrivateFiles(
   privateFiles: string[],
   entrySources: Iterable<string>,
 ): Promise<Set<string>> {
+  // Nothing to decide, and most packages are here: no private modules means no
+  // reason to read a single source file.
+  if (privateFiles.length === 0) return new Set()
+
   /** absolute path -> the glob-relative name, and the export path it serves. */
   const privateByPath = new Map<string, { file: string; group: string }>()
   for (const file of privateFiles) {
