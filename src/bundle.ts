@@ -42,6 +42,7 @@ import {
 } from './rollup/merged-config'
 import { spawn } from 'child_process'
 import { logger } from './logger'
+import { endProfile, startProfile } from './lib/profile'
 
 function assignDefault(
   options: BundleConfig,
@@ -67,21 +68,30 @@ async function bundle(
   cliEntryPath: string,
   { cwd: _cwd, onSuccess, ...options }: BundleConfig = {},
 ): Promise<void> {
+  const bundleStarted = startProfile()
   const cwd = resolve(process.cwd(), _cwd || '')
   assignDefault(options, 'format', 'esm')
   assignDefault(options, 'minify', false)
   assignDefault(options, 'target', 'es2022')
 
+  const packageStarted = startProfile()
   const pkg = await getPackageMeta(cwd)
   const parsedExportsInfo = await parseExports(pkg, cwd)
+  endProfile('bundle.package', packageStarted, {
+    exports: parsedExportsInfo.size,
+  })
   const isMultiEntries = hasMultiEntryExport(parsedExportsInfo)
   const hasBin = Boolean(pkg.bin)
   // Original input file path, client path might change later
   const inputFile = cliEntryPath
   const isFromCli = Boolean(cliEntryPath)
 
+  const tsconfigStarted = startProfile()
   const tsConfigPath = resolveTsConfigPath(cwd, options.tsconfig)
   let tsConfig = resolveTsConfig(cwd, tsConfigPath)
+  endProfile('bundle.tsconfig', tsconfigStarted, {
+    found: Boolean(tsConfig?.tsConfigPath),
+  })
   let hasTsConfig = Boolean(tsConfig?.tsConfigPath)
 
   const defaultTsOptions: TypescriptOptions = {
@@ -146,12 +156,16 @@ async function bundle(
     }
   }
 
+  const entriesStarted = startProfile()
   const entries = await collectEntriesFromParsedExports(
     cwd,
     parsedExportsInfo,
     pkg,
     inputFile,
   )
+  endProfile('bundle.entries', entriesStarted, {
+    entries: Object.keys(entries).length,
+  })
 
   // Collect and log missing entries for defined exports
   const missingEntries = [...parsedExportsInfo.keys()].filter(
@@ -214,7 +228,12 @@ async function bundle(
   // `_entryFilter` is not a reason to skip merging: a worker gets a shard of
   // entries and builds them as one graph, with the entries it does not own
   // resolved as externals against their own output paths.
+  const mergeStarted = startProfile()
   const useMerged = await canMergeEntries(entries, options, isFromCli)
+  endProfile('bundle.merge-plan', mergeStarted, {
+    entries: entryNames.length,
+    merged: useMerged,
+  })
 
   // With many entries, every entry's rollup build shares one heap and peak
   // memory scales with entry count, which OOMs on packages with many exports.
@@ -317,7 +336,20 @@ async function bundle(
         await onSuccess()
       }
     }
+    endProfile('bundle.total', bundleStarted, {
+      entries: entryNames.length,
+      generateTypes,
+      jobs: assetJobs.length,
+      merged: useMerged,
+      status: 'success',
+    })
   } catch (error) {
+    endProfile('bundle.total', bundleStarted, {
+      entries: entryNames.length,
+      generateTypes,
+      merged: useMerged,
+      status: 'error',
+    })
     options._callbacks?.onBuildError?.(error)
     return Promise.reject(error)
   }

@@ -25,6 +25,7 @@
     "ts-bunchee": "pnpm run-ts ./src/bin/index.ts",
     "build-dir": "pnpm ts-bunchee --cwd",
     "build": "pnpm run-ts ./src/bin/index.ts --runtime node",
+    "benchmark": "pnpm build && node ./scripts/benchmark.js",
     "format": "oxfmt",
     "prepare": "husky"
   },

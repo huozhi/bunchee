@@ -28,6 +28,7 @@ async function build(env: NodeJS.ProcessEnv = {}) {
 }
 
 const ENTRIES = ['index', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
+const PROFILE_PREFIX = 'BUNCHEE_PROFILE '
 
 describe('integration - many-entries', () => {
   it('should build every entry', async () => {
@@ -78,6 +79,34 @@ describe('integration - many-entries', () => {
     // TypeScript compiler API, which costs more than splitting two graphs
     // across threads saves at any entry count measured.
     expect(stdout).not.toContain('worker threads')
+  }, 120_000)
+
+  it('should emit structured build profiling when requested', async () => {
+    const { stdout } = await build({ PROFILE: '1' })
+    const events = stdout
+      .split('\n')
+      .filter((line) => line.startsWith(PROFILE_PREFIX))
+      .map((line) => JSON.parse(line.slice(PROFILE_PREFIX.length)))
+
+    expect(events.length).toBeGreaterThan(0)
+    expect(events.every((event) => event.schemaVersion === 1)).toBe(true)
+    expect(events.some((event) => event.phase === 'cli.total')).toBe(true)
+    expect(events.some((event) => event.phase === 'bundle.total')).toBe(true)
+    expect(
+      events.some(
+        (event) =>
+          event.phase === 'rollup.graph' && event.details?.kind === 'js',
+      ),
+    ).toBe(true)
+    expect(
+      events.some(
+        (event) =>
+          event.phase === 'rollup.graph' && event.details?.kind === 'dts',
+      ),
+    ).toBe(true)
+    expect(
+      events.filter((event) => event.phase === 'dts.program'),
+    ).toHaveLength(1)
   }, 120_000)
 
   it('should emit code shared between entries as a single chunk', async () => {

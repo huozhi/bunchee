@@ -21,12 +21,34 @@ import {
 import { removeOutputDir } from './utils'
 import { normalizeError } from './lib/normalize-error'
 import { logger } from './logger'
+import { endProfile, startProfile } from './lib/profile'
+
+function inputCount(input: string | Record<string, string>): number {
+  return typeof input === 'string' ? 1 : Object.keys(input).length
+}
+
+function graphKind(plugins: MergedRollupConfig['plugins']): 'dts' | 'js' {
+  const pluginValue = plugins as unknown
+  const pluginList: unknown[] = Array.isArray(pluginValue)
+    ? pluginValue.flat(Infinity)
+    : [pluginValue]
+  return pluginList.some(
+    (plugin) =>
+      plugin != null &&
+      typeof plugin === 'object' &&
+      'name' in plugin &&
+      plugin.name === 'dts',
+  )
+    ? 'dts'
+    : 'js'
+}
 
 export async function createAssetRollupJobs(
   options: BundleConfig,
   buildContext: BuildContext,
   bundleJobOptions: BundleJobOptions,
 ) {
+  const configStarted = startProfile()
   const { isFromCli, generateTypes } = bundleJobOptions
   const assetsConfigs = options._typesOnly
     ? []
@@ -41,14 +63,22 @@ export async function createAssetRollupJobs(
       })
     : []
   const allConfigs = assetsConfigs.concat(typesConfigs)
+  endProfile('bundle.config', configStarted, {
+    graphs: allConfigs.length,
+    merged: false,
+  })
 
   // When it's production build (non watch mode), we need to remove the output directory
   if (!options.watch) {
+    const cleanStarted = startProfile()
     for (const config of allConfigs) {
       if (options.clean && !isFromCli) {
         await removeOutputDir(config.output, buildContext.cwd)
       }
     }
+    endProfile('bundle.clean', cleanStarted, {
+      enabled: Boolean(options.clean && !isFromCli),
+    })
   }
 
   const rollupJobs = allConfigs.map((rollupConfig) =>
@@ -72,6 +102,7 @@ export async function createMergedRollupJobs(
   buildContext: BuildContext,
   bundleJobOptions: BundleJobOptions,
 ) {
+  const configStarted = startProfile()
   const { isFromCli, generateTypes } = bundleJobOptions
   const assetsConfigs = options._typesOnly
     ? []
@@ -83,16 +114,22 @@ export async function createMergedRollupJobs(
     ? await buildMergedConfigs(options, buildContext, { dts: true, isFromCli })
     : []
   const allConfigs = assetsConfigs.concat(typesConfigs)
+  endProfile('bundle.config', configStarted, {
+    graphs: allConfigs.length,
+    merged: true,
+  })
 
   // Clean every output directory before anything is written: the JS and types
   // groups usually share one dist directory, so cleaning per job would delete
   // an earlier job's output.
   if (options.clean && !isFromCli) {
+    const cleanStarted = startProfile()
     for (const config of allConfigs) {
       for (const output of config.output) {
         await removeOutputDir(output, buildContext.cwd)
       }
     }
+    endProfile('bundle.clean', cleanStarted, { enabled: true })
   }
 
   if (process.env.DEBUG) {
@@ -132,11 +169,26 @@ async function runMergedBundle({
   let bundle: RollupBuild
   const debug = Boolean(process.env.DEBUG)
   const started = Date.now()
+  const graphStarted = startProfile()
+  const kind =
+    graphStarted === undefined ? undefined : graphKind(restOptions.plugins)
+  const inputs =
+    graphStarted === undefined ? undefined : inputCount(restOptions.input)
   try {
     bundle = await rollup({ ...restOptions, cache: false })
   } catch (error) {
+    endProfile('rollup.graph', graphStarted, {
+      inputs,
+      kind,
+      status: 'error',
+    })
     return catchErrorHandler(error)
   }
+  endProfile('rollup.graph', graphStarted, {
+    inputs,
+    kind,
+    status: 'success',
+  })
   if (debug) {
     logMergedGraph(bundle, Object.keys(restOptions.input).length, started)
   }
@@ -146,7 +198,15 @@ async function runMergedBundle({
     const results = []
     for (const output of outputs) {
       const writeStart = Date.now()
-      results.push(await bundle.write(output))
+      const writeProfileStarted = startProfile()
+      try {
+        results.push(await bundle.write(output))
+      } finally {
+        endProfile('rollup.write', writeProfileStarted, {
+          format: output.format,
+          kind,
+        })
+      }
       if (debug) {
         logger.log(`  write ${output.format}: ${Date.now() - writeStart}ms`)
       }
@@ -201,15 +261,38 @@ async function bundleOrWatch(
 
 async function runBundle({ output, ...restOptions }: BuncheeRollupConfig) {
   let bundle: RollupBuild
+  const graphStarted = startProfile()
+  const kind =
+    graphStarted === undefined ? undefined : graphKind(restOptions.plugins)
+  const inputs =
+    graphStarted === undefined ? undefined : inputCount(restOptions.input)
   try {
     // One-shot builds never reuse the cache; disabling it stops rollup from
     // retaining every module's AST on the bundle for the rest of the build.
     bundle = await rollup({ ...restOptions, cache: false })
   } catch (error) {
+    endProfile('rollup.graph', graphStarted, {
+      inputs,
+      kind,
+      status: 'error',
+    })
     return catchErrorHandler(error)
   }
+  endProfile('rollup.graph', graphStarted, {
+    inputs,
+    kind,
+    status: 'success',
+  })
   try {
-    return await bundle.write(output)
+    const writeStarted = startProfile()
+    try {
+      return await bundle.write(output)
+    } finally {
+      endProfile('rollup.write', writeStarted, {
+        format: output.format,
+        kind,
+      })
+    }
   } finally {
     // Release module graph and plugin resources once the assets are written,
     // instead of holding every entry's graph until the whole build finishes.

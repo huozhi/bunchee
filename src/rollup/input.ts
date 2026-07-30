@@ -1,4 +1,4 @@
-import { Plugin } from 'rollup'
+import type { InputOptions, Plugin } from 'rollup'
 import { type Options as SwcOptions } from '@swc/core'
 import {
   BuildContext,
@@ -30,6 +30,7 @@ import {
   convertCompilerOptions,
   isTsConfigAutoDiscoverable,
 } from '../typescript'
+import { endProfile, startProfile } from '../lib/profile'
 import {
   availableESExtensionsRegex,
   disabledWarnings,
@@ -110,7 +111,37 @@ async function createDtsPlugin(
     respectExternal,
   })
 
-  return dtsPlugin
+  if (typeof dtsPlugin.options !== 'function') {
+    return dtsPlugin
+  }
+
+  const optionsHook = dtsPlugin.options
+
+  return {
+    ...dtsPlugin,
+    options(this: any, inputOptions: InputOptions) {
+      const input = inputOptions.input
+      const inputFiles =
+        typeof input === 'string'
+          ? [input]
+          : Array.isArray(input)
+            ? input
+            : input
+              ? Object.values(input)
+              : []
+      const started = startProfile()
+      try {
+        // rollup-plugin-dts creates its TypeScript Programs synchronously in
+        // this hook. Keep the label tied to that observable lifecycle rather
+        // than attempting to patch the TypeScript compiler itself.
+        return optionsHook.call(this, inputOptions)
+      } finally {
+        endProfile('dts.program', started, {
+          inputs: inputFiles.length,
+        })
+      }
+    },
+  } satisfies Plugin
 }
 
 const memoizeDtsPluginByKey = memoizeByKey(createDtsPlugin)
