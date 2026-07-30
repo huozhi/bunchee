@@ -25,7 +25,6 @@ import { nativeAddon } from '../plugins/native-addon-plugin'
 import { aliasEntries, getAliasFormat } from '../plugins/alias-plugin'
 import { prependShebang } from '../plugins/prepend-shebang'
 import { swcHelpersWarningPlugin } from '../plugins/swc-helpers-warning-plugin'
-import { memoizeByKey } from '../lib/memoize'
 import {
   convertCompilerOptions,
   isTsConfigAutoDiscoverable,
@@ -116,6 +115,8 @@ async function createDtsPlugin(
   }
 
   const optionsHook = dtsPlugin.options
+  let programInputs: Set<string> | undefined
+  let pluginOptionOverrides: Record<string, unknown> | undefined
 
   return {
     ...dtsPlugin,
@@ -129,22 +130,47 @@ async function createDtsPlugin(
             : input
               ? Object.values(input)
               : []
+      const previousProgramInputs = programInputs
+      const canReuseProgram =
+        previousProgramInputs !== undefined &&
+        pluginOptionOverrides !== undefined &&
+        inputFiles.every((file) => previousProgramInputs.has(file))
       const started = startProfile()
       try {
+        if (canReuseProgram) {
+          // rollup-plugin-dts normally replaces its Programs in every options
+          // hook. A later graph whose inputs are all roots of the current
+          // Program can safely retain it; replay only the Rollup option changes
+          // the plugin made during its first initialization.
+          return {
+            ...inputOptions,
+            ...pluginOptionOverrides,
+          }
+        }
+
         // rollup-plugin-dts creates its TypeScript Programs synchronously in
         // this hook. Keep the label tied to that observable lifecycle rather
         // than attempting to patch the TypeScript compiler itself.
-        return optionsHook.call(this, inputOptions)
+        const result = optionsHook.call(this, inputOptions)
+        if (result && typeof result === 'object') {
+          pluginOptionOverrides = Object.fromEntries(
+            Object.entries(result).filter(
+              ([key, value]) =>
+                value !== (inputOptions as Record<string, unknown>)[key],
+            ),
+          )
+          programInputs = new Set(inputFiles)
+        }
+        return result
       } finally {
         endProfile('dts.program', started, {
           inputs: inputFiles.length,
+          reused: canReuseProgram,
         })
       }
     },
   } satisfies Plugin
 }
-
-const memoizeDtsPluginByKey = memoizeByKey(createDtsPlugin)
 
 export async function buildInputConfig(
   entry: string,
@@ -286,21 +312,19 @@ export async function buildInputConfig(
   ]
 
   if (useTypeScript) {
-    // Each process should be unique
-    // Each package build should be unique
-    // Composing above factors into a unique cache key to retrieve the memoized dts plugin with tsconfigs
-    const autoDiscoverable = isTsConfigAutoDiscoverable(cwd, tsConfigPath, [
-      ...new Set(Object.values(entries).map((e) => dirname(e.source))),
-    ])
-    const uniqueProcessId =
-      'dts-plugin:' + process.pid + tsConfigPath + autoDiscoverable
-    const dtsPlugin = await memoizeDtsPluginByKey(uniqueProcessId)(
+    // Keep one plugin—and therefore one TypeScript Program cache—for this
+    // package build. Scoping it to BuildContext prevents repeated in-process
+    // builds and separate watchers from observing stale compiler state.
+    pluginContext.dtsPlugin ??= createDtsPlugin(
       tsCompilerOptions,
       tsConfigPath,
       bundleConfig.dts && bundleConfig.dts.respectExternal,
       cwd,
-      autoDiscoverable,
+      isTsConfigAutoDiscoverable(cwd, tsConfigPath, [
+        ...new Set(Object.values(entries).map((e) => dirname(e.source))),
+      ]),
     )
+    const dtsPlugin = await pluginContext.dtsPlugin
     typesPlugins.push(dtsPlugin)
   }
 

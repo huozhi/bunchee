@@ -113,6 +113,12 @@ export async function createMergedRollupJobs(
   const typesConfigs = generateTypes
     ? await buildMergedConfigs(options, buildContext, { dts: true, isFromCli })
     : []
+  // A declaration graph's Program also contains its transitive dependencies.
+  // Build the broadest graph first so later private/special-extension graphs
+  // can reuse that Program when their inputs are already part of it.
+  typesConfigs.sort(
+    (left, right) => inputCount(right.input) - inputCount(left.input),
+  )
   const allConfigs = assetsConfigs.concat(typesConfigs)
   endProfile('bundle.config', configStarted, {
     graphs: allConfigs.length,

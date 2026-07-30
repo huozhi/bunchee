@@ -1,6 +1,6 @@
 import type { OutputTarget } from './exports'
 import type { JscTarget } from '@swc/types'
-import type { InputOptions, OutputOptions } from 'rollup'
+import type { InputOptions, OutputOptions, Plugin } from 'rollup'
 import type { OutputState } from './plugins/output-state-plugin'
 import type { TypescriptOptions } from './typescript'
 
@@ -175,6 +175,11 @@ type BuildContext = {
   pluginContext: {
     outputState: OutputState
     moduleDirectiveLayerMap: Map<string, Set<[string, string]>>
+    /**
+     * One declaration plugin per package build. The plugin owns the TypeScript
+     * Programs that compatible declaration graphs reuse.
+     */
+    dtsPlugin?: Promise<Plugin>
   }
 }
 
