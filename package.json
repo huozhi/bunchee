@@ -3,13 +3,8 @@
   "version": "7.0.0-beta.1",
   "description": "zero config bundler for js/ts/jsx libraries",
   "bin": "./dist/bin/cli.js",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./package.json": "./package.json"
-  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "test": "vitest run",
     "test:update": "TEST_UPDATE_SNAPSHOT=1 pnpm test",
