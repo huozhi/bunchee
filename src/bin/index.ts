@@ -13,6 +13,7 @@ import { logOutputState } from '../plugins/output-state-plugin'
 import { normalizeError } from '../lib/normalize-error'
 import { createSpinner } from 'nanospinner'
 import { createRequire } from 'module'
+import { endProfile, startProcessProfile, startProfile } from '../lib/profile'
 
 // Read rather than imported: a JSON module in ESM has no named exports, and a
 // default import would inline the whole manifest into the bin. The path holds
@@ -259,7 +260,12 @@ async function run(args: CliArgs) {
   const cliEntry = source ? path.resolve(cwd, source) : ''
 
   // lint package by default
-  await lint(cwd)
+  const lintStarted = startProfile()
+  try {
+    await lint(cwd)
+  } finally {
+    endProfile('cli.lint', lintStarted)
+  }
 
   const spinnerInstance = process.stdout.isTTY
     ? createSpinner('Building...\n\n', {
@@ -376,20 +382,36 @@ async function run(args: CliArgs) {
 }
 
 async function main() {
-  let params, error
+  const mainStarted = startProcessProfile()
+  let status = 'success'
   try {
-    params = await parseCliArgs(process.argv)
-  } catch (err) {
-    error = err
+    let params, error
+    try {
+      params = await parseCliArgs(process.argv)
+    } catch (err) {
+      error = err
+    }
+    if (error || !params) {
+      // if (!error) help()
+      return exit(error as Error)
+    }
+    if ('cmd' in params) {
+      return
+    }
+    await run(params)
+  } catch (error) {
+    status = 'error'
+    throw error
+  } finally {
+    const usage =
+      mainStarted === undefined ? undefined : process.resourceUsage()
+    endProfile('cli.total', mainStarted, {
+      status,
+      userCpuMs: usage && usage.userCPUTime / 1000,
+      systemCpuMs: usage && usage.systemCPUTime / 1000,
+      maxRssBytes: usage && usage.maxRSS * 1024,
+    })
   }
-  if (error || !params) {
-    // if (!error) help()
-    return exit(error as Error)
-  }
-  if ('cmd' in params) {
-    return
-  }
-  await run(params)
 }
 
 function logWatcherBuildTime(result: RollupWatcher[], spinner: Spinner) {
