@@ -26,7 +26,7 @@
     "prepare-release": "pnpm clean && pnpm build",
     "publish-local": "pnpm prepare-release && pnpm test && pnpm publish",
     "prepublishOnly": "pnpm prepare-release && chmod +x ./dist/bin/cli.js",
-    "run-ts": "cross-env SWC_NODE_IGNORE_DYNAMIC=1 node -r ./scripts/ts6-compat.cjs --import @swc-node/register/esm-register",
+    "run-ts": "node --import tsx",
     "ts-bunchee": "pnpm run-ts ./src/bin/index.ts",
     "build-dir": "pnpm ts-bunchee --cwd",
     "build": "pnpm run-ts ./src/bin/index.ts --runtime node",
@@ -92,7 +92,6 @@
   },
   "devDependencies": {
     "@huozhi/testing-package": "1.0.0",
-    "@swc-node/register": "^1.11.1",
     "@swc/types": "^0.1.17",
     "@tailwindcss/postcss": "^4.1.8",
     "@types/clean-css": "^4.2.11",
@@ -113,6 +112,7 @@
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "tailwindcss": "^4.1.8",
+    "tsx": "^4.23.1",
     "typescript": "^6.0.2",
     "vitest": "^4.1.8"
   },
