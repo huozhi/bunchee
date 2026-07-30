@@ -1,7 +1,7 @@
 // @ts-check
 
-const fs = require('fs')
-const path = require('path')
+import fs from 'fs'
+import path from 'path'
 
 // Helper to copy and rename a file
 const copyAndRenameFile = (srcPath, destPath, testName) => {
@@ -35,14 +35,14 @@ const copyFolder = (srcFolder, destFolder, testName) => {
 
 const createProjectFromFixtures = (testName) => {
   const fixturesDir = path.resolve(
-    __dirname,
+    import.meta.dirname,
     '..',
     'test',
     'fixtures',
     'integration-test-template',
   )
   const testIntegrationFolder = path.resolve(
-    __dirname,
+    import.meta.dirname,
     '..',
     'test',
     'integration',

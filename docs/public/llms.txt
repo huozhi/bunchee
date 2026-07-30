@@ -54,9 +54,9 @@ bunchee src/index.js --output dist/bundle.js
 ### API
 Use bunchee programmatically in your Node.js scripts:
 ```javascript
-const bunchee = require('bunchee');
+import { bundle } from 'bunchee';
 
-bunchee.bundle({
+bundle({
   input: 'src/index.js',
   output: 'dist/bundle.js',
 });

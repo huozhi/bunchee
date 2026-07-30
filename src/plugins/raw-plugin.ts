@@ -1,6 +1,7 @@
 import { type FilterPattern, createFilter } from '@rollup/pluginutils'
 import type { Plugin } from 'rollup'
 import { readFile } from 'fs/promises'
+import path from 'path'
 
 export function rawContent({ exclude }: { exclude: FilterPattern }): Plugin {
   const filter = createFilter(['**/*.data', '**/*.txt'], exclude)
@@ -14,7 +15,6 @@ export function rawContent({ exclude }: { exclude: FilterPattern }): Plugin {
         const cleanId = id.split('?')[0]
         // Resolve the actual file path
         if (importer) {
-          const path = require('path')
           return path.resolve(path.dirname(importer), cleanId) + '?raw'
         }
         return cleanId + '?raw'

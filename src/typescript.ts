@@ -1,7 +1,7 @@
 import type { CompilerOptions, Diagnostic } from '@typescript/typescript6'
 import { resolve, dirname } from 'path'
 import { promises as fsp } from 'fs'
-import { Module } from 'module'
+import { Module, createRequire } from 'module'
 import pc from 'picocolors'
 import { exit, fileExists } from './utils'
 import { memoize } from './lib/memoize'
@@ -23,6 +23,11 @@ export type TypescriptOptions = {
 let hasLoggedTsWarning = false
 let hasLoggedTsCompatFallback = false
 let hasRedirectedTsRequire = false
+
+// The TypeScript compiler API is CommonJS, and the TS 7 fallback below works by
+// patching CJS resolution — so it is loaded with `require` even though this
+// module is ESM.
+const require = createRequire(import.meta.url)
 
 // Resolve to a concrete file path (works in both Node.js and Bun); the TS 7 fallback also needs the path to redirect `require('typescript')`.
 function resolveModulePath(request: string, paths: string[]): string | null {
@@ -79,7 +84,7 @@ function resolveTypescript(cwd: string): TypeScriptApi {
   if (!hasTsCompilerApi(ts)) {
     const tsCompatPath =
       resolveModulePath(TS_COMPAT_PACKAGE, searchPaths) ??
-      resolveModulePath(TS_COMPAT_PACKAGE, [__dirname])
+      resolveModulePath(TS_COMPAT_PACKAGE, [import.meta.dirname])
     if (!tsCompatPath) {
       if (!hasLoggedTsWarning) {
         hasLoggedTsWarning = true

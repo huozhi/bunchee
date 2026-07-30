@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { spawnSync } = require('child_process')
+import { spawnSync } from 'child_process'
 
 const lanes = {
   ts7: {
