@@ -22,6 +22,8 @@ By using the standard `exports` configuration as the single source of truth, **b
 
 ## Quick Start
 
+> Migrating from bunchee 6? See the [bunchee 7 migration guide](./docs/MIGRATION.md).
+
 ### Installation
 
 ```sh
