@@ -9,6 +9,7 @@
     "test": "vitest run",
     "test:update": "TEST_UPDATE_SNAPSHOT=1 pnpm test",
     "test:post": "cross-env POST_BUILD=1 pnpm test test/compile.test.ts test/integration.test.ts",
+    "test:package": "node ./scripts/test-packed-package.js",
     "site": "next dev docs",
     "docs:build": "pnpm --dir docs install && next build docs",
     "clean": "rm -rf ./dist",
