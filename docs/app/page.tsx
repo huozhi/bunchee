@@ -14,7 +14,7 @@ export default function Page() {
             {` · `}
             <a href="https://x.com/huozhi">x.com</a>
             {` · `}
-            <a href="https://github/huozhi">huozhi</a>
+            <a href="https://github.com/huozhi">huozhi</a>
           </p>
         </footer>
       </div>
@@ -28,6 +28,15 @@ function TerminalBody() {
       <Intro />
       <BlockSpacer />
       <Prompt>npm install --save-dev bunchee typescript</Prompt>
+      <Output>
+        Requires Node.js 22.12+. Migrating from bunchee 6?{' '}
+        <a href="https://github.com/huozhi/bunchee/blob/main/docs/MIGRATION.md">
+          Read the v7 guide.
+        </a>
+      </Output>
+      <Output>
+        TypeScript 7 users should also install @typescript/typescript6.
+      </Output>
       <BlockSpacer />
       <TerminalAnimation
         text="cat package.json"

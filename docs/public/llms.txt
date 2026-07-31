@@ -5,8 +5,8 @@ bunchee is a zero-config TypeScript & JavaScript bundler designed to create opti
 - **Zero Configuration**: Bundles projects with sensible defaults out of the box.
 - **Tree Shaking**: Removes unused code to produce smaller bundles.
 - **TypeScript Support**: Handles `.ts` and `.tsx` files seamlessly.
-- **ESM and CJS Outputs**: Generates dual modules to support modern and legacy environments.
-- **Source Maps**: Includes inline or external source maps for easier debugging.
+- **ESM and CJS Outputs**: Supports ESM-only, CJS-only, and dual-module packages.
+- **Source Maps**: Supports source map generation for easier debugging.
 - **CSS/JSON Asset Bundling**: Automatically processes non-JavaScript assets for compatibility.
 - **Raw File Imports**: Import any file as string content using `.txt`/`.data` extensions or `?raw` query parameter.
 - **Server Components**: Supports React Server Components and Server Actions with `"use client"` and `"use server"` directives, automatically splitting code into separate chunks.
@@ -17,9 +17,18 @@ bunchee is a zero-config TypeScript & JavaScript bundler designed to create opti
 ## Installation
 Install bunchee as a development dependency in your project:
 ```bash
-npm install --save-dev bunchee
+npm install --save-dev bunchee typescript
 ```
 
+bunchee 7 requires Node.js 22.12 or newer and targets ES2022 by default.
+
+TypeScript 7 users must also install the official compatibility API package:
+
+```bash
+npm install --save-dev @typescript/typescript6
+```
+
+Migrating from bunchee 6? See the [bunchee 7 migration guide](https://github.com/huozhi/bunchee/blob/main/docs/MIGRATION.md).
 
 ## Usage
 ### Build
@@ -28,7 +37,7 @@ Build a project:
 mkdir src && touch ./src/index.ts && touch package.json
 ```
 
-Add the exports in `package.json`.
+Add the package metadata in `package.json`.
 ```json
 {
   "name": "coffee",
@@ -54,12 +63,12 @@ bunchee src/index.js --output dist/bundle.js
 ### API
 Use bunchee programmatically in your Node.js scripts:
 ```javascript
-import { bundle } from 'bunchee';
+import path from 'node:path'
+import { bundle } from 'bunchee'
 
-bundle({
-  input: 'src/index.js',
-  output: 'dist/bundle.js',
-});
+await bundle(path.resolve('src/index.js'), {
+  file: path.resolve('dist/bundle.js'),
+})
 ```
 
 ## Example Configuration
@@ -178,7 +187,7 @@ bunchee will automatically expand the wildcard pattern to:
 The wildcard pattern matches files in the `src` directory and automatically creates corresponding exports. This is useful for libraries that want to expose multiple subpath exports without manually maintaining the exports map.
 
 ## Contributions
-Contributions are welcome! Check out the repository's [issues](https://github.com/huozhi/bunchee/issues) and [contributing guidelines](https://github.com/huozhi/bunchee/blob/main/CONTRIBUTING.md) for more information.
+Contributions are welcome! Check out the repository's [issues](https://github.com/huozhi/bunchee/issues) for more information.
 
 ## License
 bunchee is open-source and available under the [MIT License](https://github.com/huozhi/bunchee/blob/main/LICENSE).

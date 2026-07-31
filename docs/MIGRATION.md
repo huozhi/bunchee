@@ -40,8 +40,9 @@ Newly prepared packages no longer receive a legacy `module` field. Prefer the
 standard `exports` field, with `main` and `types` only when compatibility with
 older resolvers is needed.
 
-The non-standard `typings` fallback is no longer recognized. Rename it to
-`types` or add a `types` export condition:
+TypeScript still supports `typings` as a legacy alias for `types`, but bunchee 7
+no longer reads it as the package-level declaration target. Rename it to
+`types`, or add a `types` export condition:
 
 ```diff
 -"typings": "./dist/index.d.ts"
