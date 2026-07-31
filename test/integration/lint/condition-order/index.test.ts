@@ -8,8 +8,10 @@ describe('integration lint condition-order', () => {
   })
 
   it('should warn that types should come first and default last', () => {
-    const { stderr } = job
+    const { code, stderr } = job
+    expect(code).toBe(1)
     expect(stderr).toContain('"types" condition should come first')
     expect(stderr).toContain('"default" condition should come last')
+    expect(stderr).toContain('condition "import"')
   })
 })

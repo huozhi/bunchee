@@ -56,12 +56,15 @@ function help() {
   logger.log(helpMessage)
 }
 
-async function lint(cwd: string) {
+async function lint(cwd: string, failOnIssues = false) {
   // Not package.json detected, skip package linting
   if (!hasPackageJson(cwd)) {
     return
   }
-  await lintPackage(cwd)
+  const issues = await lintPackage(cwd)
+  if (failOnIssues && issues) {
+    process.exitCode = 1
+  }
 }
 
 async function parseCliArgs(argv: string[]) {
@@ -165,7 +168,7 @@ async function parseCliArgs(argv: string[]) {
       'lint package.json',
       () => {}, // skip builder arg
       (argv) => {
-        return lint(argv.cwd || process.cwd())
+        return lint(argv.cwd || process.cwd(), true)
       },
     )
     .version(version)
