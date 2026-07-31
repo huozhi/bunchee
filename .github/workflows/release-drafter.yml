@@ -2,8 +2,8 @@ name: Release Drafter
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*'
   pull_request_target:
     types:
       - opened
@@ -24,7 +24,7 @@ jobs:
       - uses: release-drafter/release-drafter/autolabeler@v7.3.0
 
   update_release_draft:
-    if: github.event_name == 'push'
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       contents: write
