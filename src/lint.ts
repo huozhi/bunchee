@@ -201,6 +201,7 @@ export async function lint(cwd: string) {
   ]
 
   const warningsCount =
+    Number(!name) +
     exportsState.badTypesExport.length +
     fieldState.missingFiles.length +
     exportsState.badCjsRequireExport.paths.length +
@@ -291,4 +292,6 @@ export async function lint(cwd: string) {
   for (const issue of extraIssues) {
     logger.warn(issue.message)
   }
+
+  return warningsCount
 }

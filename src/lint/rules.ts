@@ -19,23 +19,29 @@ export type LintRule = (context: LintContext) => LintIssue[]
 function checkConditionOrder(
   exportKey: string,
   value: Record<string, any>,
-  seen: Set<string>,
+  conditionPath: string[] = [],
 ): string[] {
   const problems: string[] = []
   const keys = Object.keys(value)
-  const orderKey = keys.join(',')
-  if (seen.has(orderKey)) {
-    return problems
-  }
-  seen.add(orderKey)
+  const location = conditionPath.length
+    ? `export "${exportKey}" condition "${conditionPath.join('.')}"`
+    : `export "${exportKey}"`
 
   const typesIndex = keys.indexOf('types')
   const defaultIndex = keys.indexOf('default')
   if (typesIndex > 0) {
-    problems.push(`export "${exportKey}": "types" condition should come first`)
+    problems.push(`${location}: "types" condition should come first`)
   }
   if (defaultIndex !== -1 && defaultIndex !== keys.length - 1) {
-    problems.push(`export "${exportKey}": "default" condition should come last`)
+    problems.push(`${location}: "default" condition should come last`)
+  }
+
+  for (const [condition, child] of Object.entries(value)) {
+    if (child && typeof child === 'object') {
+      problems.push(
+        ...checkConditionOrder(exportKey, child, [...conditionPath, condition]),
+      )
+    }
   }
   return problems
 }
@@ -52,13 +58,12 @@ export const conditionOrderRule: LintRule = ({ pkg }) => {
     return issues
   }
 
-  const seen = new Set<string>()
   for (const exportKey of Object.keys(exportsField)) {
     const value = exportsField[exportKey]
     if (!value || typeof value !== 'object') {
       continue
     }
-    for (const problem of checkConditionOrder(exportKey, value, seen)) {
+    for (const problem of checkConditionOrder(exportKey, value)) {
       issues.push({ message: problem })
     }
   }

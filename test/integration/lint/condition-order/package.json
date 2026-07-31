@@ -5,6 +5,12 @@
     ".": {
       "default": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./nested": {
+      "import": {
+        "default": "./dist/nested.js",
+        "types": "./dist/nested.d.ts"
+      }
     }
   }
 }
