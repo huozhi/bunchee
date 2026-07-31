@@ -36,3 +36,8 @@
 .caret {
   animation: caretBlink 1s steps(1, end) infinite;
 }
+
+.markdown-title-link,
+.markdown-title-link:hover {
+  color: inherit;
+}

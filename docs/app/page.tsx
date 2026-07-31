@@ -28,15 +28,6 @@ function TerminalBody() {
       <Intro />
       <BlockSpacer />
       <Prompt>npm install --save-dev bunchee typescript</Prompt>
-      <Output>
-        Requires Node.js 22.12+. Migrating from bunchee 6?{' '}
-        <a href="https://github.com/huozhi/bunchee/blob/main/docs/MIGRATION.md">
-          Read the v7 guide.
-        </a>
-      </Output>
-      <Output>
-        TypeScript 7 users should also install @typescript/typescript6.
-      </Output>
       <BlockSpacer />
       <TerminalAnimation
         text="cat package.json"
@@ -73,7 +64,70 @@ function TerminalBody() {
       <BlockSpacer />
       <TerminalLearn />
       <BlockSpacer />
+      <div className="my-2 h-px bg-white/10" />
+      <BlockSpacer />
+      <LatestRelease />
+      <BlockSpacer />
     </div>
+  )
+}
+
+function LatestRelease() {
+  return (
+    <section
+      id="latest-release"
+      data-release="v7.0.0"
+      aria-labelledby="latest-release-title"
+    >
+      <MarkdownTitle
+        id="latest-release-title"
+        title="# Latest release — bunchee v7.0.0"
+        href="https://github.com/huozhi/bunchee/releases/tag/v7.0.0"
+      />
+      <Comment>
+        - Up to 5.3× faster on a 57-entry build with declarations
+      </Comment>
+      <Comment>- New package lint checks catch publishing mistakes</Comment>
+      <Comment>- ESM-first package preparation with standard exports</Comment>
+
+      <details className="mt-3 pl-2 text-sm text-black/80">
+        <summary className="cursor-pointer">
+          <span className="ml-1 font-bold">Migrating from bunchee 6</span>
+        </summary>
+        <div className="pt-2 pl-4 text-black/70">
+          <ul className="space-y-1 pl-4">
+            <li>Use Node.js 22.12 or newer.</li>
+            <li>
+              Expect ES2022 output by default; set <code>--target</code> when an
+              older target is required.
+            </li>
+            <li>
+              Import bunchee&apos;s Node.js API with ESM <code>import</code>{' '}
+              instead of <code>require()</code>.
+            </li>
+            <li>
+              <code>bunchee prepare</code> now generates ESM-only packages; pass{' '}
+              <code>--cjs</code> for dual ESM and CommonJS output.
+            </li>
+            <li>
+              Replace the removed <code>--prepare</code> build flag with the{' '}
+              <code>bunchee prepare</code> command.
+            </li>
+            <li>
+              TypeScript 7 projects need <code>@typescript/typescript6</code>{' '}
+              for declaration generation.
+            </li>
+          </ul>
+          <p className="mt-3 mb-0 text-xs">
+            <a href="https://github.com/huozhi/bunchee/blob/main/docs/MIGRATION.md">
+              Complete migration guide
+            </a>
+            {` · `}
+            <a href="/llms.txt">Plain-text docs for agents</a>
+          </p>
+        </div>
+      </details>
+    </section>
   )
 }
 
@@ -129,14 +183,35 @@ function Comment({ children }: { children: React.ReactNode }) {
   return <div className="pl-2 text-sm text-black/80">{children}</div>
 }
 
-function MarkdownTitle({ title }: { title: string }) {
+function MarkdownTitle({
+  title,
+  id,
+  href,
+}: {
+  title: string
+  id?: string
+  href?: string
+}) {
   const match = title.match(/^(#+)\s+(.+)$/)
   if (match) {
     const [, hashes, titleText] = match
     return (
-      <div className="pl-2 text-sm">
+      <div
+        id={id}
+        role="heading"
+        aria-level={hashes.length}
+        className="pl-2 text-sm"
+      >
         <span className="text-black/40">{hashes} </span>
-        <span className="text-black/90 font-bold">{titleText}</span>
+        <span className="text-black/90 font-bold">
+          {href ? (
+            <a className="markdown-title-link" href={href}>
+              {titleText}
+            </a>
+          ) : (
+            titleText
+          )}
+        </span>
       </div>
     )
   }

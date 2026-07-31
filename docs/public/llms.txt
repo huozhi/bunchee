@@ -1,6 +1,25 @@
 # bunchee
 bunchee is a zero-config TypeScript & JavaScript bundler designed to create optimized Node.js and browser-friendly packages. It focuses on simplicity, speed, and developer-friendly defaults, making it an excellent choice for bundling modern JavaScript libraries.
 
+## Latest Release: bunchee 7.0.0
+
+- Up to 5.3x faster than bunchee 6.12.2 on a 57-entry build with declaration output (median of seven warm runs on Node.js 24.18).
+- New package lint checks detect invalid export-condition ordering, missing declared outputs, and unsafe `workspace:` dependency ranges before publishing.
+- Package preparation is ESM-first and uses standards-based package exports.
+
+Release notes: https://github.com/huozhi/bunchee/releases/tag/v7.0.0
+
+### Migrating from bunchee 6
+
+- bunchee 7 requires Node.js 22.12 or newer.
+- The default JavaScript target is ES2022. Pass `--target` or configure `compilerOptions.target` when an older output target is required.
+- The `bunchee` package itself is ESM. Replace CommonJS `require('bunchee')` calls with ESM imports.
+- `bunchee prepare` generates ESM-only packages by default. Pass `--cjs` to generate both ESM and CommonJS exports.
+- The old `--prepare` build flag has been removed. Run `bunchee prepare` explicitly.
+- TypeScript 7 projects must install `@typescript/typescript6` for declaration generation.
+
+Complete migration guide: https://github.com/huozhi/bunchee/blob/main/docs/MIGRATION.md
+
 ## Key Features
 - **Zero Configuration**: Bundles projects with sensible defaults out of the box.
 - **Tree Shaking**: Removes unused code to produce smaller bundles.
