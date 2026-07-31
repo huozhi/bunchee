@@ -6,6 +6,8 @@ import type { TypescriptOptions } from './typescript'
 
 type PackageType = 'commonjs' | 'module'
 
+type Runtime = 'browser' | 'node'
+
 type ExportType =
   | 'import'
   | 'module'
@@ -43,7 +45,7 @@ type BundleConfig = {
   external?: string[] | null
   env?: string[]
   dts?: { respectExternal?: boolean } | false
-  runtime?: string
+  runtime?: Runtime
   pkg?: PackageMetadata
   clean?: boolean
   tsconfig?: string
@@ -144,7 +146,7 @@ type CliArgs = {
   external?: string | null
   dts?: false
   dtsBundle?: boolean
-  runtime?: string
+  runtime?: Runtime
   clean?: boolean
   tsconfig?: string
   onSuccess?: string
@@ -212,4 +214,5 @@ export type {
   bundleEntryOptions,
   BrowserslistConfig,
   CustomRollupInputOptions,
+  Runtime,
 }

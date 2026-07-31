@@ -42,7 +42,7 @@ Options:
   --no-external          do not bundle external dependencies
   --no-clean             do not clean dist folder before building, default: false
   --target <target>      js features target: swc target es versions. default: es2022
-  --runtime <runtime>    build runtime (nodejs, browser). default: browser
+  --runtime <runtime>    build runtime (node, browser). default: browser
   --env <env>            inlined process env variables, separate by comma. default: NODE_ENV
   --cwd <cwd>            specify current working directory
   --sourcemap            enable sourcemap generation
@@ -113,8 +113,9 @@ async function parseCliArgs(argv: string[]) {
     })
     .option('runtime', {
       type: 'string',
+      choices: ['browser', 'node'] as const,
       default: 'browser',
-      description: 'build runtime (nodejs, browser)',
+      description: 'build runtime (node, browser)',
     })
     .option('target', {
       type: 'string',
@@ -195,7 +196,7 @@ async function parseCliArgs(argv: string[]) {
     dts: args['dts'] === false ? false : undefined,
     dtsBundle: args['dts-bundle'],
     help: args['help'],
-    runtime: args['runtime'],
+    runtime: args['runtime'] as CliArgs['runtime'],
     target: args['target'] as CliArgs['target'],
     // no-external is a boolean flag, turning external to `false`
     external:

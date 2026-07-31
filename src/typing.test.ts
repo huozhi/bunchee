@@ -13,7 +13,7 @@ describe('types', () => {
       external: [],
       format: 'esm',
       target: 'es2015',
-      runtime: 'nodejs',
+      runtime: 'node',
     }
 
     return () => bundle('./tmp/index.ts', options)
