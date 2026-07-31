@@ -148,7 +148,7 @@ jobs:
     needs: [install_and_test_compat, install_and_test_win]
     if: startsWith(github.ref, 'refs/tags/')
     permissions:
-      contents: read
+      contents: write
       id-token: write
 
     steps:
@@ -186,3 +186,11 @@ jobs:
           npm publish --access public
         env:
           NPM_CONFIG_PROVENANCE: true
+
+      - name: Publish GitHub release
+        uses: release-drafter/release-drafter@v7.3.0
+        with:
+          publish: true
+          tag: ${{ github.ref_name }}
+          name: Bunchee ${{ github.ref_name }}
+          prerelease: ${{ steps.determine_tag.outputs.tag != '' }}

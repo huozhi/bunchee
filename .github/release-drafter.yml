@@ -1,0 +1,35 @@
+name-template: 'Bunchee v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+
+categories:
+  - title: Features
+    exclusive: true
+    semver-increment: minor
+    when:
+      label: feature
+  - title: Improvements
+    exclusive: true
+    when:
+      labels:
+        - enhance
+        - bug
+        - dx
+  - title: Misc
+
+autolabeler:
+  - label: feature
+    title:
+      - '/^(feat|feature|breaking)(\([^)]+\))?!?:/i'
+  - label: enhance
+    title:
+      - '/^(fix|perf|refactor|enhance|improve|dx)(\([^)]+\))?!?:/i'
+
+change-template: '- $TITLE (#$NUMBER) @$AUTHOR'
+change-title-escapes: '\<*_&'
+sort-by: merged_at
+sort-direction: ascending
+
+template: |
+  $CHANGES
+
+  **Contributors:** $CONTRIBUTORS
