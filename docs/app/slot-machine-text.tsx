@@ -7,9 +7,9 @@ export function SlotMachineText({ text }: { text: string }) {
 
   useEffect(() => {
     const finalChars = text.split('')
-    const iterations = 10 // How many times to cycle through random chars
-    const delayPerChar = 100 // Delay before settling each character
-    const cycleSpeed = 30 // Speed of character cycling
+    const iterations = 6 // How many times to cycle through random chars
+    const delayPerChar = 50 // Delay before settling each character
+    const cycleSpeed = 20 // Speed of character cycling
 
     let currentIteration = 0
     let settledCount = 0

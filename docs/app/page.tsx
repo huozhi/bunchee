@@ -46,7 +46,7 @@ function TerminalBody() {
         logs={`Exports  File             Size\n.        dist/index.js    5.6 kB`}
         spinnerText="Building"
         lineByLine
-        delay={1200}
+        delay={600}
       />
       <BlockSpacer />
       <MarkdownTitle title="# Why bunchee?" />

@@ -62,7 +62,7 @@ export function TerminalAnimation({
         }
         return next
       })
-    }, 25)
+    }, 15)
     return () => clearInterval(id)
   }, [phase, command.length, started])
 
@@ -71,12 +71,12 @@ export function TerminalAnimation({
       const id = setTimeout(() => {
         // Skip spinning phase if no spinnerText is provided
         setPhase(spinnerText ? 'spinning' : 'showingLogs')
-      }, 500)
+      }, 250)
       return () => clearTimeout(id)
     }
     if (phase === 'spinning') {
       setRevealedCount(0)
-      const timeoutId = setTimeout(() => setPhase('showingLogs'), 1200)
+      const timeoutId = setTimeout(() => setPhase('showingLogs'), 600)
       const spinId = setInterval(() => {
         setSpinIndex((i) => (i + 1) % spinFrames.length)
       }, 80)
@@ -104,7 +104,7 @@ export function TerminalAnimation({
           }
           return next
         })
-      }, 180)
+      }, 90)
       return () => clearInterval(timer)
     }
   }, [phase, logs, spinFrames.length, lineByLine, spinnerText])
