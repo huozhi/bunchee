@@ -56,12 +56,14 @@ function help() {
   logger.log(helpMessage)
 }
 
-async function lint(cwd: string, failOnIssues = false) {
+async function lint(cwd: string, failOnIssues: boolean) {
   // Not package.json detected, skip package linting
   if (!hasPackageJson(cwd)) {
     return
   }
-  const issues = await lintPackage(cwd, failOnIssues)
+  const issues =
+    ((await lintPackage(cwd)) ?? 0) +
+    (failOnIssues ? await lintOutputs(cwd) : 0)
   if (failOnIssues && issues) {
     process.exitCode = 1
   }
@@ -266,7 +268,7 @@ async function run(args: CliArgs) {
   // lint package by default
   const lintStarted = startProfile()
   try {
-    await lint(cwd)
+    await lint(cwd, false)
   } finally {
     endProfile('cli.lint', lintStarted)
   }
