@@ -1,0 +1,6 @@
+{
+  "name": "bin-output-package",
+  "bin": {
+    "html2": "dist/bin/html2.js"
+  }
+}

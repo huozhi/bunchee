@@ -61,7 +61,7 @@ async function lint(cwd: string, failOnIssues = false) {
   if (!hasPackageJson(cwd)) {
     return
   }
-  const issues = await lintPackage(cwd)
+  const issues = await lintPackage(cwd, failOnIssues)
   if (failOnIssues && issues) {
     process.exitCode = 1
   }
