@@ -6,8 +6,13 @@ describe('integration - lint - bin outputs', () => {
     directory: __dirname,
   })
 
-  it('does not warn about binary outputs before building them', async () => {
-    expect(job.stderr).not.toContain('Declared output does not exist on disk')
+  it('checks outputs after building binaries', async () => {
+    expect(job.stderr).toContain(
+      'Declared output does not exist on disk: dist/missing.js',
+    )
+    expect(job.stderr).not.toContain(
+      'Declared output does not exist on disk: dist/bin/html2.js',
+    )
     await assertFilesContent(distDir, {
       'bin/html2.js': '#!/usr/bin/env node',
     })

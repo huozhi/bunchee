@@ -3,7 +3,7 @@ import path from 'path'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 import { performance } from 'perf_hooks'
-import { lint as lintPackage } from '../lint'
+import { lint as lintPackage, lintOutputs } from '../lint'
 import { exit, hasPackageJson } from '../utils'
 import { logger, setActiveSpinner } from '../logger'
 import { bundle } from '../../src/index'
@@ -355,6 +355,9 @@ async function run(args: CliArgs) {
 
   try {
     await bundle(cliEntry, bundleConfig)
+    if (!watch) {
+      await lintOutputs(cwd)
+    }
   } catch (err: any) {
     if (err.name === 'NOT_EXISTED') {
       buildError = {

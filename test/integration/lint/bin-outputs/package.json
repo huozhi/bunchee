@@ -1,5 +1,6 @@
 {
   "name": "bin-output-package",
+  "main": "dist/missing.js",
   "bin": {
     "html2": "dist/bin/html2.js"
   }

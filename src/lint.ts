@@ -297,3 +297,24 @@ export async function lint(cwd: string, checkOutputs = false) {
 
   return warningsCount
 }
+
+export async function lintOutputs(cwd: string) {
+  if (!hasPackageJson(cwd)) {
+    return 0
+  }
+
+  const pkg = await getPackageMeta(cwd)
+  const parsedExports = await parseExports(pkg, cwd)
+  const issues = outputsExistRule({
+    pkg,
+    cwd,
+    parsedExports,
+    pkgPath: path.resolve(cwd, 'package.json'),
+  })
+
+  for (const issue of issues) {
+    logger.warn(issue.message)
+  }
+
+  return issues.length
+}
