@@ -74,7 +74,7 @@ function validateFilesField(packageJson: PackageMetadata) {
   return state
 }
 
-export async function lint(cwd: string) {
+async function lintPackage(cwd: string, checkOutputs: boolean) {
   // Not package.json detected, skip package linting
   if (!hasPackageJson(cwd)) {
     return
@@ -196,7 +196,9 @@ export async function lint(cwd: string) {
   // are missing on disk, and workspace: ranges that would publish unrewritten.
   const extraIssues: LintIssue[] = [
     ...conditionOrderRule({ pkg, cwd, parsedExports, pkgPath }),
-    ...outputsExistRule({ pkg, cwd, parsedExports, pkgPath }),
+    ...(checkOutputs
+      ? outputsExistRule({ pkg, cwd, parsedExports, pkgPath })
+      : []),
     ...workspaceProtocolRule({ pkg, cwd, parsedExports, pkgPath }),
   ]
 
@@ -294,4 +296,12 @@ export async function lint(cwd: string) {
   }
 
   return warningsCount
+}
+
+export function lint(cwd: string) {
+  return lintPackage(cwd, true)
+}
+
+export function lintBeforeBuild(cwd: string) {
+  return lintPackage(cwd, false)
 }
