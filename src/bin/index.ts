@@ -3,7 +3,10 @@ import path from 'path'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 import { performance } from 'perf_hooks'
-import { lint as lintPackage } from '../lint'
+import {
+  lint as lintPackage,
+  lintBeforeBuild as lintPackageBeforeBuild,
+} from '../lint'
 import { exit, hasPackageJson } from '../utils'
 import { logger, setActiveSpinner } from '../logger'
 import { bundle } from '../../src/index'
@@ -266,7 +269,9 @@ async function run(args: CliArgs) {
   // lint package by default
   const lintStarted = startProfile()
   try {
-    await lint(cwd)
+    // Generated files may be absent or stale before the build. The explicit
+    // `lint` command still checks outputs after a build has completed.
+    await lintPackageBeforeBuild(cwd)
   } finally {
     endProfile('cli.lint', lintStarted)
   }
