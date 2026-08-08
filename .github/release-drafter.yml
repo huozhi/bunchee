@@ -3,18 +3,20 @@ tag-template: 'v$RESOLVED_VERSION'
 
 categories:
   - title: Features
-    exclusive: true
-    semver-increment: minor
-    when:
-      label: feature
+    labels:
+      - feature
   - title: Improvements
-    exclusive: true
-    when:
-      labels:
-        - enhance
-        - bug
-        - dx
+    labels:
+      - enhance
+      - bug
+      - dx
   - title: Misc
+
+version-resolver:
+  minor:
+    labels:
+      - feature
+  default: patch
 
 autolabeler:
   - label: feature
