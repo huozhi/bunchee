@@ -472,11 +472,11 @@ bunchee --env=ENV1,ENV2,ENV3
 
 Replace `ENV1`, `ENV2`, and `ENV3` with the names of the environment variables you want to include in your bundled code. These environment variables will be inlined during the bundling process.
 
-You can use `index.<export-type>.<ext>` to override the input source file for a specific export name, or `<export-path>/index.<export-type>.<ext>` also works, such as:
+You can use `index.<export-type>.<ext>` to override the input source file for a specific export name. Alternatively, using `<export-path>/index.<export-type>.<ext>` also works. For example:
 
 ```
 |- src/
-  |- index/.ts
+  |- index.ts
   |- index.react-server.ts
   |- index.edge-light.ts
 ```
