@@ -2,7 +2,11 @@
   "name": "bunchee-docs",
   "private": true,
   "type": "module",
+  "dependencies": {
+    "react": "19.2.1",
+    "react-dom": "19.2.1"
+  },
   "devDependencies": {
-    "typescript": "6.0.2"
+    "tailwindcss": "^4.1.8"
   }
 }

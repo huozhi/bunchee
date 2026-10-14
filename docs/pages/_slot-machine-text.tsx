@@ -1,4 +1,3 @@
-'use client'
 import { useState, useEffect } from 'react'
 
 export function SlotMachineText({ text }: { text: string }) {
@@ -35,7 +34,7 @@ export function SlotMachineText({ text }: { text: string }) {
     }, cycleSpeed)
 
     // Settling interval - settle one character at a time
-    const settleTimers: NodeJS.Timeout[] = []
+    const settleTimers: ReturnType<typeof setTimeout>[] = []
     finalChars.forEach((_, index) => {
       const timer = setTimeout(
         () => {

@@ -10,8 +10,8 @@
     "test:update": "TEST_UPDATE_SNAPSHOT=1 pnpm test",
     "test:post": "cross-env POST_BUILD=1 pnpm test test/compile.test.ts test/integration.test.ts",
     "test:package": "node ./scripts/test-packed-package.js",
-    "site": "next dev docs",
-    "docs:build": "pnpm --dir docs install && next build docs",
+    "site": "devjar dev docs",
+    "docs:build": "devjar build docs",
     "clean": "rm -rf ./dist",
     "new-test": "node ./scripts/new-test.js",
     "test:ts-matrix": "node ./scripts/test-ts-matrix.js all",
@@ -90,7 +90,6 @@
   "devDependencies": {
     "@huozhi/testing-package": "1.0.0",
     "@swc/types": "^0.1.28",
-    "@tailwindcss/postcss": "^4.1.8",
     "@types/clean-css": "^4.2.11",
     "@types/node": "^22.9.3",
     "@types/picomatch": "^3.0.1",
@@ -102,16 +101,15 @@
     "cross-env": "^7.0.3",
     "husky": "^9.0.11",
     "lint-staged": "^15.2.2",
-    "next": "^16.2.6",
     "oxfmt": "^0.60.0",
     "picocolors": "^1.0.0",
-    "postcss": "^8.5.4",
     "react": "^19.2.1",
     "react-dom": "^19.2.1",
     "tailwindcss": "^4.1.8",
     "tsx": "^4.23.15",
     "typescript": "^6.0.2",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.8",
+    "devjar": "^1.1.0"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,md,json,yml,yaml}": "oxfmt"
