@@ -1,4 +1,3 @@
-@import 'tailwindcss';
 
 /* Terminal theming helpers */
 .terminal-grid-bg {
@@ -16,10 +15,10 @@
 /* Font variables */
 :root {
   --font-default:
-    var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont,
+    system-ui, -apple-system, BlinkMacSystemFont,
     Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif,
     Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
-  --font-mono: var(--font-geist-mono), menlo, 'Courier New', Courier, monospace;
+  --font-mono: Menlo, 'Courier New', Courier, monospace;
 }
 
 @keyframes caretBlink {
@@ -41,3 +40,5 @@
 .markdown-title-link:hover {
   color: inherit;
 }
+
+.site-shell { min-height: 100vh; background: #f2ece5; color: #000; }

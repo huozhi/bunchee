@@ -1,13 +1,19 @@
+import '../reset.css'
+import '../globals.css'
 import React from 'react'
-import { TerminalAnimation } from './terminal-animation'
-import { SlotMachineText } from './slot-machine-text'
+import { TerminalAnimation } from '../components/terminal-animation'
+import { SlotMachineText } from '../components/slot-machine-text'
 
 export default function Page() {
   return (
-    <div>
+    <div className="site-shell">
+      <title>bunchee</title>
+      <meta
+        name="description"
+        content="Zero-config TypeScript & JavaScript library bundler"
+      />
       <div className="mx-auto max-w-[600px] px-4 pt-6">
         <TerminalBody />
-        <div className=""></div>
         <footer className="mx-auto max-w-4xl px-4 py-2 text-xs text-black/40">
           <p>
             <a href="https://github.com/huozhi/bunchee">github</a>
