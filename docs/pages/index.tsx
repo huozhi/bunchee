@@ -1,8 +1,8 @@
 import '../reset.css'
 import '../globals.css'
 import React from 'react'
-import { TerminalAnimation } from './_terminal-animation'
-import { SlotMachineText } from './_slot-machine-text'
+import { TerminalAnimation } from '../components/terminal-animation'
+import { SlotMachineText } from '../components/slot-machine-text'
 
 export default function Page() {
   return (
