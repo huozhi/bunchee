@@ -5,6 +5,8 @@ allowBuilds:
   '@tailwindcss/oxide': true
   esbuild: true
   sharp: true
+minimumReleaseAgeExclude:
+  - devjar@1.2.0
 peerDependencyRules:
   allowedVersions:
     'rollup-plugin-dts>typescript': ^7.0.0
