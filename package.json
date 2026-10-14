@@ -109,7 +109,7 @@
     "tsx": "^4.23.15",
     "typescript": "^6.0.2",
     "vitest": "^4.1.8",
-    "devjar": "^1.1.0"
+    "devjar": "^1.1.2"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,md,json,yml,yaml}": "oxfmt"
