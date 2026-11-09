@@ -6,7 +6,7 @@ allowBuilds:
   esbuild: true
   sharp: true
 minimumReleaseAgeExclude:
-  - devjar@1.2.0
+  - devjar@1.2.0 || 1.3.0
 peerDependencyRules:
   allowedVersions:
     'rollup-plugin-dts>typescript': ^7.0.0
