@@ -70,9 +70,7 @@ async function findMergeBlocker(
   if (bundleConfig.watch) return 'watch mode'
 
   const exportPaths = Object.keys(entries)
-  if (exportPaths.length < 2) {
-    return `only ${exportPaths.length} entry resolved`
-  }
+  if (exportPaths.length === 0) return 'no entries resolved'
 
   return undefined
 }
