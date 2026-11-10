@@ -60,17 +60,8 @@ export function inlineCss(options: {
     },
     renderChunk: {
       order: 'pre',
-      handler(code) {
-        const dependenciesIds = this.getModuleIds()
-        let foundCss = false
-        for (const depId of dependenciesIds) {
-          if (depId && cssIds.has(depId)) {
-            foundCss = true
-            break
-          }
-        }
-
-        if (!foundCss) return
+      handler(code, chunk) {
+        if (!Object.keys(chunk.modules).some((id) => cssIds.has(id))) return
 
         return {
           code: `${helpers.cssImport.global}\n${code}`,
