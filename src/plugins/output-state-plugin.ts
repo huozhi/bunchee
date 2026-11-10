@@ -18,6 +18,8 @@ import {
 
 // [filename, sourceFileName, size]
 type FileState = [string, string, number]
+const SHARED_CHUNKS = '$chunks'
+const ASSETS = '$assets'
 export type SizeStats = Map<string, FileState[]>
 export type OutputState = ReturnType<typeof createOutputState>
 
@@ -30,7 +32,7 @@ function createOutputState({ entries }: { entries: Entries }): {
   mergeSizeStats(other: SizeStats): void
 } {
   const sizeStats: SizeStats = new Map()
-  const uniqFiles = new Set<string>()
+  const filesByName = new Map<string, FileState>()
 
   function addSize({
     fileName,
@@ -43,16 +45,18 @@ function createOutputState({ entries }: { entries: Entries }): {
     sourceFileName: string
     exportPath: string
   }) {
+    const existing = filesByName.get(fileName)
+    if (existing) {
+      existing[1] = sourceFileName
+      existing[2] = size
+      return
+    }
     if (!sizeStats.has(exportPath)) {
       sizeStats.set(exportPath, [])
     }
-    const distFilesStats = sizeStats.get(exportPath)
-    if (!uniqFiles.has(fileName)) {
-      uniqFiles.add(fileName)
-      if (distFilesStats) {
-        distFilesStats.push([fileName, sourceFileName, size])
-      }
-    }
+    const fileState: FileState = [fileName, sourceFileName, size]
+    filesByName.set(fileName, fileState)
+    sizeStats.get(exportPath)!.push(fileState)
   }
 
   const reversedMapping = new Map<string, string>()
@@ -68,17 +72,19 @@ function createOutputState({ entries }: { entries: Entries }): {
           const dir = options.dir || path.dirname(options.file!)
           Object.entries(bundle).forEach(([fileName, chunk]) => {
             const filePath = path.join(dir, fileName)
-            if (chunk.type !== 'chunk') {
-              return
-            }
-            if (!chunk.isEntry) {
-              return
-            }
-            const size = chunk.code.length
-            const sourceFileName = chunk.facadeModuleId || ''
-            const exportPath = removeScope(
-              reversedMapping.get(sourceFileName) || '.',
-            )
+            const sourceFileName =
+              chunk.type === 'chunk' ? chunk.facadeModuleId || '' : ''
+            const source = chunk.type === 'chunk' ? chunk.code : chunk.source
+            const size =
+              typeof source === 'string'
+                ? Buffer.byteLength(source)
+                : source.byteLength
+            const exportPath =
+              chunk.type === 'asset'
+                ? ASSETS
+                : chunk.isEntry
+                  ? removeScope(reversedMapping.get(sourceFileName) || '.')
+                  : SHARED_CHUNKS
             addSize({
               fileName: normalizePath(path.relative(cwd, filePath)),
               size,
@@ -94,13 +100,8 @@ function createOutputState({ entries }: { entries: Entries }): {
     },
     mergeSizeStats(other: SizeStats) {
       for (const [exportPath, fileStates] of other) {
-        const distFilesStats = sizeStats.get(exportPath) || []
-        sizeStats.set(exportPath, distFilesStats)
-        for (const fileState of fileStates) {
-          if (!uniqFiles.has(fileState[0])) {
-            uniqFiles.add(fileState[0])
-            distFilesStats.push(fileState)
-          }
+        for (const [fileName, sourceFileName, size] of fileStates) {
+          addSize({ fileName, sourceFileName, size, exportPath })
         }
       }
     },
@@ -108,6 +109,8 @@ function createOutputState({ entries }: { entries: Entries }): {
 }
 
 function normalizeExportName(exportName: string): string {
+  if (exportName === SHARED_CHUNKS) return 'Shared chunks'
+  if (exportName === ASSETS) return 'Assets'
   const isBinary = isBinExportPath(exportName)
   let result = exportName
 
@@ -142,6 +145,10 @@ function logOutputState(stats: SizeStats) {
     // e.g. if you're building a file that does not listed in the exports, or there's no exports condition.
     .filter(([, fileStates]) => fileStates.length > 0)
     .sort(([a], [b]) => {
+      const groupOrder = (name: string) =>
+        name === ASSETS ? 2 : name === SHARED_CHUNKS ? 1 : 0
+      const order = groupOrder(a) - groupOrder(b)
+      if (order !== 0) return order
       const comp = normalizeExportPath(a).length - normalizeExportPath(b).length
       return comp === 0 ? a.localeCompare(b) : comp
     })
@@ -222,6 +229,11 @@ function logOutputState(stats: SizeStats) {
         )
       })
   })
+  const files = statsArray.flatMap(([, fileStates]) => fileStates)
+  const totalBytes = files.reduce((total, [, , size]) => total + size, 0)
+  console.log(
+    `Total: ${prettyBytes(totalBytes)} in ${files.length} ${files.length === 1 ? 'file' : 'files'}`,
+  )
 }
 
 export { logOutputState, createOutputState }
