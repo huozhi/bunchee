@@ -3,18 +3,10 @@ import path from 'path'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 import { performance } from 'perf_hooks'
-import {
-  lint as lintPackage,
-  lintBeforeBuild as lintPackageBeforeBuild,
-} from '../lint'
 import { exit, hasPackageJson } from '../utils'
 import { logger, setActiveSpinner } from '../logger'
-import { bundle } from '../../src/index'
-import { prepare } from '../prepare'
-import { RollupWatcher } from 'rollup'
-import { logOutputState } from '../plugins/output-state-plugin'
+import type { RollupWatcher } from 'rollup'
 import { normalizeError } from '../lib/normalize-error'
-import { createSpinner } from 'nanospinner'
 import { createRequire } from 'module'
 import { endProfile, startProcessProfile, startProfile } from '../lib/profile'
 
@@ -64,6 +56,7 @@ async function lint(cwd: string, failOnIssues = false) {
   if (!hasPackageJson(cwd)) {
     return
   }
+  const { lint: lintPackage } = await import('../lint')
   const issues = await lintPackage(cwd)
   if (failOnIssues && issues) {
     process.exitCode = 1
@@ -163,7 +156,8 @@ async function parseCliArgs(argv: string[]) {
             'configure package for dual CJS+ESM output (default: ESM only)',
         })
       },
-      (argv) => {
+      async (argv) => {
+        const { prepare } = await import('../prepare')
         return prepare(argv.cwd || process.cwd(), { cjs: argv.cjs })
       },
     )
@@ -226,6 +220,10 @@ type Spinner = {
 }
 
 async function run(args: CliArgs) {
+  const { bundle } = await import('../index')
+  const { lintBeforeBuild: lintPackageBeforeBuild } = await import('../lint')
+  const { logOutputState } = await import('../plugins/output-state-plugin')
+  const { createSpinner } = await import('nanospinner')
   const {
     source,
     format,

@@ -32,10 +32,6 @@ import {
   TESTS_GLOB_PATTERN,
 } from './constants'
 import { posixRelativify } from './lib/format'
-import {
-  collectSpecifiers,
-  resolveSpecifierToSourceFile,
-} from './lib/module-specifiers'
 
 export async function collectEntriesFromParsedExports(
   cwd: string,
@@ -423,6 +419,9 @@ export async function findReachablePrivateFiles(
   // Nothing to decide, and most packages are here: no private modules means no
   // reason to read a single source file.
   if (privateFiles.length === 0) return new Set()
+
+  const { collectSpecifiers, resolveSpecifierToSourceFile } =
+    await import('./lib/module-specifiers')
 
   /** absolute path -> the glob-relative name, and the export path it serves. */
   const privateByPath = new Map<string, { file: string; group: string }>()

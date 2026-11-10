@@ -1,7 +1,6 @@
 import fs from 'fs'
 import os from 'os'
 import { dirname, extname, join } from 'path'
-import Piscina from 'piscina'
 import type { BundleConfig } from '../types'
 import type { SizeStats } from '../plugins/output-state-plugin'
 import type { ErrorDetails, EntryWorkerTask } from '../worker'
@@ -75,6 +74,7 @@ export async function runEntriesInWorkers(
 ): Promise<SizeStats[]> {
   // `_callbacks` holds functions, which structured clone cannot move.
   const { _callbacks, ...plainOptions } = options
+  const { default: Piscina } = await import('piscina')
   const pool = new Piscina({
     filename: resolveWorkerFile(),
     maxThreads: Math.max(1, Math.min(entryGroups.length, availableCores())),

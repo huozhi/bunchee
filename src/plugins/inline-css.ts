@@ -1,5 +1,5 @@
 import type { Plugin } from 'rollup'
-import CleanCSS from 'clean-css'
+import type CleanCSS from 'clean-css'
 import { type FilterPattern, createFilter } from '@rollup/pluginutils'
 
 const helpers = {
@@ -30,9 +30,12 @@ export default sheet`
   },
 } as const
 
-const cleanCssInstance = new CleanCSS({})
-function minify(code: string) {
-  return cleanCssInstance.minify(code).styles
+let cleanCssInstance: Promise<InstanceType<typeof CleanCSS>> | undefined
+async function minify(code: string) {
+  const instance = await (cleanCssInstance ??= import('clean-css').then(
+    ({ default: CleanCSS }) => new CleanCSS({}),
+  ))
+  return instance.minify(code).styles
 }
 
 export function inlineCss(options: {
@@ -47,10 +50,10 @@ export function inlineCss(options: {
     name: 'inline-css',
     transform: {
       order: 'post',
-      handler(code, id) {
+      async handler(code, id) {
         if (!filter(id)) return
         if (options.skip) return ''
-        const cssCode = minify(code)
+        const cssCode = await minify(code)
         cssIds.add(id)
         return {
           code: helpers.cssImport.create(cssCode),
