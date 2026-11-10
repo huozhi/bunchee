@@ -311,7 +311,7 @@ export async function buildInputConfig(
     inlineCss({ skip: true }),
   ]
 
-  if (useTypeScript) {
+  if (dts && useTypeScript) {
     // Keep one plugin—and therefore one TypeScript Program cache—for this
     // package build. Scoping it to BuildContext prevents repeated in-process
     // builds and separate watchers from observing stale compiler state.
