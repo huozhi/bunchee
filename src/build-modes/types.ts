@@ -23,7 +23,8 @@ export type BuildMode = {
     entry: ParsedExportCondition,
     target: OutputTarget,
   ): string[]
-  canGroup(claimed: Map<string, string>, source: string, file: string): boolean
+  /** Whether a source may claim at most one output file per merged graph. */
+  oneOutputPerSource: boolean
   declarationTarget(target: OutputTarget, file: string): OutputTarget
   declarationOptions(
     options: CompilerOptions | undefined,

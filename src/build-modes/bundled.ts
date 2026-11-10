@@ -17,7 +17,7 @@ export const bundledMode: BuildMode = {
     JSON.stringify(getDefinedInlineVariables(env, entry)),
     getSpecialExportTypeFromConditionNames(new Set(target.conditions)),
   ],
-  canGroup: () => true,
+  oneOutputPerSource: false,
   declarationTarget: (_target, path) => ({ path, conditions: ['types'] }),
   declarationOptions: () => undefined,
   inputPlugins: () => [],

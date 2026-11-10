@@ -36,6 +36,8 @@ type Group = {
   items: GroupItem[]
   /** Absolute output file -> the source that claimed it. */
   claimed: Map<string, string>
+  /** Source -> the absolute output file it claimed in this group. */
+  claimedBySource: Map<string, string>
 }
 
 /**
@@ -148,14 +150,16 @@ export async function buildMergedConfigs(
           graphKey: JSON.stringify([...graphShape, attempt]),
           items: [],
           claimed: new Map(),
+          claimedBySource: new Map(),
         }
         groups.set(key, candidate)
+        // A mode that names files per module (unbundle) cannot let one source
+        // be the facade of two different files in the same graph.
+        const sourceFile = candidate.claimedBySource.get(exportCondition.source)
         if (
-          !buildContext.mode.canGroup(
-            candidate.claimed,
-            exportCondition.source,
-            file,
-          )
+          buildContext.mode.oneOutputPerSource &&
+          sourceFile !== undefined &&
+          sourceFile !== file
         )
           continue
         const claimedBy = candidate.claimed.get(file)
@@ -173,6 +177,7 @@ export async function buildMergedConfigs(
       }
       if (!group) continue
       group.claimed.set(file, exportCondition.source)
+      group.claimedBySource.set(exportCondition.source, file)
       group.items.push({ exportPath, exportCondition, output })
     }
   }
