@@ -27,6 +27,7 @@ const removeScope = (exportPath: string) => exportPath.replace(/^@[^/]+\//, '')
 function createOutputState({ entries }: { entries: Entries }): {
   plugin(cwd: string): Plugin
   getSizeStats(): SizeStats
+  log(): void
   mergeSizeStats(other: SizeStats): void
 } {
   const sizeStats: SizeStats = new Map()
@@ -88,6 +89,9 @@ function createOutputState({ entries }: { entries: Entries }): {
           })
         },
       }
+    },
+    log() {
+      logOutputState(sizeStats)
     },
     getSizeStats() {
       return sizeStats

@@ -187,7 +187,12 @@ export async function getEntryBundleOutputs(
         return {
           file: typeFile,
           format: 'esm' as const,
-          target: { path: typeFile, conditions: ['types'] },
+          target: pluginContext.mode.declarationTarget(
+            outputExports.find(
+              (output) => resolve(cwd, output.file) === typeFile,
+            )!.target,
+            typeFile,
+          ),
         }
       })
     } else {

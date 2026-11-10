@@ -21,7 +21,6 @@ import preserveDirectives from 'rollup-preserve-directives'
 import { esmShim } from '../plugins/esm-shim'
 import { inlineCss } from '../plugins/inline-css'
 import { rawContent } from '../plugins/raw-plugin'
-import { nativeAddon } from '../plugins/native-addon-plugin'
 import { aliasEntries, getAliasFormat } from '../plugins/alias-plugin'
 import { prependShebang } from '../plugins/prepend-shebang'
 import { swcHelpersWarningPlugin } from '../plugins/swc-helpers-warning-plugin'
@@ -64,6 +63,7 @@ async function createDtsPlugin(
    * `isTsConfigAutoDiscoverable`.
    */
   autoDiscoverable: boolean,
+  compilerOptions: BuildContext['tsOptions']['tsCompilerOptions'] = undefined,
 ) {
   const enableIncrementalWithoutBuildInfo =
     tsCompilerOptions?.incremental && !tsCompilerOptions?.tsBuildInfoFile
@@ -106,7 +106,10 @@ async function createDtsPlugin(
     require('rollup-plugin-dts') as typeof import('rollup-plugin-dts')
   ).default({
     tsconfig: autoDiscoverable ? undefined : tsConfigPath,
-    compilerOptions: overrideResolvedTsOptions,
+    compilerOptions: {
+      ...compilerOptions,
+      ...overrideResolvedTsOptions,
+    },
     respectExternal,
   })
 
@@ -303,9 +306,16 @@ export async function buildInputConfig(
     // build does not own; rollup emits the rest as chunk imports.
     mergedSources: isMerged ? mergedSources : undefined,
   })
+  const modePlugins = buildContext.mode.inputPlugins(
+    buildContext,
+    dts,
+    mergedInputs ?? { entry },
+    exportCondition.targets[0],
+  )
   const commonPlugins = [json(), sizePlugin]
 
   const typesPlugins: (Plugin | false)[] = [
+    ...modePlugins,
     aliasPlugin,
     ...commonPlugins,
     inlineCss({ skip: true }),
@@ -323,6 +333,7 @@ export async function buildInputConfig(
       isTsConfigAutoDiscoverable(cwd, tsConfigPath, [
         ...new Set(Object.values(entries).map((e) => dirname(e.source))),
       ]),
+      buildContext.mode.declarationOptions(tsCompilerOptions),
     )
     const dtsPlugin = await pluginContext.dtsPlugin
     typesPlugins.push(dtsPlugin)
@@ -332,12 +343,13 @@ export async function buildInputConfig(
     dts
       ? typesPlugins
       : [
+          ...modePlugins,
           ...commonPlugins,
           preserveDirectives(),
           aliasPlugin,
           inlineCss({ exclude: /node_modules/ }),
           rawContent({ exclude: /node_modules/ }),
-          nativeAddon(),
+          buildContext.mode.nativeAddonPlugin(),
           isMerged
             ? binSources.size > 0 && prependShebang(binSources)
             : isBinEntry && prependShebang(entry),

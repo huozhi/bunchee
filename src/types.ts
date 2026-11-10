@@ -1,3 +1,4 @@
+import type { BuildMode } from './build-modes/types'
 import type { OutputTarget } from './exports'
 import type { JscTarget } from '@swc/types'
 import type { InputOptions, OutputOptions, Plugin } from 'rollup'
@@ -168,6 +169,7 @@ type Entries = Record<string, ParsedExportCondition>
 type BrowserslistConfig = string | string[] | Record<string, string>
 
 type BuildContext = {
+  mode: BuildMode
   entries: Entries
   pkg: PackageMetadata
   cwd: string
