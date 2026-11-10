@@ -12,7 +12,6 @@ import {
   getSourcePathFromExportPath,
   isBinExportPath,
   isTypescriptFile,
-  removeOutputDir,
 } from './utils'
 import {
   MIN_ENTRIES_FOR_MERGED_WORKERS,
@@ -43,6 +42,7 @@ import { spawn } from 'child_process'
 import { logger } from './logger'
 import { endProfile, startProfile } from './lib/profile'
 import { createBuildMode } from './build-modes'
+import { createOutputCleaner } from './lib/output-cleaner'
 
 function assignDefault(
   options: BundleConfig,
@@ -213,6 +213,7 @@ async function bundle(
 
   const buildContext: BuildContext = {
     mode,
+    cleanOutputDir: createOutputCleaner(cwd),
     entries,
     pkg,
     cwd,
@@ -282,10 +283,9 @@ async function bundle(
       if (options.clean && !isFromCli) {
         for (const entry of Object.values(entries)) {
           for (const target of entry.targets) {
-            await removeOutputDir(
-              { dir: dirname(resolve(cwd, target.path)) },
-              cwd,
-            )
+            await buildContext.cleanOutputDir({
+              dir: dirname(resolve(cwd, target.path)),
+            })
           }
         }
       }

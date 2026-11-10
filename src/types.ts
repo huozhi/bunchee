@@ -170,6 +170,7 @@ type BrowserslistConfig = string | string[] | Record<string, string>
 
 type BuildContext = {
   mode: BuildMode
+  cleanOutputDir: (output: OutputOptions) => Promise<void>
   entries: Entries
   pkg: PackageMetadata
   cwd: string
