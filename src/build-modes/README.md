@@ -1,13 +1,14 @@
 # Build modes
 
-`index.ts` selects a policy once per build. This preparatory refactor always
-returns `bundledMode`, which preserves the existing build behavior.
+`index.ts` selects a mode once per build. `bundled.ts` describes the existing
+bundled behavior; `unbundle/` owns the experimental mode, including its path
+registry, declaration tracking, plugins, validation, and compact reporter.
 
-The shared entry planner and Rollup pipeline consume the internal `BuildMode`
-contract. Input/output policies, declaration configuration, plugin creation,
-and reporting can be supplied by a mode without adding feature flags to the
-shared pipeline. Future mode factories can keep their mutable state per build.
+The shared pipeline discovers entries, plans graphs, and runs Rollup. It calls
+`BuildMode` policies instead of checking feature flags. `prepareEntries` captures
+the declared exports before discovery adds private entries, and returns the
+callback that applies the mode's entry policy afterwards.
 
-`prepareEntries` runs before discovery and returns the callback applied after
-discovery. This allows a mode to distinguish declared exports from synthetic
-entries while the bundled policy retains all existing entries.
+Mode factories own per-build state; no registry or declaration tracker is stored
+in shared plugin context. To unplug unbundle, remove its factory selection and
+its directory. The bundled policy and the shared pipeline remain intact.
