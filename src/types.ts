@@ -36,6 +36,11 @@ type ExportCondition =
 
 // configs which are normalized from cli args
 type BundleConfig = {
+  /**
+   * Emit one output file per reachable source module.
+   * @experimental
+   */
+  unbundle?: boolean
   file?: string
   cwd?: string
   watch?: boolean
@@ -93,6 +98,7 @@ type BundleConfig = {
 }
 
 type PackageMetadata = {
+  sideEffects?: boolean | string[]
   name?: string
   main?: string
   bin?: string | Record<string, string>
@@ -133,6 +139,7 @@ type MergedRollupConfig = CustomRollupInputOptions & {
 }
 
 type CliArgs = {
+  unbundle?: boolean
   format?: OutputOptions['format']
   minify?: boolean
   sourcemap?: boolean

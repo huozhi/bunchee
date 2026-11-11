@@ -313,6 +313,24 @@ The `_app-context` module will be bundled into a shared chunk that exists as a s
 
 This convention keeps shared modules private while enabling efficient bundling and reuse across your codebase.
 
+### Unbundle (experimental)
+
+Use `bunchee --unbundle` or `bundle('', { unbundle: true })` to emit one file per reachable source module. Public entry filenames still come directly from `package.json` exports. Internal files mirror their paths relative to `src/` (or, when entries live elsewhere, the common directory of all entry sources). Every format and condition build uses the same root, so a module always lands at the same path:
+
+```text
+src/index.ts          → dist/index.js + dist/index.cjs
+src/utils/format.ts   → dist/utils/format.js + dist/utils/format.cjs
+src/data.json         → dist/data.json.js + dist/data.json.cjs
+```
+
+The example assumes a `type: module` package declaring both ESM and CJS exports. When exports declare `types`, declarations are preserved the same way (`.d.ts` / `.d.cts`, with declaration maps when configured) for every module the public types reach. As in bundled builds, declarations are emitted per format, not per runtime condition. CommonJS packages use `.mjs` / `.d.mts` for their ESM output. Unreachable source files are omitted.
+
+Unlike `tsc`, unbundle uses Bunchee's existing dual-format, alias, env, directive, and resource plugins, and rewrites relative imports to each output's extension. Condition builds add suffixes such as `.react-server` or `.development` to internal files. Inlined dependencies go under `_vendor/`, and generated virtual modules go under `_virtual/`; output collisions fail the build.
+
+Consider `"sideEffects": false` or an explicit list of side-effectful files in `package.json` so consumer bundlers can tree-shake individual modules. Include CSS modules or other side-effectful files in that list when needed.
+
+Phase 1 does not support `--watch`, `-o` / `--output`, or local modules outside the package source root. Native addon (`.node`) binaries are copied to the root of the output directory, as in bundled builds. Define entries through exports, and move outside files into the package source tree or externalize them as dependencies. Unbundle builds run in one process to keep shared internal outputs consistent.
+
 ### CLI
 
 #### Options

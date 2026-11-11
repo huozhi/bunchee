@@ -48,6 +48,7 @@ Options:
   --env <env>            inlined process env variables, separate by comma. default: NODE_ENV
   --cwd <cwd>            specify current working directory
   --sourcemap            enable sourcemap generation
+  --unbundle             emit one output file per source module instead of bundling
   --no-dts               do not generate types, default: undefined
   --tsconfig             path to tsconfig file, default: tsconfig.json
   --dts-bundle           bundle type declaration files, default: false
@@ -71,6 +72,10 @@ async function lint(cwd: string, failOnIssues = false) {
 
 async function parseCliArgs(argv: string[]) {
   const args = await yargs(hideBin(argv))
+    .option('unbundle', {
+      type: 'boolean',
+      description: 'emit one output file per source module instead of bundling',
+    })
     .option('watch', {
       type: 'boolean',
       alias: 'w',
@@ -188,6 +193,7 @@ async function parseCliArgs(argv: string[]) {
 
   const source: string = args._[0] as string
   const parsedArgs: CliArgs = {
+    unbundle: args['unbundle'],
     source,
     format: args['format'] as CliArgs['format'],
     file: args['output'],
@@ -243,6 +249,7 @@ async function run(args: CliArgs) {
   const cwd = args.cwd || process.cwd()
   const file = args.file ? path.resolve(cwd, args.file) : undefined
   const bundleConfig: BundleConfig = {
+    unbundle: args.unbundle,
     dts: dts !== false && { respectExternal: dtsBundle ? true : undefined },
     file,
     format,
@@ -370,7 +377,7 @@ async function run(args: CliArgs) {
     if (buildError?.digest === 'bunchee:not-existed') {
       help()
     } else {
-      if (watch) {
+      if (watch && initialBuildContext) {
         logError(err)
       } else {
         throw err

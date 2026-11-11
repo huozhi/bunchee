@@ -1,0 +1,14 @@
+{
+  "name": "unbundle-assets",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "devDependencies": {
+    "unbundle-dep": "1.0.0"
+  }
+}

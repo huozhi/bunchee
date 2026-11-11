@@ -1,0 +1,9 @@
+{
+  "name": "unbundle-basic",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./client": "./dist/client/index.js"
+  },
+  "bin": "./dist/bin/cli.js"
+}
