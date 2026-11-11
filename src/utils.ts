@@ -11,7 +11,6 @@ import {
   BINARY_TAG,
 } from './constants'
 import { logger } from './logger'
-import { type OutputOptions } from 'rollup'
 import { posixRelativify } from './lib/format'
 import { baseNameWithoutExtension } from './util/file-path'
 
@@ -193,35 +192,6 @@ export function joinRelativePath(...segments: string[]) {
 
 export function isESModulePackage(packageType: string | undefined) {
   return packageType === 'module'
-}
-
-async function removeDir(dirPath: string) {
-  try {
-    const dirStat = await fsp.stat(dirPath)
-    if (dirStat.isDirectory()) {
-      await fsp.rm(dirPath, { recursive: true, force: true })
-    }
-  } catch (err: any) {
-    if (err.code !== 'ENOENT') {
-      throw err
-    }
-  }
-}
-
-const removedDirs = new Set<string>()
-export async function removeOutputDir(output: OutputOptions, cwd: string) {
-  const dir = output.dir
-  if (
-    dir &&
-    // not equal to cwd
-    dir !== cwd &&
-    // not equal to src/ dir
-    dir !== path.resolve(cwd, SRC) &&
-    !removedDirs.has(dir)
-  ) {
-    await removeDir(dir)
-    removedDirs.add(dir)
-  }
 }
 
 export function isBinExportPath(exportPath: string) {

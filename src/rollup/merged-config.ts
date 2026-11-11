@@ -1,4 +1,4 @@
-import { dirname, relative, resolve, sep } from 'path'
+import { dirname, relative, resolve } from 'path'
 import type { OutputOptions } from 'rollup'
 import type {
   BuildContext,
@@ -14,9 +14,8 @@ import { buildOutputConfigs } from './output'
 import { buildSourceToBundleMap, getAliasFormat } from '../plugins/alias-plugin'
 import { getEntryBundleOutputs } from '../build-config'
 import { isESModulePackage, normalizePath } from '../utils'
-import { getSpecialExportTypeFromConditionNames } from '../entries'
-import { getDefinedInlineVariables } from '../env'
 import { logger } from '../logger'
+import { commonRootDir } from '../lib/common-root'
 
 type GroupItem = {
   exportPath: string
@@ -37,6 +36,8 @@ type Group = {
   items: GroupItem[]
   /** Absolute output file -> the source that claimed it. */
   claimed: Map<string, string>
+  /** Source -> the absolute output file it claimed in this group. */
+  claimedBySource: Map<string, string>
 }
 
 /**
@@ -85,18 +86,6 @@ function outputExtension(file: string): string {
   return match ? match[0] : ''
 }
 
-/** Deepest directory containing every one of `dirs`. */
-function commonRootDir(dirs: string[]): string {
-  const [first, ...rest] = dirs.map((dir) => dir.split(sep))
-  let end = first.length
-  for (const parts of rest) {
-    let i = 0
-    while (i < end && i < parts.length && parts[i] === first[i]) i++
-    end = i
-  }
-  return first.slice(0, end).join(sep) || sep
-}
-
 /**
  * One rollup config per group of entries that can share a module graph.
  *
@@ -116,7 +105,6 @@ export async function buildMergedConfigs(
 ): Promise<MergedRollupConfig[]> {
   const { entries } = buildContext
   const { dts } = bundleEntryOptions
-
   const groups = new Map<string, Group>()
   for (const [exportPath, exportCondition] of Object.entries(entries)) {
     // A shard owns a subset of the entries. The rest stay in `entries` so the
@@ -133,21 +121,13 @@ export async function buildMergedConfigs(
       buildContext,
       bundleEntryOptions,
     )
-    const env = getDefinedInlineVariables(
-      bundleConfig.env || [],
-      exportCondition,
-    )
     const seen = new Map<string, number>()
     for (const output of outputs) {
-      const graphShape = [
-        JSON.stringify(env),
-        // Which sibling bundle an import resolves to is decided per runtime or
-        // optimize condition, so entries only share a graph with entries that
-        // resolve the same way.
-        getSpecialExportTypeFromConditionNames(
-          new Set(output.target.conditions),
-        ),
-      ]
+      const graphShape = buildContext.mode.graphShape(
+        bundleConfig.env || [],
+        exportCondition,
+        output.target,
+      )
       const shape = [
         dts ? 'dts' : 'js',
         output.format,
@@ -170,8 +150,18 @@ export async function buildMergedConfigs(
           graphKey: JSON.stringify([...graphShape, attempt]),
           items: [],
           claimed: new Map(),
+          claimedBySource: new Map(),
         }
         groups.set(key, candidate)
+        // A mode that names files per module (unbundle) cannot let one source
+        // be the facade of two different files in the same graph.
+        const sourceFile = candidate.claimedBySource.get(exportCondition.source)
+        if (
+          buildContext.mode.oneOutputPerSource &&
+          sourceFile !== undefined &&
+          sourceFile !== file
+        )
+          continue
         const claimedBy = candidate.claimed.get(file)
         if (claimedBy === exportCondition.source) {
           // The same source writing the same file: nothing to add.
@@ -187,6 +177,7 @@ export async function buildMergedConfigs(
       }
       if (!group) continue
       group.claimed.set(file, exportCondition.source)
+      group.claimedBySource.set(exportCondition.source, file)
       group.items.push({ exportPath, exportCondition, output })
     }
   }
@@ -414,24 +405,31 @@ async function buildMergedConfig(
     )
 
     const dir = commonRootDir([...outputFiles.values()].map((f) => dirname(f)))
-    output.push({
-      ...outputOptions,
-      dir,
-      // Each entry keeps the exact path its export condition declares, which
-      // the per-entry path gets for free from a single `output.file`.
-      entryFileNames(chunk) {
-        const file =
-          (chunk.facadeModuleId &&
-            outputFilesBySource.get(chunk.facadeModuleId)) ||
-          outputFiles.get(chunk.name)
-        if (!file) {
-          throw new Error(
-            `bunchee: no output file mapped for merged entry "${chunk.name}"`,
-          )
-        }
-        return normalizePath(relative(dir, file))
-      },
-    })
+    output.push(
+      buildContext.mode.configureOutput(
+        {
+          ...outputOptions,
+          dir,
+          // Each entry keeps the exact path its export condition declares, which
+          // the per-entry path gets for free from a single `output.file`.
+          entryFileNames(chunk) {
+            const file =
+              (chunk.facadeModuleId &&
+                outputFilesBySource.get(chunk.facadeModuleId)) ||
+              outputFiles.get(chunk.name)
+            if (!file) {
+              throw new Error(
+                `bunchee: no output file mapped for merged entry "${chunk.name}"`,
+              )
+            }
+            return normalizePath(relative(dir, file))
+          },
+        },
+        primary.items.map((item) => item.exportCondition.source),
+        outputFilesBySource,
+        groupRepresentative.output.target,
+      ),
+    )
   }
 
   return { ...inputOptions, input, output }

@@ -18,7 +18,6 @@ import {
   BundleJobOptions,
   MergedRollupConfig,
 } from './types'
-import { removeOutputDir } from './utils'
 import { normalizeError } from './lib/normalize-error'
 import { logger } from './logger'
 import { endProfile, startProfile } from './lib/profile'
@@ -73,7 +72,7 @@ export async function createAssetRollupJobs(
     const cleanStarted = startProfile()
     for (const config of allConfigs) {
       if (options.clean && !isFromCli) {
-        await removeOutputDir(config.output, buildContext.cwd)
+        await buildContext.cleanOutputDir(config.output)
       }
     }
     endProfile('bundle.clean', cleanStarted, {
@@ -132,7 +131,7 @@ export async function createMergedRollupJobs(
     const cleanStarted = startProfile()
     for (const config of allConfigs) {
       for (const output of config.output) {
-        await removeOutputDir(output, buildContext.cwd)
+        await buildContext.cleanOutputDir(output)
       }
     }
     endProfile('bundle.clean', cleanStarted, { enabled: true })

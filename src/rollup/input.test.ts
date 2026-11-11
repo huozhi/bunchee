@@ -1,3 +1,5 @@
+import { createOutputCleaner } from '../lib/output-cleaner'
+import { bundledMode } from '../build-modes/bundled'
 import { expect, test } from 'vitest'
 import { resolve } from 'path'
 import type { BuildContext } from '../types'
@@ -12,6 +14,8 @@ test('JS graphs leave declaration plugin initialization to the DTS graph', async
   }
   const entries = { '.': entry }
   const context: BuildContext = {
+    mode: bundledMode,
+    cleanOutputDir: createOutputCleaner(process.cwd()),
     cwd: process.cwd(),
     pkg: { name: 'test', type: 'module' },
     entries,

@@ -12,7 +12,6 @@ import { logger, setActiveSpinner } from '../logger'
 import { bundle } from '../../src/index'
 import { prepare } from '../prepare'
 import { RollupWatcher } from 'rollup'
-import { logOutputState } from '../plugins/output-state-plugin'
 import { normalizeError } from '../lib/normalize-error'
 import { createSpinner } from 'nanospinner'
 import { createRequire } from 'module'
@@ -338,7 +337,7 @@ async function run(args: CliArgs) {
 
       const outputState = initialBuildContext?.pluginContext.outputState
       if (outputState) {
-        logOutputState(outputState.getSizeStats())
+        outputState.log()
       }
     }
   }

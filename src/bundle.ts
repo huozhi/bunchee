@@ -6,14 +6,12 @@ import type {
 import fsp from 'fs/promises'
 import fs from 'fs'
 import { dirname, resolve } from 'path'
-import { createOutputState } from './plugins/output-state-plugin'
 import {
   fileExists,
   getPackageMeta,
   getSourcePathFromExportPath,
   isBinExportPath,
   isTypescriptFile,
-  removeOutputDir,
 } from './utils'
 import {
   MIN_ENTRIES_FOR_MERGED_WORKERS,
@@ -43,6 +41,8 @@ import {
 import { spawn } from 'child_process'
 import { logger } from './logger'
 import { endProfile, startProfile } from './lib/profile'
+import { createBuildMode } from './build-modes'
+import { createOutputCleaner } from './lib/output-cleaner'
 
 function assignDefault(
   options: BundleConfig,
@@ -69,13 +69,20 @@ async function bundle(
   { cwd: _cwd, onSuccess, ...options }: BundleConfig = {},
 ): Promise<void> {
   const bundleStarted = startProfile()
-  const cwd = resolve(process.cwd(), _cwd || '')
+  const mode = createBuildMode(options)
+  const resolvedInput = mode.resolveInput(
+    resolve(process.cwd(), _cwd || ''),
+    cliEntryPath,
+  )
+  const cwd = resolvedInput.cwd
+  cliEntryPath = resolvedInput.entry
   assignDefault(options, 'format', 'esm')
   assignDefault(options, 'minify', false)
   assignDefault(options, 'target', 'es2022')
 
   const packageStarted = startProfile()
   const pkg = await getPackageMeta(cwd)
+  mode.validatePackage(pkg)
   const parsedExportsInfo = await parseExports(pkg, cwd)
   endProfile('bundle.package', packageStarted, {
     exports: parsedExportsInfo.size,
@@ -157,6 +164,7 @@ async function bundle(
   }
 
   const entriesStarted = startProfile()
+  const prepareEntries = mode.prepareEntries(parsedExportsInfo)
   const entries = await collectEntriesFromParsedExports(
     cwd,
     parsedExportsInfo,
@@ -166,6 +174,7 @@ async function bundle(
   endProfile('bundle.entries', entriesStarted, {
     entries: Object.keys(entries).length,
   })
+  prepareEntries(entries)
 
   // Collect and log missing entries for defined exports
   const missingEntries = [...parsedExportsInfo.keys()].filter(
@@ -200,9 +209,11 @@ async function bundle(
     browserslistConfig = pkg.browserslist
   }
 
-  const outputState = createOutputState({ entries })
+  const outputState = mode.createOutputState(entries)
 
   const buildContext: BuildContext = {
+    mode,
+    cleanOutputDir: createOutputCleaner(cwd),
     entries,
     pkg,
     cwd,
@@ -218,6 +229,7 @@ async function bundle(
   options._callbacks?.onBuildStart?.(buildContext)
 
   const generateTypes = hasTsConfig && options.dts !== false
+  mode.prepareTypes(entries, generateTypes)
   const rollupJobsOptions: BundleJobOptions = { isFromCli, generateTypes }
 
   const entryNames = Object.keys(entries)
@@ -229,7 +241,8 @@ async function bundle(
   // entries and builds them as one graph, with the entries it does not own
   // resolved as externals against their own output paths.
   const mergeStarted = startProfile()
-  const useMerged = await canMergeEntries(entries, options, isFromCli)
+  const useMerged =
+    mode.forceMerged || (await canMergeEntries(entries, options, isFromCli))
   endProfile('bundle.merge-plan', mergeStarted, {
     entries: entryNames.length,
     merged: useMerged,
@@ -239,6 +252,7 @@ async function bundle(
   // memory scales with entry count, which OOMs on packages with many exports.
   // Build each entry in its own worker instead, one isolated heap per entry.
   const workersAvailable =
+    mode.allowWorkers &&
     !options.watch &&
     !options._entryFilter &&
     // Test-only, not a supported option: the tests build the same package
@@ -269,10 +283,9 @@ async function bundle(
       if (options.clean && !isFromCli) {
         for (const entry of Object.values(entries)) {
           for (const target of entry.targets) {
-            await removeOutputDir(
-              { dir: dirname(resolve(cwd, target.path)) },
-              cwd,
-            )
+            await buildContext.cleanOutputDir({
+              dir: dirname(resolve(cwd, target.path)),
+            })
           }
         }
       }
@@ -318,6 +331,7 @@ async function bundle(
     }
 
     options._callbacks?.onBuildEnd?.(assetJobs)
+    mode.finish(buildContext)
 
     // Finished building successfully
     if (onSuccess) {
