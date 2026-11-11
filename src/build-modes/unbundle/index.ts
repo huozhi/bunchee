@@ -6,6 +6,7 @@ import type { BuildMode } from '../types'
 import { bundledMode } from '../bundled'
 import { commonRootDir } from '../../lib/common-root'
 import { logger } from '../../logger'
+import { normalizePath } from '../../utils'
 import {
   createUnbundleFileNames,
   getConditionSuffix,
@@ -13,7 +14,7 @@ import {
 } from './paths'
 import { unbundleOutputGuard } from './output-guard'
 import { unbundledNativeAddon } from './native-addon'
-import { createUnbundleOutputState } from './output-state'
+import { createOutputState } from '../../plugins/output-state-plugin'
 
 /** All unbundle policy and per-build state live behind this adapter. */
 export function createUnbundleMode(options: BundleConfig): BuildMode {
@@ -101,7 +102,8 @@ export function createUnbundleMode(options: BundleConfig): BuildMode {
       computeRoots(selected)
       return selected
     },
-    createOutputState: createUnbundleOutputState,
+    createOutputState: (entries) =>
+      createOutputState({ entries, summarizeInternal: true }),
     graphShape: (env, entry, target) => [
       ...bundledMode.graphShape(env, { ...entry, targets: [target] }, target),
       getConditionSuffix(target),
@@ -140,7 +142,21 @@ export function createUnbundleMode(options: BundleConfig): BuildMode {
       delete preserved.chunkFileNames
       return preserved
     },
-    finish({ pkg }) {
+    finish({ pkg, pluginContext }) {
+      const vendored = new Set(
+        pluginContext.outputState
+          .getInternalFiles()
+          .map((file) => file.source)
+          .filter(
+            (source) =>
+              !source.startsWith('\0') &&
+              normalizePath(source).includes('/node_modules/'),
+          ),
+      ).size
+      if (vendored)
+        logger.info(
+          `${vendored} ${vendored === 1 ? 'module' : 'modules'} from node_modules ${vendored === 1 ? 'was' : 'were'} inlined to _vendor/`,
+        )
       // A hint, not a problem: without the field, consumers simply treat every
       // module as side-effectful, which is safe.
       if (pkg.sideEffects === undefined)
