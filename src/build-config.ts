@@ -1,7 +1,6 @@
 import { posix } from 'path'
 import type {
   Entries,
-  BuncheeRollupConfig,
   BundleConfig,
   ParsedExportCondition,
   bundleEntryOptions,
@@ -20,11 +19,6 @@ import {
   getSpecialExportTypeFromComposedExportPath,
   normalizeExportPath,
 } from './entries'
-import { buildInputConfig } from './rollup/input'
-import { buildOutputConfigs } from './rollup/output'
-
-// Avoid create multiple dts plugins instance and parsing the same tsconfig multi times,
-// This will avoid memory leak and performance issue.
 
 /**
  * return {
@@ -54,71 +48,8 @@ export function getReversedAlias({
   return alias
 }
 
-export async function buildEntryConfig(
-  bundleConfig: BundleConfig,
-  pluginContext: BuildContext,
-  bundleEntryOptions: bundleEntryOptions,
-): Promise<BuncheeRollupConfig[]> {
-  const configs: BuncheeRollupConfig[] = []
-  const { entries } = pluginContext
-  for (const [exportPath, exportCondition] of Object.entries(entries)) {
-    // Workers build only their assigned entries. The full entries map stays
-    // in the context so cross-entry imports and types still resolve.
-    if (
-      bundleConfig._entryFilter &&
-      !bundleConfig._entryFilter.includes(exportPath)
-    ) {
-      continue
-    }
-    const rollupConfigs = await buildConfig(
-      bundleConfig,
-      exportCondition,
-      pluginContext,
-      bundleEntryOptions,
-    )
-    configs.push(...rollupConfigs)
-  }
-  return configs
-}
-
-async function buildRollupConfigs(
-  entry: string,
-  bundleConfig: BundleConfig,
-  exportCondition: ParsedExportCondition,
-  buildContext: BuildContext,
-  dts: boolean,
-): Promise<BuncheeRollupConfig> {
-  const inputOptions = await buildInputConfig(
-    entry,
-    bundleConfig,
-    exportCondition,
-    buildContext,
-    dts,
-  )
-
-  const outputOptions = await buildOutputConfigs(
-    bundleConfig,
-    exportCondition,
-    buildContext,
-    dts,
-  )
-
-  const { input, external, plugins, treeshake, onwarn } = inputOptions
-
-  return {
-    input,
-    external,
-    plugins,
-    treeshake,
-    onwarn,
-    output: outputOptions,
-  }
-}
-
 /**
  * Every output file a single entry produces, as `{ file, format, target }`.
- * Shared by the per-entry config path and the merged-group path so the two
- * cannot drift on which files an entry is supposed to emit.
  */
 export async function getEntryBundleOutputs(
   bundleConfig: BundleConfig,
@@ -202,41 +133,4 @@ export async function getEntryBundleOutputs(
   }
 
   return bundleOptions
-}
-
-async function buildConfig(
-  bundleConfig: BundleConfig,
-  exportCondition: ParsedExportCondition,
-  pluginContext: BuildContext,
-  bundleEntryOptions: bundleEntryOptions,
-): Promise<BuncheeRollupConfig[]> {
-  const { dts } = bundleEntryOptions
-  const entry = exportCondition.source
-  const bundleOptions = await getEntryBundleOutputs(
-    bundleConfig,
-    exportCondition,
-    pluginContext,
-    bundleEntryOptions,
-  )
-
-  const outputConfigs = bundleOptions.map(async (bundleOption) => {
-    // Narrow the entry down to the single output currently being built.
-    const targetExportCondition: ParsedExportCondition = {
-      ...exportCondition,
-      targets: [bundleOption.target],
-    }
-    return await buildRollupConfigs(
-      entry,
-      {
-        ...bundleConfig,
-        file: bundleOption.file,
-        format: bundleOption.format,
-      },
-      targetExportCondition,
-      pluginContext,
-      dts,
-    )
-  })
-
-  return Promise.all(outputConfigs)
 }

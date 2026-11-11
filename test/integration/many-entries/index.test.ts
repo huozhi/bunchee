@@ -7,11 +7,9 @@ import {
 } from '../../testing-utils'
 import { executeBunchee } from '../../testing-utils/shared'
 
-// Nine entries, above MIN_ENTRIES_FOR_WORKERS, with no directive layers: this
-// is the fixture that merges every entry into one graph per output. Being over
-// the worker threshold, it is also what catches a merged build fanning out to
-// workers it cannot profit from. The worker path itself is covered by
-// `many-entries-cli`, where a CLI entry file blocks merging.
+// Nine entries with no directive layers: every entry merges into one graph per
+// output. Worker fan-out is covered by `many-entries-cli` and
+// `merge-entries-shards`, which force it with TEST_WORKERS.
 const dir = __dirname
 const distDir = path.join(dir, 'dist')
 

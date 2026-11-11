@@ -83,8 +83,8 @@ type BundleConfig = {
     /*
      * This hook is called when the build finishes.
      * `assetJobs` holds one item per completed build job; what the items are
-     * depends on the path taken (rollup outputs, watchers, or per-entry size
-     * stats from the worker pool), so only its length is meaningful.
+     * depends on the path taken (rollup outputs, watchers, or size stats
+     * from the worker pool), so only its length is meaningful.
      * @experimental
      */
     onBuildEnd?: (assetJobs: any[]) => void

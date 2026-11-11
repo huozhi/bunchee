@@ -106,14 +106,6 @@ export function createSplitChunks(
   dependencyGraphMap: Map<string, Set<[string, string | undefined]>>,
   entryFiles: Set<string>,
   /**
-   * One graph holding every entry only gets to place a directive module once,
-   * where a build per entry decides separately each time — so it cannot inline
-   * the module into a same-layer entry and split it out of a different-layer
-   * one. Giving every directive module its own chunk keeps the boundary
-   * explicit for all of them, and costs one chunk instead of a copy per entry.
-   */
-  merged: boolean = false,
-  /**
    * Filled in as groups are created: group name -> the base name its file is
    * written under, for `chunkFileNames` to read back.
    *
@@ -210,7 +202,9 @@ export function createSplitChunks(
       }
     }
 
-    if (merged && moduleLayer && !isEntry) {
+    // One graph holds every entry, so a directive module is placed once: give
+    // it its own chunk so the boundary stays explicit for every importer.
+    if (moduleLayer && !isEntry) {
       const existing = splitChunksGroupMap.get(id)
       if (existing) return existing
       const chunkGroup = groupFor(id, moduleLayer)

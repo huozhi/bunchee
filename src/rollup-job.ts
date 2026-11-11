@@ -1,6 +1,5 @@
 import {
   RollupBuild,
-  RollupOutput,
   RollupWatchOptions,
   RollupWatcher,
   rollup,
@@ -9,11 +8,9 @@ import {
 
 import { statSync } from 'fs'
 
-import { buildEntryConfig } from './build-config'
 import { buildMergedConfigs } from './rollup/merged-config'
 import {
   BuildContext,
-  BuncheeRollupConfig,
   BundleConfig,
   BundleJobOptions,
   MergedRollupConfig,
@@ -40,56 +37,6 @@ function graphKind(plugins: MergedRollupConfig['plugins']): 'dts' | 'js' {
   )
     ? 'dts'
     : 'js'
-}
-
-export async function createAssetRollupJobs(
-  options: BundleConfig,
-  buildContext: BuildContext,
-  bundleJobOptions: BundleJobOptions,
-) {
-  const configStarted = startProfile()
-  const { isFromCli, generateTypes } = bundleJobOptions
-  const assetsConfigs = options._typesOnly
-    ? []
-    : await buildEntryConfig(options, buildContext, {
-        dts: false,
-        isFromCli,
-      })
-  const typesConfigs = generateTypes
-    ? await buildEntryConfig(options, buildContext, {
-        dts: true,
-        isFromCli,
-      })
-    : []
-  const allConfigs = assetsConfigs.concat(typesConfigs)
-  endProfile('bundle.config', configStarted, {
-    graphs: allConfigs.length,
-    merged: false,
-  })
-
-  // When it's production build (non watch mode), we need to remove the output directory
-  if (!options.watch) {
-    const cleanStarted = startProfile()
-    for (const config of allConfigs) {
-      if (options.clean && !isFromCli) {
-        await buildContext.cleanOutputDir(config.output)
-      }
-    }
-    endProfile('bundle.clean', cleanStarted, {
-      enabled: Boolean(options.clean && !isFromCli),
-    })
-  }
-
-  const rollupJobs = allConfigs.map((rollupConfig) =>
-    bundleOrWatch(options, rollupConfig),
-  )
-
-  try {
-    return await Promise.all(rollupJobs)
-  } catch (err: unknown) {
-    const error = normalizeError(err)
-    throw error
-  }
 }
 
 /**
@@ -126,8 +73,8 @@ export async function createMergedRollupJobs(
 
   // Clean every output directory before anything is written: the JS and types
   // groups usually share one dist directory, so cleaning per job would delete
-  // an earlier job's output.
-  if (options.clean && !isFromCli) {
+  // an earlier job's output. Watch mode keeps the previous output.
+  if (options.clean && !isFromCli && !options.watch) {
     const cleanStarted = startProfile()
     for (const config of allConfigs) {
       for (const output of config.output) {
@@ -151,10 +98,16 @@ export async function createMergedRollupJobs(
     )
   }
 
+  if (options.watch) {
+    // One watcher per graph; rollup rebuilds and rewrites every output of a
+    // graph when one of its modules changes.
+    return allConfigs.map((config) => runMergedWatch(config))
+  }
+
   try {
     // Sequentially: there are only a handful of graphs and each is large.
     // Running them concurrently puts every graph — including a full TypeScript
-    // program — in one heap, which is both the OOM the per-entry path hits and,
+    // program — in one heap, which is both an OOM risk on large packages and,
     // measured, slower than doing them in turn. Parallelism across types shards
     // comes from the worker pool, where each shard gets its own heap.
     const results = []
@@ -254,73 +207,14 @@ function logMergedGraph(
   }
 }
 
-async function bundleOrWatch(
-  options: BundleConfig,
-  rollupConfig: BuncheeRollupConfig,
-): Promise<RollupWatcher | RollupOutput | void> {
-  if (options.watch) {
-    return runWatch(rollupConfig)
-  }
-  return runBundle(rollupConfig)
-}
-
-async function runBundle({ output, ...restOptions }: BuncheeRollupConfig) {
-  let bundle: RollupBuild
-  const graphStarted = startProfile()
-  const kind =
-    graphStarted === undefined ? undefined : graphKind(restOptions.plugins)
-  const inputs =
-    graphStarted === undefined ? undefined : inputCount(restOptions.input)
-  try {
-    // One-shot builds never reuse the cache; disabling it stops rollup from
-    // retaining every module's AST on the bundle for the rest of the build.
-    bundle = await rollup({ ...restOptions, cache: false })
-  } catch (error) {
-    endProfile('rollup.graph', graphStarted, {
-      inputs,
-      kind,
-      status: 'error',
-    })
-    return catchErrorHandler(error)
-  }
-  endProfile('rollup.graph', graphStarted, {
-    inputs,
-    kind,
-    status: 'success',
-  })
-  try {
-    const writeStarted = startProfile()
-    try {
-      return await bundle.write(output)
-    } finally {
-      endProfile('rollup.write', writeStarted, {
-        format: output.format,
-        kind,
-      })
-    }
-  } finally {
-    // Release module graph and plugin resources once the assets are written,
-    // instead of holding every entry's graph until the whole build finishes.
-    await bundle.close()
-  }
-}
-
-function runWatch({
-  output,
-  ...restOptions
-}: BuncheeRollupConfig): RollupWatcher {
-  const watchOptions: RollupWatchOptions[] = [
-    {
-      ...restOptions,
-      output: output,
-      watch: {
-        exclude: ['node_modules/**'],
-      },
+function runMergedWatch(config: MergedRollupConfig): RollupWatcher {
+  const watchOptions: RollupWatchOptions = {
+    ...config,
+    watch: {
+      exclude: ['node_modules/**'],
     },
-  ]
-  const watcher = rollupWatch(watchOptions)
-
-  return watcher
+  }
+  return rollupWatch(watchOptions)
 }
 
 function catchErrorHandler(error: any) {

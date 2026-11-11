@@ -64,7 +64,6 @@ export function createUnbundleMode(options: BundleConfig): BuildMode {
     for (const [ext, dirs] of dirsByExt) outRoots.set(ext, commonRootDir(dirs))
   }
   return {
-    forceMerged: true,
     // Shards would concurrently emit the same internal modules.
     allowWorkers: false,
     resolveInput(cwd, entry) {

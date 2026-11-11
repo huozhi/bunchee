@@ -35,10 +35,16 @@ describe('integration - merge-entries-shards', () => {
   }, 120_000)
 
   it('should emit the same declarations however the types are sharded', async () => {
-    const oneShard = declarations(await build({ BUNCHEE_DTS_SHARDS: '1' }))
+    // TEST_WORKERS sends declarations to workers despite the small fixture;
+    // without it the shard count is never consulted.
+    const oneShard = declarations(
+      await build({ TEST_WORKERS: '1', BUNCHEE_DTS_SHARDS: '1' }),
+    )
     // More shards than entries, so every entry lands in a shard of its own and
     // every cross-entry reference has to cross a shard boundary.
-    const manyShards = declarations(await build({ BUNCHEE_DTS_SHARDS: '8' }))
+    const manyShards = declarations(
+      await build({ TEST_WORKERS: '1', BUNCHEE_DTS_SHARDS: '8' }),
+    )
 
     // One graph holding every entry, against every entry in a shard of its own
     // so each cross-entry reference crosses a boundary.

@@ -7,10 +7,6 @@ import type { SizeStats } from '../plugins/output-state-plugin'
 import type { ErrorDetails, EntryWorkerTask } from '../worker'
 import { logger, pauseActiveSpinner } from '../logger'
 
-// Below this entry count builds stay in-process: a handful of module graphs
-// fits comfortably in one heap, and skipping the pool avoids worker startup.
-export const MIN_ENTRIES_FOR_WORKERS = 8
-
 /**
  * The entry count at which a *merged* build is worth fanning out.
  *
