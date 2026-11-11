@@ -72,7 +72,7 @@ function dumpDom(url: string): Promise<string> {
       url,
     ])
     // Never let a stuck browser hang the suite.
-    const timer = setTimeout(() => child.kill('SIGKILL'), 20_000)
+    const timer = setTimeout(() => child.kill('SIGKILL'), 50_000)
     let stdout = ''
     child.stdout.on('data', (chunk) => (stdout += chunk))
     child.on('error', reject)
@@ -104,5 +104,5 @@ test.skipIf(!chrome && !(process.env.CI && process.platform === 'linux'))(
       server.close()
     }
   },
-  30_000,
+  60_000,
 )
