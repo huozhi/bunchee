@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version bump
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: release-version
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@v6.0.2
+        with:
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.3.0
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Bump version
+        env:
+          RELEASE_TYPE: ${{ inputs.version }}
+          HUSKY: '0'
+        run: |
+          npm version "$RELEASE_TYPE" --no-git-tag-version --ignore-scripts --package-lock=false
+          version=$(node -p "require('./package.json').version")
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add package.json
+          git commit -m "$version"
+          git push origin HEAD:main
+          echo "Bumped main to $version. Run the Publish workflow to publish this version." >> "$GITHUB_STEP_SUMMARY"

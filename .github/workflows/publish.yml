@@ -1,0 +1,41 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: npm-publish
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@v6.0.2
+
+      - uses: pnpm/action-setup@v6.0.8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.3.0
+        with:
+          node-version: 24
+          cache: pnpm
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Determine npm tag
+        id: npm_tag
+        run: node -p "'tag=' + (require('./package.json').version.match(/-(alpha|beta|rc)(?:[.-]|$)/)?.[1] || 'latest')" >> "$GITHUB_OUTPUT"
+
+      # prepublishOnly builds the package before publishing.
+      - name: Publish current version
+        run: npm publish --tag "$NPM_TAG" --access public
+        env:
+          NPM_TAG: ${{ steps.npm_tag.outputs.tag }}
+          NPM_CONFIG_PROVENANCE: true
