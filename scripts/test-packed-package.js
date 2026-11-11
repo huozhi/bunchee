@@ -186,6 +186,27 @@ try {
   })
   assert.equal(binOutput.trim(), 'packed-bunchee-bin')
 
+  // The packed CLI also runs the experimental unbundle mode. Its output
+  // rules are covered by test/integration/unbundle-*; this only checks the
+  // published package can drive it.
+  await mkdir(path.join(consumerDir, 'src/utils'))
+  await writeFile(
+    path.join(consumerDir, 'src/utils/answer.ts'),
+    'export const answer = 42\n',
+  )
+  await writeFile(
+    path.join(consumerDir, 'src/index.ts'),
+    "export { answer } from './utils/answer'\n",
+  )
+  await run(process.execPath, [packedCli, '--unbundle', '--runtime', 'node'], {
+    cwd: consumerDir,
+  })
+  const unbundled = await import(
+    pathToFileURL(path.join(consumerDir, 'dist/index.js')).href + '?unbundle'
+  )
+  assert.equal(unbundled.answer, 42)
+  await readFile(path.join(consumerDir, 'dist/utils/answer.js'), 'utf8')
+
   console.log(`Packed package smoke test passed: ${packResult.filename}`)
 } finally {
   await rm(tempDir, { recursive: true, force: true })
