@@ -1,0 +1,9 @@
+{
+  "name": "unbundle-rsc",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./client": "./dist/client/index.js"
+  },
+  "sideEffects": false
+}

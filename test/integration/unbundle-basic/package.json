@@ -1,0 +1,5 @@
+{
+  "name": "unbundle-basic",
+  "type": "module",
+  "exports": "./dist/index.js"
+}

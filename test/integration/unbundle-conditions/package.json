@@ -1,0 +1,18 @@
+{
+  "name": "unbundle-conditions",
+  "type": "module",
+  "exports": {
+    ".": {
+      "development": "./dist/index.development.js",
+      "production": "./dist/index.production.js",
+      "react-server": "./dist/index.react-server.js",
+      "edge-light": "./dist/index.edge-light.js",
+      "default": "./dist/index.js"
+    },
+    "./combined": {
+      "development": {
+        "react-server": "./dist/combined.development.react-server.js"
+      }
+    }
+  }
+}

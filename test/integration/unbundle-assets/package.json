@@ -1,0 +1,10 @@
+{
+  "name": "unbundle-assets",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  }
+}

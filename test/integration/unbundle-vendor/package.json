@@ -1,0 +1,9 @@
+{
+  "name": "unbundle-vendor",
+  "type": "module",
+  "exports": "./dist/index.js",
+  "devDependencies": {
+    "unbundle-dep": "1.0.0"
+  },
+  "sideEffects": false
+}
