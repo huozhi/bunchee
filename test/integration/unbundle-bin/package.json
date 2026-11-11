@@ -1,6 +1,0 @@
-{
-  "name": "unbundle-bin",
-  "type": "module",
-  "exports": "./dist/index.js",
-  "bin": "./dist/bin/cli.js"
-}
