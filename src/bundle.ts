@@ -164,20 +164,27 @@ async function bundle(
   }
 
   const entriesStarted = startProfile()
-  const prepareEntries = mode.prepareEntries(parsedExportsInfo)
-  const entries = await collectEntriesFromParsedExports(
-    cwd,
-    parsedExportsInfo,
-    pkg,
-    inputFile,
+  // Entry discovery adds private shared modules to `parsedExportsInfo` (new
+  // keys, and targets pushed onto existing ones). Keep a copy of what
+  // package.json itself declares.
+  const declaredExports: ParsedExportsInfo = new Map(
+    [...parsedExportsInfo].map(([key, targets]) => [key, [...targets]]),
+  )
+  const entries = mode.selectEntries(
+    await collectEntriesFromParsedExports(
+      cwd,
+      parsedExportsInfo,
+      pkg,
+      inputFile,
+    ),
+    declaredExports,
   )
   endProfile('bundle.entries', entriesStarted, {
     entries: Object.keys(entries).length,
   })
-  prepareEntries(entries)
 
   // Collect and log missing entries for defined exports
-  const missingEntries = [...parsedExportsInfo.keys()].filter(
+  const missingEntries = [...declaredExports.keys()].filter(
     (key) => !entries[key] && key !== './package.json',
   )
   if (missingEntries.length > 0 && !options._entryFilter) {

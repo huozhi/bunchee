@@ -80,29 +80,26 @@ export function createUnbundleMode(options: BundleConfig): BuildMode {
           'Unbundle requires package.json exports or bin entries. Define them instead of relying on main/module or an inferred CLI output.',
         )
     },
-    prepareEntries(exports) {
-      const keys = new Set(exports.keys())
-      const targets = new Set(
-        [...exports.values()].flatMap((items) =>
-          items.map((target) => target.path),
+    selectEntries(entries, declared) {
+      // Discovery also finds private shared modules (`_internal/`, `lib/_x`)
+      // and turns them into entries so bundled builds can split them out.
+      // Here they are ordinary reachable modules, not public entrypoints.
+      const declaredTargets = new Set(
+        [...declared.values()].flatMap((targets) =>
+          targets.map((target) => target.path),
         ),
       )
-      return (entries) => {
-        for (const [name, entry] of Object.entries(entries)) {
-          if (!entry.targets.some((target) => targets.has(target.path)))
-            delete entries[name]
-        }
-        // Discovery adds synthetic private exports for bundled builds. They
-        // become ordinary reachable modules here, not public entrypoints.
-        for (const key of exports.keys())
-          if (!keys.has(key)) exports.delete(key)
-        if (!Object.keys(entries).length)
-          throw unbundleError(
-            'BUNCHEE_UNBUNDLE_NO_ENTRIES',
-            'No unbundle entries found. Define package.json exports and matching source files.',
-          )
-        computeRoots(entries)
-      }
+      const selected: Entries = {}
+      for (const [name, entry] of Object.entries(entries))
+        if (entry.targets.some((target) => declaredTargets.has(target.path)))
+          selected[name] = entry
+      if (!Object.keys(selected).length)
+        throw unbundleError(
+          'BUNCHEE_UNBUNDLE_NO_ENTRIES',
+          'No unbundle entries found. Define package.json exports and matching source files.',
+        )
+      computeRoots(selected)
+      return selected
     },
     createOutputState: createUnbundleOutputState,
     graphShape: (env, entry, target) => [

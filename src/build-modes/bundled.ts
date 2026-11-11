@@ -10,7 +10,7 @@ export const bundledMode: BuildMode = {
   allowWorkers: true,
   resolveInput: (cwd, entry) => ({ cwd, entry }),
   validatePackage() {},
-  prepareEntries: () => () => {},
+  selectEntries: (entries) => entries,
   createOutputState: (entries) => createOutputState({ entries }),
   graphShape: (env, entry, target) => [
     JSON.stringify(getDefinedInlineVariables(env, entry)),
