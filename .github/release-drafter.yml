@@ -1,4 +1,4 @@
-name-template: 'Bunchee v$RESOLVED_VERSION'
+name-template: 'v$RESOLVED_VERSION'
 tag-template: 'v$RESOLVED_VERSION'
 
 categories:
@@ -26,7 +26,7 @@ autolabeler:
     title:
       - '/^(fix|perf|refactor|enhance|improve|dx)(\([^)]+\))?!?:/i'
 
-change-template: '- $TITLE (#$NUMBER) @$AUTHOR'
+change-template: '- $TITLE (#$NUMBER)'
 change-title-escapes: '\<*_&'
 sort-by: merged_at
 sort-direction: ascending
