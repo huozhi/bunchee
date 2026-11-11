@@ -13,7 +13,6 @@ export async function buildOutputConfigs(
   exportCondition: ParsedExportCondition,
   buildContext: BuildContext,
   dts: boolean,
-  merged: boolean = false,
 ): Promise<OutputOptions> {
   const { format } = bundleConfig
   const {
@@ -70,7 +69,6 @@ export async function buildOutputConfigs(
     manualChunks: createSplitChunks(
       pluginContext.moduleDirectiveLayerMap,
       entryFiles,
-      merged,
       chunkBaseNames,
     ),
     chunkFileNames(chunk) {

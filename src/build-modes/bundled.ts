@@ -6,7 +6,6 @@ import { getSpecialExportTypeFromConditionNames } from '../entries'
 
 /** Existing bundled behavior; mode-specific state stays out of BuildContext. */
 export const bundledMode: BuildMode = {
-  forceMerged: false,
   allowWorkers: true,
   resolveInput: (cwd, entry) => ({ cwd, entry }),
   validatePackage() {},

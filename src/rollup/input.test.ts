@@ -28,10 +28,25 @@ test('JS graphs leave declaration plugin initialization to the DTS graph', async
     },
   }
 
-  await buildInputConfig(entry.source, { dts: false }, entry, context, false)
+  const inputs = { index: entry.source }
+  await buildInputConfig(
+    entry.source,
+    { dts: false },
+    entry,
+    context,
+    false,
+    inputs,
+  )
   expect(context.pluginContext.dtsPlugin).toBeUndefined()
 
-  const config = await buildInputConfig(entry.source, {}, entry, context, true)
+  const config = await buildInputConfig(
+    entry.source,
+    {},
+    entry,
+    context,
+    true,
+    inputs,
+  )
   expect(context.pluginContext.dtsPlugin).toBeDefined()
   expect(config.plugins).toContain(await context.pluginContext.dtsPlugin)
 })

@@ -1,6 +1,6 @@
 import { OutputOptions, Plugin } from 'rollup'
 import { Entries, ParsedExportCondition } from '../types'
-import { dirname, posix, relative, resolve } from 'path'
+import { dirname, relative, resolve } from 'path'
 import { posixRelativify } from '../lib/format'
 import { getSpecialExportTypeFromConditionNames } from '../entries'
 import {
@@ -210,7 +210,6 @@ export function buildSourceToBundleMap({
 
 // Alias entry key to dist bundle path
 export function aliasEntries({
-  entry: sourceFilePath,
   exportCondition,
   entries,
   isESMPkg,
@@ -219,7 +218,6 @@ export function aliasEntries({
   cwd,
   mergedSources,
 }: {
-  entry: string
   entries: Entries
   format: OutputOptions['format']
   isESMPkg: boolean
@@ -227,11 +225,11 @@ export function aliasEntries({
   dts: boolean
   cwd: string
   /**
-   * The sources this build owns as inputs. When set, the build is a merged one:
-   * rollup emits the references between these itself, and only entries outside
-   * the set need rewriting to a `<dist>` path.
+   * The sources this build owns as inputs: rollup emits the references between
+   * these itself, and only entries outside the set need rewriting to a
+   * `<dist>` path.
    */
-  mergedSources?: Set<string>
+  mergedSources: Set<string>
 }): Plugin {
   const sourceToRelativeBundleMap = buildSourceToBundleMap({
     entries,
@@ -241,79 +239,40 @@ export function aliasEntries({
     dts,
   })
 
-  if (mergedSources) {
-    return {
-      name: 'alias',
-      resolveId: {
-        async handler(source, importer, options) {
-          const resolved = await this.resolve(source, importer, options)
-          if (resolved == null) return null
-          // An input of this build: rollup emits the cross-chunk reference.
-          if (mergedSources.has(resolved.id)) return null
-
-          const bundlePath = sourceToRelativeBundleMap.get(resolved.id)
-          if (!bundlePath) return null
-          // Resolved with the platform's own path rules — `cwd` and the dist
-          // paths are native, and mixing them with posix helpers treats a
-          // Windows path as a single segment.
-          return {
-            id: SIBLING_MARK + resolve(cwd, bundlePath),
-            external: true,
-          }
-        },
-      },
-      renderChunk(code, chunk, outputOptions) {
-        if (!code.includes(SIBLING_MARK)) return null
-        const chunkDir = dirname(
-          resolve(outputOptions.dir ?? cwd, chunk.fileName),
-        )
-        const rewritten = code.replace(
-          // The mark is followed by an absolute path, up to the quote that
-          // closes the module specifier.
-          new RegExp(`${SIBLING_MARK}([^'"]+)`, 'g'),
-          (_, target: string) =>
-            // The specifier is always posix, whatever the platform's paths are.
-            posixRelativify(normalizePath(relative(chunkDir, target))),
-        )
-        return { code: rewritten, map: null }
-      },
-    }
-  }
-
   return {
     name: 'alias',
     resolveId: {
       async handler(source, importer, options) {
         const resolved = await this.resolve(source, importer, options)
+        if (resolved == null) return null
+        // An input of this build: rollup emits the cross-chunk reference.
+        if (mergedSources.has(resolved.id)) return null
 
-        if (resolved != null) {
-          // For types, generate relative path to the other type files,
-          // this will be compatible for the node10 ts module resolution.
-          let srcBundle = sourceToRelativeBundleMap.get(sourceFilePath)
-          // Resolved module bundle path
-          let resolvedModuleBundle = sourceToRelativeBundleMap.get(resolved.id)
-
-          if (
-            resolved.id !== sourceFilePath &&
-            srcBundle &&
-            resolvedModuleBundle
-          ) {
-            const absoluteBundlePath = posix.resolve(cwd, srcBundle)
-            const absoluteImportBundlePath = posix.resolve(
-              cwd,
-              resolvedModuleBundle,
-            )
-
-            const filePathBase = posix.relative(
-              posix.dirname(absoluteBundlePath),
-              absoluteImportBundlePath,
-            )!
-            const relativePath = posixRelativify(normalizePath(filePathBase))
-            return { id: relativePath, external: true }
-          }
+        const bundlePath = sourceToRelativeBundleMap.get(resolved.id)
+        if (!bundlePath) return null
+        // Resolved with the platform's own path rules — `cwd` and the dist
+        // paths are native, and mixing them with posix helpers treats a
+        // Windows path as a single segment.
+        return {
+          id: SIBLING_MARK + resolve(cwd, bundlePath),
+          external: true,
         }
-        return null
       },
+    },
+    renderChunk(code, chunk, outputOptions) {
+      if (!code.includes(SIBLING_MARK)) return null
+      const chunkDir = dirname(
+        resolve(outputOptions.dir ?? cwd, chunk.fileName),
+      )
+      const rewritten = code.replace(
+        // The mark is followed by an absolute path, up to the quote that
+        // closes the module specifier.
+        new RegExp(`${SIBLING_MARK}([^'"]+)`, 'g'),
+        (_, target: string) =>
+          // The specifier is always posix, whatever the platform's paths are.
+          posixRelativify(normalizePath(relative(chunkDir, target))),
+      )
+      return { code: rewritten, map: null }
     },
   }
 }

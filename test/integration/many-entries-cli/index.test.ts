@@ -7,10 +7,11 @@ import {
 } from '../../testing-utils'
 import { executeBunchee } from '../../testing-utils/shared'
 
-// Nine entries, so the build fans out to workers, and the `.` export has no
-// src/index.ts behind it — it exists only because an entry file is passed on
-// the command line. A worker that does not replay that entry path resolves a
-// different entries map than the main thread listed, and silently builds
+// Nine entries, and the `.` export has no src/index.ts behind it — it exists
+// only because an entry file is passed on the command line. The CLI entry goes
+// through the same merged graphs as everything else. When declarations are
+// split across workers, a worker that does not replay that entry path resolves
+// a different entries map than the main thread listed, and silently builds
 // nothing for the entry it was assigned.
 const dir = __dirname
 const distDir = path.join(dir, 'dist')
@@ -39,9 +40,9 @@ describe('integration - many-entries-cli', () => {
     expect(stdout).toMatch(/^\.\s+dist\/index\.d\.ts/m)
   }, 120_000)
 
-  it('should produce the same output as an in-process build', async () => {
-    const workers = await build()
-    const inProcess = await build({ TEST_NO_WORKERS: '1' })
+  it('should produce the same output when declarations go to workers', async () => {
+    const inProcess = await build()
+    const workers = await build({ TEST_WORKERS: '1', BUNCHEE_DTS_SHARDS: '2' })
 
     expect(inProcess.files).toEqual(workers.files)
   }, 240_000)

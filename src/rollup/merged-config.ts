@@ -3,7 +3,6 @@ import type { OutputOptions } from 'rollup'
 import type {
   BuildContext,
   BundleConfig,
-  Entries,
   MergedRollupConfig,
   ParsedExportCondition,
   bundleEntryOptions,
@@ -38,42 +37,6 @@ type Group = {
   claimed: Map<string, string>
   /** Source -> the absolute output file it claimed in this group. */
   claimedBySource: Map<string, string>
-}
-
-/**
- * Whether every entry can share one module graph.
- *
- * This merges all-or-nothing. Partial merging is possible but a standalone
- * entry importing a merged one has to go back through the alias plugin for its
- * `<pkg>/<subpath>` rewrite, and that interaction wants designing on its own.
- */
-export async function canMergeEntries(
-  entries: Entries,
-  bundleConfig: BundleConfig,
-  isFromCli: boolean,
-): Promise<boolean> {
-  const reason = await findMergeBlocker(entries, bundleConfig, isFromCli)
-  if (reason && process.env.DEBUG) {
-    logger.log(`Not merging entries into shared rollup instances: ${reason}`)
-  }
-  return reason == null
-}
-
-/** Why this package cannot be merged, or `undefined` if it can. */
-async function findMergeBlocker(
-  entries: Entries,
-  bundleConfig: BundleConfig,
-  isFromCli: boolean,
-): Promise<string | undefined> {
-  // A CLI `-o` build has a single explicit output; nothing to merge.
-  if (isFromCli || bundleConfig.file) return 'building a single CLI output'
-  // Watch mode drives one rollup watcher per config; merging it is separate work.
-  if (bundleConfig.watch) return 'watch mode'
-
-  const exportPaths = Object.keys(entries)
-  if (exportPaths.length === 0) return 'no entries resolved'
-
-  return undefined
 }
 
 /** `.` -> `index`, `./a` -> `a`, `./foo/bar` -> `foo/bar` */
@@ -401,7 +364,6 @@ async function buildMergedConfig(
       },
       buildContext,
       dts,
-      true,
     )
 
     const dir = commonRootDir([...outputFiles.values()].map((f) => dirname(f)))
@@ -411,7 +373,7 @@ async function buildMergedConfig(
           ...outputOptions,
           dir,
           // Each entry keeps the exact path its export condition declares, which
-          // the per-entry path gets for free from a single `output.file`.
+          // a single `output.file` would give it.
           entryFileNames(chunk) {
             const file =
               (chunk.facadeModuleId &&

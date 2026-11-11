@@ -11,7 +11,6 @@ import type { OutputState } from '../plugins/output-state-plugin'
 
 /** Build policies consumed by the shared entry planner and Rollup pipeline. */
 export type BuildMode = {
-  forceMerged: boolean
   allowWorkers: boolean
   resolveInput(cwd: string, entry: string): { cwd: string; entry: string }
   validatePackage(pkg: PackageMetadata): void
