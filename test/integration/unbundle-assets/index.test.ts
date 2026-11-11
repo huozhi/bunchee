@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { execFile } from 'child_process'
+import { exec as execCallback, execFile } from 'child_process'
 import { promisify } from 'util'
 import os from 'os'
 import path from 'path'
@@ -11,6 +11,7 @@ import {
 } from '../../testing-utils'
 
 const exec = promisify(execFile)
+const execShell = promisify(execCallback)
 const { job, distDir } = createJob({
   directory: __dirname,
   args: ['--unbundle', '--runtime', 'node'],
@@ -74,9 +75,9 @@ test('both formats run, including the native addon and the vendored dependency',
 test('npm pack publishes every unbundled file, including _vendor and _virtual', async () => {
   // npm drops node_modules directories from a tarball, which is why vendored
   // modules must never be written under one. Ask npm what it would publish.
-  const { stdout } = await exec(
-    'npm',
-    ['pack', '--dry-run', '--json', '--ignore-scripts'],
+  // npm is a .cmd script on Windows, so it needs a shell.
+  const { stdout } = await execShell(
+    'npm pack --dry-run --json --ignore-scripts',
     {
       cwd: __dirname,
       env: {
