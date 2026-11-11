@@ -229,7 +229,6 @@ async function bundle(
   options._callbacks?.onBuildStart?.(buildContext)
 
   const generateTypes = hasTsConfig && options.dts !== false
-  mode.prepareTypes(entries, generateTypes)
   const rollupJobsOptions: BundleJobOptions = { isFromCli, generateTypes }
 
   const entryNames = Object.keys(entries)

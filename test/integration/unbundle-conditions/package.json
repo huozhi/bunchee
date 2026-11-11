@@ -3,6 +3,7 @@
   "type": "module",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "development": "./dist/index.development.js",
       "production": "./dist/index.production.js",
       "react-server": "./dist/index.react-server.js",
@@ -13,6 +14,10 @@
       "development": {
         "react-server": "./dist/combined.development.react-server.js"
       }
+    },
+    "./client": {
+      "react-server": "./dist/client/index.react-server.js",
+      "default": "./dist/client/index.js"
     }
   }
 }

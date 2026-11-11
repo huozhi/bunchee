@@ -4,18 +4,14 @@ import { SRC } from '../../constants'
 import type { BundleConfig, Entries } from '../../types'
 import type { BuildMode } from '../types'
 import { bundledMode } from '../bundled'
-import { isTypescriptFile } from '../../utils'
-import { getExportFileTypePath } from '../../exports'
 import { commonRootDir } from '../../lib/common-root'
 import { logger } from '../../logger'
 import {
-  claimUnbundleOutput,
   createUnbundleFileNames,
   getConditionSuffix,
   unbundleError,
 } from './paths'
 import { unbundleOutputGuard } from './output-guard'
-import { createUnbundleModuleTracker } from './modules-plugin'
 import { unbundledNativeAddon } from './native-addon'
 import { createUnbundleOutputState } from './output-state'
 
@@ -33,7 +29,6 @@ export function createUnbundleMode(options: BundleConfig): BuildMode {
     )
 
   const registry = new Map<string, string>()
-  const modulePlugin = createUnbundleModuleTracker()
   // Build-wide roots. Every graph maps a module to the same path, so a graph
   // whose entries all live in a subdirectory (a `react-server` subpath, say)
   // still places shared modules where the default graph does.
@@ -106,13 +101,8 @@ export function createUnbundleMode(options: BundleConfig): BuildMode {
             'BUNCHEE_UNBUNDLE_NO_ENTRIES',
             'No unbundle entries found. Define package.json exports and matching source files.',
           )
+        computeRoots(entries)
       }
-    },
-    prepareTypes(entries, generateTypes) {
-      // Runs after entry filtering and declaration targets, so the roots see
-      // every public file this build writes.
-      if (generateTypes) addDeclarationTargets(entries)
-      computeRoots(entries)
     },
     createOutputState: createUnbundleOutputState,
     graphShape: (env, entry, target) => [
@@ -120,25 +110,13 @@ export function createUnbundleMode(options: BundleConfig): BuildMode {
       getConditionSuffix(target),
     ],
     oneOutputPerSource: true,
-    declarationTarget: (target, path) => ({ ...target, path }),
     // Preserved declaration files keep their imports, so the DTS plugin must
     // resolve tsconfig `paths` aliases (`@utils/x`) to rewrite them into
     // relative specifiers. With an auto-discovered tsconfig the plugin is not
     // handed the file, so pass the resolved options through explicitly.
     declarationOptions: (compilerOptions) => compilerOptions,
-    inputPlugins(context, dts, inputs, target) {
-      return [
-        modulePlugin({
-          inputs,
-          suffix: getConditionSuffix(target),
-          dts,
-          entrySources: new Set(
-            Object.values(context.entries).map((entry) => entry.source),
-          ),
-          allowJs: Boolean(context.tsOptions.tsCompilerOptions?.allowJs),
-        }),
-        unbundleOutputGuard(registry),
-      ]
+    inputPlugins() {
+      return [unbundleOutputGuard(registry)]
     },
     nativeAddonPlugin: unbundledNativeAddon,
     configureOutput(output, _sources, files, target) {
@@ -147,8 +125,6 @@ export function createUnbundleMode(options: BundleConfig): BuildMode {
         outRoots.get(ext) ?? output.dir!,
         ...[...files.values()].map(dirname),
       ])
-      for (const [source, file] of files)
-        claimUnbundleOutput(registry, file, source, dir)
       const preserved = {
         ...output,
         dir,
@@ -175,31 +151,5 @@ export function createUnbundleMode(options: BundleConfig): BuildMode {
           'Unbundle output keeps individual modules. Consider setting "sideEffects": false or listing side-effectful files (for example CSS) in package.json.',
         )
     },
-  }
-}
-
-/** Give every TypeScript entry a declaration target per JS output. */
-function addDeclarationTargets(entries: Entries): void {
-  for (const entry of Object.values(entries)) {
-    if (!isTypescriptFile(entry.source)) continue
-    const types = entry.targets.filter((target) =>
-      /\.d\.[cm]?ts$/.test(target.path),
-    )
-    for (const target of [...entry.targets]) {
-      if (/\.d\.[cm]?ts$/.test(target.path)) continue
-      const path = getExportFileTypePath(target.path)
-      const extension = /\.d\.[cm]?ts$/.exec(path)![0]
-      if (
-        !types.some(
-          (type) =>
-            type.path.endsWith(extension) &&
-            getConditionSuffix(type) === getConditionSuffix(target),
-        )
-      )
-        entry.targets.push({
-          path,
-          conditions: [...target.conditions, 'types'],
-        })
-    }
   }
 }

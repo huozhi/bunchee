@@ -10,6 +10,6 @@ test('a commonjs package uses .mjs and .d.mts for its ESM modules', async () => 
   expect(files['index.mjs']).toContain("'./utils/create.mjs'")
   expect(files['index.js']).toContain("'./utils/create.js'")
   expect(files['index.d.mts']).toContain("'./utils/create.mjs'")
-  expect(files['utils/create.d.mts']).toContain("'../index.mjs'")
-  expect(files['utils/create.d.ts']).toContain("'../index.js'")
+  expect(files['utils/create.d.mts']).toContain("'./types.mjs'")
+  expect(files['utils/create.d.ts']).toContain("'./types.js'")
 })

@@ -44,10 +44,3 @@ test('unbundle emits nested declarations, matching extensions, and declaration m
     ).toBeGreaterThan(0)
   }
 })
-
-test('implementation-only TypeScript modules also get individual declarations', async () => {
-  const files = await getFileContents(distDir)
-  expect(files['utils/compute.js']).toBeDefined()
-  expect(files['utils/compute.d.ts']).toContain('compute')
-  expect(files['utils/compute.d.cts']).toContain('compute')
-})

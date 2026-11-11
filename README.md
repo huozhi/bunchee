@@ -323,7 +323,7 @@ src/utils/format.ts   → dist/utils/format.js + dist/utils/format.cjs
 src/data.json         → dist/data.json.js + dist/data.json.cjs
 ```
 
-The example assumes a `type: module` package declaring both ESM and CJS exports. TypeScript modules also receive separate `.d.ts` / `.d.cts` declarations, with declaration maps when configured. CommonJS packages use `.mjs` / `.d.mts` for their ESM output. Unreachable source files are omitted.
+The example assumes a `type: module` package declaring both ESM and CJS exports. When exports declare `types`, declarations are preserved the same way (`.d.ts` / `.d.cts`, with declaration maps when configured) for every module the public types reach. As in bundled builds, declarations are emitted per format, not per runtime condition. CommonJS packages use `.mjs` / `.d.mts` for their ESM output. Unreachable source files are omitted.
 
 Unlike `tsc`, unbundle uses Bunchee's existing dual-format, alias, env, directive, and resource plugins, and rewrites relative imports to each output's extension. Condition builds add suffixes such as `.react-server` or `.development` to internal files. Inlined dependencies go under `_vendor/`, and generated virtual modules go under `_virtual/`; output collisions fail the build.
 

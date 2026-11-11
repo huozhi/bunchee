@@ -16,7 +16,6 @@ export type BuildMode = {
   resolveInput(cwd: string, entry: string): { cwd: string; entry: string }
   validatePackage(pkg: PackageMetadata): void
   prepareEntries(exports: ParsedExportsInfo): (entries: Entries) => void
-  prepareTypes(entries: Entries, generateTypes: boolean): void
   createOutputState(entries: Entries): OutputState
   graphShape(
     env: string[],
@@ -25,7 +24,6 @@ export type BuildMode = {
   ): string[]
   /** Whether a source may claim at most one output file per merged graph. */
   oneOutputPerSource: boolean
-  declarationTarget(target: OutputTarget, file: string): OutputTarget
   declarationOptions(
     options: CompilerOptions | undefined,
   ): CompilerOptions | undefined
