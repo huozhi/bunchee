@@ -4,12 +4,31 @@ import { type FilterPattern, createFilter } from '@rollup/pluginutils'
 
 const helpers = {
   cssImport: {
+    // Prefer a constructable stylesheet adopted by the document: it is not an
+    // inline <style> element, so a Content-Security-Policy without
+    // 'unsafe-inline' in style-src does not block it, and no nonce is needed.
+    // replaceSync drops @import rules, so CSS using them, and environments
+    // without adoptedStyleSheets, fall back to a <style> element.
+    // The helper is injected after transpilation: keep it ES5.
     // have to assign r.type = 'text/css' to make it work in Safari
     global: `\
 function __insertCSS(code) {
   if (!code || typeof document == 'undefined') return
-  let head = document.head || document.getElementsByTagName('head')[0]
-  let style = document.createElement('style')
+  if (
+    code.indexOf('@import') < 0 &&
+    typeof CSSStyleSheet == 'function' &&
+    'adoptedStyleSheets' in document &&
+    'replaceSync' in CSSStyleSheet.prototype
+  ) {
+    try {
+      var sheet = new CSSStyleSheet()
+      sheet.replaceSync(code)
+      document.adoptedStyleSheets = document.adoptedStyleSheets.concat(sheet)
+      return
+    } catch (e) {}
+  }
+  var head = document.head || document.getElementsByTagName('head')[0]
+  var style = document.createElement('style')
   style.type = 'text/css'
   head.appendChild(style)
   ;style.styleSheet ? (style.styleSheet.cssText = code) : style.appendChild(document.createTextNode(code))
@@ -29,6 +48,9 @@ export default sheet`
     },
   },
 } as const
+
+/** @internal Exposed for tests. */
+export const insertCssHelper = helpers.cssImport.global
 
 const cleanCssInstance = new CleanCSS({})
 function minify(code: string) {

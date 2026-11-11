@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest'
 import { rollup } from 'rollup'
-import { inlineCss } from './inline-css'
+import vm from 'vm'
+import { inlineCss, insertCssHelper } from './inline-css'
 
 test.each([false, true])(
   'injects the CSS helper only in chunks containing CSS (shared: %s)',
@@ -45,3 +46,66 @@ test.each([false, true])(
     }
   },
 )
+
+/** Runs the injected helper against a minimal fake DOM. */
+function insertCss(
+  code: string,
+  { constructable }: { constructable: boolean },
+) {
+  const styleTags: { children: string[] }[] = []
+  class FakeSheet {
+    text = ''
+    replaceSync(text: string) {
+      this.text = text
+    }
+  }
+  const document: Record<string, any> = {
+    head: {
+      appendChild: (node: { children: string[] }) => styleTags.push(node),
+    },
+    createElement: () => ({
+      children: [] as string[],
+      appendChild(text: string) {
+        this.children.push(text)
+      },
+    }),
+    createTextNode: (text: string) => text,
+  }
+  if (constructable) document.adoptedStyleSheets = Object.freeze([])
+  const context = vm.createContext({
+    document,
+    CSSStyleSheet: constructable ? FakeSheet : undefined,
+  })
+  vm.runInContext(
+    `${insertCssHelper}\n__insertCSS(${JSON.stringify(code)})`,
+    context,
+  )
+  return {
+    adopted: (document.adoptedStyleSheets ?? []).map(
+      (sheet: FakeSheet) => sheet.text,
+    ),
+    styleTags: styleTags.map((tag) => tag.children.join('')),
+  }
+}
+
+test('adopts a constructable stylesheet, which CSP style-src does not block', () => {
+  expect(insertCss('a{color:red}', { constructable: true })).toEqual({
+    adopted: ['a{color:red}'],
+    styleTags: [],
+  })
+})
+
+test('falls back to a <style> element without adoptedStyleSheets', () => {
+  expect(insertCss('a{color:red}', { constructable: false })).toEqual({
+    adopted: [],
+    styleTags: ['a{color:red}'],
+  })
+})
+
+test('falls back to a <style> element for @import, which replaceSync drops', () => {
+  const code = '@import url(x.css);a{color:red}'
+  expect(insertCss(code, { constructable: true })).toEqual({
+    adopted: [],
+    styleTags: [code],
+  })
+})
