@@ -6,6 +6,7 @@ import type { BuildMode } from '../types'
 import { bundledMode } from '../bundled'
 import { commonRootDir } from '../../lib/common-root'
 import { logger } from '../../logger'
+import { normalizePath } from '../../utils'
 import {
   createUnbundleFileNames,
   getConditionSuffix,
@@ -13,7 +14,7 @@ import {
 } from './paths'
 import { unbundleOutputGuard } from './output-guard'
 import { unbundledNativeAddon } from './native-addon'
-import { createUnbundleOutputState } from './output-state'
+import { createOutputState } from '../../plugins/output-state-plugin'
 
 /** All unbundle policy and per-build state live behind this adapter. */
 export function createUnbundleMode(options: BundleConfig): BuildMode {
@@ -80,31 +81,29 @@ export function createUnbundleMode(options: BundleConfig): BuildMode {
           'Unbundle requires package.json exports or bin entries. Define them instead of relying on main/module or an inferred CLI output.',
         )
     },
-    prepareEntries(exports) {
-      const keys = new Set(exports.keys())
-      const targets = new Set(
-        [...exports.values()].flatMap((items) =>
-          items.map((target) => target.path),
+    selectEntries(entries, declared) {
+      // Discovery also finds private shared modules (`_internal/`, `lib/_x`)
+      // and turns them into entries so bundled builds can split them out.
+      // Here they are ordinary reachable modules, not public entrypoints.
+      const declaredTargets = new Set(
+        [...declared.values()].flatMap((targets) =>
+          targets.map((target) => target.path),
         ),
       )
-      return (entries) => {
-        for (const [name, entry] of Object.entries(entries)) {
-          if (!entry.targets.some((target) => targets.has(target.path)))
-            delete entries[name]
-        }
-        // Discovery adds synthetic private exports for bundled builds. They
-        // become ordinary reachable modules here, not public entrypoints.
-        for (const key of exports.keys())
-          if (!keys.has(key)) exports.delete(key)
-        if (!Object.keys(entries).length)
-          throw unbundleError(
-            'BUNCHEE_UNBUNDLE_NO_ENTRIES',
-            'No unbundle entries found. Define package.json exports and matching source files.',
-          )
-        computeRoots(entries)
-      }
+      const selected: Entries = {}
+      for (const [name, entry] of Object.entries(entries))
+        if (entry.targets.some((target) => declaredTargets.has(target.path)))
+          selected[name] = entry
+      if (!Object.keys(selected).length)
+        throw unbundleError(
+          'BUNCHEE_UNBUNDLE_NO_ENTRIES',
+          'No unbundle entries found. Define package.json exports and matching source files.',
+        )
+      computeRoots(selected)
+      return selected
     },
-    createOutputState: createUnbundleOutputState,
+    createOutputState: (entries) =>
+      createOutputState({ entries, summarizeInternal: true }),
     graphShape: (env, entry, target) => [
       ...bundledMode.graphShape(env, { ...entry, targets: [target] }, target),
       getConditionSuffix(target),
@@ -143,7 +142,21 @@ export function createUnbundleMode(options: BundleConfig): BuildMode {
       delete preserved.chunkFileNames
       return preserved
     },
-    finish({ pkg }) {
+    finish({ pkg, pluginContext }) {
+      const vendored = new Set(
+        pluginContext.outputState
+          .getInternalFiles()
+          .map((file) => file.source)
+          .filter(
+            (source) =>
+              !source.startsWith('\0') &&
+              normalizePath(source).includes('/node_modules/'),
+          ),
+      ).size
+      if (vendored)
+        logger.info(
+          `${vendored} ${vendored === 1 ? 'module' : 'modules'} from node_modules ${vendored === 1 ? 'was' : 'were'} inlined to _vendor/`,
+        )
       // A hint, not a problem: without the field, consumers simply treat every
       // module as side-effectful, which is safe.
       if (pkg.sideEffects === undefined)

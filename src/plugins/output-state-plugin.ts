@@ -19,19 +19,36 @@ import {
 // [filename, sourceFileName, size]
 type FileState = [string, string, number]
 export type SizeStats = Map<string, FileState[]>
+/** A written file that is not a public entry: a shared chunk or an asset. */
+export type InternalFile = { source: string; bytes: number; asset: boolean }
 export type OutputState = ReturnType<typeof createOutputState>
 
 // Example: @foo/bar -> bar
 const removeScope = (exportPath: string) => exportPath.replace(/^@[^/]+\//, '')
 
-function createOutputState({ entries }: { entries: Entries }): {
+function createOutputState({
+  entries,
+  summarizeInternal = false,
+}: {
+  entries: Entries
+  /**
+   * Also collect every written file that is not an entry chunk, and log them
+   * as one summary line per kind under the entry table. For builds whose
+   * output is mostly internal files (unbundle). Collected on this process
+   * only: `mergeSizeStats` carries the entry table, not the summary.
+   */
+  summarizeInternal?: boolean
+}): {
   plugin(cwd: string): Plugin
   getSizeStats(): SizeStats
+  getInternalFiles(): InternalFile[]
   log(): void
   mergeSizeStats(other: SizeStats): void
 } {
   const sizeStats: SizeStats = new Map()
   const uniqFiles = new Set<string>()
+  /** Absolute output path -> file, so a file written twice counts once. */
+  const internalFiles = new Map<string, InternalFile>()
 
   function addSize({
     fileName,
@@ -69,10 +86,21 @@ function createOutputState({ entries }: { entries: Entries }): {
           const dir = options.dir || path.dirname(options.file!)
           Object.entries(bundle).forEach(([fileName, chunk]) => {
             const filePath = path.join(dir, fileName)
-            if (chunk.type !== 'chunk') {
-              return
-            }
-            if (!chunk.isEntry) {
+            if (chunk.type !== 'chunk' || !chunk.isEntry) {
+              if (summarizeInternal) {
+                const code = chunk.type === 'chunk' ? chunk.code : chunk.source
+                internalFiles.set(filePath, {
+                  source:
+                    chunk.type === 'chunk'
+                      ? (chunk.facadeModuleId ?? fileName)
+                      : fileName,
+                  bytes:
+                    typeof code === 'string'
+                      ? Buffer.byteLength(code)
+                      : code.byteLength,
+                  asset: chunk.type === 'asset',
+                })
+              }
               return
             }
             const size = chunk.code.length
@@ -92,9 +120,13 @@ function createOutputState({ entries }: { entries: Entries }): {
     },
     log() {
       logOutputState(sizeStats)
+      if (summarizeInternal) logInternalSummary([...internalFiles.values()])
     },
     getSizeStats() {
       return sizeStats
+    },
+    getInternalFiles() {
+      return [...internalFiles.values()]
     },
     mergeSizeStats(other: SizeStats) {
       for (const [exportPath, fileStates] of other) {
@@ -129,6 +161,23 @@ function normalizeExportName(exportName: string): string {
       (specialConditionName !== 'default' ? ` (${specialConditionName})` : '')
   }
   return result
+}
+
+const plural = (count: number, word: string) =>
+  `${count} ${word}${count === 1 ? '' : 's'}`
+
+function logInternalSummary(files: InternalFile[]) {
+  const modules = files.filter((file) => !file.asset)
+  const assets = files.filter((file) => file.asset)
+  const total = (list: InternalFile[]) =>
+    prettyBytes(list.reduce((sum, file) => sum + file.bytes, 0))
+  // A module written in several formats is still one module.
+  if (modules.length)
+    console.log(
+      `+ ${plural(new Set(modules.map((file) => file.source)).size, 'internal module')}  ${total(modules)}`,
+    )
+  if (assets.length)
+    console.log(`+ ${plural(assets.length, 'asset')}  ${total(assets)}`)
 }
 
 function logOutputState(stats: SizeStats) {

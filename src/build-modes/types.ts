@@ -15,7 +15,12 @@ export type BuildMode = {
   allowWorkers: boolean
   resolveInput(cwd: string, entry: string): { cwd: string; entry: string }
   validatePackage(pkg: PackageMetadata): void
-  prepareEntries(exports: ParsedExportsInfo): (entries: Entries) => void
+  /**
+   * The entries to build, chosen from everything entry discovery found.
+   * `declared` is the package.json exports as written, before discovery
+   * added private shared modules. Must not mutate its arguments.
+   */
+  selectEntries(entries: Entries, declared: ParsedExportsInfo): Entries
   createOutputState(entries: Entries): OutputState
   graphShape(
     env: string[],
