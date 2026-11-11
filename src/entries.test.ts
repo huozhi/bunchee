@@ -2,7 +2,12 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import path from 'path'
 import { afterEach, describe, expect, it } from 'vitest'
-import { findReachablePrivateFiles, normalizeExportPath } from './entries'
+import {
+  collectEntriesFromParsedExports,
+  findReachablePrivateFiles,
+  normalizeExportPath,
+} from './entries'
+import type { ParsedExportsInfo } from './exports'
 
 describe('normalizeExportPath', () => {
   it('should strip export condition suffixes', () => {
@@ -224,5 +229,50 @@ describe('findReachablePrivateFiles', () => {
         ['_a.ts'],
       ),
     ).toEqual([])
+  })
+})
+
+describe('collectEntriesFromParsedExports', () => {
+  const created: string[] = []
+
+  afterEach(() => {
+    while (created.length)
+      rmSync(created.pop()!, { recursive: true, force: true })
+  })
+
+  it('should add private shared modules as entries without changing the exports map', async () => {
+    const root = mkdtempSync(path.join(tmpdir(), 'bunchee-entries-'))
+    created.push(root)
+    mkdirSync(path.join(root, 'src'))
+    writeFileSync(
+      path.join(root, 'src/index.ts'),
+      "export { util } from './_util'\n",
+    )
+    writeFileSync(path.join(root, 'src/_util.ts'), 'export const util = 1\n')
+
+    const declared: ParsedExportsInfo = new Map([
+      [
+        './index',
+        [
+          { path: './dist/index.js', conditions: ['import', 'default'] },
+          { path: './dist/index.d.ts', conditions: ['import', 'types'] },
+        ],
+      ],
+    ])
+    const snapshot = structuredClone([...declared])
+
+    const entries = await collectEntriesFromParsedExports(
+      root,
+      declared,
+      { name: 'pkg', type: 'module' },
+      undefined,
+    )
+
+    expect(Object.keys(entries).sort()).toEqual(['./_util', './index'])
+    expect(entries['./_util'].targets.map((target) => target.path)).toContain(
+      './dist/_util.js',
+    )
+    // The private module's targets live on its entry, not in the map.
+    expect([...declared]).toEqual(snapshot)
   })
 })
