@@ -17,8 +17,9 @@ export type BuildMode = {
   validatePackage(pkg: PackageMetadata): void
   /**
    * The entries to build, chosen from everything entry discovery found.
-   * `declared` is the package.json exports as written, before discovery
-   * added private shared modules. Must not mutate its arguments.
+   * `declared` is the package.json exports as written; discovery adds the
+   * private shared modules it finds to `entries` only. Must not mutate its
+   * arguments.
    */
   selectEntries(entries: Entries, declared: ParsedExportsInfo): Entries
   createOutputState(entries: Entries): OutputState

@@ -61,11 +61,20 @@ export async function collectEntriesFromParsedExports(
   }
 
   // Find source files
-  const { bins, exportsEntries } = await collectSourceEntriesFromExportPaths(
-    path.join(cwd, SRC),
-    parsedExportsInfo,
-    pkg,
-  )
+  const { bins, exportsEntries, privateExports } =
+    await collectSourceEntriesFromExportPaths(
+      path.join(cwd, SRC),
+      parsedExportsInfo,
+      pkg,
+    )
+  // Declared exports plus the targets synthesized for private shared modules.
+  // A local view: the caller's map is not modified.
+  const exportsInfo: ParsedExportsInfo = new Map(parsedExportsInfo)
+  for (const [exportPath, targets] of privateExports)
+    exportsInfo.set(exportPath, [
+      ...(exportsInfo.get(exportPath) ?? []),
+      ...targets,
+    ])
 
   // A mapping between each export path and its related special export conditions,
   // excluding the 'default' export condition.
@@ -90,7 +99,7 @@ export async function collectEntriesFromParsedExports(
     const normalizedExportPath = stripSpecialCondition(entryExportPath)
 
     const entryExportPathType = getExportTypeFromExportPath(entryExportPath)
-    const outputExports = parsedExportsInfo.get(normalizedExportPath)
+    const outputExports = exportsInfo.get(normalizedExportPath)
     if (!outputExports) {
       continue
     }
@@ -146,7 +155,7 @@ export async function collectEntriesFromParsedExports(
 
   // Handling binaries
   for (const [exportPath, sourceFile] of bins) {
-    const outputExports = parsedExportsInfo.get(exportPath)
+    const outputExports = exportsInfo.get(exportPath)
     if (!outputExports) {
       continue
     }
@@ -529,6 +538,8 @@ export async function collectSourceEntriesFromExportPaths(
 ) {
   const bins = new Map<string, string>()
   const exportsEntries = new Map<string, Record<string, string>>()
+  /** Output targets synthesized for private shared modules, by export path. */
+  const privateExports: ParsedExportsInfo = new Map()
   let requiredPrivateModuleFormats = ModuleFormat.none
 
   for (const [exportPath, exportInfo] of parsedExportsInfo.entries()) {
@@ -660,14 +671,12 @@ export async function collectSourceEntriesFromExportPaths(
       })
     }
 
-    const exportsInfo = parsedExportsInfo.get(normalizedExportPath)
-    if (!exportsInfo) {
-      // Add private shared files to parsedExportsInfo
-      parsedExportsInfo.set(normalizedExportPath, privateExportInfo)
-    } else {
-      // Merge private shared files to the existing exportsInfo
-      exportsInfo.push(...privateExportInfo)
-    }
+    // Collected separately: the caller's exports map stays as package.json
+    // declares it.
+    privateExports.set(normalizedExportPath, [
+      ...(privateExports.get(normalizedExportPath) ?? []),
+      ...privateExportInfo,
+    ])
 
     // Insert private shared modules into the entries
     const entry = exportsEntries.get(exportPath)
@@ -683,5 +692,6 @@ export async function collectSourceEntriesFromExportPaths(
   return {
     bins,
     exportsEntries,
+    privateExports,
   }
 }
