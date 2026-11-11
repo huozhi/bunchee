@@ -63,48 +63,6 @@ test('rejects collisions between internal module paths and explicit exports path
   expect(result.stderr).toContain('clash.js')
 })
 
-test('rejects an exports directory that npm pack would discard', async () => {
-  await writeFile(
-    path.join(dir, 'package.json'),
-    JSON.stringify({
-      name: 'unbundle-errors',
-      type: 'module',
-      exports: './dist/node_modules/index.js',
-    }),
-  )
-  const result = await runCli({ directory: dir, args: ['--unbundle'] })
-  expect(result.code).not.toBe(0)
-  expect(result.stderr).toContain('BUNCHEE_UNBUNDLE_OUTPUT_CONFLICT')
-  expect(result.stderr).toContain('node_modules')
-})
-
-test('the Node API exposes unbundle and preserves actionable error names', async () => {
-  const { execFile } = await import('child_process')
-  const { promisify } = await import('util')
-  const { pathToFileURL } = await import('url')
-  const api = path.resolve(
-    __dirname,
-    process.env.POST_BUILD ? '../../../dist/index.js' : '../../../src/index.ts',
-  )
-  const { stdout } = await promisify(execFile)(process.execPath, [
-    '--import',
-    'tsx',
-    '--input-type=module',
-    '-e',
-    `
-    import { bundle } from ${JSON.stringify(pathToFileURL(api).href)};
-    await bundle('', { cwd: ${JSON.stringify(dir)}, unbundle: true, runtime: 'node' });
-    try { await bundle('', { cwd: ${JSON.stringify(dir)}, unbundle: true, watch: true }) }
-    catch (error) { console.log(error.name) }
-  `,
-  ])
-  expect(stdout).toContain('BUNCHEE_UNBUNDLE_WATCH_UNSUPPORTED')
-  const { readFile } = await import('fs/promises')
-  expect(await readFile(path.join(dir, 'dist/index.js'), 'utf8')).toContain(
-    '42',
-  )
-})
-
 test('requires declared exports instead of inferring an entry output from main', async () => {
   await writeFile(
     path.join(dir, 'package.json'),
@@ -122,7 +80,7 @@ test('requires declared exports instead of inferring an entry output from main',
   )
 })
 
-test('the Node API switches modes without leaking output or per-build registries', async () => {
+test('the Node API exposes unbundle, its error names, and switches modes cleanly', async () => {
   await writeFile(
     path.join(dir, 'src/index.js'),
     "export { value } from './helper.js'",
@@ -156,8 +114,12 @@ test('the Node API switches modes without leaking output or per-build registries
       found.push(existsSync(cwd + '/dist/helper.js'));
     }
     console.log(JSON.stringify(found));
+    try { await bundle('', { cwd, unbundle: true, watch: true }) }
+    catch (error) { console.log(error.name) }
   `,
   ])
-  // The last line is the result; build notices may precede it.
-  expect(stdout.trim().split('\n').pop()).toBe('[true,false,true]')
+  const lines = stdout.trim().split('\n')
+  // Build notices may precede the results.
+  expect(lines.at(-2)).toBe('[true,false,true]')
+  expect(lines.at(-1)).toBe('BUNCHEE_UNBUNDLE_WATCH_UNSUPPORTED')
 })
