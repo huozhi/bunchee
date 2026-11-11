@@ -1,8 +1,21 @@
 'use client';
 function __insertCSS(code) {
   if (!code || typeof document == 'undefined') return
-  let head = document.head || document.getElementsByTagName('head')[0]
-  let style = document.createElement('style')
+  if (
+    code.indexOf('@import') < 0 &&
+    typeof CSSStyleSheet == 'function' &&
+    'adoptedStyleSheets' in document &&
+    'replaceSync' in CSSStyleSheet.prototype
+  ) {
+    try {
+      var sheet = new CSSStyleSheet()
+      sheet.replaceSync(code)
+      document.adoptedStyleSheets = document.adoptedStyleSheets.concat(sheet)
+      return
+    } catch (e) {}
+  }
+  var head = document.head || document.getElementsByTagName('head')[0]
+  var style = document.createElement('style')
   style.type = 'text/css'
   head.appendChild(style)
   ;style.styleSheet ? (style.styleSheet.cssText = code) : style.appendChild(document.createTextNode(code))

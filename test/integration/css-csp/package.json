@@ -1,0 +1,5 @@
+{
+  "name": "css-csp",
+  "type": "module",
+  "exports": "./dist/index.js"
+}

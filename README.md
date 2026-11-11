@@ -518,7 +518,9 @@ Then you can use `bunchee` to build the development bundle and production bundle
 
 ### CSS
 
-`bunchee` has basic CSS support for pure CSS file imports. It will be bundled into js bundle and insert the style tag into the document head when the bundle is loaded by browser.
+`bunchee` has basic CSS support for pure CSS file imports. The CSS is bundled into the JS bundle and applied when the bundle is loaded in a browser, as a [constructable stylesheet](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleSheet/CSSStyleSheet) added to `document.adoptedStyleSheets`. Adopted stylesheets are not inline `<style>` elements, so pages with a Content Security Policy that omits `'unsafe-inline'` from `style-src` apply them without a nonce. Browsers without `adoptedStyleSheets`, and CSS containing `@import`, fall back to a `<style>` tag in the document head.
+
+Adopted stylesheets come after the document's own stylesheets in the cascade, so with equal specificity the imported CSS wins over page styles.
 
 ```css
 /* src/style.css */
