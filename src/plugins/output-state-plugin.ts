@@ -22,6 +22,26 @@ export type SizeStats = Map<string, FileState[]>
 /** A written file that is not a public entry: a shared chunk or an asset. */
 export type InternalFile = { source: string; bytes: number; asset: boolean }
 export type OutputState = ReturnType<typeof createOutputState>
+/** One written file, as it appears in the `--stats` JSON. */
+export type StatsOutput = {
+  file: string
+  export?: string
+  source?: string
+  bytes: number
+  /** Module path -> bytes it takes in this file. Not set for type files. */
+  modules?: Record<string, number>
+}
+
+/**
+ * A module id as a path relative to cwd: rollup's virtual-module marker and
+ * query strings are dropped, so the name does not depend on the build machine.
+ */
+function toStatsModuleId(id: string, cwd: string): string {
+  const clean = id.replace(/^\0/, '').replace(/\?.*$/, '')
+  return normalizePath(
+    path.isAbsolute(clean) ? path.relative(cwd, clean) : clean,
+  )
+}
 
 // Example: @foo/bar -> bar
 const removeScope = (exportPath: string) => exportPath.replace(/^@[^/]+\//, '')
@@ -42,6 +62,7 @@ function createOutputState({
   plugin(cwd: string): Plugin
   getSizeStats(): SizeStats
   getInternalFiles(): InternalFile[]
+  getStatsOutputs(): StatsOutput[]
   log(): void
   mergeSizeStats(other: SizeStats): void
 } {
@@ -49,6 +70,8 @@ function createOutputState({
   const uniqFiles = new Set<string>()
   /** Absolute output path -> file, so a file written twice counts once. */
   const internalFiles = new Map<string, InternalFile>()
+  /** Every written file, keyed by its path relative to cwd. */
+  const statsOutputs = new Map<string, StatsOutput>()
 
   function addSize({
     fileName,
@@ -86,6 +109,34 @@ function createOutputState({
           const dir = options.dir || path.dirname(options.file!)
           Object.entries(bundle).forEach(([fileName, chunk]) => {
             const filePath = path.join(dir, fileName)
+            const file = normalizePath(path.relative(cwd, filePath))
+            const content = chunk.type === 'chunk' ? chunk.code : chunk.source
+            const statsOutput: StatsOutput = {
+              file,
+              bytes:
+                typeof content === 'string'
+                  ? Buffer.byteLength(content)
+                  : content.byteLength,
+            }
+            if (chunk.type === 'chunk') {
+              if (chunk.isEntry && chunk.facadeModuleId) {
+                const exportPath = reversedMapping.get(chunk.facadeModuleId)
+                if (exportPath) statsOutput.export = removeScope(exportPath)
+              }
+              if (chunk.facadeModuleId) {
+                statsOutput.source = toStatsModuleId(chunk.facadeModuleId, cwd)
+              }
+              if (!isTypeFile(fileName)) {
+                const modules: Record<string, number> = {}
+                for (const [id, info] of Object.entries(chunk.modules)) {
+                  if (info.renderedLength > 0) {
+                    modules[toStatsModuleId(id, cwd)] = info.renderedLength
+                  }
+                }
+                statsOutput.modules = modules
+              }
+            }
+            statsOutputs.set(file, statsOutput)
             if (chunk.type !== 'chunk' || !chunk.isEntry) {
               if (summarizeInternal) {
                 const code = chunk.type === 'chunk' ? chunk.code : chunk.source
@@ -127,6 +178,11 @@ function createOutputState({
     },
     getInternalFiles() {
       return [...internalFiles.values()]
+    },
+    getStatsOutputs() {
+      return [...statsOutputs.values()].sort((a, b) =>
+        a.file.localeCompare(b.file),
+      )
     },
     mergeSizeStats(other: SizeStats) {
       for (const [exportPath, fileStates] of other) {
@@ -277,4 +333,4 @@ function logOutputState(stats: SizeStats) {
   })
 }
 
-export { logOutputState, createOutputState }
+export { logOutputState, createOutputState, normalizeExportName }

@@ -140,6 +140,8 @@ type MergedRollupConfig = CustomRollupInputOptions & {
 
 type CliArgs = {
   unbundle?: boolean
+  /** Print build stats as JSON to stdout. CLI only. */
+  stats?: boolean
   format?: OutputOptions['format']
   minify?: boolean
   sourcemap?: boolean

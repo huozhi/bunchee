@@ -2,7 +2,7 @@ import type { OutputChunk, Plugin } from 'rollup'
 import type { PackageMetadata } from '../types'
 import { createRequire } from 'module'
 import path from 'path'
-import { logger } from '../logger'
+import { warnWithCode } from '../logger'
 
 function hasSwcHelpersDeclared(pkg: PackageMetadata): boolean {
   return Boolean(
@@ -65,7 +65,8 @@ export function swcHelpersWarningPlugin({
         ? ''
         : ' (and add it to your dependencies)'
 
-      logger.warn(
+      warnWithCode(
+        'SWC_HELPERS_MISSING',
         [
           `Your build output imports "@swc/helpers" due to transform, but it isn't installed in this project.`,
           `Install it as a runtime dependency${declaredHint} (e.g. "pnpm add @swc/helpers").`,

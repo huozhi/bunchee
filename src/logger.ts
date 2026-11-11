@@ -87,15 +87,74 @@ export function pauseActiveSpinner(): () => void {
   }
 }
 
+/** A warning or error as it appears in the `--stats` JSON. */
+export type StatsMessage = {
+  code?: string
+  message: string
+  file?: string
+  line?: number
+  column?: number
+}
+
+let statsMessages: { warnings: StatsMessage[]; errors: StatsMessage[] } | null =
+  null
+
+/**
+ * `--stats`: stdout carries only the stats JSON. Everything else that would be
+ * printed to stdout goes to stderr instead, and warnings and errors are also
+ * collected so they can be included in the JSON.
+ */
+export function enableStatsMode() {
+  statsMessages = { warnings: [], errors: [] }
+  console.log = originalConsole.error
+  console.info = originalConsole.error
+}
+
+export function isStatsMode(): boolean {
+  return statsMessages !== null
+}
+
+export function getStatsMessages() {
+  return statsMessages ?? { warnings: [], errors: [] }
+}
+
+export function collectStatsMessage(
+  kind: 'warnings' | 'errors',
+  message: StatsMessage,
+) {
+  statsMessages?.[kind].push(message)
+}
+
+function formatMessage(args: any[]): string {
+  return args
+    .map((arg) =>
+      arg instanceof Error
+        ? arg.message
+        : typeof arg === 'string'
+          ? arg
+          : String(arg),
+    )
+    .join(' ')
+    .trim()
+}
+
+/** `logger.warn` with a stable code, which is kept in the `--stats` JSON. */
+export function warnWithCode(code: string, ...arg: any[]) {
+  console.warn(color('yellow')('!'), ...arg)
+  collectStatsMessage('warnings', { code, message: formatMessage(arg) })
+}
+
 export const logger = {
   log(...arg: any[]) {
     console.log(...arg)
   },
   warn(...arg: any[]) {
     console.warn(color('yellow')('!'), ...arg)
+    collectStatsMessage('warnings', { message: formatMessage(arg) })
   },
   error(...arg: any) {
     console.error(color('red')('⨯'), ...arg)
+    collectStatsMessage('errors', { message: formatMessage(arg) })
   },
   info(...arg: any) {
     console.log(color('green')('✓'), ...arg)

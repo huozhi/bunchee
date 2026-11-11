@@ -11,7 +11,7 @@ import {
   type ParsedExportsInfo,
 } from './exports'
 import { PackageMetadata, type Entries } from './types'
-import { logger } from './logger'
+import { logger, warnWithCode } from './logger'
 import { baseNameWithoutExtension, validateEntryFiles } from './util/file-path'
 import {
   getSourcePathFromExportPath,
@@ -204,7 +204,10 @@ export async function collectBinaries(
       const source = await getSourcePathFromExportPath(cwd, binName, BINARY_TAG)
 
       if (!source) {
-        logger.warn(`Cannot find source file for ${binName}`)
+        warnWithCode(
+          'BIN_MISSING_SOURCE',
+          `Cannot find source file for ${binName}`,
+        )
         continue
       }
 

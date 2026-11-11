@@ -6,10 +6,16 @@ import {
   CustomRollupInputOptions,
   ParsedExportCondition,
 } from '../types'
-import { isBinExportPath, isESModulePackage, isNotNull } from '../utils'
+import {
+  isBinExportPath,
+  isESModulePackage,
+  isNotNull,
+  normalizePath,
+} from '../utils'
+import { collectStatsMessage } from '../logger'
 import { normalizeExportPath } from '../entries'
 import { getDefinedInlineVariables } from '../env'
-import { dirname, posix } from 'path'
+import { dirname, isAbsolute, posix, relative } from 'path'
 import { createRequire } from 'module'
 import { wasm } from '@rollup/plugin-wasm'
 import { swc } from 'rollup-plugin-swc3'
@@ -419,6 +425,18 @@ export async function buildInputConfig(
       if (code === 'MODULE_LEVEL_DIRECTIVE') {
         return
       }
+      const file = warning.loc?.file ?? warning.id
+      collectStatsMessage('warnings', {
+        ...(code && { code }),
+        message: warning.message,
+        ...(file && {
+          file: normalizePath(isAbsolute(file) ? relative(cwd, file) : file),
+        }),
+        ...(warning.loc && {
+          line: warning.loc.line,
+          column: warning.loc.column,
+        }),
+      })
       warn(warning)
     },
   }

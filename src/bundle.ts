@@ -34,7 +34,7 @@ import { collectEntriesFromParsedExports } from './entries'
 import { createMergedRollupJobs } from './rollup-job'
 import { shardEntries, typeShardCount } from './rollup/merged-config'
 import { spawn } from 'child_process'
-import { logger } from './logger'
+import { isStatsMode, warnWithCode } from './logger'
 import { endProfile, startProfile } from './lib/profile'
 import { createBuildMode } from './build-modes'
 import { createOutputCleaner } from './lib/output-cleaner'
@@ -177,7 +177,8 @@ async function bundle(
     (key) => !entries[key] && key !== './package.json',
   )
   if (missingEntries.length > 0 && !options._entryFilter) {
-    logger.warn(
+    warnWithCode(
+      'EXPORT_MISSING_SOURCE',
       `The following exports are defined in package.json but missing source files:\n${missingEntries
         .map((name) => `⨯ ${name}`)
         .join('\n')}\n`,
@@ -242,6 +243,9 @@ async function bundle(
     generateTypes &&
     !options.watch &&
     !options._entryFilter &&
+    // --stats: workers write to the shared stdout directly, which must only
+    // carry the stats JSON, and their warnings would not be collected.
+    !isStatsMode() &&
     // Test-only, not supported options: the tests build the same package
     // both ways and diff the output, and fixtures are far below the threshold.
     !process.env.TEST_NO_WORKERS &&
@@ -303,7 +307,8 @@ async function bundle(
       if (typeof onSuccess === 'string') {
         const successProg = spawn(onSuccess, {
           shell: true,
-          stdio: 'inherit',
+          // --stats keeps stdout for the JSON: send the command's stdout to stderr.
+          stdio: isStatsMode() ? ['inherit', 2, 'inherit'] : 'inherit',
           cwd,
         })
         successProg.on('exit', (code) => {

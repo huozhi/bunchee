@@ -1,4 +1,5 @@
 import { performance } from 'perf_hooks'
+import { isStatsMode } from '../logger'
 
 export const PROFILE_PREFIX = 'BUNCHEE_PROFILE '
 
@@ -75,5 +76,7 @@ export function endProfile(
     performance.now() - startedAt,
     details,
   )
-  process.stdout.write(PROFILE_PREFIX + JSON.stringify(event) + '\n')
+  // --stats keeps stdout for the JSON.
+  const stream = isStatsMode() ? process.stderr : process.stdout
+  stream.write(PROFILE_PREFIX + JSON.stringify(event) + '\n')
 }

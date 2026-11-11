@@ -1,0 +1,5 @@
+{
+  "name": "errors-stats",
+  "type": "module",
+  "exports": "./dist/index.js"
+}

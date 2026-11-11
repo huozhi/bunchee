@@ -375,6 +375,36 @@ A command to be executed after a build is successful can be specified using the 
 bunchee --watch --success "node ./dist/index.js"
 ```
 
+#### Build Stats
+
+`--stats` prints the build result as JSON to stdout, and nothing else, so it can be saved to a file or read by scripts and agents:
+
+```sh
+bunchee --stats > stats.json
+```
+
+It lists the files built for each export, every output file with its size in bytes and the modules it contains, and the warnings and errors of the build, with a `code` and source location when they have one. A failed build still prints the JSON, with `"status": "error"`. Logs go to stderr. `--stats` can't be combined with `--watch`.
+
+```jsonc
+{
+  "version": 1,
+  "status": "success",
+  "exports": { ".": ["dist/index.cjs", "dist/index.js"] },
+  "outputs": [
+    {
+      "file": "dist/index.js",
+      "export": ".",
+      "source": "src/index.ts",
+      "bytes": 1234,
+      // bytes each module takes in this file, before minification
+      "modules": { "src/index.ts": 512, "src/utils.ts": 402 }
+    }
+  ],
+  "warnings": [{ "code": "EXPORT_MISSING_SOURCE", "message": "..." }],
+  "errors": []
+}
+```
+
 #### Prepare Package
 
 ```sh

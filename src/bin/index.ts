@@ -8,7 +8,15 @@ import {
   lintBeforeBuild as lintPackageBeforeBuild,
 } from '../lint'
 import { exit, hasPackageJson } from '../utils'
-import { logger, setActiveSpinner } from '../logger'
+import {
+  collectStatsMessage,
+  enableStatsMode,
+  isStatsMode,
+  logger,
+  setActiveSpinner,
+} from '../logger'
+import { createStats, errorToStatsMessage } from './stats'
+import type { OutputState } from '../plugins/output-state-plugin'
 import { bundle } from '../../src/index'
 import { prepare } from '../prepare'
 import { RollupWatcher } from 'rollup'
@@ -49,6 +57,7 @@ Options:
   --cwd <cwd>            specify current working directory
   --sourcemap            enable sourcemap generation
   --unbundle             emit one output file per source module instead of bundling
+  --stats                print build stats as JSON to stdout, e.g. bunchee --stats > stats.json
   --no-dts               do not generate types, default: undefined
   --tsconfig             path to tsconfig file, default: tsconfig.json
   --dts-bundle           bundle type declaration files, default: false
@@ -75,6 +84,11 @@ async function parseCliArgs(argv: string[]) {
     .option('unbundle', {
       type: 'boolean',
       description: 'emit one output file per source module instead of bundling',
+    })
+    .option('stats', {
+      type: 'boolean',
+      description:
+        'print build stats as JSON to stdout, e.g. bunchee --stats > stats.json',
     })
     .option('watch', {
       type: 'boolean',
@@ -194,6 +208,7 @@ async function parseCliArgs(argv: string[]) {
   const source: string = args._[0] as string
   const parsedArgs: CliArgs = {
     unbundle: args['unbundle'],
+    stats: !!args['stats'],
     source,
     format: args['format'] as CliArgs['format'],
     file: args['output'],
@@ -230,6 +245,21 @@ type Spinner = {
   stop: (text?: string) => void
 }
 
+// --stats: the output state of the build that is running, and the errors that
+// were already collected, so that a failed build is reported once.
+let statsOutputState: OutputState | undefined
+let statsCwd: string | undefined
+const reportedErrors = new WeakSet<object>()
+
+function printStats(status: 'success' | 'error') {
+  const stats = createStats({
+    version,
+    status,
+    outputState: statsOutputState,
+  })
+  process.stdout.write(JSON.stringify(stats, null, 2) + '\n')
+}
+
 async function run(args: CliArgs) {
   const {
     source,
@@ -245,8 +275,16 @@ async function run(args: CliArgs) {
     clean,
     tsconfig,
     onSuccess,
+    stats,
   } = args
+  if (stats) {
+    enableStatsMode()
+  }
+  if (stats && watch) {
+    throw new Error('--stats is not supported with --watch')
+  }
   const cwd = args.cwd || process.cwd()
+  statsCwd = cwd
   const file = args.file ? path.resolve(cwd, args.file) : undefined
   const bundleConfig: BundleConfig = {
     unbundle: args.unbundle,
@@ -282,20 +320,23 @@ async function run(args: CliArgs) {
     endProfile('cli.lint', lintStarted)
   }
 
-  const spinnerInstance = process.stdout.isTTY
-    ? createSpinner('Building...\n\n', {
-        color: 'green',
-      })
-    : {
-        start: () => {},
-        stop: () => {},
-        clear: () => {},
-        success: () => {},
-        isSpinning: false,
-      }
+  // --stats keeps stdout for the JSON, so there is no spinner.
+  const spinnerInstance =
+    process.stdout.isTTY && !stats
+      ? createSpinner('Building...\n\n', {
+          color: 'green',
+        })
+      : {
+          start: () => {},
+          stop: () => {},
+          clear: () => {},
+          success: () => {},
+          isSpinning: false,
+        }
 
-  // Register spinner with logger so logs automatically pause the spinner
-  setActiveSpinner(spinnerInstance)
+  // Register spinner with logger so logs automatically pause the spinner.
+  // Not with --stats: that would put console.log back on stdout.
+  if (!stats) setActiveSpinner(spinnerInstance)
 
   const spinner: Spinner = {
     start: startSpinner,
@@ -323,6 +364,7 @@ async function run(args: CliArgs) {
   let initialBuildContext: BuildContext | undefined
   function onBuildStart(buildContext: BuildContext) {
     initialBuildContext = buildContext
+    statsOutputState = buildContext.pluginContext.outputState
     if (!watch) {
       spinner.start()
     }
@@ -343,7 +385,7 @@ async function run(args: CliArgs) {
       }
 
       const outputState = initialBuildContext?.pluginContext.outputState
-      if (outputState) {
+      if (outputState && !stats) {
         outputState.log()
       }
     }
@@ -367,6 +409,12 @@ async function run(args: CliArgs) {
   try {
     await bundle(cliEntry, bundleConfig)
   } catch (err: any) {
+    if (stats) {
+      logError(err)
+      printStats('error')
+      process.exitCode = 1
+      return
+    }
     if (err.name === 'NOT_EXISTED') {
       buildError = {
         digest: 'bunchee:not-existed',
@@ -393,7 +441,11 @@ async function run(args: CliArgs) {
   }
 
   // Unregister spinner from logger
-  setActiveSpinner(null)
+  if (stats) {
+    printStats('success')
+  } else {
+    setActiveSpinner(null)
+  }
 }
 
 async function main() {
@@ -470,11 +522,26 @@ function logWatcherBuildTime(result: RollupWatcher[], spinner: Spinner) {
 }
 
 function logError(err: unknown) {
+  if (isStatsMode()) {
+    // Collected with its code and location, and only once: a build error is
+    // passed to both onBuildError and the rejected bundle() call.
+    if (err && typeof err === 'object') {
+      if (reportedErrors.has(err)) return
+      reportedErrors.add(err)
+    }
+    collectStatsMessage(
+      'errors',
+      errorToStatsMessage(err, statsCwd ?? process.cwd()),
+    )
+    console.error(normalizeError(err))
+    return
+  }
   const error = normalizeError(err)
   logger.error(error)
 }
 
 main().catch((error) => {
   logError(error)
+  if (isStatsMode()) printStats('error')
   process.exit(1)
 })
