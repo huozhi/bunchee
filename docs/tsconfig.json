@@ -6,9 +6,15 @@
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
     "strict": true,
+    "noUncheckedSideEffectImports": false,
     "noEmit": true,
     "skipLibCheck": true,
     "esModuleInterop": true
   },
-  "include": ["pages/**/*.ts", "pages/**/*.tsx"]
+  "include": [
+    "pages/**/*.ts",
+    "pages/**/*.tsx",
+    "components/**/*.ts",
+    "components/**/*.tsx"
+  ]
 }
